@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta BOE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF; 
+        }
+
+        a:hover {
+            text-decoration: underline; 
+        }
+        .api-button {
+            background-color: #4CAF50; 
+            color: white;
+            padding: 10px 15px; 
+            font-size: 13px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block; 
+            margin-top: 10px;
+        }
+
+        .api-button:hover {
+            background-color: #45a049; 
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .header p {
+            margin: 5px 0 0;
+            color: #555;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .left-column {
+            flex: 1;
+            max-width: 25%;
+        }
+        .right-column {
+            flex: 3;
+            max-width: 75%;
+        }
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        .filters input, .filters select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .announcement {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .announcement h2 {
+            margin-top: 0;
+            font-weight: normal;
+        }
+        .announcement p {
+            margin: 5px 0;
+        }
+        .announcement a {
+            color: #333;
+            text-decoration: none;
+        }
+        .announcement a:hover {
+            text-decoration: underline;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto; 
+            max-width: 120px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px; /* Espacio entre icono y texto */
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .show-filters-button {
+            display: none;
+            background-color: #007BFF;
+            margin-bottom: 10px;
+        }
+        .show-filters-button:hover {
+            background-color: #0056b3;
+        }
+        .icon {
+            margin-right: 10px;
+            color: #555;
+            font-size: 12px;
+        }
+        .icon.blue {
+            color: #007BFF;
+        }
+        .divider {
+            border-top: 1px solid #ddd;
+            margin: 15px 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center; 
+        }
+        @media (max-width: 768px) {
+            .left-column, .right-column {
+                max-width: 100%;
+                flex: 100%;
+            }
+            .filters {
+                display: none;
+            }
+            .show-filters-button {
+                display: block;
+                width: 100%; 
+                margin: 0 auto 10px auto; 
+                text-align: center; 
+            }
+            .google-card {
+                text-align: center;
+            }
+        }
+        .google-card {
+            text-align: center; 
+        }
+
+        .google-card p {
+           margin: 0 0 10px 0; 
+        }
+
+        .google-card button {
+            margin: 0 auto; 
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Consulta BOE</h1>
+        <p>Prueba de concepto para ver los anuncios publicados en el BOE sobre Contratación Pública</p>
+    </div>
+    <div class="container">
+        <!-- Columna izquierda: Filtros y botón de Google -->
+        <div class="left-column">
+            <button class="show-filters-button" onclick="toggleFilters()">Mostrar filtros</button>
+            <div class="card filters" id="filters">
+                <input type="date" id="dateInput" value="2025-02-21">
+                <input type="text" id="expedienteFilter" placeholder="Filtrar por Expediente">
+                <input type="text" id="identificadorFilter" placeholder="Filtrar por Identificador">
+                <select id="procedimientoFilter">
+                    <option value="">Tipo de procedimiento</option>
+                    <option value="Abierto">Abierto</option>
+                    <option value="Abierto simplificado">Abierto simplificado</option>
+                    <option value="Restringido">Restringido</option>
+                    <option value="Negociado con Publicidad">Negociado con Publicidad</option>
+                    <option value="Negociado sin Publicidad">Negociado sin Publicidad</option>
+                    <option value="Diálogo Competitivo">Diálogo Competitivo</option>
+                    <option value="Contrato Menor">Contrato Menor</option>
+                    <option value="Asociación para la Innovación">Asociación para la Innovación</option>
+                    <option value="Subasta Electrónica">Subasta Electrónica</option>
+                    <option value="Concurso de Proyectos">Concurso de Proyectos</option>
+                </select>
+            </div>
+            <div class="card google-card">
+                <p>La información se recoge del <a href="https://www.boe.es" target="_blank">BOE</a> en formato XML y se parametriza según el Manual <a href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.boe.es/datosabiertos/documentos/APIsumarioBOE.pdf" target="_blank">Manual</a>.</p>
+        <a href="https://www.boe.es/datosabiertos/api/api.php" target="_blank">
+            <button class="api-button">API</button>
+                </a>
+            </div>
+            <div class="card google-card">
+                <p>Exportar todos los datos a un archivo CSV.</p>
+                <button class="api-button" onclick="exportToCSV()">Descargar Excel</button>
+            </div>
+        </div>
+
+        <!-- Columna derecha: Anuncios -->
+        <div class="right-column" id="results"></div>
+    </div>
+
+    <script>
+        function toggleFilters() {
+            const filters = document.getElementById('filters');
+            if (filters.style.display === 'none' || filters.style.display === '') {
+                filters.style.display = 'block';
+            } else {
+                filters.style.display = 'none';
+            }
+        }
+
+        document.getElementById('dateInput').addEventListener('change', loadSelectedDateData);
+        document.getElementById('expedienteFilter').addEventListener('input', applyFilters);
+        document.getElementById('identificadorFilter').addEventListener('input', applyFilters);
+        document.getElementById('procedimientoFilter').addEventListener('change', applyFilters);
+
+        function getFormattedDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        function getPreviousFriday(date) {
+            const previousFriday = new Date(date);
+            const dayOfWeek = previousFriday.getDay();
+            if (dayOfWeek === 0) {
+                previousFriday.setDate(date.getDate() - 2);
+            } else if (dayOfWeek === 6) {
+                previousFriday.setDate(date.getDate() - 1);
+            } else {
+                previousFriday.setDate(date.getDate() - (dayOfWeek + 2));
+            }
+            return previousFriday;
+        }
+
+        function loadDefaultDate() {
+            const today = new Date();
+            let dateToLoad = today;
+            if (today.getDay() === 0 || today.getDay() === 6) {
+                dateToLoad = getPreviousFriday(today);
+            }
+            const formattedDate = getFormattedDate(dateToLoad);
+            document.getElementById('dateInput').value = formattedDate.slice(0, 4) + '-' + formattedDate.slice(4, 6) + '-' + formattedDate.slice(6);
+            fetchData(formattedDate);
+        }
+
+        function loadSelectedDateData() {
+            const selectedDate = document.getElementById('dateInput').value;
+            const dateParts = selectedDate.split('-');
+            const formattedDate = `${dateParts[0]}${dateParts[1]}${dateParts[2]}`;
+            fetchData(formattedDate);
+        }
+
+        function fetchData(date) {
+            const url = `https://corsmirror.com/v1?url=https://www.boe.es/datosabiertos/api/boe/sumario/${date}`;
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/xml'
+                }
+            })
+            .then(response => response.text())
+            .then(str => new window.DOMParser().parseFromString(str, "application/xml"))
+            .then(data => {
+                const items = data.querySelectorAll('seccion[codigo="5A"] item');
+                displayResults(items);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function displayResults(items) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            items.forEach(item => {
+                const identifier = item.querySelector('identificador')?.textContent.replace(/\.$/, '') || 'No disponible';
+                const titulo = item.querySelector('titulo')?.textContent.replace(/\.$/, '') || 'No disponible';
+                const pdfUrl = item.querySelector('url_pdf')?.textContent || '#';
+                const htmlUrl = item.querySelector('url_html')?.textContent || '#';
+
+                const expedienteMatch = titulo.match(/Expediente:\s*([^\s,.;]+)/);
+                const expediente = expedienteMatch ? expedienteMatch[1].trim().replace(/\.$/, '') : 'No disponible';
+
+                fetchDetailedData(identifier, titulo, expediente, pdfUrl, htmlUrl);
+            });
+        }
+
+        function fetchDetailedData(identifier, titulo, expediente, pdfUrl, htmlUrl) {
+            const url = `https://corsmirror.com/v1?url=https://www.boe.es/diario_boe/xml.php?id=${identifier}`;
+            fetch(url)
+            .then(response => response.text())
+            .then(str => new window.DOMParser().parseFromString(str, "application/xml"))
+            .then(data => {
+                const result = extractInformation(data);
+                result.titulo = titulo;
+                result.expediente = expediente;
+                result.identificador = identifier;
+                result.pdfUrl = pdfUrl;
+                result.htmlUrl = htmlUrl;
+                displayDetailedResult(result);
+                applyFilters(); 
+            })
+            .catch(error => console.error('Error fetching detailed data:', error));
+        }
+
+        function extractInformation(data) {
+            const info = {};
+            const text = data.querySelector('texto').innerHTML;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const dtElements = doc.querySelectorAll('dt');
+
+            dtElements.forEach(dt => {
+                const label = dt.textContent.trim();
+                const dd = dt.nextElementSibling;
+                if (dd && dd.tagName === 'DD') {
+                    switch (label) {
+                        case '1.1) Nombre:':
+                            info['1.1 Nombre'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '1.4) Localidad:':
+                            info['1.4 Localidad'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '1.9) Teléfono:':
+                            info['1.9 Teléfono'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '1.11) Correo electrónico:':
+                            info['1.11 Correo electrónico'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '1.13) Dirección del perfil de comprador:':
+                            info['1.13 Dirección del perfil de comprador'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '4. Códigos CPV:':
+                            info['4. Códigos CPV'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '13. Valor estimado del contrato:':
+                            info['Valor estimado'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                        case '7. Tipo de procedimiento de adjudicación:':
+                            info['Tipo de procedimiento'] = dd.textContent.trim().replace(/\.$/, '');
+                            break;
+                    }
+                }
+            });
+
+            return info;
+        }
+
+        function displayDetailedResult(result) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'card announcement';
+            resultDiv.innerHTML = `
+                <div>
+                    <p><strong>Id. BOE:</strong> ${result.identificador}</p>
+                    <p><strong>Nº Exp.:</strong> ${result.expediente}</p>
+                    <p>${result.titulo}</p>
+                    <p><i class="fas fa-building icon"></i> ${result['1.1 Nombre'] || 'No disponible'}
+                        <a href="${result['1.13 Dirección del perfil de comprador'] || '#'}" target="_blank">
+                            <i class="fas fa-external-link-alt icon blue"></i> Ver Perfil
+                        </a>
+                    </p>
+                    <p><i class="fas fa-phone icon blue"></i> ${result['1.9 Teléfono'] || 'No disponible'}</p>
+                    <p><i class="fas fa-envelope icon blue"></i> ${result['1.11 Correo electrónico'] || 'No disponible'}</p>
+                    <div class="divider"></div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <p><i class="fas fa-box icon"></i> <span class="procedimiento-text">${result['Tipo de procedimiento'] || 'No disponible'}</span></p>
+                        <div class="action-buttons">
+                            <a href="${result.htmlUrl}" target="_blank">
+                                <button style="background-color: #4CAF50;"><i class="fas fa-globe"></i> Ver web</button>
+                            </a>
+                            <a href="${result.pdfUrl}" target="_blank">
+                                <button style="background-color: #007BFF;"><i class="fas fa-download"></i> Descargar PDF</button>
+                            </a>
+                        </div>
+						<p><i class="fas fa-map-marker-alt icon blue"></i> ${result['1.4 Localidad'] || 'No disponible'}</p>
+                    </div>
+                </div>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function applyFilters() {
+            const expedienteFilter = document.getElementById('expedienteFilter').value.toLowerCase();
+            const identificadorFilter = document.getElementById('identificadorFilter').value.toLowerCase();
+            const procedimientoFilter = document.getElementById('procedimientoFilter').value.toLowerCase();
+            const resultsDiv = document.getElementById('results');
+            const resultDivs = resultsDiv.getElementsByClassName('card');
+
+            Array.from(resultDivs).forEach(resultDiv => {
+                const expediente = resultDiv.querySelector('p:nth-child(2)')?.textContent.toLowerCase() || '';
+                const identificador = resultDiv.querySelector('p:nth-child(1)')?.textContent.toLowerCase() || '';
+                const procedimiento = resultDiv.querySelector('.procedimiento-text')?.textContent.toLowerCase() || '';
+
+                const matchesExpediente = expedienteFilter === '' || expediente.includes(expedienteFilter);
+                const matchesIdentificador = identificadorFilter === '' || identificador.includes(identificadorFilter);
+                const matchesProcedimiento = procedimientoFilter === '' || procedimiento.includes(procedimientoFilter);
+
+                if (matchesExpediente && matchesIdentificador && matchesProcedimiento) {
+                    resultDiv.style.display = '';
+                } else {
+                    resultDiv.style.display = 'none';
+                }
+            });
+        }
+
+        function exportToCSV() {
+            const resultsDiv = document.getElementById('results');
+            const resultDivs = resultsDiv.getElementsByClassName('card');
+            const csvData = [];
+
+            const headers = ['Identificador', 'Expediente', 'Título', 'Nombre', 'Teléfono', 'Correo electrónico', 'Localidad', 'Tipo de procedimiento', 'Valor estimado', 'CPV Principal', 'URL HTML', 'URL PDF'];
+            csvData.push(headers.join(';'));
+
+            Array.from(resultDivs).forEach(resultDiv => {
+                const identificador = resultDiv.querySelector('p:nth-child(1)')?.textContent.replace('Id. BOE:', '').trim();
+                const expediente = resultDiv.querySelector('p:nth-child(2)')?.textContent.replace('Nº Exp.:', '').trim();
+                const titulo = resultDiv.querySelector('p:nth-child(3)')?.textContent.trim();
+                const nombre = resultDiv.querySelector('p:nth-child(4) i + span')?.textContent.trim();
+                const telefono = resultDiv.querySelector('p:nth-child(5)')?.textContent.replace('Teléfono:', '').trim();
+                const correo = resultDiv.querySelector('p:nth-child(6)')?.textContent.replace('Correo electrónico:', '').trim();
+                const localidad = resultDiv.querySelector('p:nth-child(8)')?.textContent.replace('Localidad:', '').trim();
+                const procedimiento = resultDiv.querySelector('.procedimiento-text')?.textContent.trim();
+                const valorEstimado = resultDiv.querySelector('p:nth-child(7)')?.textContent.replace('Valor estimado:', '').trim();
+                const cpvPrincipal = resultDiv.querySelector('p:nth-child(9)')?.textContent.replace('CPV Principal:', '').trim();
+                const htmlUrl = resultDiv.querySelector('.action-buttons a:nth-child(1)')?.href;
+                const pdfUrl = resultDiv.querySelector('.action-buttons a:nth-child(2)')?.href;
+
+                const row = [identificador, expediente, titulo, nombre, telefono, correo, localidad, procedimiento, valorEstimado, cpvPrincipal, htmlUrl, pdfUrl];
+                csvData.push(row.join(';'));
+            });
+			
+            const csvBlob = new Blob([csvData.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(csvBlob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'datos_boe.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        window.onload = loadDefaultDate;
+    </script>
+</body>
+</html>

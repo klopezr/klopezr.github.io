@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anuncios Contratación en el DOUE</title>
+       <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            text-align: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .container {
+            display: flex;
+            width: 90%;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .filters-and-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; 
+            width: 20%; 
+        }
+
+        .filters, .source-card, .export-card {
+            width: 90%; 
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            background-color: white;
+            text-align: center; 
+        }
+
+        .filter-card input, .filter-card select {
+            width: 100%;
+            padding: 4px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .filter-card button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .filter-card button:hover {
+            background-color: #0056b3;
+        }
+
+        .results {
+            width: 75%; 
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            position: relative;
+        }
+
+        .card-header, .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header {
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .card .fecha-actualizacion {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .icon {
+            color: #666;
+            margin-right: 5px;
+        }
+
+        .source-card a, .export-card a {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .source-card a:hover, .export-card a:hover {
+            background-color: #218838;
+        }
+
+        .total-anuncios {
+            background-color: #e6f7ff;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mini-button {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .mini-button:hover {
+            background-color: #0056b3;
+        }
+
+        .mini-button2 {
+            background-color: #04c41e;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .mini-button2:hover {
+            background-color: #0056b3;
+        }
+
+        .separator {
+            border-top: 1px solid #ddd;
+            margin: 10px 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .mobile-filters-button {
+            display: none;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .mobile-filters-button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .filters-and-info, .results {
+                width: 100%; 
+            }
+            .filters {
+                display: none; 
+            }
+            .filters.active {
+                display: flex; 
+            }
+            .mobile-filters-button {
+                display: block;
+            }
+            .source-card, .export-card {
+                padding: 15px; 
+            }
+            .filter-card input, .filter-card select {
+                padding: 6px; 
+            }
+        }
+
+        ul#resultados {
+            list-style-type: none;
+            padding-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Anuncios Contratación en el DOUE</h1>
+        <p>Prueba de concepto para revisar los anuncios publicados sobre contratación a nivel Europeo</p>
+    </header>
+    <div class="container">
+        <div class="filters-and-info">
+            <button class="mobile-filters-button">Mostrar Filtros</button>
+            <div class="filters">
+                <div class="filter-card">
+                    <label for="fecha">Selecciona la fecha:</label>
+                    <input type="date" id="fecha" />
+                    <label for="cpv">CPV:</label>
+                    <input type="text" id="cpv" placeholder="Código CPV" />
+                    <label for="identificador">Nº Expediente:</label>
+                    <input type="text" id="identificador" placeholder="Identificador interno" />
+                    <label for="valorMinimo">Valor estimado mínimo:</label>
+                    <input type="text" id="valorMinimo" placeholder="ej. 100000" />
+                    <label for="numeroPublicacion">Nº DOUE:</label>
+                    <input type="text" id="numeroPublicacion" placeholder="Nº DOUE" />
+                    <label for="subtipo">Tipo:</label>
+                    <select id="subtipo" style="width: 100%;">
+                        <option value="">Selecciona un tipo</option>
+                        <!-- Opciones generadas dinámicamente desde JavaScript -->
+                    </select>
+                    <button onclick="buscarDatos()">Buscar</button>
+                </div>
+            </div>
+            <div class="source-card">
+                <p>La información se recoge de EU Tenders</p>
+                <a href="https://ted.europa.eu/api/documentation/index.html#/notice-search-v3/search" target="_blank">API</a>
+            </div>
+            <div class="export-card">
+                <p>Crea un archivo Excel con los datos de los anuncios</p>
+                <a href="#" id="exportButton">Descargar Excel</a>
+            </div>
+        </div>
+        <div class="results">
+            <p class="total-anuncios">Total de anuncios esperados: 0</p>
+            <ul id="resultados"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileFiltersButton = document.querySelector('.mobile-filters-button');
+            if (mobileFiltersButton) {
+                mobileFiltersButton.addEventListener('click', toggleFilters);
+            } else {
+                console.error('No se encontró el botón .mobile-filters-button');
+            }
+
+            const exportButton = document.getElementById('exportButton');
+            if (exportButton) {
+                exportButton.addEventListener('click', exportarDatos);
+            } else {
+                console.error('No se encontró el botón de exportar');
+            }
+        });
+
+        function toggleFilters() {
+            const filters = document.querySelector('.filters');
+            const button = document.querySelector('.mobile-filters-button');
+
+            if (!filters || !button) {
+                console.error('No se encontraron los elementos .filters o .mobile-filters-button');
+                return;
+            }
+
+            filters.classList.toggle('active');
+
+            button.textContent = filters.classList.contains('active') ? 'Ocultar Filtros' : 'Mostrar Filtros';
+        }
+
+        const apiKey = '123c25db483547d9b88aa57c981a425d';
+        const apiUrl = 'https://api.ted.europa.eu/v3/notices/search';
+        const proxyUrl = `https://corsmirror.com/v1?url=${encodeURIComponent(apiUrl)}`;
+
+        const traduccionesNoticeType = {
+            "corr": "Notificación de cambio",
+            "can-tran": "Notificación de adjudicación de contrato para servicios de transporte público",
+            "can-modif": "Notificación de modificación de contrato",
+            "cn-social": "Notificación de contrato – régimen ligero",
+            "can-social": "Notificación de adjudicación de contrato o concesión – régimen ligero",
+            "can-standard": "Notificación de adjudicación de contrato o concesión – régimen estándar",
+            "cn-standard": "Notificación de contrato o concesión – régimen estándar",
+            "cn-desg": "Notificación de concurso de diseño",
+            "can-desg": "Notificación de resultado de concurso de diseño",
+            "brin-ecs": "Notificación de Sociedad Europea / Sociedad Cooperativa Europea",
+            "brin-eeig": "Notificación de Agrupación de Interés Económico Europeo",
+        };
+
+        const descripcionesNoticeSubtype = {
+            "1": "Anuncio de la publicación de un anuncio de información previa en un perfil de comprador. Directiva general.",
+            "10": "Anuncio de información previa usado como convocatoria de licitación. Directiva general, régimen normal.",
+            "11": "Anuncio periódico indicativo usado como convocatoria de licitación. Directiva sectorial, régimen normal.",
+            "12": "Anuncio de información previa usado como convocatoria de licitación. Directiva general, régimen simplificado.",
+            "13": "Anuncio periódico indicativo usado como convocatoria de licitación. Directiva general, régimen simplificado.",
+            "14": "Anuncio de información previa usado como convocatoria de licitación. Directiva de concesiones, régimen simplificado.",
+            "15": "Anuncio de la existencia de un sistema de calificación. Directiva sectorial.",
+            "16": "Anuncio de licitación. Directiva general, régimen normal.",
+            "18": "Anuncio de licitación. Directiva de defensa, régimen normal.",
+            "19": "Anuncio de concesión. Directiva de concesiones, régimen normal.",
+            "2": "Anuncio de la publicación de un anuncio periódico indicativo en un perfil de comprador. Directiva sectorial.",
+            "20": "Anuncio de licitación. Directiva general, régimen simplificado.",
+            "21": "Anuncio de licitación. Directiva sectorial, régimen simplificado.",
+            "22": "Anuncio de subcontrato. Directiva de defensa.",
+            "23": "Anuncio de concurso de proyectos. Directiva general, proyecto.",
+            "24": "Anuncio de concurso de proyectos. Directiva sectorial, proyecto.",
+            "25": "Anuncio de transparencia previa voluntaria. Directiva general.",
+            "26": "Anuncio de transparencia previa voluntaria. Directiva sectorial.",
+            "27": "Anuncio de transparencia previa voluntaria. Directiva de defensa.",
+            "28": "Anuncio de transparencia previa voluntaria. Directiva de concesiones.",
+            "29": "Anuncio de adjudicación de contrato. Directiva general, régimen normal.",
+            "3": "Anuncio de la publicación de un anuncio de información previa en un perfil de comprador. Directiva de defensa.",
+            "30": "Anuncio de adjudicación de contrato. Directiva sectorial, régimen normal.",
+            "31": "Anuncio de adjudicación de contrato. Directiva de defensa, régimen normal.",
+            "32": "Anuncio de adjudicación de concesión. Directiva de concesiones, régimen normal.",
+            "33": "Anuncio de adjudicación de contrato. Directiva general, régimen simplificado.",
+            "34": "Anuncio de adjudicación de contrato. Directiva sectorial, régimen simplificado.",
+            "35": "Anuncio de adjudicación de concesión. Directiva de concesiones, régimen simplificado.",
+            "36": "Anuncio del resultado de un concurso de proyectos. Directiva general, proyecto.",
+            "37": "Anuncio del resultado de un concurso de proyectos. Directiva sectorial, proyecto.",
+            "38": "Anuncio de modificación de contrato. Directiva general.",
+            "39": "Anuncio de modificación de contrato. Directiva sectorial.",
+            "40": "Anuncio de modificación de contrato. Directiva de concesiones.",
+            "4": "Anuncio de información previa usado solo para información. Directiva general.",
+            "5": "Anuncio periódico indicativo usado solo para información. Directiva sectorial.",
+            "6": "Anuncio de información previa usado solo para información. Directiva de defensa.",
+            "7": "Anuncio de información previa usado para reducir los plazos de recepción de las ofertas. Directiva general.",
+            "8": "Anuncio periódico indicativo usado para reducir los plazos de recepción de las ofertas. Directiva sectorial.",
+            "9": "Anuncio de información previa usado para reducir los plazos de recepción de las ofertas. Directiva de defensa.",
+            "CEI": "Convocatoria de manifestaciones de interés.",
+            "E1": "Anuncio de consulta preliminar del mercado.",
+            "E2": "Solo anuncio de información previa por debajo del umbral.",
+            "E3": "Anuncio de licitación general por debajo del umbral.",
+            "E4": "Anuncio de adjudicación del contrato general por debajo del umbral.",
+            "E5": "Anuncio de finalización del contrato.",
+            "T01": "Anuncio de información previa relativo a un contrato de servicio público.",
+            "T02": "Anuncio de información para la adjudicación de un contrato de servicio público.",
+            "X01": "Agrupación Europea de Interés Económico.",
+            "X02": "Sociedad Europea / Sociedad Cooperativa Europea."
+        };
+
+        function traducirNoticeType(tipo) {
+            return traduccionesNoticeType[tipo] || tipo;
+        }
+
+        function describirNoticeSubtype(subtipo) {
+            return descripcionesNoticeSubtype[subtipo] || "Subtipo no especificado.";
+        }
+
+        function obtenerFechaValida() {
+            const hoy = new Date();
+            const diaSemana = hoy.getDay();
+
+            if (diaSemana === 0) {
+                hoy.setDate(hoy.getDate() - 2);
+            } else if (diaSemana === 6) {
+                hoy.setDate(hoy.getDate() - 1);
+            }
+
+            const año = hoy.getFullYear();
+            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoy.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+        }
+
+        function formatearFecha(fechaISO) {
+            const fecha = new Date(fechaISO);
+            if (isNaN(fecha.getTime())) {
+                return fechaISO;
+            }
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const año = fecha.getFullYear();
+            return `${dia}/${mes}/${año}`;
+        }
+
+        function formatearValorTotal(valor) {
+            if (!valor) return 'No disponible';
+            const numero = parseFloat(valor).toFixed(2).replace(".", ",");
+            const partes = numero.split(",");
+            partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return `${partes.join(",")} €`;
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function llenarDesplegableSubtipos() {
+            const selectSubtipo = document.getElementById('subtipo');
+            for (const [key, value] of Object.entries(descripcionesNoticeSubtype)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = value;
+                selectSubtipo.appendChild(option);
+            }
+        }
+
+        function inicializarFecha() {
+            const fechaInput = document.getElementById('fecha');
+            const fechaValida = obtenerFechaValida();
+            fechaInput.value = fechaValida;
+            llenarDesplegableSubtipos();
+            buscarDatos();
+        }
+
+        async function buscarDatos() {
+            const fechaSeleccionada = document.getElementById('fecha').value;
+            const cpv = document.getElementById('cpv').value;
+            const identificador = document.getElementById('identificador').value;
+            const valorMinimo = document.getElementById('valorMinimo').value;
+            const numeroPublicacion = document.getElementById('numeroPublicacion').value;
+            const subtipo = document.getElementById('subtipo').value;
+
+            if (!fechaSeleccionada) {
+                alert('Por favor, selecciona una fecha.');
+                return;
+            }
+
+            const resultados = document.getElementById('resultados');
+            resultados.innerHTML = '';
+            const totalAnuncios = document.querySelector('.total-anuncios');
+            totalAnuncios.textContent = 'Cargando...';
+
+            let iterationNextToken = null;
+            let hasMoreResults = true;
+            let totalNotices = 0;
+            let loadedNotices = 0;
+            const tiposProcedimiento = {};
+
+            while (hasMoreResults) {
+                const requestData = {
+                    query: `buyer-country=ESP and publication-date=${fechaSeleccionada.replace(/-/g, '')} ${cpv ? `and classification-cpv=${cpv}` : ''} ${identificador ? `and internal-identifier-proc=${identificador}` : ''} ${valorMinimo ? `and total-value>=${valorMinimo}` : ''} ${numeroPublicacion ? `and publication-number=${numeroPublicacion}` : ''} ${subtipo ? `and notice-subtype=${subtipo}` : ''}`,
+                    fields: [
+                        "publication-number",
+                        "links",
+                        "publication-date",
+                        "buyer-profile",
+                        "buyer-email",
+                        "AU",
+                        "BT-24-Procedure",
+                        "touchpoint-city-revieworg-lot",
+                        "classification-cpv",
+                        "internal-identifier-proc",
+                        "deadline-receipt-request",
+                        "procedure-type",
+                        "total-value",
+                        "notice-type",
+                        "notice-subtype"
+                    ],
+                    paginationMode: "ITERATION",
+                    limit: 250,
+                    iterationNextToken: iterationNextToken,
+                    scope: "ACTIVE"
+                };
+
+                try {
+                    const response = await fetch(proxyUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (totalNotices === 0 && data.totalNoticeCount) {
+                        totalNotices = data.totalNoticeCount;
+                        totalAnuncios.textContent = `Total de anuncios esperados: ${totalNotices}`;
+                    }
+
+                    if (data.notices && data.notices.length > 0) {
+                        data.notices.forEach(anuncio => {
+                            loadedNotices++;
+                            const pdfSPA = anuncio.links?.pdf?.SPA;
+                            const htmlSPA = anuncio.links?.html?.SPA;
+                            const buyerProfile = anuncio["buyer-profile"]?.[0];
+                            const noticeType = anuncio["notice-type"];
+                            const noticeTypeTraducido = traducirNoticeType(noticeType);
+                            const noticeSubtype = anuncio["notice-subtype"];
+                            const noticeSubtypeDescripcion = describirNoticeSubtype(noticeSubtype);
+
+                            if (pdfSPA || htmlSPA) {
+                                const item = document.createElement('li');
+                                item.className = 'card';
+                                const fechaLimite = anuncio["deadline-receipt-request"];
+                                const fechaLimiteFormateada = fechaLimite
+                                    ? (fechaLimite.includes(",")
+                                        ? formatearFecha(fechaLimite.split(",")[0])
+                                        : formatearFecha(fechaLimite))
+                                    : 'No disponible';
+                                const valorTotalFormateado = formatearValorTotal(anuncio["total-value"]);
+
+                                item.innerHTML = `
+                                    <div class="card-header">
+                                        <div>
+                                            <strong>🏢 Nº DOUE:</strong> ${anuncio["publication-number"] || 'No disponible'} <br>
+                                            <strong>🔖 Nº Exp.:</strong> ${anuncio["internal-identifier-proc"] || 'No disponible'} <br>
+                                            <strong>📑 Objeto:</strong> ${anuncio["BT-24-Procedure"]?.spa || 'No disponible'} <br>
+                                            <strong>🔖 CPV:</strong> ${anuncio["classification-cpv"]?.join(', ') || 'No disponible'} <br>
+                                            <strong>🏛️ </strong> ${anuncio["AU"]?.spa?.join(', ') || 'No disponible'}
+                                            ${buyerProfile ? `<a href="${buyerProfile}" target="_blank" class="icon">🔗 Ver perfil</a>` : ''} <br>
+                                            <strong>📧 </strong> <a href="mailto:${anuncio["buyer-email"]}">${anuncio["buyer-email"] || 'No disponible'}</a>
+                                        </div>
+                                        <div class="fecha-actualizacion">${formatearFecha(anuncio["publication-date"])}</div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div>
+                                            <span class="icon">💰</span> ${valorTotalFormateado}
+                                            ${htmlSPA ? `<a href="${htmlSPA}" target="_blank" class="mini-button">Ver anuncio</a>` : ''}
+                                            ${pdfSPA ? `<a href="${pdfSPA}" target="_blank" class="mini-button2">Descargar PDF</a>` : ''}
+                                            <span class="icon">📅</span> ${fechaLimiteFormateada}
+                                            <span class="icon">🏙️</span> ${anuncio["touchpoint-city-revieworg-lot"]?.join(', ') || 'No disponible'}
+                                        </div>
+                                    </div>
+                                    <div class="separator"></div>
+                                    <div>
+                                        <strong>Tipo:</strong> ${noticeSubtypeDescripcion}
+                                    </div>
+                                `;
+                                resultados.appendChild(item);
+                            }
+
+                            // Contar los tipos de procedimiento
+                            const tipoProcedimiento = anuncio["procedure-type"];
+                            if (tipoProcedimiento) {
+                                tiposProcedimiento[tipoProcedimiento] = (tiposProcedimiento[tipoProcedimiento] || 0) + 1;
+                            }
+                        });
+                    }
+
+                    // Verificar si hay más resultados
+                    if (data.iterationNextToken && loadedNotices < totalNotices) {
+                        iterationNextToken = data.iterationNextToken; // Actualizar el token
+                        await delay(1000); // Retraso de 1 segundo entre solicitudes
+                    } else {
+                        hasMoreResults = false; // No hay más resultados
+                    }
+                } catch (error) {
+                    console.error('Error al realizar la solicitud:', error);
+                    resultados.innerHTML = `<li>Error al obtener datos: ${error.message}</li>`;
+                    return;
+                }
+            }
+
+            if (loadedNotices === totalNotices) {
+                // Mostrar los tipos de procedimiento y sus conteos
+                let tiposProcedimientoHTML = "<p>Tipos de procedimiento encontrados:</p><ul>";
+                for (const [tipo, conteo] of Object.entries(tiposProcedimiento)) {
+                    tiposProcedimientoHTML += `<li>${tipo}: ${conteo}</li>`;
+                }
+                tiposProcedimientoHTML += "</ul>";
+
+                resultados.innerHTML += `<p>✅ Todos los anuncios (${totalNotices}) han sido cargados.</p>`;
+                resultados.innerHTML += tiposProcedimientoHTML;
+            }
+        }
+
+    function exportarDatos() {
+        const resultados = document.getElementById('resultados').getElementsByTagName('li');
+        if (resultados.length === 0) {
+            alert('No hay datos para exportar.');
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Nº DOUE;Nº Exp.;Objeto;CPV;Entidad;Email;Valor Total;Ciudad;Enlace;PDF\n";
+
+        Array.from(resultados).forEach(item => {
+            const numeroDOUE = item.querySelector('strong:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const numeroExp = item.querySelector('strong:nth-of-type(2)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const objeto = item.querySelector('strong:nth-of-type(3)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const cpv = item.querySelector('strong:nth-of-type(4)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const entidad = item.querySelector('strong:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const email = item.querySelector('a[href^="mailto:"]')?.textContent.trim() || 'No disponible';
+            const valorTotal = item.querySelector('.card-footer span:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const ciudad = item.querySelector('.card-footer span:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
+            const enlace = item.querySelector('.mini-button')?.getAttribute('href') || 'No disponible';
+            const pdf = item.querySelector('.mini-button2')?.getAttribute('href') || 'No disponible';
+
+            csvContent += `${numeroDOUE};${numeroExp};${objeto};${cpv};${entidad};${email};${valorTotal};${ciudad};${enlace};${pdf}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "anuncios_contratacion.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+        window.onload = inicializarFecha;
+    </script>
+</body>
+</html>
