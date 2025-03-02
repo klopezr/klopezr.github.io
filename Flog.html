@@ -106,19 +106,19 @@
             <!-- Fila adicional -->
             <tr class="fila-posibles-ofertas">
                 <td colspan="2"></td>
-                <td colspan="7">Mejor oferta: rebaja</td>
+                <td colspan="7">Mejor oferta presentada</td>
             </tr>
             <!-- Cabecera principal -->
             <tr>
                 <th>Reducción<br>Propia</th>
                 <th>Importe Oferta</th>
-                <th><input type="number" class="input-field-blue" value="80">%</th>
-                <th><input type="number" class="input-field-blue" value="70">%</th>
-                <th><input type="number" class="input-field-blue" value="60">%</th>
-                <th><input type="number" class="input-field-blue" value="50">%</th>
-                <th><input type="number" class="input-field-blue" value="40">%</th>
-                <th><input type="number" class="input-field-blue" value="30">%</th>
-                <th><input type="number" class="input-field-blue" value="10">%</th>
+                <th><input type="number" class="input-field-blue" value="80">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="70">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="60">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="50">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="40">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="30">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="10">%<br>(<span class="importe-calculado"></span>)</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -142,6 +142,14 @@
         ];
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
+
+        // Actualizar los importes calculados en la cabecera
+        const importesCalculados = document.querySelectorAll('.importe-calculado');
+        for (let i = 0; i < mejoresOfertas.length; i++) {
+            const porcentaje = mejoresOfertas[i];
+            const importeCalculado = importe * (1 - porcentaje / 100);
+            importesCalculados[i].textContent = importeCalculado.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
 
         for (let reduccion = 0; reduccion <= 35; reduccion++) {
             const tr = document.createElement('tr');
@@ -194,7 +202,17 @@
 
             const td = tr.children[i + 2];
             td.textContent = puntuacion.toFixed(2);
+
+            // Colorear la celda según la puntuación
+            const porcentajePuntuacion = (puntuacion / pmax) * 100;
+            const color = getColorForPercentage(porcentajePuntuacion);
+            td.style.backgroundColor = color;
         }
+    }
+
+    function getColorForPercentage(percentage) {
+        const hue = (percentage / 100) * 120; // De 0 (rojo) a 120 (verde)
+        return `hsl(${hue}, 100%, 50%)`;
     }
 
     // Event listeners para actualización automática
