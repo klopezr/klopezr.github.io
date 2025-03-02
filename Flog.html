@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Puntuaciones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .input-field {
+            background-color: yellow;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        .input-field-blue {
+            background-color: lightblue;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        .container {
+            max-height: 600px;
+            overflow: auto;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .fila-posibles-ofertas {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Simulador de Puntuaciones de Licitación</h1>
+
+<div class="legend">
+    <p><strong>Leyenda:</strong></p>
+    <p><span style="background-color: lightblue;">Azul</span>: Precio ofertado por otros.</p>
+    <p><span style="background-color: yellow;">Amarillo</span>: Precio que tú ofertarás.</p>
+	Fórmula: p= pm * (1 + Log (mo/O))
+	
+	Donde “P” es la puntuación a obtener, “pm” es la puntuación máxima, “O” es el importe de la oferta a valorar y “mo” es el importe de la mejor oferta (la más económica), siendo “log” el logaritmo en base 10. 
+</div>
+
+<div>
+    <label>Importe Licitación (€): </label>
+    <input type="number" id="importe" class="input-field" value="70000"><br>
+    
+    <label>Puntuación Máxima (pm): </label>
+    <input type="number" id="pmax" class="input-field" value="35">
+</div>
+
+<div class="container">
+    <table id="mainTable">
+        <thead class="fixed-header">
+            <!-- Fila adicional -->
+            <tr class="fila-posibles-ofertas">
+                <td colspan="2"></td>
+                <td colspan="7">Posibles ofertas de otros candidatos</td>
+            </tr>
+            <!-- Cabecera principal -->
+            <tr>
+                <th>Reducción<br>Propia</th>
+                <th>Importe Oferta</th>
+                <th><input type="number" class="input-field-blue" value="80">%</th>
+                <th><input type="number" class="input-field-blue" value="70">%</th>
+                <th><input type="number" class="input-field-blue" value="60">%</th>
+                <th><input type="number" class="input-field-blue" value="50">%</th>
+                <th><input type="number" class="input-field-blue" value="40">%</th>
+                <th><input type="number" class="input-field-blue" value="30">%</th>
+                <th><input type="number" class="input-field-blue" value="10">%</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Filas generadas dinámicamente -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function actualizarTabla() {
+        const importe = parseFloat(document.getElementById('importe').value);
+        const pmax = parseFloat(document.getElementById('pmax').value);
+        const mejoresOfertas = [
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(3) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(4) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(5) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(6) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(7) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(8) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(9) input').value)
+        ];
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        for (let reduccion = 0; reduccion <= 35; reduccion++) {
+            const tr = document.createElement('tr');
+
+            // Celda de reducción (editable)
+            const tdReduccion = document.createElement('td');
+            const inputReduccion = document.createElement('input');
+            inputReduccion.type = 'number';
+            inputReduccion.className = 'input-field';
+            inputReduccion.value = reduccion;
+            inputReduccion.min = 0;
+            inputReduccion.max = 100;
+            inputReduccion.addEventListener('input', () => {
+                const nuevaReduccion = parseFloat(inputReduccion.value);
+                if (!isNaN(nuevaReduccion)) {
+                    actualizarFila(tr, importe, pmax, mejoresOfertas, nuevaReduccion);
+                }
+            });
+            tdReduccion.appendChild(inputReduccion);
+            tr.appendChild(tdReduccion);
+
+            // Celda de importe
+            const tdImporte = document.createElement('td');
+            tr.appendChild(tdImporte);
+
+            // Celdas de puntuación
+            for (let i = 0; i < mejoresOfertas.length; i++) {
+                const td = document.createElement('td');
+                tr.appendChild(td);
+            }
+
+            // Actualizar la fila con los valores iniciales
+            actualizarFila(tr, importe, pmax, mejoresOfertas, reduccion);
+
+            tbody.appendChild(tr);
+        }
+    }
+
+    function actualizarFila(tr, importe, pmax, mejoresOfertas, reduccion) {
+        const importeOferta = importe * (1 - reduccion / 100);
+        const tdImporte = tr.children[1];
+        tdImporte.textContent = importeOferta.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+
+        for (let i = 0; i < mejoresOfertas.length; i++) {
+            const mejor = mejoresOfertas[i];
+            const mo = importe * (1 - mejor / 100);
+            let log = Math.log10(mo / importeOferta);
+            let puntuacion = pmax * (1 + log);
+            puntuacion = Math.min(pmax, Math.max(0, puntuacion)); // Limitar entre 0 y pmax
+
+            const td = tr.children[i + 2];
+            td.textContent = puntuacion.toFixed(2);
+        }
+    }
+
+    // Event listeners para actualización automática
+    document.getElementById('importe').addEventListener('input', actualizarTabla);
+    document.getElementById('pmax').addEventListener('input', actualizarTabla);
+    document.querySelectorAll('#mainTable thead th input').forEach(input => {
+        input.addEventListener('input', actualizarTabla);
+    });
+    
+    // Cargar tabla inicial
+    actualizarTabla();
+</script>
+
+</body>
+</html>
