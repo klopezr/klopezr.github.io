@@ -106,19 +106,19 @@
             <!-- Fila adicional -->
             <tr class="fila-posibles-ofertas">
                 <td colspan="2"></td>
-                <td colspan="7">Mejor oferta: rebaja</td>
+                <td colspan="7">Mejor oferta presentada</td>
             </tr>
             <!-- Cabecera principal -->
             <tr>
                 <th>Reducción<br>Propia</th>
                 <th>Importe Oferta</th>
-                <th><input type="number" class="input-field-blue" value="80">%</th>
-                <th><input type="number" class="input-field-blue" value="70">%</th>
-                <th><input type="number" class="input-field-blue" value="60">%</th>
-                <th><input type="number" class="input-field-blue" value="50">%</th>
-                <th><input type="number" class="input-field-blue" value="40">%</th>
-                <th><input type="number" class="input-field-blue" value="30">%</th>
-                <th><input type="number" class="input-field-blue" value="10">%</th>
+                <th><input type="number" class="input-field-blue" value="80">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="70">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="60">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="50">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="40">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="30">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="10">%<br>(<span class="importe-calculado"></span>)</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -144,6 +144,14 @@
         // Calcular los precios de las ofertas de otros licitadores
         const preciosOfertasOtros = porcentajesOfertasOtros.map(porcentaje => precioBase * (1 - porcentaje / 100));
 
+        // Actualizar los importes calculados en la cabecera
+        const importesCalculados = document.querySelectorAll('.importe-calculado');
+        for (let i = 0; i < porcentajesOfertasOtros.length; i++) {
+            const porcentaje = porcentajesOfertasOtros[i];
+            const importeCalculado = precioBase * (1 - porcentaje / 100);
+            importesCalculados[i].textContent = importeCalculado.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
+
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
 
@@ -161,7 +169,35 @@
             inputReduccionPropia.addEventListener('input', () => {
                 const nuevaReduccion = parseFloat(inputReduccionPropia.value);
                 if (!isNaN(nuevaReduccion)) {
-                    actualizarFila(tr, precioBase, pmax, preciosOfertasOtros, nuevaReduccion);
+                    // Actualizar el importe de la oferta propia
+                    const importePropio = precioBase * (1 - nuevaReduccion / 100);
+                    tr.children[1].textContent = importePropio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+
+                    // Recalcular todas las celdas de puntuación en esta fila
+                    for (let i = 0; i < preciosOfertasOtros.length; i++) {
+                        const precioOfertaOtro = preciosOfertasOtros[i];
+
+                        // Calcular el precio medio (PMED) entre tu oferta y la oferta del otro licitador
+                        const pmed = (importePropio + precioOfertaOtro) / 2;
+
+                        // Calcular los coeficientes (COEi) para tu oferta y la oferta del otro licitador
+                        const coeiPropio = pmed / importePropio;
+                        const coeiOfertaOtro = pmed / precioOfertaOtro;
+
+                        // Calcular el coeficiente máximo (COEmax)
+                        const coemax = Math.max(coeiPropio, coeiOfertaOtro);
+
+                        // Calcular la puntuación económica (PE) para tu oferta
+                        const pePropio = (coeiPropio / coemax) * pmax;
+
+                        const td = tr.children[i + 2];
+                        td.textContent = pePropio.toFixed(2);
+
+                        // Aplicar escala de colores
+                        const porcentajePuntuacion = (pePropio / pmax) * 100;
+                        const color = getColorForPercentage(porcentajePuntuacion);
+                        td.style.backgroundColor = color;
+                    }
                 }
             });
             tdReduccionPropia.appendChild(inputReduccionPropia);
@@ -192,11 +228,22 @@
 
                 const td = document.createElement('td');
                 td.textContent = pePropio.toFixed(2);
+
+                // Aplicar escala de colores
+                const porcentajePuntuacion = (pePropio / pmax) * 100;
+                const color = getColorForPercentage(porcentajePuntuacion);
+                td.style.backgroundColor = color;
+
                 tr.appendChild(td);
             }
 
             tbody.appendChild(tr);
         }
+    }
+
+    function getColorForPercentage(percentage) {
+        const hue = (percentage / 100) * 120; // De 0 (rojo) a 120 (verde)
+        return `hsl(${hue}, 100%, 50%)`;
     }
 
     // Event listeners para actualización automática
