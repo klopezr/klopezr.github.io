@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Puntuaciones Económicas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .input-field {
+            background-color: yellow;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        .input-field-blue {
+            background-color: lightblue;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        .container {
+            max-height: 600px;
+            overflow: auto;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .fila-posibles-ofertas {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .formula {
+            font-family: monospace;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        @media (max-width: 600px) {
+            .input-field, .input-field-blue {
+                width: 60px;
+            }
+            th, td {
+                padding: 5px;
+                font-size: 0.9em;
+            }
+            .formula {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Simulador de Puntuaciones Económicas</h1>
+
+<div class="legend">
+    <p><strong>Leyenda:</strong></p>
+    <p><span style="background-color: lightblue;">Azul</span>: Precio ofertado por otros.</p>
+    <p><span style="background-color: yellow;">Amarillo</span>: Precio que tú ofertarás.</p>
+    <p class="formula"><strong>Fórmula:</strong> PE = (COEi / COEmax) × Ponderación</p>
+    <p><strong>Explicación de la fórmula:</strong></p>
+    <ul>
+        <li><strong>PE</strong>: Puntuación económica.</li>
+        <li><strong>COEi</strong>: Coeficiente de la oferta (COEi = PMED / P).</li>
+        <li><strong>COEmax</strong>: Coeficiente máximo de todas las ofertas.</li>
+        <li><strong>PMED</strong>: Precio medio de las ofertas.</li>
+        <li><strong>P</strong>: Precio de la oferta que se valora.</li>
+    </ul>
+</div>
+
+<div>
+    <label>Precio Base de Licitación (€): </label>
+    <input type="number" id="precioBase" class="input-field" value="70000"><br>
+    
+    <label>Puntuación Máxima (PE): </label>
+    <input type="number" id="pmax" class="input-field" value="35">
+</div>
+
+<div class="container">
+    <table id="mainTable">
+        <thead class="fixed-header">
+            <!-- Fila adicional -->
+            <tr class="fila-posibles-ofertas">
+                <td colspan="2"></td>
+                <td colspan="7">Posibles ofertas de otros candidatos</td>
+            </tr>
+            <!-- Cabecera principal -->
+            <tr>
+                <th>Reducción<br>Propia</th>
+                <th>Importe Oferta</th>
+                <th><input type="number" class="input-field-blue" value="80">%</th>
+                <th><input type="number" class="input-field-blue" value="70">%</th>
+                <th><input type="number" class="input-field-blue" value="60">%</th>
+                <th><input type="number" class="input-field-blue" value="50">%</th>
+                <th><input type="number" class="input-field-blue" value="40">%</th>
+                <th><input type="number" class="input-field-blue" value="30">%</th>
+                <th><input type="number" class="input-field-blue" value="10">%</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Filas generadas dinámicamente -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function actualizarTabla() {
+        const precioBase = parseFloat(document.getElementById('precioBase').value);
+        const pmax = parseFloat(document.getElementById('pmax').value);
+        const porcentajesOfertasOtros = [
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(3) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(4) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(5) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(6) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(7) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(8) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(9) input').value)
+        ];
+
+        // Calcular los precios de las ofertas de otros licitadores
+        const preciosOfertasOtros = porcentajesOfertasOtros.map(porcentaje => precioBase * (1 - porcentaje / 100));
+
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        for (let reduccionPropia = 0; reduccionPropia <= 35; reduccionPropia++) {
+            const tr = document.createElement('tr');
+
+            // Celda de reducción propia (editable)
+            const tdReduccionPropia = document.createElement('td');
+            const inputReduccionPropia = document.createElement('input');
+            inputReduccionPropia.type = 'number';
+            inputReduccionPropia.className = 'input-field';
+            inputReduccionPropia.value = reduccionPropia;
+            inputReduccionPropia.min = 0;
+            inputReduccionPropia.max = 100;
+            inputReduccionPropia.addEventListener('input', () => {
+                const nuevaReduccion = parseFloat(inputReduccionPropia.value);
+                if (!isNaN(nuevaReduccion)) {
+                    actualizarFila(tr, precioBase, pmax, preciosOfertasOtros, nuevaReduccion);
+                }
+            });
+            tdReduccionPropia.appendChild(inputReduccionPropia);
+            tr.appendChild(tdReduccionPropia);
+
+            // Celda de importe de tu oferta
+            const tdImportePropio = document.createElement('td');
+            const importePropio = precioBase * (1 - reduccionPropia / 100);
+            tdImportePropio.textContent = importePropio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+            tr.appendChild(tdImportePropio);
+
+            // Celdas de puntuación (PE) para cada oferta de otros licitadores
+            for (let i = 0; i < preciosOfertasOtros.length; i++) {
+                const precioOfertaOtro = preciosOfertasOtros[i];
+
+                // Calcular el precio medio (PMED) entre tu oferta y la oferta del otro licitador
+                const pmed = (importePropio + precioOfertaOtro) / 2;
+
+                // Calcular los coeficientes (COEi) para tu oferta y la oferta del otro licitador
+                const coeiPropio = pmed / importePropio;
+                const coeiOfertaOtro = pmed / precioOfertaOtro;
+
+                // Calcular el coeficiente máximo (COEmax)
+                const coemax = Math.max(coeiPropio, coeiOfertaOtro);
+
+                // Calcular la puntuación económica (PE) para tu oferta
+                const pePropio = (coeiPropio / coemax) * pmax;
+
+                const td = document.createElement('td');
+                td.textContent = pePropio.toFixed(2);
+                tr.appendChild(td);
+            }
+
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Event listeners para actualización automática
+    document.getElementById('precioBase').addEventListener('input', actualizarTabla);
+    document.getElementById('pmax').addEventListener('input', actualizarTabla);
+    document.querySelectorAll('#mainTable thead th input').forEach(input => {
+        input.addEventListener('input', actualizarTabla);
+    });
+    
+    // Cargar tabla inicial
+    actualizarTabla();
+</script>
+
+</body>
+</html>
