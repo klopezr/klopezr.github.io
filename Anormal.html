@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cálculo baja temeraria</title>
-    <style>
+	    <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
@@ -14,6 +14,15 @@
         h1 {
             color: #2c3e50;
             text-align: center;
+            margin-bottom: 10px;
+        }
+        h1 a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        h1 a:hover {
+            text-decoration: underline;
         }
         table {
             width: 100%;
@@ -69,7 +78,7 @@
             background-color: #e6f7ff;
         }
         .base-licitacion {
-            width: 100px; /* Ancho reducido para pantallas grandes */
+            width: 100px;
         }
         .oferta-mas-baja {
             margin-top: 20px;
@@ -100,27 +109,56 @@
         }
         .form-group input {
             flex: 1;
-            max-width: 200px; /* Limita el ancho de los campos de entrada */
+            max-width: 200px;
         }
-        @media (max-width: 600px) {
-            .form-group {
-                flex-direction: column;
-            }
-            .form-group input {
-                max-width: 100%; /* En móviles, los campos ocupan el 100% del ancho */
-            }
-            .base-licitacion {
-                width: 100%; /* En móviles, la base de licitación ocupa el 100% del ancho */
-            }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        @media screen and (max-width: 600px) {
+            button {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+        }
+
+        .form-group {
+            flex-direction: column;
+            gap: 5px;
+		}
+    
+		.form-group input {
+			width: 100%;
+			max-width: none;
+		}
+
+		table {
+			font-size: 14px;
+		}
+
+		th, td {
+			padding: 8px;
+			}
+		}
+		.description {
+            font-size: 18px; 
+            color: #555;
+            margin-top: 10px; 
+			text-align: center
         }
     </style>
 </head>
 <body>
 
-<h1>Cálculo baja temeraria</h1>
+<h1>Cálculo de la baja anormal</h1>
+
+        <p class="description">
+            Según el <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2001-19995" target="_blank">artículo 85</a> del Real Decreto 1098/2001, de 12 de octubre, por el que se aprueba el Reglamento general de la Ley de Contratos de las Administraciones Públicas
+        </p>
 
 <label for="baseLicitacion">Base de Licitación (€):</label>
-<input type="number" id="baseLicitacion" placeholder="Base" class="base-licitacion editable">
+<input type="number" id="baseLicitacion" placeholder="Base" style="width: 150px;">
 
 <br><br>
 
@@ -132,11 +170,12 @@
 
 <button onclick="limpiarTabla()">Limpiar Tabla</button>
 
+<div class="table-container">
 <table id="tablaLicitadores">
     <thead>
         <tr>
-            <th>Nombre del Licitador</th>
-            <th>Precio Licitado (€)</th>
+            <th>Licitador</th>
+            <th>Precio</th>
             <th>Baja Temeraria</th>
             <th>Explicación</th>
         </tr>
@@ -144,6 +183,7 @@
     <tbody>
     </tbody>
 </table>
+</div>
 
 <div class="oferta-mas-baja" id="ofertaMasBaja">
     Oferta más baja: <span id="valorOfertaMasBaja">-</span> | 
@@ -238,14 +278,79 @@
                 explicaciones.push('No es baja temeraria.');
                 explicaciones.push('No es baja temeraria.');
             }
-        } else if (numLicitadores >= 3) {
-            // Caso 3 y 4: Tres o más licitadores
-            const media = calcularMedia(precios);
+        } else if (numLicitadores === 3) {
+            // Caso 3: Tres licitadores
+            let media = calcularMedia(precios);
+            let ofertaExcluida = false;
+
+            // Verificar si la oferta más alta es superior en más de un 10% a la media
+            const ofertaMasAlta = Math.max(...precios);
+            if ((ofertaMasAlta - media) / media > 0.10) {
+                // Excluir la oferta más alta y recalcular la media
+                const preciosFiltrados = precios.filter(p => p !== ofertaMasAlta);
+                media = calcularMedia(preciosFiltrados);
+                ofertaExcluida = true;
+            }
+
             for (let i = 0; i < precios.length; i++) {
-                const diferencia = (media - precios[i]) / media;
-                const esTemeraria = diferencia > 0.10;
+                const precio = precios[i];
+                const diferencia = (media - precio) / media;
+                const esTemeraria = diferencia > 0.10 || precio < (baseLicitacion * 0.75); // 10% menos que la media o 25% menos que la base
                 bajasTemerarias.push(esTemeraria);
-                explicaciones.push(esTemeraria ? `La oferta es un 10% menor que la media de las ofertas (${media.toFixed(2)} €). Según el artículo ${numLicitadores === 3 ? '85.3' : '85.4'}. <span class="mostrar-mas" onclick="mostrarOcultarParrafo(this)">[Mostrar más]</span><div class="parrafo-oculto">${numLicitadores === 3 ? 'Cuando concurran tres licitadores, las que sean inferiores en más de 10 unidades porcentuales a la media aritmética de las ofertas presentadas. No obstante, se excluirá para el cómputo de dicha media la oferta de cuantía más elevada cuando sea superior en más de 10 unidades porcentuales a dicha media. En cualquier caso, se considerará desproporcionada la baja superior a 25 unidades porcentuales.' : 'Cuando concurran cuatro o más licitadores, las que sean inferiores en más de 10 unidades porcentuales a la media aritmética de las ofertas presentadas. No obstante, si entre ellas existen ofertas que sean superiores a dicha media en más de 10 unidades porcentuales, se procederá al cálculo de una nueva media sólo con las ofertas que no se encuentren en el supuesto indicado. En todo caso, si el número de las restantes ofertas es inferior a tres, la nueva media se calculará sobre las tres ofertas de menor cuantía.'}</div>` : 'No es baja temeraria.');
+
+                let explicacion = '';
+                if (precio < (baseLicitacion * 0.75)) {
+                    explicacion += `La oferta es un 25% menor que la base de licitación (${baseLicitacion} €). `;
+                }
+                if (diferencia > 0.10) {
+                    explicacion += `La oferta es un 10% menor que la media de las ofertas (${media.toFixed(2)} €). `;
+                }
+                if (ofertaExcluida && precios[i] === ofertaMasAlta) {
+                    explicacion += `La oferta más alta fue excluida del cálculo de la media por ser superior en más de un 10% a la media inicial. `;
+                }
+                explicacion += `Según el artículo 85.3. <span class="mostrar-mas" onclick="mostrarOcultarParrafo(this)">[Mostrar más]</span><div class="parrafo-oculto">Cuando concurran tres licitadores, las que sean inferiores en más de 10 unidades porcentuales a la media aritmética de las ofertas presentadas. No obstante, se excluirá para el cómputo de dicha media la oferta de cuantía más elevada cuando sea superior en más de 10 unidades porcentuales a dicha media. En cualquier caso, se considerará desproporcionada la baja superior a 25 unidades porcentuales.</div>`;
+                explicaciones.push(esTemeraria ? explicacion : 'No es baja temeraria.');
+            }
+        } else if (numLicitadores >= 4) {
+            // Caso 4: Cuatro o más licitadores
+            let media = calcularMedia(precios);
+            let ofertasExcluidas = [];
+
+            // Identificar ofertas que superan en más de un 10% la media
+            for (let i = 0; i < precios.length; i++) {
+                if ((precios[i] - media) / media > 0.10) {
+                    ofertasExcluidas.push(precios[i]);
+                }
+            }
+
+            // Si hay ofertas excluidas, recalcular la media con las ofertas restantes
+            if (ofertasExcluidas.length > 0) {
+                const preciosFiltrados = precios.filter(p => !ofertasExcluidas.includes(p));
+                if (preciosFiltrados.length >= 3) {
+                    media = calcularMedia(preciosFiltrados);
+                } else {
+                    // Si hay menos de 3 ofertas restantes, calcular la media sobre las 3 ofertas más bajas
+                    const preciosOrdenados = [...precios].sort((a, b) => a - b);
+                    const tresOfertasMasBajas = preciosOrdenados.slice(0, 3);
+                    media = calcularMedia(tresOfertasMasBajas);
+                }
+            }
+
+            for (let i = 0; i < precios.length; i++) {
+                const precio = precios[i];
+                const diferencia = (media - precio) / media;
+                const esTemeraria = diferencia > 0.10; // 10% menos que la media
+                bajasTemerarias.push(esTemeraria);
+
+                let explicacion = '';
+                if (diferencia > 0.10) {
+                    explicacion += `La oferta es un 10% menor que la media de las ofertas (${media.toFixed(2)} €). `;
+                }
+                if (ofertasExcluidas.includes(precio)) {
+                    explicacion += `La oferta fue excluida del cálculo de la media por ser superior en más de un 10% a la media inicial. `;
+                }
+                explicacion += `Según el artículo 85.4. <span class="mostrar-mas" onclick="mostrarOcultarParrafo(this)">[Mostrar más]</span><div class="parrafo-oculto">Cuando concurran cuatro o más licitadores, las que sean inferiores en más de 10 unidades porcentuales a la media aritmética de las ofertas presentadas. No obstante, si entre ellas existen ofertas que sean superiores a dicha media en más de 10 unidades porcentuales, se procederá al cálculo de una nueva media sólo con las ofertas que no se encuentren en el supuesto indicado. En todo caso, si el número de las restantes ofertas es inferior a tres, la nueva media se calculará sobre las tres ofertas de menor cuantía.</div>`;
+                explicaciones.push(esTemeraria ? explicacion : 'No es baja temeraria.');
             }
         }
 
