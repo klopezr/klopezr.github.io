@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Puntuaciones de Licitación</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .input-field {
+            background-color: yellow;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        .input-field-blue {
+            background-color: lightblue;
+            width: 80px;
+            margin: 2px;
+            text-align: center;
+        }
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .fixed-header {
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+        .container {
+            max-height: 600px;
+            overflow: auto;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .fila-posibles-ofertas {
+            background-color: #e0e0e0;
+            font-weight: bold;
+        }
+        .formula {
+            font-family: monospace;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        @media (max-width: 600px) {
+            .input-field, .input-field-blue {
+                width: 60px;
+            }
+            th, td {
+                padding: 5px;
+                font-size: 0.9em;
+            }
+            .formula {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Simulador de Puntuaciones de Licitación</h1>
+
+<div class="legend">
+    <p><strong>Leyenda:</strong></p>
+    <p><span style="background-color: lightblue;">Azul</span>: Precio ofertado por otros.</p>
+    <p class="formula"><strong>Fórmula:</strong> POE = Pmax × (1 - (OF / PBL)<sup>n</sup>)</p>
+    <p><strong>Explicación de la fórmula:</strong></p>
+    <ul>
+        <li><strong>POE</strong>: Puntuación de la oferta.</li>
+        <li><strong>Pmax</strong>: Puntuación máxima.</li>
+        <li><strong>OF</strong>: Importe de la oferta a valorar.</li>
+        <li><strong>PBL</strong>: Precio base de la licitación.</li>
+        <li><strong>n</strong>: Exponente (editable).</li>
+    </ul>
+</div>
+
+<div>
+    <label>Precio Base de Licitación (PBL) (€): </label>
+    <input type="number" id="pbl" class="input-field" value="60000"><br>
+    
+    <label>Puntuación Máxima (Pmax): </label>
+    <input type="number" id="pmax" class="input-field" value="100"><br>
+    
+    <label>Exponente (n): </label>
+    <input type="number" id="exponente" class="input-field" value="20">
+</div>
+
+<div class="container">
+    <table id="mainTable">
+        <thead class="fixed-header">
+            <!-- Fila adicional -->
+            <tr class="fila-posibles-ofertas">
+                <td colspan="5">Ofertas de otros</td>
+            </tr>
+            <!-- Cabecera principal -->
+            <tr>
+                <th><input type="number" class="input-field-blue" value="0">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="30">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="50">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="70">%<br>(<span class="importe-calculado"></span>)</th>
+                <th><input type="number" class="input-field-blue" value="80">%<br>(<span class="importe-calculado"></span>)</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Filas generadas dinámicamente -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function actualizarTabla() {
+        const pbl = parseFloat(document.getElementById('pbl').value);
+        const pmax = parseFloat(document.getElementById('pmax').value);
+        const exponente = parseFloat(document.getElementById('exponente').value);
+        const ofertasOtros = [
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(1) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(2) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(3) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(4) input').value),
+            parseFloat(document.querySelector('#mainTable thead th:nth-child(5) input').value)
+        ];
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        // Actualizar los importes calculados en la cabecera
+        const importesCalculados = document.querySelectorAll('.importe-calculado');
+        for (let i = 0; i < ofertasOtros.length; i++) {
+            const porcentaje = ofertasOtros[i];
+            const importeCalculado = pbl * (1 - porcentaje / 100);
+            importesCalculados[i].textContent = importeCalculado.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
+
+        // Crear una sola fila para mostrar las puntuaciones
+        const tr = document.createElement('tr');
+
+        // Celdas de puntuación
+        for (let i = 0; i < ofertasOtros.length; i++) {
+            const porcentaje = ofertasOtros[i];
+            const of = pbl * (1 - porcentaje / 100);
+            const poe = pmax * (1 - Math.pow(of / pbl, exponente));
+            const puntuacion = Math.min(pmax, Math.max(0, poe)); // Limitar entre 0 y pmax
+
+            const td = document.createElement('td');
+            td.textContent = puntuacion.toFixed(2);
+
+            // Colorear la celda según la puntuación
+            const porcentajePuntuacion = (puntuacion / pmax) * 100;
+            const color = getColorForPercentage(porcentajePuntuacion);
+            td.style.backgroundColor = color;
+
+            tr.appendChild(td);
+        }
+
+        tbody.appendChild(tr);
+    }
+
+    function getColorForPercentage(percentage) {
+        const hue = (percentage / 100) * 120; // De 0 (rojo) a 120 (verde)
+        return `hsl(${hue}, 100%, 50%)`;
+    }
+
+    // Event listeners para actualización automática
+    document.getElementById('pbl').addEventListener('input', actualizarTabla);
+    document.getElementById('pmax').addEventListener('input', actualizarTabla);
+    document.getElementById('exponente').addEventListener('input', actualizarTabla);
+    document.querySelectorAll('#mainTable thead th input').forEach(input => {
+        input.addEventListener('input', actualizarTabla);
+    });
+    
+    // Cargar tabla inicial
+    actualizarTabla();
+</script>
+
+</body>
+</html>
