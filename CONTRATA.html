@@ -893,6 +893,10 @@
         function checkNewFeed() {
             fetchAndDisplayLicitaciones(allEntries);
         }
+		function convertToNumber(value) {
+			const numericValue = value.replace(/\./g, '').replace(',', '.');
+			return parseFloat(numericValue) || 0;
+		}
         function exportToCSV() {
             const cpvFilter = document.getElementById("cpvFilter").value.toLowerCase();
             const importeFilterValue = document.getElementById("importeFilter").value;
