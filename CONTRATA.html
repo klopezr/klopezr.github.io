@@ -9,7 +9,6 @@
     <title>Monitor de Licitaciones</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Estilos CSS anteriores */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -99,20 +98,20 @@
             display: flex;
             align-items: center;
             gap: 10px;
-			margin-bottom: 10px; /* Margen inferior */
+            margin-bottom: 10px;
         }
-		.input-label {
-			font-size: 12px; /* Tamaño de fuente más pequeño */
-			color: #333; /* Color de texto */
-			white-space: nowrap; /* Evitar que el texto se divida en varias líneas */
-		}
+        .input-label {
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+        }
         #maxFeedsInput {
             width: 60px;
             padding: 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
-			box-sizing: border-box;
+            box-sizing: border-box;
         }
         .progress-indicator {
             font-weight: bold;
@@ -191,15 +190,15 @@
                 margin: 0 auto;
             }
             .download-box {
-                width: 90%; /* Ajustar el ancho de la tarjeta de descarga */
-                margin: 0 auto 20px auto; /* Centrar la tarjeta y añadir margen inferior */
+                width: 90%;
+                margin: 0 auto 20px auto;
             }
             #atomContainer {
-                width: 95%; /* Ajustar el ancho del contenedor de Atom */
-                margin: 0 auto 20px auto; /* Centrar el contenedor y añadir margen inferior */
+                width: 95%;
+                margin: 0 auto 20px auto;
             }
             .atom-list-box {
-                width: 100%; /* Asegurar que el contenedor de la lista ocupe todo el ancho disponible */
+                width: 100%;
             }
         }
         .filters.visible, .load-more-container.visible {
@@ -244,8 +243,8 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             font-size: 14px;
-            position: relative; /* Para posicionar el distintivo */
-            overflow: hidden; /* Para que el distintivo no se salga de la tarjeta */
+            position: relative;
+            overflow: hidden;
         }
         .card-header {
             display: flex;
@@ -320,10 +319,10 @@
             margin-right: 5px;
         }
         .fa-phone, .fa-envelope, .fa-map-marker-alt {
-            color: #6c8cff; 
+            color: #6c8cff;
         }
         .card-details .fa-map-marker-alt {
-            color: #6c8cff; 
+            color: #6c8cff;
         }
         .ver-licitacion-button {
             background-color: #28a745;
@@ -399,155 +398,132 @@
             font-size: 16px;
         }
         .estado-anuncio {
-            background-color: #fff3cd; 
+            background-color: #fff3cd;
             padding: 1px 4px;
-            border-radius: 6px; 
+            border-radius: 6px;
             display: inline-block;
         }
         .estado-en-plazo {
-            background-color: #d4edda; 
+            background-color: #d4edda;
             padding: 1px 4px;
-            border-radius: 6px; 
+            border-radius: 6px;
             display: inline-block;
         }
         .estado-otros {
-            background-color: #f8d7da; 
+            background-color: #f8d7da;
             padding: 1px 4px;
-            border-radius: 6px; 
+            border-radius: 6px;
             display: inline-block;
         }
-		    /* Ajustar el distintivo "ext" */
-    .card.ext::after {
-        content: "Ext";
-        position: absolute;
-        bottom: 5px; 
-        right: -20px;
-        background-color: #007bff;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        padding: 5px 30px;
-        transform: rotate(-45deg);
-        opacity: 0.7;
-        z-index: 1;
-    }
-
-/* Estilos para móviles */
-@media (max-width: 600px) {
-    .atom-controls {
-        display: none; /* Ocultar por defecto en móviles */
-    }
-
-    .mobile-toggle-button {
-        display: block; /* Mostrar el botón en móviles */
-        width: 95%;
-        margin: 0 auto 10px auto;
-        padding: 10px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-align: left;
-    }
-
-    .mobile-toggle-button i {
-        margin-right: 5px;
-    }
-
-    .atom-controls.visible {
-        display: block; /* Mostrar al hacer clic en el botón */
-    }
-}
-
-.atom-switches h4 {
-    margin: 0; /* Elimina el margen superior e inferior */
-    padding: 0; /* Elimina el padding */
-    font-size: 14px; /* Tamaño de fuente más pequeño */
-    color: #333; /* Color de texto */
-    font-weight: bold; /* Texto en negrita */
-}
-
-/* Estilos generales */
-.atom-switches {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 15px;
-}
-
-.switch {
-    position: relative;
-    display: flex;
-    align-items: center; /* Alinear slider y texto verticalmente */
-    gap: 8px; /* Espacio entre slider y texto */
-    height: 14px; /* Altura fija para alinear */
-	margin: 0; /* Elimina el margen */
-    padding: 0; /* Elimina el padding */
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: relative;
-    cursor: pointer;
-    width: 36px; /* Más pequeño */
-    height: 18px; /* Más pequeño */
-    background-color: #ccc; /* Gris cuando está desactivado */
-    transition: 0.4s;
-    border-radius: 18px; /* Más redondeado */
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 14px; /* Más pequeño */
-    width: 14px; /* Más pequeño */
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: 0.4s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: #28a745; /* Verde cuando está activado */
-}
-
-input:checked + .slider:before {
-    transform: translateX(18px); /* Ajustado para el tamaño más pequeño */
-}
-
-.switch-text {
-    font-size: 12px; /* Texto más pequeño */
-    color: #333;
-    white-space: nowrap; /* Evita que el texto se divida en varias líneas */
-}
-     </style>
+        .card.ext::after {
+            content: "Ext";
+            position: absolute;
+            bottom: 5px;
+            right: -20px;
+            background-color: #007bff;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px 30px;
+            transform: rotate(-45deg);
+            opacity: 0.7;
+            z-index: 1;
+        }
+        @media (max-width: 600px) {
+            .atom-controls {
+                display: none;
+            }
+            .mobile-toggle-button {
+                display: block;
+                width: 95%;
+                margin: 0 auto 10px auto;
+                padding: 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-align: left;
+            }
+            .mobile-toggle-button i {
+                margin-right: 5px;
+            }
+            .atom-controls.visible {
+                display: block;
+            }
+        }
+        .atom-switches h4 {
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+        .atom-switches {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .switch {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 14px;
+            margin: 0;
+            padding: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: relative;
+            cursor: pointer;
+            width: 36px;
+            height: 18px;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 18px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #28a745;
+        }
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+        .switch-text {
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+        }
+    </style>
 </head>
 <body>
-    <!-- Título y descripción (siempre arriba) -->
     <div class="header">
         <h3>Anuncios Licitaciones</h3>
         <div class="info-box">
             Prueba de concepto para comprobar las últimas publicaciones en la Plataforma de Contratación del Estado
         </div>
     </div>
-
-    <!-- Contenedor principal para filtros y tarjetas -->
     <div class="container">
-        <!-- Columna de filtros (izquierda en pantallas grandes) -->
         <div class="left-column">
-            <!-- Botón para mostrar/ocultar filtros en móvil -->
             <button id="toggleFiltersButton" class="mobile-toggle-button">
                 <i class="fas fa-filter"></i> Introducir Filtros
             </button>
-
-            <!-- Contenedor de filtros (oculto por defecto en móvil) -->
             <div id="filtersContainer" class="filters">
                 <h2>Filtros</h2>
                 <input type="text" id="cpvFilter" placeholder="Código CPV">
@@ -591,56 +567,46 @@ input:checked + .slider:before {
                 </select>
                 <button onclick="checkNewFeed()">Aplicar Filtros</button>
             </div>
-
-<!-- Botón para mostrar/ocultar carga de Atom en móvil -->
-<button id="toggleAtomButton" class="mobile-toggle-button">
-    <i class="fas fa-history"></i> Historial Atoms
-</button>
-
-            <!-- Botón para mostrar/ocultar carga de Atom en móvil -->
-<div id="atomContainer" class="load-more-container">
-    <!-- Contenedor de controles (switches, input, etc.) -->
-    <div id="atomControls" class="atom-controls">
-        <div class="atom-switches">
-            <h4>Seleccionar base de datos</h4>
-            <label class="switch">
-                <input type="checkbox" id="switchNormal" checked>
-                <span class="slider"></span>
-                <span class="switch-text">PLACE</span>
-            </label>
-            <label class="switch">
-                <input type="checkbox" id="switchMenor" checked>
-                <span class="slider"></span>
-                <span class="switch-text">Contratos menores</span>
-            </label>
-            <label class="switch">
-                <input type="checkbox" id="switchOtras" checked>
-                <span class="slider"></span>
-                <span class="switch-text">Plataformas Externas</span>
-            </label>
-        </div>
-        <div class="input-loading-wrapper">
-            <span class="input-label">Cargar Atoms Nº:</span>
-            <input type="number" id="maxFeedsInput" placeholder="1" min="1" value="1">
-            <div id="progress" class="progress-indicator"></div>
-        </div>
-        <button id="loadMoreButton" onclick="loadSelectedFeeds()">Cargar más historial</button>
-        <div class="atom-list-box">
-            <h4>Atom Cargados</h4>
-            <div id="atomList" class="atom-list">
-                <!-- Aquí se añadirán dinámicamente los Atom cargados -->
+            <button id="toggleAtomButton" class="mobile-toggle-button">
+                <i class="fas fa-history"></i> Historial Atoms
+            </button>
+            <div id="atomContainer" class="load-more-container">
+                <div id="atomControls" class="atom-controls">
+                    <div class="atom-switches">
+                        <h4>Seleccionar base de datos</h4>
+                        <label class="switch">
+                            <input type="checkbox" id="switchNormal" checked>
+                            <span class="slider"></span>
+                            <span class="switch-text">PLACE</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="switchMenor" checked>
+                            <span class="slider"></span>
+                            <span class="switch-text">Contratos menores</span>
+                        </label>
+                        <label class="switch">
+                            <input type="checkbox" id="switchOtras" checked>
+                            <span class="slider"></span>
+                            <span class="switch-text">Plataformas Externas</span>
+                        </label>
+                    </div>
+                    <div class="input-loading-wrapper">
+                        <span class="input-label">Cargar Atoms Nº:</span>
+                        <input type="number" id="maxFeedsInput" placeholder="1" min="1" value="1">
+                        <div id="progress" class="progress-indicator"></div>
+                    </div>
+                    <button id="loadMoreButton" onclick="loadSelectedFeeds()">Cargar más historial</button>
+                    <div class="atom-list-box">
+                        <h4>Atom Cargados</h4>
+                        <div id="atomList" class="atom-list"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
-
             <div class="description">
-                La información se recoge de <a href="https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom" target="_blank" rel="noopener noreferrer">Códice</a> en formato XML y se parametriza según el <a href="https://contrataciondelsectorpublico.gob.es/datosabiertos/especificacion-sindicacion.pdf" target="_blank" rel="noopener noreferrer">Manual</a>. 
+                La información se recoge de <a href="https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom" target="_blank" rel="noopener noreferrer">Códice</a> en formato XML y se parametriza según el <a href="https://contrataciondelsectorpublico.gob.es/datosabiertos/especificacion-sindicacion.pdf" target="_blank" rel="noopener noreferrer">Manual</a>.
                 <button onclick="window.location.href='https://klopezr.github.io/OTRAS'" class="other-platforms-button">Historial plataformas Autonómicas</button>
                 <button onclick="window.location.href='https://klopezr.github.io/MENOR'" class="other-platforms-button">Historial Contratos Menores</button>
             </div>
-
-            <!-- Tarjeta para descargar Excel -->
             <div class="download-box">
                 <h4>Exportar Datos</h4>
                 <p>Crea un archivo Excel con los datos de las licitaciones.</p>
@@ -649,8 +615,6 @@ input:checked + .slider:before {
                 </button>
             </div>
         </div>
-
-        <!-- Columna de tarjetas (derecha en pantallas grandes) -->
         <div class="right-column">
             <div class="cards">
                 <p id="status" style="display: none;">🔍 Cargando datos...</p>
@@ -659,288 +623,242 @@ input:checked + .slider:before {
             </div>
         </div>
     </div>
-<script>
-    const initialFeedUrlNormal = "https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom";
-    const initialFeedUrlMenor = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1143/contratosMenoresPerfilesContratantes.atom";
-    const initialFeedUrlOtras = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1044/PlataformasAgregadasSinMenores.atom";
-    const proxyUrl = "https://corsmirror.com/v1?url=";
-	
-	// Obtener los switches
-const switchNormal = document.getElementById("switchNormal");
-const switchMenor = document.getElementById("switchMenor");
-const switchOtras = document.getElementById("switchOtras");
-
-// Vincular el evento `change` a cada switch
-switchNormal.addEventListener("change", updateData);
-switchMenor.addEventListener("change", updateData);
-switchOtras.addEventListener("change", updateData);
-
-    let allEntries = [];
-    let isProcessing = false;
-    let loadedAtoms = [];
-
-    const estadoMapping = {
-        "PRE": "Anuncio Previo",
-        "PUB": "EN PLAZO",
-        "EV": "PENDIENTE DE ADJUDICACION",
-        "ADJ": "Adjudicada",
-        "RES": "Resuelta",
-        "ANUL": "Anulada"
-    };
-
-    const procedureCodeMapping = {
-        "1": "Abierto",
-        "2": "Restringido",
-        "3": "Negociado con Publicidad",
-        "4": "Negociado sin Publicidad",
-        "5": "Diálogo Competitivo",
-        "6": "Contrato Menor",
-        "7": "Asociación para la Innovación",
-        "8": "Subasta Electrónica",
-        "9": "Concurso de Proyectos"
-    };
-
-    const tipoMapping = {
-        "1": "Suministros",
-        "2": "Servicios",
-        "3": "Obras",
-        "21": "Gestión de Servicios Públicos",
-        "31": "Concesión de Obras Públicas",
-        "40": "Colaboración entre el sector público y sector privado",
-        "7": "Administrativo especial",
-        "8": "Privado",
-        "50": "Patrimonial",
-        "999": "Otros"
-    };
-
-    document.getElementById("toggleFiltersButton").addEventListener("click", () => {
-        const filtersContainer = document.getElementById("filtersContainer");
-        filtersContainer.classList.toggle("visible");
-    });
-
-    document.getElementById("toggleAtomButton").addEventListener("click", () => {
-        const atomContainer = document.getElementById("atomContainer");
-        atomContainer.classList.toggle("visible");
-    });
-
-// Función para actualizar los datos al cambiar un switch
-async function updateData() {
-    try {
-        console.log("Actualizando datos..."); // Depuración
-
-        // Limpiar las entradas y los Atom cargados
-        allEntries = [];
-        loadedAtoms = [];
-
-        // Obtener el número máximo de feeds a cargar
-        const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
-
-        // Cargar los feeds seleccionados
-        if (switchNormal.checked) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
-        if (switchMenor.checked) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
-        if (switchOtras.checked) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
-
-        // Mostrar las licitaciones actualizadas
-        fetchAndDisplayLicitaciones(allEntries);
-    } catch (error) {
-        console.error("Error en updateData:", error);
-        document.getElementById("error").innerText = `❌ Error al actualizar los datos: ${error.message}`;
-    }
-}
-
-    function formatDate(dateString) {
-        if (!dateString || dateString === "N/A") return "N/A";
-        const date = new Date(dateString);
-        if (isNaN(date)) return "N/A";
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        return `${day}/${month}/${year} // ${hours}:${minutes}:${seconds}`;
-    }
-
-    function formatShortDate(dateString) {
-        if (!dateString || dateString === "N/A") return "N/A";
-        const date = new Date(dateString);
-        if (isNaN(date)) return "N/A";
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    }
-
-    function formatPrice(amount) {
-        if (isNaN(amount)) return "N/A";
-        return new Intl.NumberFormat('es-ES', {
-            style: 'currency',
-            currency: 'EUR',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
-    }
-
-    async function fetchWithTimeout(url, options = {}, timeout = 15000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(proxyUrl + url, {
-                ...options,
-                signal: controller.signal,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                }
-            });
-            clearTimeout(id);
-            return response;
-        } catch (error) {
-            clearTimeout(id);
-            throw error;
-        }
-    }
-
-        // Función para cargar más feeds
-async function loadSelectedFeeds() {
-    const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
-    if (isNaN(maxFeeds)) {
-        alert("Por favor, introduce un número válido.");
-        return;
-    }
-
-    const loadNormal = document.getElementById("switchNormal").checked;
-    const loadMenor = document.getElementById("switchMenor").checked;
-    const loadOtras = document.getElementById("switchOtras").checked;
-
-    try {
-        document.getElementById("status").innerText = "🔍 Cargando datos...";
-        document.getElementById("status").style.display = "block";
-        document.getElementById("error").innerText = "";
-
-        // Limpiar entradas anteriores
-        allEntries = [];
-
-        // Cargar los feeds seleccionados
-        if (loadNormal) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
-        if (loadMenor) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
-        if (loadOtras) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
-
-        // Ordenar las entradas por fecha (updated)
-        allEntries.sort((a, b) => {
-            const dateA = new Date(a.querySelector("updated")?.textContent || 0);
-            const dateB = new Date(b.querySelector("updated")?.textContent || 0);
-            return dateB - dateA; // Orden descendente (más reciente primero)
+    <script>
+        const initialFeedUrlNormal = "https://contrataciondelestado.es/sindicacion/sindicacion_643/licitacionesPerfilesContratanteCompleto3.atom";
+        const initialFeedUrlMenor = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1143/contratosMenoresPerfilesContratantes.atom";
+        const initialFeedUrlOtras = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1044/PlataformasAgregadasSinMenores.atom";
+        const proxyUrl = "https://corsmirror.com/v1?url=";
+        const switchNormal = document.getElementById("switchNormal");
+        const switchMenor = document.getElementById("switchMenor");
+        const switchOtras = document.getElementById("switchOtras");
+        switchNormal.addEventListener("change", updateData);
+        switchMenor.addEventListener("change", updateData);
+        switchOtras.addEventListener("change", updateData);
+        let allEntries = [];
+        let isProcessing = false;
+        let loadedAtoms = [];
+        const estadoMapping = {
+            "PRE": "Anuncio Previo",
+            "PUB": "EN PLAZO",
+            "EV": "PENDIENTE DE ADJUDICACION",
+            "ADJ": "Adjudicada",
+            "RES": "Resuelta",
+            "ANUL": "Anulada"
+        };
+        const procedureCodeMapping = {
+            "1": "Abierto",
+            "2": "Restringido",
+            "3": "Negociado con Publicidad",
+            "4": "Negociado sin Publicidad",
+            "5": "Diálogo Competitivo",
+            "6": "Contrato Menor",
+            "7": "Asociación para la Innovación",
+            "8": "Subasta Electrónica",
+            "9": "Concurso de Proyectos"
+        };
+        const tipoMapping = {
+            "1": "Suministros",
+            "2": "Servicios",
+            "3": "Obras",
+            "21": "Gestión de Servicios Públicos",
+            "31": "Concesión de Obras Públicas",
+            "40": "Colaboración entre el sector público y sector privado",
+            "7": "Administrativo especial",
+            "8": "Privado",
+            "50": "Patrimonial",
+            "999": "Otros"
+        };
+        document.getElementById("toggleFiltersButton").addEventListener("click", () => {
+            const filtersContainer = document.getElementById("filtersContainer");
+            filtersContainer.classList.toggle("visible");
         });
-
-        // Actualizar la lista de Atom cargados
-        updateAtomList();
-
-        // Mostrar las licitaciones filtradas
-        fetchAndDisplayLicitaciones(allEntries);
-
-        document.getElementById("status").style.display = "none";
-    } catch (error) {
-        console.error(error);
-        document.getElementById("error").innerText = `❌ Error al cargar más feeds: ${error.message}`;
-    }
-}
-
-        // Función para cargar un feed específico
-        // Función para cargar un feed específico
-async function loadFeed(url, feedName, maxFeeds) {
-    try {
-        let currentUrl = url;
-        let loadedCount = 0;
-
-        while (currentUrl && loadedCount < maxFeeds) {
-            const response = await fetchWithTimeout(currentUrl);
-            if (!response.ok) {
-                throw new Error(`No se pudo obtener el Atom: ${currentUrl}. Estado: ${response.status}`);
+        document.getElementById("toggleAtomButton").addEventListener("click", () => {
+            const atomContainer = document.getElementById("atomContainer");
+            atomContainer.classList.toggle("visible");
+        });
+        async function updateData() {
+            try {
+                console.log("Actualizando datos...");
+                allEntries = [];
+                loadedAtoms = [];
+                const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
+                if (switchNormal.checked) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
+                if (switchMenor.checked) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
+                if (switchOtras.checked) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
+                fetchAndDisplayLicitaciones(allEntries);
+            } catch (error) {
+                console.error("Error en updateData:", error);
+                document.getElementById("error").innerText = `❌ Error al actualizar los datos: ${error.message}`;
             }
-
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(text, "text/xml");
-
-            // Obtener los enlaces self, first y next
-            const selfLink = xmlDoc.querySelector("link[rel='self']")?.getAttribute("href");
-            const nextLink = xmlDoc.querySelector("link[rel='next']")?.getAttribute("href");
-
-            // Verificar si el Atom ya fue cargado previamente
-            const isAlreadyLoaded = loadedAtoms.some(atom => atom.url === selfLink);
-            if (!isAlreadyLoaded) {
-                // Guardar el feed cargado
-                loadedAtoms.push({ name: feedName, url: selfLink });
-
-                // Cargar las entradas del feed
-                const feedEntries = Array.from(xmlDoc.querySelectorAll("entry"));
-                feedEntries.forEach(entry => entry.feedName = feedName);
-                allEntries.push(...feedEntries);
-
-                loadedCount++;
+        }
+        function toggleVisibility(button) {
+            const content = button.nextElementSibling;
+            content.style.display = content.style.display === "block" ? "none" : "block";
+            button.textContent = content.style.display === "block" ? "Ocultar Documentos" : "Documentos";
+        }
+        function toggleCPVVisibility(button) {
+            const hiddenContent = button.nextElementSibling;
+            hiddenContent.classList.toggle('visible');
+            button.innerHTML = hiddenContent.classList.contains('visible')
+                ? `<i class="fas fa-minus"></i>`
+                : `<i class="fas fa-plus"></i>`;
+        }
+        function formatDate(dateString) {
+            if (!dateString || dateString === "N/A") return "N/A";
+            const date = new Date(dateString);
+            if (isNaN(date)) return "N/A";
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${day}/${month}/${year} // ${hours}:${minutes}:${seconds}`;
+        }
+        function formatShortDate(dateString) {
+            if (!dateString || dateString === "N/A") return "N/A";
+            const date = new Date(dateString);
+            if (isNaN(date)) return "N/A";
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        function formatTime(dateString) {
+            if (!dateString || dateString === "N/A") return "N/A";
+            const date = new Date(dateString);
+            if (isNaN(date)) return "N/A";
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+        function formatPrice(amount) {
+            if (isNaN(amount)) return "N/A";
+            return new Intl.NumberFormat('es-ES', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+        async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(proxyUrl + url, {
+                    ...options,
+                    signal: controller.signal,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                clearTimeout(id);
+                return response;
+            } catch (error) {
+                clearTimeout(id);
+                throw error;
             }
-
-            // Actualizar la URL para el siguiente feed
-            currentUrl = nextLink;
         }
-    } catch (error) {
-        console.error(error);
-        document.getElementById("error").innerText = `❌ Error al cargar el feed ${feedName}: ${error.message}`;
-    }
-}
-	async function loadAllFeeds() {
-        if (isProcessing) return;
-        isProcessing = true;
-        try {
-            document.getElementById("status").innerText = "🔍 Cargando datos...";
-            document.getElementById("status").style.display = "block";
-            document.getElementById("error").innerText = "";
-
-            // Cargar los 3 feeds
-            await Promise.all([
-                loadFeed(initialFeedUrlNormal, "Contratos Normales"),
-                loadFeed(initialFeedUrlMenor, "Contratos Menores"),
-                loadFeed(initialFeedUrlOtras, "Otras Plataformas")
-            ]);
-
-            // Ordenar las entradas por fecha (updated)
-            allEntries.sort((a, b) => {
-                const dateA = new Date(a.querySelector("updated")?.textContent || 0);
-                const dateB = new Date(b.querySelector("updated")?.textContent || 0);
-                return dateB - dateA; // Orden descendente (más reciente primero)
-            });
-
-            fetchAndDisplayLicitaciones(allEntries);
-            document.getElementById("status").style.display = "none";
-        } catch (error) {
-            console.error(error);
-            document.getElementById("error").innerText = `❌ Error en loadAllFeeds: ${error.message}`;
-        } finally {
-            isProcessing = false;
+        async function loadSelectedFeeds() {
+            const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
+            if (isNaN(maxFeeds)) {
+                alert("Por favor, introduce un número válido.");
+                return;
+            }
+            const loadNormal = document.getElementById("switchNormal").checked;
+            const loadMenor = document.getElementById("switchMenor").checked;
+            const loadOtras = document.getElementById("switchOtras").checked;
+            try {
+                document.getElementById("status").innerText = "🔍 Cargando datos...";
+                document.getElementById("status").style.display = "block";
+                document.getElementById("error").innerText = "";
+                allEntries = [];
+                if (loadNormal) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
+                if (loadMenor) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
+                if (loadOtras) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
+                allEntries.sort((a, b) => {
+                    const dateA = new Date(a.querySelector("updated")?.textContent || 0);
+                    const dateB = new Date(b.querySelector("updated")?.textContent || 0);
+                    return dateB - dateA;
+                });
+                updateAtomList();
+                fetchAndDisplayLicitaciones(allEntries);
+                document.getElementById("status").style.display = "none";
+            } catch (error) {
+                console.error(error);
+                document.getElementById("error").innerText = `❌ Error al cargar más feeds: ${error.message}`;
+            }
         }
-    }
-
-        // Función para actualizar la lista de Atom cargados
+        async function loadFeed(url, feedName, maxFeeds) {
+            try {
+                let currentUrl = url;
+                let loadedCount = 0;
+                while (currentUrl && loadedCount < maxFeeds) {
+                    const response = await fetchWithTimeout(currentUrl);
+                    if (!response.ok) {
+                        throw new Error(`No se pudo obtener el Atom: ${currentUrl}. Estado: ${response.status}`);
+                    }
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(text, "text/xml");
+                    const selfLink = xmlDoc.querySelector("link[rel='self']")?.getAttribute("href");
+                    const nextLink = xmlDoc.querySelector("link[rel='next']")?.getAttribute("href");
+                    const isAlreadyLoaded = loadedAtoms.some(atom => atom.url === selfLink);
+                    if (!isAlreadyLoaded) {
+                        loadedAtoms.push({ name: feedName, url: selfLink });
+                        const feedEntries = Array.from(xmlDoc.querySelectorAll("entry"));
+                        feedEntries.forEach(entry => entry.feedName = feedName);
+                        allEntries.push(...feedEntries);
+                        loadedCount++;
+                    }
+                    currentUrl = nextLink;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById("error").innerText = `❌ Error al cargar el feed ${feedName}: ${error.message}`;
+            }
+        }
+        async function loadAllFeeds() {
+            if (isProcessing) return;
+            isProcessing = true;
+            try {
+                document.getElementById("status").innerText = "🔍 Cargando datos...";
+                document.getElementById("status").style.display = "block";
+                document.getElementById("error").innerText = "";
+                await Promise.all([
+                    loadFeed(initialFeedUrlNormal, "Contratos Normales"),
+                    loadFeed(initialFeedUrlMenor, "Contratos Menores"),
+                    loadFeed(initialFeedUrlOtras, "Otras Plataformas")
+                ]);
+                allEntries.sort((a, b) => {
+                    const dateA = new Date(a.querySelector("updated")?.textContent || 0);
+                    const dateB = new Date(b.querySelector("updated")?.textContent || 0);
+                    return dateB - dateA;
+                });
+                fetchAndDisplayLicitaciones(allEntries);
+                document.getElementById("status").style.display = "none";
+            } catch (error) {
+                console.error(error);
+                document.getElementById("error").innerText = `❌ Error en loadAllFeeds: ${error.message}`;
+            } finally {
+                isProcessing = false;
+            }
+        }
         function updateAtomList() {
             const atomListContainer = document.getElementById("atomList");
             atomListContainer.innerHTML = "";
-
-            // Agrupar los Atom por tipo (Normales, Menores, Otras)
             const groupedAtoms = {
                 "Contratos Normales": [],
                 "Contratos Menores": [],
                 "Otras Plataformas": []
             };
-
             loadedAtoms.forEach(atom => {
                 if (groupedAtoms[atom.name]) {
                     groupedAtoms[atom.name].push(atom);
                 }
             });
-
-            // Mostrar los Atom agrupados en el contenedor
             for (const [feedName, atoms] of Object.entries(groupedAtoms)) {
                 if (atoms.length > 0) {
                     const feedHeader = document.createElement("div");
@@ -949,10 +867,8 @@ async function loadFeed(url, feedName, maxFeeds) {
                     feedHeader.style.marginTop = "10px";
                     feedHeader.style.color = "#333";
                     atomListContainer.appendChild(feedHeader);
-
                     atoms.forEach(atom => {
                         const atomElement = document.createElement("a");
-                        // Eliminar la parte común de la URL
                         const displayUrl = atom.url.replace("https://contrataciondelestado.es/sindicacion/sindicacion_", "");
                         atomElement.textContent = displayUrl;
                         atomElement.href = atom.url;
@@ -963,27 +879,20 @@ async function loadFeed(url, feedName, maxFeeds) {
                         atomElement.style.textDecoration = "none";
                         atomElement.style.borderBottom = "1px solid #eee";
                         atomElement.style.cursor = "pointer";
-
                         atomElement.addEventListener("mouseenter", () => {
                             atomElement.style.backgroundColor = "#f9f9f9";
                         });
                         atomElement.addEventListener("mouseleave", () => {
                             atomElement.style.backgroundColor = "transparent";
                         });
-
                         atomListContainer.appendChild(atomElement);
                     });
                 }
             }
         }
-
-    function checkNewFeed() {
-        // Lógica para aplicar filtros
-        fetchAndDisplayLicitaciones(allEntries);
-    }
-
-
-
+        function checkNewFeed() {
+            fetchAndDisplayLicitaciones(allEntries);
+        }
         function exportToCSV() {
             const cpvFilter = document.getElementById("cpvFilter").value.toLowerCase();
             const importeFilterValue = document.getElementById("importeFilter").value;
@@ -994,7 +903,6 @@ async function loadFeed(url, feedName, maxFeeds) {
             const estadoFilter = document.getElementById("estadoFilter").value;
             const procedimientoFilter = document.getElementById("procedimientoFilter").value;
             const tipoFilter = document.getElementById("tipoFilter").value;
-
             const filteredEntries = allEntries.filter(entry => {
                 const cpvElements = entry.getElementsByTagName("cbc:ItemClassificationCode");
                 const cpvs = Array.from(cpvElements).map(el => el.textContent.toLowerCase());
@@ -1013,7 +921,6 @@ async function loadFeed(url, feedName, maxFeeds) {
                 const procedureCode = procedureCodeElement ? procedureCodeMapping[procedureCodeElement.textContent] || "N/A" : "N/A";
                 const tipoElement = entry.getElementsByTagName("cbc:TypeCode")[0];
                 const tipoCode = tipoElement ? tipoElement.textContent : "N/A";
-
                 return (cpvFilter === "" || cpvs.some(cpv => cpv.includes(cpvFilter))) &&
                     (importe >= importeFilter) &&
                     (clienteFilter === "" || clienteName.includes(clienteFilter)) &&
@@ -1023,17 +930,14 @@ async function loadFeed(url, feedName, maxFeeds) {
                     (procedimientoFilter === "" || procedureCode === procedimientoFilter) &&
                     (tipoFilter === "" || tipoCode === tipoFilter);
             });
-
             if (filteredEntries.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
-
             const headers = [
                 "N Expediente", "Ver Licitacion", "Titulo", "Importe", "Cliente", "Estado", "Fecha Final", "Hora Final",
                 "Contacto (Email)", "CPV", "Tipo de Procedimiento", "Tipo de Contrato", "Lotes"
             ];
-
             const rows = filteredEntries.map(entry => {
                 const expediente = entry.getElementsByTagNameNS("*", "ContractFolderID")[0]?.textContent || "N/A";
                 const link = entry.querySelector("link")?.getAttribute("href") || "#";
@@ -1047,22 +951,18 @@ async function loadFeed(url, feedName, maxFeeds) {
                 const estado = estadoElement ? estadoElement.textContent : "N/A";
                 const fechaFinalElement = entry.getElementsByTagNameNS("*", "TenderSubmissionDeadlinePeriod")[0]?.getElementsByTagNameNS("*", "EndDate")[0];
                 const horaFinalElement = entry.getElementsByTagNameNS("*", "TenderSubmissionDeadlinePeriod")[0]?.getElementsByTagNameNS("*", "EndTime")[0];
-
                 let fechaFinal = "N/A";
                 let horaFinal = "N/A";
-
                 if (fechaFinalElement && fechaFinalElement.textContent) {
                     const fechaCompleta = fechaFinalElement.textContent.trim();
                     const [year, month, day] = fechaCompleta.split('-');
                     fechaFinal = `${day}/${month}/${year}`;
                 }
-
                 if (horaFinalElement && horaFinalElement.textContent) {
                     const horaCompleta = horaFinalElement.textContent.trim();
                     const [hours, minutes] = horaCompleta.split(':');
                     horaFinal = `${hours}:${minutes}`;
                 }
-
                 const cpvElements = entry.getElementsByTagNameNS("*", "ItemClassificationCode");
                 const cpvs = Array.from(cpvElements).map(el => el.textContent).join(", ");
                 const procedureCodeElement = entry.getElementsByTagNameNS("*", "ProcedureCode")[0];
@@ -1070,7 +970,6 @@ async function loadFeed(url, feedName, maxFeeds) {
                 const tipoElement = entry.getElementsByTagNameNS("*", "TypeCode")[0];
                 const tipoCode = tipoElement ? tipoElement.textContent : "N/A";
                 const tipo = tipoMapping[tipoCode] || "N/A";
-
                 const loteElements = entry.getElementsByTagNameNS("*", "ProcurementProjectLot");
                 const lotes = Array.from(loteElements).map(lote => {
                     const idLote = lote.getElementsByTagNameNS("*", "ID")[0]?.textContent || "N/A";
@@ -1078,27 +977,21 @@ async function loadFeed(url, feedName, maxFeeds) {
                     const precio = precioElement ? formatPrice(parseFloat(precioElement.textContent)) : "N/A";
                     return `Lote ${idLote}: ${precio}`;
                 }).join("; ");
-
                 const emailElement = entry.getElementsByTagNameNS("*", "ElectronicMail")[0];
                 const email = emailElement ? emailElement.textContent : "N/A";
-
                 return [
                     expediente, link, titulo, formattedImporte, clienteName, estado, fechaFinal, horaFinal,
                     email, cpvs, procedureCode, tipo, lotes
                 ];
             });
-
             const csvContent = [
                 headers.join(";"),
                 ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(";"))
             ].join("\n");
-
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-
             const now = new Date();
             const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}_${now.getHours().toString().padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
             const filename = `licitaciones_${timestamp}.csv`;
-
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -1108,170 +1001,151 @@ async function loadFeed(url, feedName, maxFeeds) {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
-		
-    function fetchAndDisplayLicitaciones(entries) {
-        try {
-            let cardsContent = "";
-            const cpvFilter = document.getElementById("cpvFilter").value.toLowerCase();
-            const importeFilterValue = document.getElementById("importeFilter").value;
-            const importeFilter = importeFilterValue ? convertToNumber(importeFilterValue) : 0;
-            const clienteFilter = document.getElementById("clienteFilter").value.toLowerCase();
-            const expedienteFilter = document.getElementById("expedienteFilter").value.toLowerCase();
-            const ciudadFilter = document.getElementById("ciudadFilter").value.toLowerCase();
-            const estadoFilter = document.getElementById("estadoFilter").value;
-            const procedimientoFilter = document.getElementById("procedimientoFilter").value;
-            const tipoFilter = document.getElementById("tipoFilter").value;
-
-            entries.forEach(entry => {
-                const title = entry.querySelector("title")?.textContent || "N/A";
-                const updated = entry.querySelector("updated")?.textContent || "N/A";
-                const link = entry.querySelector("link")?.getAttribute("href") || "#";
-                const importeElement = entry.getElementsByTagName("cbc:TotalAmount")[0];
-                const importe = importeElement ? parseFloat(importeElement.textContent) : 0;
-                const formattedImporte = formatPrice(importe);
-                const clienteElement = entry.getElementsByTagName("cac:PartyName")[0];
-                const clienteName = clienteElement ? clienteElement.getElementsByTagName("cbc:Name")[0]?.textContent : "N/A";
-                const buyerProfileElement = entry.getElementsByTagName("cbc:BuyerProfileURIID")[0];
-                const buyerProfile = buyerProfileElement
-                    ? `<a href='${buyerProfileElement.textContent}' target='_blank' class='ver-perfil'><i class="fas fa-external-link-alt"></i> Ver Perfil</a>`
-                    : "N/A";
-                const cpvElements = entry.getElementsByTagName("cbc:ItemClassificationCode");
-                const cpvs = Array.from(cpvElements).map(el => el.textContent.toLowerCase());
-                const documentElements = entry.getElementsByTagNameNS("*", "Attachment");
-                const documentos = Array.from(documentElements).map((doc, index) => {
-                    const docIdElement = doc.parentElement.getElementsByTagNameNS("*", "ID")[0];
-                    const docName = docIdElement ? docIdElement.textContent : `Documento ${index + 1}`;
-                    const uriElement = doc.getElementsByTagNameNS("*", "URI")[0];
-                    return uriElement ? `<a href='${uriElement.textContent}' target='_blank'>${docName}</a>` : "";
-                });
-                const documentosHTML = documentos.length > 0
-                    ? `<button class='toggle-button' onclick='toggleVisibility(this)'><i class="fas fa-file"></i> Documentos</button><div class='document-list'>${documentos.join("<br>")}</div>`
-                    : "";
-                const procedureCodeElement = entry.getElementsByTagName("cbc:ProcedureCode")[0];
-                const procedureCode = procedureCodeElement ? procedureCodeMapping[procedureCodeElement.textContent] || "N/A" : "N/A";
-                const contractNotificationElement = entry.getElementsByTagName("cbc:ContractFolderID")[0];
-                const contractNotification = contractNotificationElement ? contractNotificationElement.textContent : "N/A";
-                const additionalPublicationElement = entry.getElementsByTagName("cac-place-ext:AdditionalPublicationDocumentReference")[0];
-                const fechaAnuncio = additionalPublicationElement
-                    ? formatDate(additionalPublicationElement.getElementsByTagName("cbc:IssueDate")[0]?.textContent)
-                    : "N/A";
-                const participationRequestReceptionPeriod = entry.getElementsByTagName("cac:TenderSubmissionDeadlinePeriod")[0];
-                const fechaFinalElement = participationRequestReceptionPeriod ? participationRequestReceptionPeriod.getElementsByTagName("cbc:EndDate")[0] : null;
-                const horaFinalElement = participationRequestReceptionPeriod ? participationRequestReceptionPeriod.getElementsByTagName("cbc:EndTime")[0] : null;
-
-                let fechaFinal = "N/A";
-                let horaFinal = "N/A";
-
-                if (fechaFinalElement && fechaFinalElement.textContent) {
-                    const fechaCompleta = fechaFinalElement.textContent.trim();
-                    const [year, month, day] = fechaCompleta.split('-');
-                    fechaFinal = `${day}/${month}/${year}`;
-                }
-
-                if (horaFinalElement && horaFinalElement.textContent) {
-                    const horaCompleta = horaFinalElement.textContent.trim();
-                    const [hours, minutes] = horaCompleta.split(':');
-                    horaFinal = `${hours}:${minutes}`;
-                }
-
-                const estadoElement = entry.getElementsByTagName("cbc-place-ext:ContractFolderStatusCode")[0];
-                const estadoCode = estadoElement ? estadoElement.textContent : "N/A";
-                const estado = estadoMapping[estadoCode] || "N/A";
-                const estadoClass = estado === "Anuncio Previo"
-                    ? "estado-anuncio"
-                    : estado === "EN PLAZO"
-                    ? "estado-en-plazo"
-                    : "estado-otros";
-                const tipoElement = entry.getElementsByTagName("cbc:TypeCode")[0];
-                const tipoCode = tipoElement ? tipoElement.textContent : "N/A";
-                const tipo = tipoMapping[tipoCode] || "N/A"; // Usar tipoMapping aquí
-                const ciudadElement = entry.getElementsByTagName("cbc:CityName")[0];
-                const ciudad = ciudadElement ? ciudadElement.textContent : "N/A";
-
-                const loteElements = entry.getElementsByTagName("cac:ProcurementProjectLot");
-                const lotes = Array.from(loteElements).map(lote => {
-                    const idLote = lote.getElementsByTagName("cbc:ID")[0]?.textContent || "N/A";
-                    const precioElement = lote.getElementsByTagName("cbc:TaxExclusiveAmount")[0];
-                    const precio = precioElement ? formatPrice(parseFloat(precioElement.textContent)) : "N/A";
-                    return { idLote, precio };
-                });
-
-                const telefonoElement = entry.getElementsByTagName("cbc:Telephone")[0];
-                const telefono = telefonoElement ? telefonoElement.textContent : null;
-
-                const emailElement = entry.getElementsByTagName("cbc:ElectronicMail")[0];
-                const email = emailElement ? emailElement.textContent : null;
-
-                const contactoHTML = (telefono || email)
-                    ? `<p class="contacto">
-                            ${telefono ? `<span><i class="fas fa-phone"></i> ${telefono}</span>` : ""}
-                            ${email ? `<span><i class="fas fa-envelope"></i> ${email}</span>` : ""}
-                        </p>`
-                    : "";
-
-                if ((cpvFilter === "" || cpvs.some(cpv => cpv.includes(cpvFilter))) &&
-                    (importe >= importeFilter) &&
-                    (clienteFilter === "" || clienteName.toLowerCase().includes(clienteFilter)) &&
-                    (expedienteFilter === "" || contractNotification.toLowerCase().includes(expedienteFilter)) &&
-                    (ciudadFilter === "" || ciudad.toLowerCase().includes(ciudadFilter)) &&
-                    (estadoFilter === "" || estado === estadoFilter) &&
-                    (procedimientoFilter === "" || procedureCode === procedimientoFilter) &&
-                    (tipoFilter === "" || tipoCode === tipoFilter)) {
-                    const cpvsToShow = cpvs.slice(0, 3);
-                    const cpvsHidden = cpvs.slice(3);
-                    const cpvsHTML = cpvsToShow.join(", ");
-                    const cpvsHiddenHTML = cpvsHidden.length > 0
-                        ? `<div class="cpv"><button class='toggle-cpv' onclick='toggleCPVVisibility(this)'><i class="fas fa-plus"></i></button><div class='cpv-list-hidden'>${cpvsHidden.join(", ")}</div></div>`
+        function fetchAndDisplayLicitaciones(entries) {
+            try {
+                let cardsContent = "";
+                const cpvFilter = document.getElementById("cpvFilter").value.toLowerCase();
+                const importeFilterValue = document.getElementById("importeFilter").value;
+                const importeFilter = importeFilterValue ? convertToNumber(importeFilterValue) : 0;
+                const clienteFilter = document.getElementById("clienteFilter").value.toLowerCase();
+                const expedienteFilter = document.getElementById("expedienteFilter").value.toLowerCase();
+                const ciudadFilter = document.getElementById("ciudadFilter").value.toLowerCase();
+                const estadoFilter = document.getElementById("estadoFilter").value;
+                const procedimientoFilter = document.getElementById("procedimientoFilter").value;
+                const tipoFilter = document.getElementById("tipoFilter").value;
+                entries.forEach(entry => {
+                    const title = entry.querySelector("title")?.textContent || "N/A";
+                    const updated = entry.querySelector("updated")?.textContent || "N/A";
+                    const link = entry.querySelector("link")?.getAttribute("href") || "#";
+                    const importeElement = entry.getElementsByTagName("cbc:TotalAmount")[0];
+                    const importe = importeElement ? parseFloat(importeElement.textContent) : 0;
+                    const formattedImporte = formatPrice(importe);
+                    const clienteElement = entry.getElementsByTagName("cac:PartyName")[0];
+                    const clienteName = clienteElement ? clienteElement.getElementsByTagName("cbc:Name")[0]?.textContent : "N/A";
+                    const buyerProfileElement = entry.getElementsByTagName("cbc:BuyerProfileURIID")[0];
+                    const buyerProfile = buyerProfileElement
+                        ? `<a href='${buyerProfileElement.textContent}' target='_blank' class='ver-perfil'><i class="fas fa-external-link-alt"></i> Ver Perfil</a>`
+                        : "N/A";
+                    const cpvElements = entry.getElementsByTagName("cbc:ItemClassificationCode");
+                    const cpvs = Array.from(cpvElements).map(el => el.textContent.toLowerCase());
+                    const documentElements = entry.getElementsByTagNameNS("*", "Attachment");
+                    const documentos = Array.from(documentElements).map((doc, index) => {
+                        const docIdElement = doc.parentElement.getElementsByTagNameNS("*", "ID")[0];
+                        const docName = docIdElement ? docIdElement.textContent : `Documento ${index + 1}`;
+                        const uriElement = doc.getElementsByTagNameNS("*", "URI")[0];
+                        return uriElement ? `<a href='${uriElement.textContent}' target='_blank'>${docName}</a>` : "";
+                    });
+                    const documentosHTML = documentos.length > 0
+                        ? `<button class='toggle-button' onclick='toggleVisibility(this)'><i class="fas fa-file"></i> Documentos</button><div class='document-list'>${documentos.join("<br>")}</div>`
                         : "";
-
-                    const lotesHTML = lotes.length > 0
-                        ? `<p class="lote"><strong>Lotes:</strong><br>${lotes.map(lote => `Lote ${lote.idLote}: ${lote.precio}`).join("<br>")}</p>`
+                    const procedureCodeElement = entry.getElementsByTagName("cbc:ProcedureCode")[0];
+                    const procedureCode = procedureCodeElement ? procedureCodeMapping[procedureCodeElement.textContent] || "N/A" : "N/A";
+                    const contractNotificationElement = entry.getElementsByTagName("cbc:ContractFolderID")[0];
+                    const contractNotification = contractNotificationElement ? contractNotificationElement.textContent : "N/A";
+                    const additionalPublicationElement = entry.getElementsByTagName("cac-place-ext:AdditionalPublicationDocumentReference")[0];
+                    const fechaAnuncio = additionalPublicationElement
+                        ? formatDate(additionalPublicationElement.getElementsByTagName("cbc:IssueDate")[0]?.textContent)
+                        : "N/A";
+                    const participationRequestReceptionPeriod = entry.getElementsByTagName("cac:TenderSubmissionDeadlinePeriod")[0];
+                    const fechaFinalElement = participationRequestReceptionPeriod ? participationRequestReceptionPeriod.getElementsByTagName("cbc:EndDate")[0] : null;
+                    const horaFinalElement = participationRequestReceptionPeriod ? participationRequestReceptionPeriod.getElementsByTagName("cbc:EndTime")[0] : null;
+                    let fechaFinal = "N/A";
+                    let horaFinal = "N/A";
+                    if (fechaFinalElement && fechaFinalElement.textContent) {
+                        const fechaCompleta = fechaFinalElement.textContent.trim();
+                        const [year, month, day] = fechaCompleta.split('-');
+                        fechaFinal = `${day}/${month}/${year}`;
+                    }
+                    if (horaFinalElement && horaFinalElement.textContent) {
+                        const horaCompleta = horaFinalElement.textContent.trim();
+                        const [hours, minutes] = horaCompleta.split(':');
+                        horaFinal = `${hours}:${minutes}`;
+                    }
+                    const estadoElement = entry.getElementsByTagName("cbc-place-ext:ContractFolderStatusCode")[0];
+                    const estadoCode = estadoElement ? estadoElement.textContent : "N/A";
+                    const estado = estadoMapping[estadoCode] || "N/A";
+                    const estadoClass = estado === "Anuncio Previo"
+                        ? "estado-anuncio"
+                        : estado === "EN PLAZO"
+                        ? "estado-en-plazo"
+                        : "estado-otros";
+                    const tipoElement = entry.getElementsByTagName("cbc:TypeCode")[0];
+                    const tipoCode = tipoElement ? tipoElement.textContent : "N/A";
+                    const tipo = tipoMapping[tipoCode] || "N/A";
+                    const ciudadElement = entry.getElementsByTagName("cbc:CityName")[0];
+                    const ciudad = ciudadElement ? ciudadElement.textContent : "N/A";
+                    const loteElements = entry.getElementsByTagName("cac:ProcurementProjectLot");
+                    const lotes = Array.from(loteElements).map(lote => {
+                        const idLote = lote.getElementsByTagName("cbc:ID")[0]?.textContent || "N/A";
+                        const precioElement = lote.getElementsByTagName("cbc:TaxExclusiveAmount")[0];
+                        const precio = precioElement ? formatPrice(parseFloat(precioElement.textContent)) : "N/A";
+                        return { idLote, precio };
+                    });
+                    const telefonoElement = entry.getElementsByTagName("cbc:Telephone")[0];
+                    const telefono = telefonoElement ? telefonoElement.textContent : null;
+                    const emailElement = entry.getElementsByTagName("cbc:ElectronicMail")[0];
+                    const email = emailElement ? emailElement.textContent : null;
+                    const contactoHTML = (telefono || email)
+                        ? `<p class="contacto">
+                                ${telefono ? `<span><i class="fas fa-phone"></i> ${telefono}</span>` : ""}
+                                ${email ? `<span><i class="fas fa-envelope"></i> ${email}</span>` : ""}
+                            </p>`
                         : "";
-
-                    const esOtraPlataforma = entry.feedName === "Otras Plataformas"; // Verificar si es de otra plataforma
-
-                    cardsContent += `<div class="card ${esOtraPlataforma ? 'ext' : ''}">
-                         <div class="card-header">
-                             <div class="expediente"><strong>Nº Exp: ${contractNotification}</strong></div>
-                             <span class="actualizado">Actualizado: ${formatShortDate(updated)}</span>
-                         </div>
-                         <p class="tipo"><strong>${tipo}</strong></p>
-                         <p class="objeto">${title}</p>
-                          ${lotesHTML}
-                         <p class="cpv">CPV: ${cpvsHTML} ${cpvsHiddenHTML}</p>
-                         <p class="cliente"><i class="fas fa-building"></i> ${clienteName} <span class="ver-perfil">${buyerProfile}</span></p>
-                         ${contactoHTML}
-                         <hr class="divider">
-                         <div class="card-details">
-                             <p><i class="fas fa-box"></i> ${procedureCode}</p>
-                             <p><i class="fas fa-info-circle"></i> <span class="${estadoClass}">${estado}</span></p>
-                             <p><i class="fas fa-credit-card"></i> ${formattedImporte}</p>
-                              <p><i class="fas fa-calendar-alt"></i> ${fechaFinal} <i class="fas fa-clock" style="color: #777;"></i> ${horaFinal}</p>
-                              <p><i class="fas fa-map-marker-alt"></i> ${ciudad}</p>
-                         </div>
-                          <a href='${link}' target='_blank' class='ver-licitacion-button'>Ver Licitación</a>
-                         ${documentosHTML}
-                    </div>`;
-                }
-            });
-            document.getElementById("licitacionesContainer").innerHTML = cardsContent;
-        } catch (error) {
-            console.error(error);
-            document.getElementById("error").innerText = `❌ Error en fetchAndDisplayLicitaciones: ${error.message}`;
+                    if ((cpvFilter === "" || cpvs.some(cpv => cpv.includes(cpvFilter))) &&
+                        (importe >= importeFilter) &&
+                        (clienteFilter === "" || clienteName.toLowerCase().includes(clienteFilter)) &&
+                        (expedienteFilter === "" || contractNotification.toLowerCase().includes(expedienteFilter)) &&
+                        (ciudadFilter === "" || ciudad.toLowerCase().includes(ciudadFilter)) &&
+                        (estadoFilter === "" || estado === estadoFilter) &&
+                        (procedimientoFilter === "" || procedureCode === procedimientoFilter) &&
+                        (tipoFilter === "" || tipoCode === tipoFilter)) {
+                        const cpvsToShow = cpvs.slice(0, 3);
+                        const cpvsHidden = cpvs.slice(3);
+                        const cpvsHTML = cpvsToShow.join(", ");
+                        const cpvsHiddenHTML = cpvsHidden.length > 0
+                            ? `<div class="cpv"><button class='toggle-cpv' onclick='toggleCPVVisibility(this)'><i class="fas fa-plus"></i></button><div class='cpv-list-hidden'>${cpvsHidden.join(", ")}</div></div>`
+                            : "";
+                        const lotesHTML = lotes.length > 0
+                            ? `<p class="lote"><strong>Lotes:</strong><br>${lotes.map(lote => `Lote ${lote.idLote}: ${lote.precio}`).join("<br>")}</p>`
+                            : "";
+                        const esOtraPlataforma = entry.feedName === "Otras Plataformas";
+                        cardsContent += `<div class="card ${esOtraPlataforma ? 'ext' : ''}">
+                            <div class="card-header">
+                                <div class="expediente"><strong>Nº Exp: ${contractNotification}</strong></div>
+                                <span class="actualizado">Actualizado: ${formatShortDate(updated)}</span>
+                            </div>
+                            <p class="tipo"><strong>${tipo}</strong></p>
+                            <p class="objeto">${title}</p>
+                            ${lotesHTML}
+                            <p class="cpv">CPV: ${cpvsHTML} ${cpvsHiddenHTML}</p>
+                            <p class="cliente"><i class="fas fa-building"></i> ${clienteName} <span class="ver-perfil">${buyerProfile}</span></p>
+                            ${contactoHTML}
+                            <hr class="divider">
+                            <div class="card-details">
+                                <p><i class="fas fa-box"></i> ${procedureCode}</p>
+                                <p><i class="fas fa-info-circle"></i> <span class="${estadoClass}">${estado}</span></p>
+                                <p><i class="fas fa-credit-card"></i> ${formattedImporte}</p>
+                                <p><i class="fas fa-calendar-alt"></i> ${fechaFinal} <i class="fas fa-clock" style="color: #777;"></i> ${horaFinal}</p>
+                                <p><i class="fas fa-map-marker-alt"></i> ${ciudad}</p>
+                            </div>
+                            <a href='${link}' target='_blank' class='ver-licitacion-button'>Ver Licitación</a>
+                            ${documentosHTML}
+                        </div>`;
+                    }
+                });
+                document.getElementById("licitacionesContainer").innerHTML = cardsContent;
+            } catch (error) {
+                console.error(error);
+                document.getElementById("error").innerText = `❌ Error en fetchAndDisplayLicitaciones: ${error.message}`;
+            }
         }
-    }
-
-
-// Mostrar/ocultar el contenedor de controles en móviles
-document.getElementById("toggleAtomButton").addEventListener("click", () => {
-    const atomControls = document.getElementById("atomControls");
-    atomControls.classList.toggle("visible");
-});
-
-window.onload = async function () {
-    await loadSelectedFeeds(); 
-};
-</script>
-
+        document.getElementById("toggleAtomButton").addEventListener("click", () => {
+            const atomControls = document.getElementById("atomControls");
+            atomControls.classList.toggle("visible");
+        });
+        window.onload = async function () {
+            await loadSelectedFeeds();
+        };
+    </script>
 </body>
 </html>
