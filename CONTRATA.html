@@ -718,21 +718,22 @@
             const atomContainer = document.getElementById("atomContainer");
             atomContainer.classList.toggle("visible");
         });
-        async function updateData() {
-            try {
-                console.log("Actualizando datos...");
-                allEntries = [];
-                loadedAtoms = [];
-                const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
-                if (switchNormal.checked) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
-                if (switchMenor.checked) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
-                if (switchOtras.checked) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
-                fetchAndDisplayLicitaciones(allEntries);
-            } catch (error) {
-                console.error("Error en updateData:", error);
-                document.getElementById("error").innerText = `❌ Error al actualizar los datos: ${error.message}`;
-            }
-        }
+		async function updateData() {
+			try {
+				console.log("Actualizando datos...");
+				allEntries = [];
+				loadedAtoms = [];
+				const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
+				if (switchNormal.checked) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
+				if (switchMenor.checked) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
+				if (switchOtras.checked) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
+				fetchAndDisplayLicitaciones(allEntries);
+				updateAtomList(); 
+			} catch (error) {
+				console.error("Error en updateData:", error);
+				document.getElementById("error").innerText = `❌ Error al actualizar los datos: ${error.message}`;
+			}
+		}
         function toggleVisibility(button) {
             const content = button.nextElementSibling;
             content.style.display = content.style.display === "block" ? "none" : "block";
@@ -956,6 +957,8 @@
 			localStorage.setItem('switchNormal', switchNormal.checked);
 			localStorage.setItem('switchMenor', switchMenor.checked);
 			localStorage.setItem('switchOtras', switchOtras.checked);
+			
+			updateAtomList();
 		}
     
         function exportToCSV() {
