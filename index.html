@@ -645,13 +645,77 @@
             width: 60%;
         }
     }
+	.footer-card {
+        background-color: #f4f4f4;
+        padding: 10px 15px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px auto;
+        width: fit-content;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ddd;
+    }
+
+    .footer-card a {
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .footer-card a i {
+        color: black; /* Icono de GitHub en negro */
+        font-size: 16px;
+    }
+
+    .footer-card a:hover {
+        color: #007bff;
+    }
+
+    .footer-card a:hover i {
+        color: #007bff; /* Cambia el color del icono al hacer hover */
+    }
+	    .footer-banner {
+        background-color: #007bff; /* Fondo azul */
+        padding: 15px 20px;
+        text-align: center;
+        margin-top: 20px;
+        border-top: 2px solid #0056b3; /* Borde superior */
+    }
+
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .footer-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: #f8f9fa; /* Cambia el color al hacer hover */
+    }
+
+    @media (max-width: 600px) {
+        .footer-links {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
     </style>
 </head>
 <body>
     <div class="header">
-        <h3>Anuncios Licitaciones</h3>
+        <h3>Licitaciones</h3>
         <div class="info-box">
-            Prueba de concepto para comprobar las últimas publicaciones en la Plataforma de Contratación del Estado
+            Prueba de concepto para comprobar las últimas publicaciones sobre Contratación Pública
         </div>
     </div>
 <div class="button-container">
@@ -787,6 +851,17 @@
             </div>
         </div>
     </div>
+	<div class="footer-card">
+		<a href="https://github.com/klopezr" target="_blank" rel="noopener noreferrer">
+			<i class="fab fa-github"></i> Creado por Klopezr
+		</a>
+	</div>
+	<div class="footer-banner">
+    <div class="footer-links">
+			<a href="aviso-legal.html">Aviso Legal</a>
+			<a href="politica-privacidad.html">Política de Privacidad</a>
+		</div>
+	</div>
 	<script>
     function toggleButtons(group) {
         const buttons = document.getElementById(`${group}Buttons`);
