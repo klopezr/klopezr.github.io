@@ -664,6 +664,16 @@ input:checked + .slider:before {
     const initialFeedUrlMenor = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1143/contratosMenoresPerfilesContratantes.atom";
     const initialFeedUrlOtras = "https://contrataciondelsectorpublico.gob.es/sindicacion/sindicacion_1044/PlataformasAgregadasSinMenores.atom";
     const proxyUrl = "https://corsmirror.com/v1?url=";
+	
+	// Obtener los switches
+const switchNormal = document.getElementById("switchNormal");
+const switchMenor = document.getElementById("switchMenor");
+const switchOtras = document.getElementById("switchOtras");
+
+// Vincular el evento `change` a cada switch
+switchNormal.addEventListener("change", updateData);
+switchMenor.addEventListener("change", updateData);
+switchOtras.addEventListener("change", updateData);
 
     let allEntries = [];
     let isProcessing = false;
@@ -712,6 +722,31 @@ input:checked + .slider:before {
         const atomContainer = document.getElementById("atomContainer");
         atomContainer.classList.toggle("visible");
     });
+
+// Función para actualizar los datos al cambiar un switch
+async function updateData() {
+    try {
+        console.log("Actualizando datos..."); // Depuración
+
+        // Limpiar las entradas y los Atom cargados
+        allEntries = [];
+        loadedAtoms = [];
+
+        // Obtener el número máximo de feeds a cargar
+        const maxFeeds = parseInt(document.getElementById("maxFeedsInput").value, 10) || 1;
+
+        // Cargar los feeds seleccionados
+        if (switchNormal.checked) await loadFeed(initialFeedUrlNormal, "Contratos Normales", maxFeeds);
+        if (switchMenor.checked) await loadFeed(initialFeedUrlMenor, "Contratos Menores", maxFeeds);
+        if (switchOtras.checked) await loadFeed(initialFeedUrlOtras, "Otras Plataformas", maxFeeds);
+
+        // Mostrar las licitaciones actualizadas
+        fetchAndDisplayLicitaciones(allEntries);
+    } catch (error) {
+        console.error("Error en updateData:", error);
+        document.getElementById("error").innerText = `❌ Error al actualizar los datos: ${error.message}`;
+    }
+}
 
     function formatDate(dateString) {
         if (!dateString || dateString === "N/A") return "N/A";
@@ -813,47 +848,48 @@ async function loadSelectedFeeds() {
 }
 
         // Función para cargar un feed específico
-        async function loadFeed(url, feedName, maxFeeds) {
-            try {
-                let currentUrl = url;
-                let loadedCount = 0;
+        // Función para cargar un feed específico
+async function loadFeed(url, feedName, maxFeeds) {
+    try {
+        let currentUrl = url;
+        let loadedCount = 0;
 
-                while (currentUrl && loadedCount < maxFeeds) {
-                    const response = await fetchWithTimeout(currentUrl);
-                    if (!response.ok) {
-                        throw new Error(`No se pudo obtener el Atom: ${currentUrl}. Estado: ${response.status}`);
-                    }
-
-                    const text = await response.text();
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(text, "text/xml");
-
-                    // Obtener los enlaces self, first y next
-                    const selfLink = xmlDoc.querySelector("link[rel='self']")?.getAttribute("href");
-                    const nextLink = xmlDoc.querySelector("link[rel='next']")?.getAttribute("href");
-
-                    // Verificar si el Atom ya fue cargado previamente
-                    const isAlreadyLoaded = loadedAtoms.some(atom => atom.url === selfLink);
-                    if (!isAlreadyLoaded) {
-                        // Guardar el feed cargado
-                        loadedAtoms.push({ name: feedName, url: selfLink });
-
-                        // Cargar las entradas del feed
-                        const feedEntries = Array.from(xmlDoc.querySelectorAll("entry"));
-                        feedEntries.forEach(entry => entry.feedName = feedName);
-                        allEntries.push(...feedEntries);
-
-                        loadedCount++;
-                    }
-
-                    // Actualizar la URL para el siguiente feed
-                    currentUrl = nextLink;
-                }
-            } catch (error) {
-                console.error(error);
-                document.getElementById("error").innerText = `❌ Error al cargar el feed ${feedName}: ${error.message}`;
+        while (currentUrl && loadedCount < maxFeeds) {
+            const response = await fetchWithTimeout(currentUrl);
+            if (!response.ok) {
+                throw new Error(`No se pudo obtener el Atom: ${currentUrl}. Estado: ${response.status}`);
             }
+
+            const text = await response.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, "text/xml");
+
+            // Obtener los enlaces self, first y next
+            const selfLink = xmlDoc.querySelector("link[rel='self']")?.getAttribute("href");
+            const nextLink = xmlDoc.querySelector("link[rel='next']")?.getAttribute("href");
+
+            // Verificar si el Atom ya fue cargado previamente
+            const isAlreadyLoaded = loadedAtoms.some(atom => atom.url === selfLink);
+            if (!isAlreadyLoaded) {
+                // Guardar el feed cargado
+                loadedAtoms.push({ name: feedName, url: selfLink });
+
+                // Cargar las entradas del feed
+                const feedEntries = Array.from(xmlDoc.querySelectorAll("entry"));
+                feedEntries.forEach(entry => entry.feedName = feedName);
+                allEntries.push(...feedEntries);
+
+                loadedCount++;
+            }
+
+            // Actualizar la URL para el siguiente feed
+            currentUrl = nextLink;
         }
+    } catch (error) {
+        console.error(error);
+        document.getElementById("error").innerText = `❌ Error al cargar el feed ${feedName}: ${error.message}`;
+    }
+}
 	async function loadAllFeeds() {
         if (isProcessing) return;
         isProcessing = true;
