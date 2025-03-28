@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anuncios Contratación en el DOUE</title>
-       <style>
+    <style>
         body {
             font-family: Arial, sans-serif;
             font-size: 14px;
@@ -15,36 +15,31 @@
             align-items: center;
             background-color: #f9f9f9;
         }
-
         header {
             text-align: center;
             margin-top: 20px;
             width: 100%;
         }
-
         .container {
             display: flex;
             width: 90%;
             margin-top: 20px;
             gap: 20px;
         }
-
         .filters-and-info {
             display: flex;
             flex-direction: column;
-            gap: 10px; 
-            width: 20%; 
+            gap: 10px;
+            width: 20%;
         }
-
         .filters, .source-card, .export-card {
-            width: 90%; 
+            width: 90%;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 5px;
             background-color: white;
-            text-align: center; 
+            text-align: center;
         }
-
         .filter-card input, .filter-card select {
             width: 100%;
             padding: 4px;
@@ -52,7 +47,6 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-
         .filter-card button {
             width: 100%;
             padding: 10px;
@@ -62,15 +56,27 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
         .filter-card button:hover {
             background-color: #0056b3;
         }
-
         .results {
-            width: 75%; 
+            width: 75%;
+            position: relative;
         }
-
+        .sort-control {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #007bff;
+            font-size: 13px;
+            margin-left: 10px;
+            border: 1px solid #ddd;
+        }
+        .sort-control:hover {
+            background-color: #e0e0e0;
+        }
         .card {
             border: 1px solid #ddd;
             border-radius: 10px;
@@ -80,24 +86,20 @@
             background-color: white;
             position: relative;
         }
-
         .card-header, .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
         .card-header {
             padding-bottom: 10px;
             margin-bottom: 10px;
         }
-
         .card-footer {
             border-top: 1px solid #ddd;
             padding-top: 10px;
             margin-top: 10px;
         }
-
         .card .fecha-actualizacion {
             position: absolute;
             top: 10px;
@@ -105,12 +107,10 @@
             font-size: 12px;
             color: #666;
         }
-
         .icon {
             color: #666;
             margin-right: 5px;
         }
-
         .source-card a, .export-card a {
             background-color: #28a745;
             color: white;
@@ -119,20 +119,17 @@
             border-radius: 5px;
             display: inline-block;
         }
-
         .source-card a:hover, .export-card a:hover {
             background-color: #218838;
         }
-
         .total-anuncios {
             background-color: #e6f7ff;
             padding: 10px;
             border-radius: 5px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-align: center;
         }
-
         .mini-button {
             background-color: #007bff;
             color: white;
@@ -142,11 +139,9 @@
             display: inline-block;
             margin-left: 10px;
         }
-
         .mini-button:hover {
             background-color: #0056b3;
         }
-
         .mini-button2 {
             background-color: #04c41e;
             color: white;
@@ -156,25 +151,20 @@
             display: inline-block;
             margin-left: 10px;
         }
-
         .mini-button2:hover {
             background-color: #0056b3;
         }
-
         .separator {
             border-top: 1px solid #ddd;
             margin: 10px 0;
         }
-
         a {
             text-decoration: none;
             color: inherit;
         }
-
         a:hover {
             text-decoration: underline;
         }
-
         .mobile-filters-button {
             display: none;
             width: 100%;
@@ -186,38 +176,65 @@
             cursor: pointer;
             margin-bottom: 10px;
         }
-
         .mobile-filters-button:hover {
             background-color: #0056b3;
         }
-
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
             }
             .filters-and-info, .results {
-                width: 100%; 
+                width: 100%;
             }
             .filters {
-                display: none; 
+                display: none;
             }
             .filters.active {
-                display: flex; 
+                display: flex;
             }
             .mobile-filters-button {
                 display: block;
             }
             .source-card, .export-card {
-                padding: 15px; 
+                padding: 15px;
             }
             .filter-card input, .filter-card select {
-                padding: 6px; 
+                padding: 6px;
             }
         }
-
         ul#resultados {
             list-style-type: none;
             padding-left: 0;
+        }
+        #rangoFechas {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .clear-date {
+            cursor: pointer;
+            color: #007bff;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .clear-date:hover {
+            text-decoration: underline;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-container input[type="checkbox"] {
+            margin-right: 8px;
+            width: auto;
+        }
+        .sort-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -231,8 +248,18 @@
             <button class="mobile-filters-button">Mostrar Filtros</button>
             <div class="filters">
                 <div class="filter-card">
-                    <label for="fecha">Selecciona la fecha:</label>
-                    <input type="date" id="fecha" />
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="usarRangoFechas">
+                        <label for="usarRangoFechas">Usar rango de fechas</label>
+                    </div>
+                    <div id="rangoFechas">
+                        <label for="fechaInicio">Fecha inicio:</label>
+                        <input type="date" id="fechaInicio">
+                        <label for="fechaFin">Fecha fin:</label>
+                        <input type="date" id="fechaFin">
+                    </div>
+                    <label for="fecha">Fecha concreta: <span id="fechaHoy" class="clear-date">(Usar hoy)</span></label>
+                    <input type="date" id="fecha">
                     <label for="cpv">CPV:</label>
                     <input type="text" id="cpv" placeholder="Código CPV" />
                     <label for="identificador">Nº Expediente:</label>
@@ -244,7 +271,6 @@
                     <label for="subtipo">Tipo:</label>
                     <select id="subtipo" style="width: 100%;">
                         <option value="">Selecciona un tipo</option>
-                        <!-- Opciones generadas dinámicamente desde JavaScript -->
                     </select>
                     <button onclick="buscarDatos()">Buscar</button>
                 </div>
@@ -259,39 +285,63 @@
             </div>
         </div>
         <div class="results">
-            <p class="total-anuncios">Total de anuncios esperados: 0</p>
+            <div class="total-anuncios">Total de anuncios esperados: 0 <span id="sortContainer"></span></div>
             <ul id="resultados"></ul>
         </div>
     </div>
 
     <script>
+        let sortDescending = true;
+        let currentNotices = [];
+        let hasFilters = false;
+
         document.addEventListener('DOMContentLoaded', function () {
             const mobileFiltersButton = document.querySelector('.mobile-filters-button');
             if (mobileFiltersButton) {
                 mobileFiltersButton.addEventListener('click', toggleFilters);
-            } else {
-                console.error('No se encontró el botón .mobile-filters-button');
             }
 
             const exportButton = document.getElementById('exportButton');
             if (exportButton) {
                 exportButton.addEventListener('click', exportarDatos);
-            } else {
-                console.error('No se encontró el botón de exportar');
             }
+
+            const usarRangoFechasCheckbox = document.getElementById('usarRangoFechas');
+            if (usarRangoFechasCheckbox) {
+                usarRangoFechasCheckbox.addEventListener('change', function() {
+                    document.getElementById('rangoFechas').style.display = 
+                        this.checked ? 'block' : 'none';
+                });
+            }
+
+            const fechaHoyLink = document.getElementById('fechaHoy');
+            if (fechaHoyLink) {
+                fechaHoyLink.addEventListener('click', function() {
+                    const fechaInput = document.getElementById('fecha');
+                    fechaInput.value = obtenerFechaFormateadaInput(obtenerFechaLaboral());
+                });
+            }
+
+            const filterInputs = document.querySelectorAll('.filter-card input, .filter-card select');
+            filterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    hasFilters = Array.from(filterInputs).some(input => {
+                        return (input.type === 'text' || input.type === 'date') && input.value !== '' ||
+                               (input.type === 'checkbox' && input.checked) ||
+                               (input.tagName === 'SELECT' && input.value !== '');
+                    });
+                });
+            });
+
+            llenarDesplegableSubtipos();
+            buscarDatos();
         });
 
         function toggleFilters() {
             const filters = document.querySelector('.filters');
             const button = document.querySelector('.mobile-filters-button');
-
-            if (!filters || !button) {
-                console.error('No se encontraron los elementos .filters o .mobile-filters-button');
-                return;
-            }
-
+            if (!filters || !button) return;
             filters.classList.toggle('active');
-
             button.textContent = filters.classList.contains('active') ? 'Ocultar Filtros' : 'Mostrar Filtros';
         }
 
@@ -373,22 +423,6 @@
             return descripcionesNoticeSubtype[subtipo] || "Subtipo no especificado.";
         }
 
-        function obtenerFechaValida() {
-            const hoy = new Date();
-            const diaSemana = hoy.getDay();
-
-            if (diaSemana === 0) {
-                hoy.setDate(hoy.getDate() - 2);
-            } else if (diaSemana === 6) {
-                hoy.setDate(hoy.getDate() - 1);
-            }
-
-            const año = hoy.getFullYear();
-            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-            const dia = String(hoy.getDate()).padStart(2, '0');
-            return `${año}-${mes}-${dia}`;
-        }
-
         function formatearFecha(fechaISO) {
             const fecha = new Date(fechaISO);
             if (isNaN(fecha.getTime())) {
@@ -414,6 +448,8 @@
 
         function llenarDesplegableSubtipos() {
             const selectSubtipo = document.getElementById('subtipo');
+            selectSubtipo.innerHTML = '<option value="">Selecciona un tipo</option>';
+            
             for (const [key, value] of Object.entries(descripcionesNoticeSubtype)) {
                 const option = document.createElement('option');
                 option.value = key;
@@ -422,25 +458,163 @@
             }
         }
 
-        function inicializarFecha() {
-            const fechaInput = document.getElementById('fecha');
-            const fechaValida = obtenerFechaValida();
-            fechaInput.value = fechaValida;
-            llenarDesplegableSubtipos();
-            buscarDatos();
+        function obtenerFechaLaboral() {
+            const hoy = new Date();
+            const diaSemana = hoy.getDay();
+            if (diaSemana === 0) {
+                hoy.setDate(hoy.getDate() - 2);
+            } else if (diaSemana === 6) {
+                hoy.setDate(hoy.getDate() - 1);
+            }
+            return hoy;
+        }
+
+        function obtenerFechaFormateadaInput(fecha) {
+            const año = fecha.getFullYear();
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+        }
+
+        function formatDateForAPI(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0].replace(/-/g, '');
+        }
+
+        function toggleSortOrder() {
+            sortDescending = !sortDescending;
+            updateSortButton();
+            renderResults(currentNotices);
+        }
+
+        function updateSortButton() {
+            const sortContainer = document.getElementById('sortContainer');
+            if (!sortContainer) return;
+            
+            sortContainer.innerHTML = `
+                <span class="sort-control" onclick="toggleSortOrder()">
+                    ${sortDescending ? '↓ Más recientes primero' : '↑ Más antiguos primero'}
+                </span>
+            `;
+        }
+
+        function renderResults(notices) {
+            const resultados = document.getElementById('resultados');
+            resultados.innerHTML = '';
+
+            if (!notices || notices.length === 0) {
+                resultados.innerHTML = '<li>No se encontraron anuncios</li>';
+                return;
+            }
+
+            const sortedNotices = [...notices].sort((a, b) => {
+                const dateA = new Date(a["publication-date"]).getTime();
+                const dateB = new Date(b["publication-date"]).getTime();
+                return sortDescending ? dateB - dateA : dateA - dateB;
+            });
+
+            sortedNotices.forEach(anuncio => {
+                const pdfSPA = anuncio.links?.pdf?.SPA;
+                const htmlSPA = anuncio.links?.html?.SPA;
+                const buyerProfile = anuncio["buyer-profile"]?.[0];
+                const noticeType = anuncio["notice-type"];
+                const noticeTypeTraducido = traducirNoticeType(noticeType);
+                const noticeSubtype = anuncio["notice-subtype"];
+                const noticeSubtypeDescripcion = describirNoticeSubtype(noticeSubtype);
+
+                if (pdfSPA || htmlSPA) {
+                    const item = document.createElement('li');
+                    item.className = 'card';
+                    const fechaLimite = anuncio["deadline-receipt-request"];
+                    const fechaLimiteFormateada = fechaLimite
+                        ? (fechaLimite.includes(",")
+                            ? formatearFecha(fechaLimite.split(",")[0])
+                            : formatearFecha(fechaLimite))
+                        : 'No disponible';
+                    const valorTotalFormateado = formatearValorTotal(anuncio["total-value"]);
+
+                    item.innerHTML = `
+                        <div class="card-header">
+                            <div>
+                                <strong>🏢 Nº DOUE:</strong> ${anuncio["publication-number"] || 'No disponible'} <br>
+                                <strong>🔖 Nº Exp.:</strong> ${anuncio["internal-identifier-proc"] || 'No disponible'} <br>
+                                <strong>📑 Objeto:</strong> ${anuncio["BT-24-Procedure"]?.spa || 'No disponible'} <br>
+                                <strong>🔖 CPV:</strong> ${anuncio["classification-cpv"]?.join(', ') || 'No disponible'} <br>
+                                <strong>🏛️ </strong> ${anuncio["AU"]?.spa?.join(', ') || 'No disponible'}
+                                ${buyerProfile ? `<a href="${buyerProfile}" target="_blank" class="icon">🔗 Ver perfil</a>` : ''} <br>
+                                <strong>📧 </strong> <a href="mailto:${anuncio["buyer-email"]}">${anuncio["buyer-email"] || 'No disponible'}</a>
+                            </div>
+                            <div class="fecha-actualizacion">${formatearFecha(anuncio["publication-date"])}</div>
+                        </div>
+                        <div class="card-footer">
+                            <div>
+                                <span class="icon">💰</span> ${valorTotalFormateado}
+                                ${htmlSPA ? `<a href="${htmlSPA}" target="_blank" class="mini-button">Ver anuncio</a>` : ''}
+                                ${pdfSPA ? `<a href="${pdfSPA}" target="_blank" class="mini-button2">Descargar PDF</a>` : ''}
+                                <span class="icon">📅</span> ${fechaLimiteFormateada}
+                                <span class="icon">🏙️</span> ${anuncio["touchpoint-city-revieworg-lot"]?.join(', ') || 'No disponible'}
+                            </div>
+                        </div>
+                        <div class="separator"></div>
+                        <div>
+                            <strong>Tipo:</strong> ${noticeSubtypeDescripcion}
+                        </div>
+                    `;
+                    resultados.appendChild(item);
+                }
+            });
         }
 
         async function buscarDatos() {
-            const fechaSeleccionada = document.getElementById('fecha').value;
             const cpv = document.getElementById('cpv').value;
             const identificador = document.getElementById('identificador').value;
             const valorMinimo = document.getElementById('valorMinimo').value;
             const numeroPublicacion = document.getElementById('numeroPublicacion').value;
             const subtipo = document.getElementById('subtipo').value;
+            const usarRangoFechas = document.getElementById('usarRangoFechas').checked;
+            const fechaInicio = formatDateForAPI(document.getElementById('fechaInicio').value);
+            const fechaFin = formatDateForAPI(document.getElementById('fechaFin').value);
+            const fechaUnica = formatDateForAPI(document.getElementById('fecha').value);
 
-            if (!fechaSeleccionada) {
-                alert('Por favor, selecciona una fecha.');
-                return;
+            let queryBase = 'buyer-country=ESP';
+            
+            if (!hasFilters) {
+                const fechaHoy = formatDateForAPI(obtenerFechaFormateadaInput(obtenerFechaLaboral()));
+                queryBase += ` and publication-date=${fechaHoy}`;
+                document.getElementById('sortContainer').innerHTML = '';
+            } else {
+                if (usarRangoFechas && fechaInicio && fechaFin) {
+                    if (fechaInicio > fechaFin) {
+                        alert('La fecha de inicio no puede ser posterior a la fecha final');
+                        return;
+                    }
+                    queryBase += ` and publication-date>=${fechaInicio} and publication-date<=${fechaFin}`;
+                } else if (fechaUnica) {
+                    queryBase += ` and publication-date=${fechaUnica}`;
+                }
+                
+                if (identificador) {
+                    queryBase += ` and internal-identifier-proc=${identificador}`;
+                }
+                
+                if (cpv) {
+                    queryBase += ` and classification-cpv=${cpv}`;
+                }
+                
+                if (valorMinimo) {
+                    queryBase += ` and total-value>=${valorMinimo}`;
+                }
+                
+                if (numeroPublicacion) {
+                    queryBase += ` and publication-number=${numeroPublicacion}`;
+                }
+                
+                if (subtipo) {
+                    queryBase += ` and notice-subtype=${subtipo}`;
+                }
+                
+                updateSortButton();
             }
 
             const resultados = document.getElementById('resultados');
@@ -453,10 +627,11 @@
             let totalNotices = 0;
             let loadedNotices = 0;
             const tiposProcedimiento = {};
+            currentNotices = [];
 
             while (hasMoreResults) {
                 const requestData = {
-                    query: `buyer-country=ESP and publication-date=${fechaSeleccionada.replace(/-/g, '')} ${cpv ? `and classification-cpv=${cpv}` : ''} ${identificador ? `and internal-identifier-proc=${identificador}` : ''} ${valorMinimo ? `and total-value>=${valorMinimo}` : ''} ${numeroPublicacion ? `and publication-number=${numeroPublicacion}` : ''} ${subtipo ? `and notice-subtype=${subtipo}` : ''}`,
+                    query: queryBase,
                     fields: [
                         "publication-number",
                         "links",
@@ -491,6 +666,8 @@
                     });
 
                     if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error response:', errorText);
                         throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
                     }
 
@@ -502,58 +679,10 @@
                     }
 
                     if (data.notices && data.notices.length > 0) {
+                        currentNotices.push(...data.notices);
+                        loadedNotices += data.notices.length;
+
                         data.notices.forEach(anuncio => {
-                            loadedNotices++;
-                            const pdfSPA = anuncio.links?.pdf?.SPA;
-                            const htmlSPA = anuncio.links?.html?.SPA;
-                            const buyerProfile = anuncio["buyer-profile"]?.[0];
-                            const noticeType = anuncio["notice-type"];
-                            const noticeTypeTraducido = traducirNoticeType(noticeType);
-                            const noticeSubtype = anuncio["notice-subtype"];
-                            const noticeSubtypeDescripcion = describirNoticeSubtype(noticeSubtype);
-
-                            if (pdfSPA || htmlSPA) {
-                                const item = document.createElement('li');
-                                item.className = 'card';
-                                const fechaLimite = anuncio["deadline-receipt-request"];
-                                const fechaLimiteFormateada = fechaLimite
-                                    ? (fechaLimite.includes(",")
-                                        ? formatearFecha(fechaLimite.split(",")[0])
-                                        : formatearFecha(fechaLimite))
-                                    : 'No disponible';
-                                const valorTotalFormateado = formatearValorTotal(anuncio["total-value"]);
-
-                                item.innerHTML = `
-                                    <div class="card-header">
-                                        <div>
-                                            <strong>🏢 Nº DOUE:</strong> ${anuncio["publication-number"] || 'No disponible'} <br>
-                                            <strong>🔖 Nº Exp.:</strong> ${anuncio["internal-identifier-proc"] || 'No disponible'} <br>
-                                            <strong>📑 Objeto:</strong> ${anuncio["BT-24-Procedure"]?.spa || 'No disponible'} <br>
-                                            <strong>🔖 CPV:</strong> ${anuncio["classification-cpv"]?.join(', ') || 'No disponible'} <br>
-                                            <strong>🏛️ </strong> ${anuncio["AU"]?.spa?.join(', ') || 'No disponible'}
-                                            ${buyerProfile ? `<a href="${buyerProfile}" target="_blank" class="icon">🔗 Ver perfil</a>` : ''} <br>
-                                            <strong>📧 </strong> <a href="mailto:${anuncio["buyer-email"]}">${anuncio["buyer-email"] || 'No disponible'}</a>
-                                        </div>
-                                        <div class="fecha-actualizacion">${formatearFecha(anuncio["publication-date"])}</div>
-                                    </div>
-                                    <div class="card-footer">
-                                        <div>
-                                            <span class="icon">💰</span> ${valorTotalFormateado}
-                                            ${htmlSPA ? `<a href="${htmlSPA}" target="_blank" class="mini-button">Ver anuncio</a>` : ''}
-                                            ${pdfSPA ? `<a href="${pdfSPA}" target="_blank" class="mini-button2">Descargar PDF</a>` : ''}
-                                            <span class="icon">📅</span> ${fechaLimiteFormateada}
-                                            <span class="icon">🏙️</span> ${anuncio["touchpoint-city-revieworg-lot"]?.join(', ') || 'No disponible'}
-                                        </div>
-                                    </div>
-                                    <div class="separator"></div>
-                                    <div>
-                                        <strong>Tipo:</strong> ${noticeSubtypeDescripcion}
-                                    </div>
-                                `;
-                                resultados.appendChild(item);
-                            }
-
-                            // Contar los tipos de procedimiento
                             const tipoProcedimiento = anuncio["procedure-type"];
                             if (tipoProcedimiento) {
                                 tiposProcedimiento[tipoProcedimiento] = (tiposProcedimiento[tipoProcedimiento] || 0) + 1;
@@ -561,12 +690,11 @@
                         });
                     }
 
-                    // Verificar si hay más resultados
                     if (data.iterationNextToken && loadedNotices < totalNotices) {
-                        iterationNextToken = data.iterationNextToken; // Actualizar el token
-                        await delay(1000); // Retraso de 1 segundo entre solicitudes
+                        iterationNextToken = data.iterationNextToken;
+                        await delay(1000);
                     } else {
-                        hasMoreResults = false; // No hay más resultados
+                        hasMoreResults = false;
                     }
                 } catch (error) {
                     console.error('Error al realizar la solicitud:', error);
@@ -575,8 +703,9 @@
                 }
             }
 
+            renderResults(currentNotices);
+
             if (loadedNotices === totalNotices) {
-                // Mostrar los tipos de procedimiento y sus conteos
                 let tiposProcedimientoHTML = "<p>Tipos de procedimiento encontrados:</p><ul>";
                 for (const [tipo, conteo] of Object.entries(tiposProcedimiento)) {
                     tiposProcedimientoHTML += `<li>${tipo}: ${conteo}</li>`;
@@ -588,41 +717,39 @@
             }
         }
 
-    function exportarDatos() {
-        const resultados = document.getElementById('resultados').getElementsByTagName('li');
-        if (resultados.length === 0) {
-            alert('No hay datos para exportar.');
-            return;
+        function exportarDatos() {
+            const resultados = document.getElementById('resultados').getElementsByTagName('li');
+            if (resultados.length === 0) {
+                alert('No hay datos para exportar.');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Nº DOUE;Nº Exp.;Objeto;CPV;Entidad;Email;Valor Total;Ciudad;Enlace;PDF\n";
+
+            Array.from(resultados).forEach(item => {
+                const numeroDOUE = item.querySelector('strong:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const numeroExp = item.querySelector('strong:nth-of-type(2)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const objeto = item.querySelector('strong:nth-of-type(3)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const cpv = item.querySelector('strong:nth-of-type(4)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const entidad = item.querySelector('strong:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const email = item.querySelector('a[href^="mailto:"]')?.textContent.trim() || 'No disponible';
+                const valorTotal = item.querySelector('.card-footer span:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const ciudad = item.querySelector('.card-footer span:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
+                const enlace = item.querySelector('.mini-button')?.getAttribute('href') || 'No disponible';
+                const pdf = item.querySelector('.mini-button2')?.getAttribute('href') || 'No disponible';
+
+                csvContent += `${numeroDOUE};${numeroExp};${objeto};${cpv};${entidad};${email};${valorTotal};${ciudad};${enlace};${pdf}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "anuncios_contratacion.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Nº DOUE;Nº Exp.;Objeto;CPV;Entidad;Email;Valor Total;Ciudad;Enlace;PDF\n";
-
-        Array.from(resultados).forEach(item => {
-            const numeroDOUE = item.querySelector('strong:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const numeroExp = item.querySelector('strong:nth-of-type(2)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const objeto = item.querySelector('strong:nth-of-type(3)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const cpv = item.querySelector('strong:nth-of-type(4)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const entidad = item.querySelector('strong:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const email = item.querySelector('a[href^="mailto:"]')?.textContent.trim() || 'No disponible';
-            const valorTotal = item.querySelector('.card-footer span:nth-of-type(1)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const ciudad = item.querySelector('.card-footer span:nth-of-type(5)')?.nextSibling?.textContent.trim() || 'No disponible';
-            const enlace = item.querySelector('.mini-button')?.getAttribute('href') || 'No disponible';
-            const pdf = item.querySelector('.mini-button2')?.getAttribute('href') || 'No disponible';
-
-            csvContent += `${numeroDOUE};${numeroExp};${objeto};${cpv};${entidad};${email};${valorTotal};${ciudad};${enlace};${pdf}\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "anuncios_contratacion.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-        window.onload = inicializarFecha;
     </script>
 </body>
 </html>
