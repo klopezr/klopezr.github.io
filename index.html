@@ -714,6 +714,132 @@
             gap: 10px;
         }
     }
+    .search-status-card {
+        text-align: center;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-options {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #e9ecef;
+        border-radius: 8px;
+        text-align: left;
+    }
+
+    .source-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 15px 0;
+    }
+
+    .source-selector label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .search-button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    .search-button:hover {
+        background-color: #218838;
+    }
+
+    .retry-button {
+        background-color: #17a2b8;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-top: 10px;
+    }
+
+    .retry-button:hover {
+        background-color: #138496;
+    }
+
+    #searchProgress {
+        margin-top: 15px;
+        text-align: left;
+    }
+
+    #searchProgress p {
+        margin: 5px 0;
+        padding: 5px;
+        border-left: 3px solid #6c757d;
+        padding-left: 10px;
+    }
+
+    .text-success {
+        color: #28a745;
+    }
+
+    .text-warning {
+        color: #ffc107;
+    }
+
+    .text-error {
+        color: #dc3545;
+    }
+	.alert {
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+    }
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    .retry-button {
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .retry-button:hover {
+        background-color: #138496;
+    }
+    .search-button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 100%;
+    }
+
     </style>
 </head>
 <body>
@@ -1148,9 +1274,6 @@
                 }
             }
         }
-        function checkNewFeed() {
-            fetchAndDisplayLicitaciones(allEntries);
-        }
 		function convertToNumber(value) {
 			const numericValue = value.replace(/\./g, '').replace(',', '.');
 			return parseFloat(numericValue) || 0;
@@ -1472,5 +1595,289 @@
 			await loadSelectedFeeds();
         };
     </script>
+	
+<script>
+    let currentSearch = {
+        active: false,
+        abortController: null
+    };
+
+    async function searchExpediente() {
+        const expediente = document.getElementById("expedienteFilter").value.trim();
+        if (!expediente) {
+            alert("Por favor, introduce un número de expediente");
+            return;
+        }
+
+        if (currentSearch.active && currentSearch.abortController) {
+            currentSearch.abortController.abort();
+        }
+
+        currentSearch = {
+            active: true,
+            abortController: new AbortController(),
+            found: false
+        };
+
+        const licitacionesContainer = document.getElementById("licitacionesContainer");
+        licitacionesContainer.innerHTML = `
+            <div class="search-status-card">
+                <h3><i class="fas fa-search"></i> Buscando expediente: ${expediente}</h3>
+                <div class="search-options">
+                    <p>Selecciona fuentes a consultar:</p>
+                    <div class="source-selector">
+                        <label>
+                            <input type="checkbox" id="searchNormal" checked>
+                            <span>Contratos Normales</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" id="searchMenor" checked>
+                            <span>Contratos Menores</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" id="searchOtras" checked>
+                            <span>Plataformas Externas</span>
+                        </label>
+                    </div>
+                    <button onclick="startExpedienteSearch()" class="search-button">
+                        <i class="fas fa-play"></i> Iniciar Búsqueda
+                    </button>
+                    <button onclick="cancelSearch()" class="search-button" style="background-color: #dc3545; margin-top: 5px;">
+                        <i class="fas fa-stop"></i> Cancelar
+                    </button>
+                </div>
+                <div id="searchProgress" style="text-align: center; margin-top: 15px;"></div>
+            </div>
+        `;
+    }
+
+    function cancelSearch() {
+        if (currentSearch.active && currentSearch.abortController) {
+            currentSearch.abortController.abort();
+            document.getElementById("searchProgress").innerHTML += `
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Búsqueda cancelada por el usuario</p>
+            `;
+            currentSearch.active = false;
+        }
+    }
+
+    async function startExpedienteSearch() {
+        const expediente = document.getElementById("expedienteFilter").value.trim();
+        const searchNormal = document.getElementById("searchNormal").checked;
+        const searchMenor = document.getElementById("searchMenor").checked;
+        const searchOtras = document.getElementById("searchOtras").checked;
+        
+        const progressElement = document.getElementById("searchProgress");
+        progressElement.innerHTML = `<p><i class="fas fa-spinner fa-spin"></i> Preparando búsqueda...</p>`;
+
+        const feedsToSearch = [];
+        if (searchNormal) feedsToSearch.push({ 
+            url: initialFeedUrlNormal, 
+            name: "Contratos Normales", 
+            id: "normal"
+        });
+        if (searchMenor) feedsToSearch.push({ 
+            url: initialFeedUrlMenor, 
+            name: "Contratos Menores", 
+            id: "menor"
+        });
+        if (searchOtras) feedsToSearch.push({ 
+            url: initialFeedUrlOtras, 
+            name: "Plataformas Externas", 
+            id: "otras"
+        });
+
+        if (feedsToSearch.length === 0) {
+            progressElement.innerHTML = `<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> ¡Selecciona al menos una fuente!</p>`;
+            return;
+        }
+
+        try {
+            progressElement.innerHTML = feedsToSearch.map(feed => `
+                <div id="feed-${feed.id}" style="margin-bottom: 10px;">
+                    <p>
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        <strong>${feed.name}:</strong>
+                        <span id="status-${feed.id}">Preparando...</span>
+                        <span id="page-${feed.id}" style="margin-left: 10px;"></span>
+                    </p>
+                    <progress id="progress-${feed.id}" value="0" max="100" style="width: 100%;"></progress>
+                </div>
+            `).join('');
+
+            const updateStatus = (feedId, status, page = 0, percent = 0) => {
+                const statusElement = document.getElementById(`status-${feedId}`);
+                const pageElement = document.getElementById(`page-${feedId}`);
+                const progressElement = document.getElementById(`progress-${feedId}`);
+                
+                if (statusElement) statusElement.innerHTML = status;
+                if (pageElement) pageElement.textContent = page > 0 ? `Pág. ${page}` : '';
+                if (progressElement) progressElement.value = percent;
+            };
+
+            let foundEntry = null;
+            currentSearch.found = false;
+            
+            const searchPromises = feedsToSearch.map(async (feed) => {
+                let currentUrl = feed.url;
+                let pageCount = 0;
+                const startTime = Date.now();
+                
+                try {
+                    while (currentUrl && !currentSearch.found && !currentSearch.abortController.signal.aborted) {
+                        pageCount++;
+                        updateStatus(feed.id, "🔍 Buscando...", pageCount, (pageCount % 100));
+                        
+                        const response = await fetchWithTimeout(currentUrl, {
+                            signal: currentSearch.abortController.signal
+                        }, 4000); // Timeout de 4 segundos
+                        
+                        if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+                        
+                        const text = await response.text();
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(text, "text/xml");
+                        
+                        const entries = xmlDoc.getElementsByTagName("entry");
+                        for (let entry of entries) {
+                            if (currentSearch.abortController.signal.aborted) break;
+                            
+                            const contractFolder = entry.getElementsByTagName("cbc:ContractFolderID")[0];
+                            if (contractFolder?.textContent === expediente) {
+                                foundEntry = entry;
+                                foundEntry.feedName = feed.name;
+                                currentSearch.found = true;
+                                
+                                // Mostrar resultado inmediatamente
+                                const elapsed = ((Date.now() - startTime)/1000).toFixed(1);
+                                updateStatus(feed.id, `✅ Encontrado en ${elapsed}s`, pageCount, 100);
+                                await fetchAndDisplayLicitaciones([foundEntry]);
+                                
+                                // Agregar confirmación visual
+                                progressElement.innerHTML += `
+                                    <div class="alert alert-success" style="margin-top: 15px;">
+                                        <i class="fas fa-check-circle"></i> 
+                                        <strong>Expediente encontrado en ${feed.name}</strong><br>
+                                        <small>Página ${pageCount} | Tiempo: ${elapsed}s</small>
+                                    </div>
+                                `;
+                                
+                                return; // Finalizar búsqueda
+                            }
+                        }
+                        
+                        const nextLink = xmlDoc.querySelector("link[rel='next']")?.getAttribute("href");
+                        if (!nextLink) {
+                            updateStatus(feed.id, "❌ Fin del feed", pageCount, 100);
+                            break;
+                        }
+                        currentUrl = nextLink;
+                        
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                    }
+                    
+                    if (!currentSearch.found && !currentSearch.abortController.signal.aborted) {
+                        updateStatus(feed.id, "⚠️ No encontrado", pageCount, 100);
+                    }
+                    
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error(`Error en ${feed.name}:`, error);
+                        updateStatus(feed.id, `❌ ${error.message}`, pageCount, 100);
+                    }
+                }
+            });
+
+            await Promise.race([
+                Promise.allSettled(searchPromises),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error("Timeout global alcanzado")), 45000) // 45 segundos
+                )
+            ]);
+            
+            if (!currentSearch.found && !currentSearch.abortController.signal.aborted) {
+                progressElement.innerHTML += `
+                    <div class="alert alert-warning" style="margin-top: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Expediente no encontrado en las fuentes seleccionadas</strong>
+                        <button onclick="searchExpediente()" class="retry-button" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> Intentar nuevamente
+                        </button>
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error("Error en la búsqueda:", error);
+                progressElement.innerHTML += `
+                    <div class="alert alert-danger" style="margin-top: 20px;">
+                        <i class="fas fa-times-circle"></i>
+                        <strong>Error en la búsqueda:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        } finally {
+            currentSearch.active = false;
+        }
+    }
+
+    async function fetchWithTimeout(url, options = {}, timeout = 5000, retries = 1) {
+        const proxyUrls = [
+            "https://corsmirror.com/v1?url="
+        ];
+        
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            const proxyUrl = proxyUrls[attempt % proxyUrls.length] + encodeURIComponent(url);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(proxyUrl, {
+                    ...options,
+                    signal: controller.signal,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/xml'
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                return response;
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (attempt === retries) throw error;
+                await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+            }
+        }
+    }
+
+    function checkNewFeed() {
+        const expediente = document.getElementById("expedienteFilter").value.trim();
+        const otrosFiltros = 
+            document.getElementById("cpvFilter").value || 
+            document.getElementById("importeFilter").value || 
+            document.getElementById("clienteFilter").value || 
+            document.getElementById("ciudadFilter").value || 
+            document.getElementById("tipoFilter").value || 
+            document.getElementById("estadoFilter").value || 
+            document.getElementById("procedimientoFilter").value;
+        
+        if (expediente && !otrosFiltros) {
+            searchExpediente();
+        } else {
+            if (currentSearch.active) {
+                cancelSearch();
+            }
+            fetchAndDisplayLicitaciones(allEntries);
+        }
+    }
+</script>
 </body>
 </html>
