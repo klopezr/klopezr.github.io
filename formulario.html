@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario de Envío</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --rojo: #990000;
+      --negro: #000000;
+      --blanco: #ffffff;
+      --gris: #f2f2f2;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--gris);
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: var(--rojo);
+      padding: 10px 20px;
+      color: var(--blanco);
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header img {
+      height: 50px;
+      margin-right: 15px;
+    }
+
+    h1 {
+      margin: 20px;
+      color: #333;
+      text-align: center;
+    }
+
+    form {
+      background: var(--blanco);
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .required::after {
+      content: " *";
+      color: red;
+    }
+
+    input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--rojo);
+      color: var(--blanco);
+      padding: 10px 20px;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+    }
+
+    button:hover {
+      background: #b30000;
+    }
+
+    .resumen {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff8f8;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .progress {
+      height: 30px;
+      width: 100%;
+      background: var(--negro);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--rojo);
+      transition: width 0.5s ease;
+    }
+
+    #progress {
+      max-width: 600px;
+      margin: 20px auto;
+      text-align: center;
+      color: var(--rojo);
+      font-weight: bold;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    footer {
+      text-align: center;
+      margin: 40px 0 20px;
+      color: #666;
+    }
+
+    a {
+      color: var(--rojo);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      form, .resumen {
+        margin: 10px;
+        padding: 15px;
+      }
+
+      button {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://www.publicaauditores.es/wp-content/uploads/2024/02/logotipo-publica-asesores-BN-1.png" alt="Logo">
+  <h2>Formulario de Documentación</h2>
+</header>
+
+<h1>Adjuntar Documentos</h1>
+
+<form id="formulario" onsubmit="event.preventDefault(); mostrarResumen();">
+  <label for="nif" class="required">NIF</label>
+  <input type="text" id="nif" required>
+
+  <label for="facturas">Nº Facturas</label>
+  <input type="file" id="facturas">
+
+  <label for="doc_adicional">Documento adicional</label>
+  <input type="file" id="doc_adicional">
+
+  <label for="otros">Otros</label>
+  <input type="file" id="otros">
+
+  <button type="submit">Revisar antes de enviar</button>
+</form>
+
+<div class="resumen hidden" id="resumen">
+  <h2>Resumen del envío</h2>
+  <ul id="resumen-lista"></ul>
+  <button onclick="modificar()">Modificar</button>
+  <button onclick="enviar()">Enviar</button>
+</div>
+
+<div class="resumen hidden" id="progress">
+  <div class="progress">
+    <div id="progress-bar" class="progress-bar"></div>
+  </div>
+  <p id="respuesta">Enviando...</p>
+</div>
+
+<footer>
+  <p>&copy; 2025 <a href="https://www.publicaauditores.es/" target="_blank">Pública Auditores</a></p>
+</footer>
+
+<script>
+  const encodedURL = "aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J4TklfTks3Y201YUY2U3d5ell3Wm9KVlBpZEZFaUU2NS0tMlJKMk1jM3F3YTliNEI2SV9wZWw3MVRHcEtNcU9lZC0vZXhlYw==";
+  const SCRIPT_URL = atob(encodedURL);
+
+  function mostrarResumen() {
+    const nif = document.getElementById("nif").value.trim();
+    if (!nif) return alert("El campo NIF es obligatorio.");
+
+    const resumenLista = document.getElementById("resumen-lista");
+    resumenLista.innerHTML = "";
+
+    const campos = ["nif", "facturas", "doc_adicional", "otros"];
+    campos.forEach(id => {
+      const input = document.getElementById(id);
+      if (id === "nif") {
+        resumenLista.innerHTML += `<li><strong>NIF:</strong> ${input.value}</li>`;
+      } else if (input.files.length > 0) {
+        resumenLista.innerHTML += `<li><strong>${input.previousElementSibling.textContent}:</strong> ${input.files[0].name}</li>`;
+      }
+    });
+
+    document.getElementById("resumen").classList.remove("hidden");
+  }
+
+  function modificar() {
+    document.getElementById("resumen").classList.add("hidden");
+  }
+
+  async function enviar() {
+    const nif = document.getElementById("nif").value.trim();
+    if (!nif) return alert("El campo NIF es obligatorio.");
+
+    const formData = new FormData();
+    formData.append("nif", nif);
+
+    const archivos = ["facturas", "doc_adicional", "otros"];
+    await Promise.all(archivos.map(id => new Promise(resolve => {
+      const input = document.getElementById(id);
+      if (!input.files[0]) return resolve();
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result.split(',')[1];
+        formData.append(id, base64);
+        formData.append(id + "_name", input.files[0].name);
+        formData.append(id + "_type", input.files[0].type);
+        resolve();
+      };
+      reader.readAsDataURL(input.files[0]);
+    })));
+
+    const progress = document.getElementById("progress");
+    const progressBar = document.getElementById("progress-bar");
+    const respuesta = document.getElementById("respuesta");
+
+    progress.classList.remove("hidden");
+    progressBar.style.width = "0%";
+    respuesta.innerText = "Subiendo archivos, esto puede tardar...";
+
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    progressBar.style.width = "100%";
+    respuesta.innerText = await response.text();
+
+    document.getElementById("formulario").reset();
+    document.getElementById("resumen").classList.add("hidden");
+  }
+</script>
+
+</body>
+</html>
