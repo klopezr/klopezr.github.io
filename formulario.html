@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Formulario de Envío</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --rojo: #990000;
@@ -17,33 +19,53 @@
       background: var(--gris);
       margin: 0;
       padding: 0;
+      line-height: 1.5;
+      scroll-behavior: smooth;
     }
 
     header {
       background: var(--rojo);
-      padding: 10px 20px;
+      padding: 15px 20px;
       color: var(--blanco);
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
+      position: relative;
+      min-height: 60px;
     }
 
-    header img {
+    .logo {
       height: 50px;
-      margin-right: 15px;
+      width: auto;
+      z-index: 1;
+    }
+
+    .header-title {
+      position: absolute;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 0;
+    }
+
+    .header-title h2 {
+      margin: 0 auto;
+      max-width: calc(100% - 70px);
+      padding-left: 60px;
+      font-size: 1.3rem;
     }
 
     h1 {
-      margin: 20px;
+      margin: 20px 15px;
       color: #333;
       text-align: center;
+      font-size: 1.5rem;
     }
 
     form {
       background: var(--blanco);
       max-width: 600px;
       margin: 20px auto;
-      padding: 20px;
+      padding: 25px;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
@@ -52,6 +74,7 @@
       display: block;
       margin-top: 15px;
       font-weight: bold;
+      font-size: 0.95rem;
     }
 
     .required::after {
@@ -61,21 +84,65 @@
 
     input[type="text"], input[type="file"] {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 5px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    /* Mejora para inputs de archivo en móviles */
+    .file-input-container {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-button {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 12px 20px;
+      background-color: #f8f8f8;
+      color: #333;
+      font-size: 1rem;
+      font-weight: normal;
+      cursor: pointer;
+      display: block;
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    .file-input {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-name {
+      margin-top: 5px;
+      font-size: 0.9rem;
+      color: #666;
+      word-break: break-all;
     }
 
     button {
       background: var(--rojo);
       color: var(--blanco);
-      padding: 10px 20px;
+      padding: 12px 20px;
       border: none;
       margin-top: 20px;
       cursor: pointer;
       border-radius: 5px;
       width: 100%;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: background 0.3s;
     }
 
     button:hover {
@@ -85,10 +152,11 @@
     .resumen {
       max-width: 600px;
       margin: 20px auto;
-      padding: 20px;
+      padding: 25px;
       background: #fff8f8;
       border: 1px solid #eee;
       border-radius: 10px;
+      scroll-margin-top: 20px;
     }
 
     .hidden {
@@ -117,16 +185,23 @@
       text-align: center;
       color: var(--rojo);
       font-weight: bold;
+      scroll-margin-top: 20px;
     }
 
     ul {
       padding-left: 20px;
+      margin-bottom: 25px;
+    }
+
+    li {
+      margin-bottom: 8px;
     }
 
     footer {
       text-align: center;
       margin: 40px 0 20px;
       color: #666;
+      padding: 0 15px;
     }
 
     a {
@@ -138,19 +213,125 @@
       text-decoration: underline;
     }
 
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .button-group button {
+      margin-top: 0;
+      flex: 1;
+    }
+
+    .justificante {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 25px;
+      background: white;
+      border: 2px solid var(--rojo);
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .justificante-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    .justificante-logo {
+      height: 50px;
+      margin-right: 20px;
+    }
+
+    .justificante-title {
+      font-size: 1.5rem;
+      color: var(--rojo);
+      margin: 0;
+    }
+
+    .justificante-body {
+      margin-top: 20px;
+    }
+
+    .justificante-item {
+      margin-bottom: 10px;
+      display: flex;
+    }
+
+    .justificante-label {
+      font-weight: bold;
+      min-width: 150px;
+    }
+
+    .justificante-success {
+      color: green;
+      font-weight: bold;
+    }
+
+    .justificante-error {
+      color: red;
+      font-weight: bold;
+    }
+
     @media (max-width: 600px) {
       header {
         flex-direction: column;
         text-align: center;
-      }
-
-      form, .resumen {
-        margin: 10px;
         padding: 15px;
+        min-height: auto;
+      }
+      
+      .logo {
+        margin-bottom: 10px;
+        position: static;
+      }
+      
+      .header-title {
+        position: static;
+        padding-left: 0;
+      }
+      
+      .header-title h2 {
+        max-width: 100%;
+        padding-left: 0;
       }
 
-      button {
-        font-size: 16px;
+      .button-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .justificante-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .justificante-logo {
+        margin-right: 0;
+        margin-bottom: 15px;
+      }
+      
+      .justificante-item {
+        flex-direction: column;
+      }
+      
+      .justificante-label {
+        min-width: auto;
+        margin-bottom: 5px;
+      }
+      
+      /* Mejoras específicas para móviles */
+      input[type="file"] {
+        font-size: 16px; /* Mejor legibilidad en iOS */
+      }
+      
+      .file-input-button {
+        padding: 15px; /* Mayor área de click */
       }
     }
   </style>
@@ -158,8 +339,10 @@
 <body>
 
 <header>
-  <img src="https://www.publicaauditores.es/wp-content/uploads/2024/02/logotipo-publica-asesores-BN-1.png" alt="Logo">
-  <h2>Formulario de Documentación</h2>
+  <img src="PP.png" alt="Logo Pública Auditores" class="logo">
+  <div class="header-title">
+    <h2>Formulario de Auditoría</h2>
+  </div>
 </header>
 
 <h1>Adjuntar Documentos</h1>
@@ -169,13 +352,25 @@
   <input type="text" id="nif" required>
 
   <label for="facturas">Nº Facturas</label>
-  <input type="file" id="facturas">
+  <div class="file-input-container">
+    <span class="file-input-button">Seleccionar archivo</span>
+    <input type="file" id="facturas" class="file-input" accept="*/*">
+  </div>
+  <div id="facturas-name" class="file-name"></div>
 
   <label for="doc_adicional">Documento adicional</label>
-  <input type="file" id="doc_adicional">
+  <div class="file-input-container">
+    <span class="file-input-button">Seleccionar archivo</span>
+    <input type="file" id="doc_adicional" class="file-input" accept="*/*">
+  </div>
+  <div id="doc_adicional-name" class="file-name"></div>
 
   <label for="otros">Otros</label>
-  <input type="file" id="otros">
+  <div class="file-input-container">
+    <span class="file-input-button">Seleccionar archivo</span>
+    <input type="file" id="otros" class="file-input" accept="*/*">
+  </div>
+  <div id="otros-name" class="file-name"></div>
 
   <button type="submit">Revisar antes de enviar</button>
 </form>
@@ -183,8 +378,22 @@
 <div class="resumen hidden" id="resumen">
   <h2>Resumen del envío</h2>
   <ul id="resumen-lista"></ul>
-  <button onclick="modificar()">Modificar</button>
-  <button onclick="enviar()">Enviar</button>
+  <div class="button-group">
+    <button onclick="modificar()">Modificar</button>
+    <button onclick="enviar()">Enviar</button>
+    <button onclick="generarJustificante()" id="justificante-btn" class="hidden">Generar Justificante PDF</button>
+  </div>
+</div>
+
+<div class="justificante hidden" id="justificante">
+  <div class="justificante-header">
+    <img src="PP.png" alt="Logo" class="justificante-logo" id="justificante-logo">
+    <h3 class="justificante-title">Justificante de Envío</h3>
+  </div>
+  <div class="justificante-body" id="justificante-content">
+    <!-- Contenido generado dinámicamente -->
+  </div>
+  <button onclick="generarPDF()" style="margin-top: 20px;">Descargar PDF</button>
 </div>
 
 <div class="resumen hidden" id="progress">
@@ -199,8 +408,28 @@
 </footer>
 
 <script>
+  const { jsPDF } = window.jspdf;
   const encodedURL = "aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J4TklfTks3Y201YUY2U3d5ell3Wm9KVlBpZEZFaUU2NS0tMlJKMk1jM3F3YTliNEI2SV9wZWw3MVRHcEtNcU9lZC0vZXhlYw==";
   const SCRIPT_URL = atob(encodedURL);
+  let ultimoEnvio = null;
+
+  // Configurar eventos para mostrar nombres de archivos
+  document.getElementById('facturas').addEventListener('change', function(e) {
+    document.getElementById('facturas-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
+  });
+  document.getElementById('doc_adicional').addEventListener('change', function(e) {
+    document.getElementById('doc_adicional-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
+  });
+  document.getElementById('otros').addEventListener('change', function(e) {
+    document.getElementById('otros-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
+  });
+
+  function scrollToElement(id) {
+    document.getElementById(id).scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
 
   function mostrarResumen() {
     const nif = document.getElementById("nif").value.trim();
@@ -215,15 +444,17 @@
       if (id === "nif") {
         resumenLista.innerHTML += `<li><strong>NIF:</strong> ${input.value}</li>`;
       } else if (input.files.length > 0) {
-        resumenLista.innerHTML += `<li><strong>${input.previousElementSibling.textContent}:</strong> ${input.files[0].name}</li>`;
+        resumenLista.innerHTML += `<li><strong>${document.querySelector(`label[for="${id}"]`).textContent}:</strong> ${input.files[0].name}</li>`;
       }
     });
 
     document.getElementById("resumen").classList.remove("hidden");
+    scrollToElement("resumen");
   }
 
   function modificar() {
     document.getElementById("resumen").classList.add("hidden");
+    scrollToElement("formulario");
   }
 
   async function enviar() {
@@ -254,19 +485,167 @@
     const respuesta = document.getElementById("respuesta");
 
     progress.classList.remove("hidden");
+    scrollToElement("progress");
     progressBar.style.width = "0%";
     respuesta.innerText = "Subiendo archivos, esto puede tardar...";
 
-    const response = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: formData
-    });
+    try {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: formData
+      });
 
-    progressBar.style.width = "100%";
-    respuesta.innerText = await response.text();
-
-    document.getElementById("formulario").reset();
+      progressBar.style.width = "100%";
+      const resultado = await response.text();
+      respuesta.innerText = resultado;
+      
+      // Guardamos los datos del envío para el justificante
+      ultimoEnvio = {
+        fecha: new Date().toLocaleString(),
+        nif: nif,
+        documentos: archivos.map(id => {
+          const input = document.getElementById(id);
+          return input.files[0] ? {
+            tipo: document.querySelector(`label[for="${id}"]`).textContent,
+            nombre: input.files[0].name
+          } : null;
+        }).filter(Boolean),
+        estado: "success",
+        mensaje: resultado
+      };
+      
+      // Mostramos botón de justificante
+      document.getElementById("justificante-btn").classList.remove("hidden");
+    } catch (error) {
+      progressBar.style.width = "100%";
+      respuesta.innerText = "Error en el envío: " + error.message;
+      
+      ultimoEnvio = {
+        fecha: new Date().toLocaleString(),
+        estado: "error",
+        mensaje: error.message
+      };
+    }
+    
     document.getElementById("resumen").classList.add("hidden");
+  }
+
+  function generarJustificante() {
+    if (!ultimoEnvio) return;
+    
+    const justificante = document.getElementById("justificante");
+    const contenido = document.getElementById("justificante-content");
+    
+    contenido.innerHTML = `
+      <div class="justificante-item">
+        <span class="justificante-label">Fecha y hora:</span>
+        <span>${ultimoEnvio.fecha}</span>
+      </div>
+      <div class="justificante-item">
+        <span class="justificante-label">Estado:</span>
+        <span class="${ultimoEnvio.estado === 'success' ? 'justificante-success' : 'justificante-error'}">
+          ${ultimoEnvio.estado === 'success' ? 'Envío satisfactorio' : 'Error en el envío'}
+        </span>
+      </div>
+      ${ultimoEnvio.nif ? `
+      <div class="justificante-item">
+        <span class="justificante-label">NIF:</span>
+        <span>${ultimoEnvio.nif}</span>
+      </div>` : ''}
+      <div class="justificante-item">
+        <span class="justificante-label">Mensaje:</span>
+        <span>${ultimoEnvio.mensaje}</span>
+      </div>
+      ${ultimoEnvio.documentos && ultimoEnvio.documentos.length > 0 ? `
+      <div style="margin-top: 20px;">
+        <h4>Documentos enviados:</h4>
+        <ul>
+          ${ultimoEnvio.documentos.map(doc => `<li><strong>${doc.tipo}:</strong> ${doc.nombre}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+      <div style="margin-top: 30px; text-align: center; font-size: 0.8em; color: #666;">
+        <p>Justificante generado automáticamente por Pública Auditores</p>
+      </div>
+    `;
+    
+    justificante.classList.remove("hidden");
+    scrollToElement("justificante");
+  }
+
+  async function generarPDF() {
+    const justificante = document.getElementById("justificante");
+    const logo = document.getElementById("justificante-logo");
+    
+    // Crear PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Añadir logo como imagen (convertir a base64)
+    const canvas = await html2canvas(logo);
+    const logoData = canvas.toDataURL('image/png');
+    
+    // Configuración del PDF
+    pdf.setFontSize(12);
+    pdf.setTextColor(40);
+    
+    // Añadir logo
+    pdf.addImage(logoData, 'PNG', 15, 15, 30, 30 * (canvas.height / canvas.width));
+    
+    // Añadir título
+    pdf.setFontSize(18);
+    pdf.setTextColor(153, 0, 0);
+    pdf.text("Justificante de Envío", 50, 30);
+    
+    // Añadir información
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+    
+    let yPos = 50;
+    
+    // Información básica
+    pdf.text(`Fecha y hora: ${ultimoEnvio.fecha}`, 20, yPos);
+    yPos += 10;
+    
+    pdf.text(`Estado: ${ultimoEnvio.estado === 'success' ? 'Envío satisfactorio' : 'Error en el envío'}`, 
+             20, yPos, { color: ultimoEnvio.estado === 'success' ? [0, 128, 0] : [255, 0, 0] });
+    yPos += 10;
+    
+    if (ultimoEnvio.nif) {
+      pdf.text(`NIF: ${ultimoEnvio.nif}`, 20, yPos);
+      yPos += 10;
+    }
+    
+    pdf.text(`Mensaje: ${ultimoEnvio.mensaje}`, 20, yPos);
+    yPos += 15;
+    
+    // Documentos enviados
+    if (ultimoEnvio.documentos && ultimoEnvio.documentos.length > 0) {
+      pdf.setFontSize(14);
+      pdf.text("Documentos enviados:", 20, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(12);
+      ultimoEnvio.documentos.forEach(doc => {
+        pdf.text(`- ${doc.tipo}: ${doc.nombre}`, 25, yPos);
+        yPos += 8;
+        if (yPos > 270) { // Salto de página si nos quedamos sin espacio
+          pdf.addPage();
+          yPos = 20;
+        }
+      });
+    }
+    
+    // Pie de página
+    pdf.setFontSize(10);
+    pdf.setTextColor(100);
+    pdf.text("Justificante generado automáticamente por Pública Auditores", 
+             105, 287, null, null, 'center');
+    
+    // Guardar PDF
+    pdf.save(`justificante_envio_${ultimoEnvio.fecha.replace(/[/,:]/g, '-')}.pdf`);
   }
 </script>
 
