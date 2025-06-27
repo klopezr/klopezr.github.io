@@ -1,522 +1,388 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Formulario de Envío</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <style>
-    /* Estilos CSS */
-    :root {
-      --rojo: #990000;
-      --negro: #000000;
-      --blanco: #ffffff;
-      --gris: #f2f2f2;
-      --verde: #006600;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--gris);
-      margin: 0;
-      padding: 0;
-      line-height: 1.5;
-      scroll-behavior: smooth;
-    }
-    header {
-      background: var(--rojo);
-      padding: 15px 20px;
-      color: var(--blanco);
-      display: flex;
-      align-items: center;
-      position: relative;
-      min-height: 60px;
-    }
-    .logo {
-      height: 50px;
-      width: auto;
-      z-index: 1;
-    }
-    .header-title {
-      position: absolute;
-      left: 0;
-      right: 0;
-      text-align: center;
-      z-index: 0;
-    }
-    .header-title h2 {
-      margin: 0 auto;
-      max-width: calc(100% - 70px);
-      padding-left: 60px;
-      font-size: 1.3rem;
-    }
-    h1 {
-      margin: 20px 15px;
-      color: #333;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    form {
-      background: var(--blanco);
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-      font-size: 0.95rem;
-    }
-    .required::after {
-      content: " *";
-      color: red;
-    }
-    input[type="text"], input[type="file"] {
-      width: 100%;
-      padding: 12px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-      font-size: 1rem;
-    }
-    .file-input-container {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      width: 100%;
-    }
-    .file-input-button {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 12px 20px;
-      background-color: #f8f8f8;
-      color: #333;
-      font-size: 1rem;
-      font-weight: normal;
-      cursor: pointer;
-      display: block;
-      text-align: center;
-      margin-top: 5px;
-    }
-    .file-input {
-      position: absolute;
-      left: 0;
-      top: 0;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-    }
-    .file-name {
-      margin-top: 5px;
-      font-size: 0.9rem;
-      color: #666;
-      word-break: break-all;
-    }
-    button {
-      background: var(--rojo);
-      color: var(--blanco);
-      padding: 12px 20px;
-      border: none;
-      margin-top: 20px;
-      cursor: pointer;
-      border-radius: 5px;
-      width: 100%;
-      font-size: 1rem;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #b30000;
-    }
-    .btn-verde {
-      background: var(--verde);
-    }
-    .btn-verde:hover {
-      background: #004d00;
-    }
-    .resumen {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 25px;
-      background: #fff8f8;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      scroll-margin-top: 20px;
-    }
-    .hidden {
-      display: none;
-    }
-    .progress {
-      height: 30px;
-      width: 100%;
-      background: var(--negro);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 15px;
-    }
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--rojo);
-      transition: width 0.5s ease;
-    }
-    #progress {
-      max-width: 600px;
-      margin: 20px auto;
-      text-align: center;
-      color: var(--rojo);
-      font-weight: bold;
-      scroll-margin-top: 20px;
-    }
-    ul {
-      padding-left: 20px;
-      margin-bottom: 25px;
-    }
-    li {
-      margin-bottom: 8px;
-    }
-    footer {
-      text-align: center;
-      margin: 40px 0 20px;
-      color: #666;
-      padding: 0 15px;
-    }
-    a {
-      color: var(--rojo);
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .button-group {
-      display: flex;
-      gap: 15px;
-      margin-top: 25px;
-    }
-    .button-group button {
-      margin-top: 0;
-      flex: 1;
-    }
-    .justificante {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 25px;
-      background: white;
-      border: 2px solid var(--rojo);
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      display: none;
-    }
-    .justificante-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 15px;
-    }
-    .justificante-logo {
-      height: 50px;
-      margin-right: 20px;
-    }
-    .justificante-title {
-      font-size: 1.5rem;
-      color: var(--rojo);
-      margin: 0;
-    }
-    .justificante-body {
-      margin-top: 20px;
-    }
-    .justificante-item {
-      margin-bottom: 10px;
-      display: flex;
-    }
-    .justificante-label {
-      font-weight: bold;
-      min-width: 150px;
-    }
-    .justificante-success {
-      color: green;
-      font-weight: bold;
-    }
-    .justificante-error {
-      color: red;
-      font-weight: bold;
-    }
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        text-align: center;
-        padding: 15px;
-        min-height: auto;
-      }
-
-      .logo {
-        margin-bottom: 10px;
-        position: static;
-      }
-
-      .header-title {
-        position: static;
-        padding-left: 0;
-      }
-
-      .header-title h2 {
-        max-width: 100%;
-        padding-left: 0;
-      }
-      .button-group {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .justificante-header {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .justificante-logo {
-        margin-right: 0;
-        margin-bottom: 15px;
-      }
-
-      .justificante-item {
-        flex-direction: column;
-      }
-
-      .justificante-label {
-        min-width: auto;
-        margin-bottom: 5px;
-      }
-
-      input[type="file"] {
-        font-size: 16px;
-      }
-
-      .file-input-button {
-        padding: 15px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pública Auditoría</title>
+    <link rel="icon" type="image/png" href="PPS.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        html { scroll-behavior: smooth; }
+        body { background-color: #f9fafb; }
+        .file-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.5rem; border-radius: 0.5rem; background-color: #fff;
+            border: 1px solid #e5e7eb; margin-top: 0.5rem;
+        }
+        .progress-bar-container {
+            width: 100%; background-color: #e5e7eb; border-radius: 0.5rem;
+            overflow: hidden; height: 8px;
+        }
+        .progress-bar {
+            background-color: #DC2626; height: 100%; width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+        .btn {
+            background-color: #ffffff; color: #111827; border: 2px solid #1f2937;
+            font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out; text-align: center;
+        }
+        .btn:hover:not(:disabled) {
+            background-color: #111827; color: #ffffff;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-delete {
+            background: none; border: none; padding: 0.25rem; color: #9ca3af;
+            visibility: hidden;
+        }
+        .btn-delete:hover:not(:disabled) {
+            color: #DC2626;
+        }
+        .btn-cancel {
+            background-color: #FEE2E2; color: #B91C1C;
+            border: 1px solid #FCA5A5; font-size: 0.75rem;
+            padding: 0.125rem 0.5rem; border-radius: 9999px;
+        }
+        .btn-cancel:hover {
+            background-color: #FCA5A5;
+        }
+    </style>
 </head>
-<body>
-<header>
-  <img src="PP.png" alt="Logo Pública Auditores" class="logo">
-  <div class="header-title">
-    <h2>Formulario de Documentación</h2>
-  </div>
-</header>
-<h1>Adjuntar Documentos</h1>
-<form id="formulario" onsubmit="event.preventDefault(); mostrarResumen();">
-  <label for="nif" class="required">NIF</label>
-  <input type="text" id="nif" required>
-  <label for="facturas">Nº Facturas</label>
-  <div class="file-input-container">
-    <span class="file-input-button">Seleccionar archivo</span>
-    <input type="file" id="facturas" class="file-input" accept="*/*">
-  </div>
-  <div id="facturas-name" class="file-name"></div>
-  <label for="doc_adicional">Documento adicional</label>
-  <div class="file-input-container">
-    <span class="file-input-button">Seleccionar archivo</span>
-    <input type="file" id="doc_adicional" class="file-input" accept="*/*">
-  </div>
-  <div id="doc_adicional-name" class="file-name"></div>
-  <label for="otros">Otros</label>
-  <div class="file-input-container">
-    <span class="file-input-button">Seleccionar archivo</span>
-    <input type="file" id="otros" class="file-input" accept="*/*">
-  </div>
-  <div id="otros-name" class="file-name"></div>
-  <button type="submit">Revisar antes de enviar</button>
-</form>
-<div class="resumen hidden" id="resumen">
-  <h2>Resumen del envío</h2>
-  <ul id="resumen-lista"></ul>
-  <div class="button-group">
-    <button onclick="modificar()">Modificar</button>
-    <button onclick="enviar()">Enviar</button>
-  </div>
-</div>
-<div class="resumen hidden" id="progress">
-  <div class="progress">
-    <div id="progress-bar" class="progress-bar"></div>
-  </div>
-  <p id="respuesta">Enviando...</p>
-</div>
-<div style="max-width: 600px; margin: 20px auto; text-align: center;">
-  <button onclick="generarJustificante()" id="justificante-btn" class="hidden btn-verde">Generar Justificante PDF</button>
-</div>
-<div class="justificante hidden" id="justificante">
-  <div class="justificante-header">
-    <img src="PP.png" alt="Logo" class="justificante-logo" id="justificante-logo">
-    <h3 class="justificante-title">Justificante de Envío</h3>
-  </div>
-  <div class="justificante-body" id="justificante-content">
-    <!-- Contenido generado dinámicamente -->
-  </div>
-</div>
-<footer>
-  <p>&copy; 2025 <a href="https://www.publicaauditores.es/" target="_blank">Pública Auditores</a></p>
-</footer>
-<script>
-  const { jsPDF } = window.jspdf;
-  const encodedURL = "aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J4TklfTks3Y201YUY2U3d5ell3Wm9KVlBpZEZFaUU2NS0tMlJKMk1jM3F3YTliNEI2SV9wZWw3MVRHcEtNcU9lZC0vZXhlYw==";
-  const SCRIPT_URL = atob(encodedURL);
-  let ultimoEnvio = null;
+<body class="font-sans">
 
-  // Mostrar nombres de archivos seleccionados
-  document.getElementById('facturas').addEventListener('change', function(e) {
-    document.getElementById('facturas-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
-  });
-  document.getElementById('doc_adicional').addEventListener('change', function(e) {
-    document.getElementById('doc_adicional-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
-  });
-  document.getElementById('otros').addEventListener('change', function(e) {
-    document.getElementById('otros-name').textContent = e.target.files[0] ? e.target.files[0].name : '';
-  });
+    <header class="bg-red-600 shadow-md w-full">
+        <div class="container mx-auto max-w-4xl p-4 flex justify-center items-center relative">
+            <div class="absolute left-4">
+                <img src="PP.png" alt="Logo" class="h-10" onerror="this.style.display='none'">
+            </div>
+            <h1 class="text-lg sm:text-2xl font-bold text-white text-center w-full pl-28 sm:pl-0">
+                Formulario de Auditoría
+            </h1>
+        </div>
+    </header>
 
-  function scrollToElement(id) {
-    document.getElementById(id).scrollIntoView({
-      behavior: 'smooth',
-      block: 'start'
-    });
-  }
+    <main class="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
+        
+        <p class="text-center text-gray-600 mb-8">
+            <strong>Gestión Pública Auditora</strong> es una firma de servicios profesionales de auditoría que brinda una oferta de servicios basados en la calidad, la experiencia y la continua colaboración con el cliente que, unido a un profundo conocimiento sectorial de nuestra provincia, hace posible generar un valor añadido a las organizaciones a las que prestamos nuestros servicios.
+        </p>
 
-  function mostrarResumen() {
-    const nif = document.getElementById("nif").value.trim();
-    if (!nif) return alert("El campo NIF es obligatorio.");
-    const resumenLista = document.getElementById("resumen-lista");
-    resumenLista.innerHTML = "";
-    const campos = ["nif", "facturas", "doc_adicional", "otros"];
-    campos.forEach(id => {
-      const input = document.getElementById(id);
-      if (id === "nif") {
-        resumenLista.innerHTML += `<li><strong>NIF:</strong> ${input.value}</li>`;
-      } else if (input.files.length > 0) {
-        resumenLista.innerHTML += `<li><strong>${document.querySelector(`label[for="${id}"]`).textContent}:</strong> ${input.files[0].name}</li>`;
-      }
-    });
-    document.getElementById("resumen").classList.remove("hidden");
-    scrollToElement("resumen");
-  }
+        <div class="bg-white p-8 rounded-2xl shadow-lg border">
+            
+            <div id="form-section">
+                <div class="mb-6">
+                    <label for="nif" class="block text-sm font-medium text-gray-700 mb-1">NIF/CIF (Obligatorio)</label>
+                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
+                    <input type="text" id="nif" name="nif" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Ej: 12345678A">
+                    <p id="nif-error" class="text-red-500 text-xs mt-1 hidden">El campo NIF es obligatorio para poder subir archivos.</p>
+                </div>
 
-  function modificar() {
-    document.getElementById("resumen").classList.add("hidden");
-    scrollToElement("formulario");
-  }
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700">Facturas (Opcional)</label>
+                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
+                    <button onclick="document.getElementById('facturas-input').click()" class="w-full btn mt-2">
+                        + Adjuntar Facturas
+                    </button>
+                    <input type="file" id="facturas-input" multiple class="hidden" onchange="handleFileSelect(event, 'Facturas')">
+                    <div id="facturas-list" class="mt-4"></div>
+                </div>
 
-  async function enviar() {
-    const nif = document.getElementById("nif").value.trim();
-    if (!nif) return alert("El campo NIF es obligatorio.");
-    const formData = new FormData();
-    formData.append("nif", nif);
-    const archivos = ["facturas", "doc_adicional", "otros"];
-    await Promise.all(archivos.map(id => new Promise(resolve => {
-      const input = document.getElementById(id);
-      if (!input.files[0]) return resolve();
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result.split(',')[1];
-        formData.append(id, base64);
-        formData.append(id + "_name", input.files[0].name);
-        formData.append(id + "_type", input.files[0].type);
-        resolve();
-      };
-      reader.readAsDataURL(input.files[0]);
-    })));
+                <div class="mb-8">
+                    <label class="block text-sm font-medium text-gray-700">Justificantes de Pago (Opcional)</label>
+                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
+                    <button onclick="document.getElementById('justificantes-input').click()" class="w-full btn mt-2">
+                        + Adjuntar Justificantes
+                    </button>
+                    <input type="file" id="justificantes-input" multiple class="hidden" onchange="handleFileSelect(event, 'Justificantes de Pago')">
+                    <div id="justificantes-list" class="mt-4"></div>
+                </div>
 
-    const progress = document.getElementById("progress");
-    const progressBar = document.getElementById("progress-bar");
-    const respuesta = document.getElementById("respuesta");
-    progress.classList.remove("hidden");
-    scrollToElement("progress");
-    progressBar.style.width = "0%";
-    respuesta.innerText = "Subiendo archivos, esto puede tardar...";
+                <div class="border-t pt-6">
+                    <button id="summary-button" onclick="showSummary()" class="w-full btn" disabled>
+                        Ver Resumen y Enviar
+                    </button>
+                </div>
+            </div>
 
-    try {
-      const response = await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: formData
-      });
-      progressBar.style.width = "100%";
-      const resultado = await response.text();
-      respuesta.innerText = resultado;
+            <div id="summary-section" class="hidden mt-8 pt-8 border-t-2 border-dashed">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Resumen de la Documentación a Enviar</h2>
+                <div id="summary-content" class="space-y-4"></div>
+                <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6">
+                    <button id="final-send-button" onclick="finalizeSubmission()" class="w-full btn flex items-center justify-center">
+                       <span id="send-button-text">Confirmar y Enviar</span>
+                       <svg id="send-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-800 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                </div>
+            </div>
 
-      // Guardar datos para el justificante
-      ultimoEnvio = {
-        fecha: new Date().toLocaleString(),
-        nif: nif,
-        documentos: archivos.map(id => {
-          const input = document.getElementById(id);
-          return input.files[0] ? {
-            tipo: document.querySelector(`label[for="${id}"]`).textContent,
-            nombre: input.files[0].name
-          } : null;
-        }).filter(Boolean),
-        estado: "success",
-        mensaje: resultado
-      };
+            <div id="confirmation-section" class="hidden text-center mt-8 pt-8 border-t-2 border-dashed">
+                <svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Registrado!</h2>
+                <p class="text-gray-500 mt-2">Su solicitud ha sido recibida. El procesamiento final se completará en segundo plano.</p>
+                <div id="confirmation-log" class="text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mt-6"></div>
+                <div class="mt-8">
+                    <button onclick="downloadReceipt()" class="w-full btn">
+                        Descargar Justificante de Envío (PDF)
+                    </button>
+                </div>
+            </div>
 
-      // Mostrar botón de justificante
-      document.getElementById("justificante-btn").classList.remove("hidden");
+        </div>
+    </main>
+    
+    <footer class="text-center py-6 px-4">
+        <a href="https://www.publicaauditores.es/" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-red-600 transition-colors">
+            © 2024 Publica Auditores
+        </a>
+        <span class="text-sm text-gray-400 mx-2">|</span>
+        <a href="https://www.publicaauditores.es/conozcanos/" target="_blank" rel="noopener noreferrer" class="text-sm text-red-600 hover:text-red-700 transition-colors">
+            Conózcanos
+        </a>
+    </footer>
 
-    } catch (error) {
-      progressBar.style.width = "100%";
-      respuesta.innerText = "Error en el envío: " + error.message;
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOE0FtdHJK1CGUm0mUngCLkjg9AuHGnbcGKgetBR0fXhHtVDTo9izoTzLbYckEbt0lWw/exec'; 
 
-      ultimoEnvio = {
-        fecha: new Date().toLocaleString(),
-        estado: "error",
-        mensaje: error.message
-      };
+        let submissionData = {
+            nif: '',
+            files: { 'Facturas': [], 'Justificantes de Pago': [] },
+            submissionTimestamp: ''
+        };
+        let uploadsInProgress = 0;
 
-      document.getElementById("justificante-btn").classList.remove("hidden");
-    }
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
 
-    document.getElementById("resumen").classList.add("hidden");
-  }
+        function updateSummaryButtonState() {
+            const summaryButton = document.getElementById('summary-button');
+            const hasFiles = submissionData.files['Facturas'].length > 0 || submissionData.files['Justificantes de Pago'].length > 0;
+            summaryButton.disabled = uploadsInProgress > 0 || !hasFiles;
+        }
 
-  function generarJustificante() {
-    if (!ultimoEnvio) return;
+        function handleFileSelect(event, category) {
+            const nifInput = document.getElementById('nif');
+            if (!nifInput.value.trim()) {
+                document.getElementById('nif-error').classList.remove('hidden');
+                nifInput.focus();
+                return;
+            }
+            document.getElementById('nif-error').classList.add('hidden');
+            nifInput.disabled = true;
+            
+            for (const file of event.target.files) {
+                uploadFileToTemp(file, category);
+            }
+            event.target.value = '';
+        }
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Justificante de Envío", 105, 20, { align: 'center' });
+        function uploadFileToTemp(file, category) {
+            const domId = `file-${Date.now()}-${Math.random()}`;
+            const listId = category === 'Facturas' ? 'facturas-list' : 'justificantes-list';
+            const fileListContainer = document.getElementById(listId);
+            
+            const fileItem = document.createElement('div');
+            fileItem.id = domId;
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div class="flex-grow mr-4 overflow-hidden">
+                    <div class="flex justify-between items-baseline">
+                        <p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p>
+                        <span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span>
+                    </div>
+                    <div class="progress-bar-container mt-1">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">Subiendo...</p>
+                </div>
+                <div class="flex flex-col items-center">
+                    <button class="btn-cancel">Cancelar</button>
+                    <button class="btn-delete">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
+                    </button>
+                </div>`;
+            fileListContainer.appendChild(fileItem);
 
-    doc.setFontSize(12);
-    let yPos = 40;
+            const progressBar = fileItem.querySelector('.progress-bar');
+            const deleteButton = fileItem.querySelector('.btn-delete');
+            const cancelButton = fileItem.querySelector('.btn-cancel');
+            const progressText = fileItem.querySelector('.text-xs');
+            const fileNameText = fileItem.querySelector('.truncate');
+            
+            const MAX_SIZE_MB = 35;
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                fileNameText.textContent = `Error: Archivo demasiado grande (Máx ${MAX_SIZE_MB}MB)`;
+                fileNameText.classList.add('text-red-500');
+                progressText.classList.add('hidden');
+                cancelButton.classList.add('hidden');
+                progressBar.style.backgroundColor = '#991B1B';
+                progressBar.style.width = '100%';
+                return;
+            }
 
-    doc.text(`Fecha y hora: ${ultimoEnvio.fecha}`, 20, yPos);
-    yPos += 10;
+            uploadsInProgress++;
+            updateSummaryButtonState();
+            
+            const controller = new AbortController();
+            cancelButton.onclick = () => controller.abort();
 
-    doc.text(`Estado: ${ultimoEnvio.estado === 'success' ? 'Envío satisfactorio' : 'Error en el envío'}`, 20, yPos);
-    yPos += 10;
+            setTimeout(() => { progressBar.style.width = '30%'; }, 100);
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
+                fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.id) {
+                        progressBar.style.width = '100%';
+                        progressText.classList.add('hidden');
+                        cancelButton.classList.add('hidden');
+                        deleteButton.style.visibility = 'visible'; 
+                        const fileData = { name: file.name, id: result.id, domId: domId };
+                        submissionData.files[category].push(fileData);
+                        deleteButton.onclick = () => removeFile(category, fileData);
+                    } else { throw new Error(result.message || 'Error desconocido.'); }
+                })
+                .catch(error => {
+                    if (error.name === 'AbortError') {
+                        console.log('Subida cancelada por el usuario.');
+                        fileItem.remove();
+                    } else {
+                        fileNameText.textContent = `Error al subir: ${file.name}`;
+                        fileNameText.classList.add('text-red-500');
+                        progressText.classList.add('hidden');
+                        cancelButton.classList.add('hidden');
+                        progressBar.style.backgroundColor = '#991B1B';
+                    }
+                })
+                .finally(() => {
+                    uploadsInProgress--;
+                    updateSummaryButtonState();
+                });
+            };
+            reader.readAsDataURL(file);
+        }
 
-    if (ultimoEnvio.nif) {
-      doc.text(`NIF: ${ultimoEnvio.nif}`, 20, yPos);
-      yPos += 10;
-    }
+        function removeFile(category, fileData) {
+            const fileItem = document.getElementById(fileData.domId);
+            if (!fileItem) return;
 
-    doc.text(`Mensaje: ${ultimoEnvio.mensaje}`, 20, yPos);
-    yPos += 15;
+            fileItem.style.opacity = '0.5';
+            const deleteButton = fileItem.querySelector('.btn-delete');
+            deleteButton.disabled = true;
 
-    if (ultimoEnvio.documentos && ultimoEnvio.documentos.length > 0) {
-      doc.text("Documentos enviados:", 20, yPos);
-      yPos += 10;
+            uploadsInProgress++; 
+            updateSummaryButtonState();
+            
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'delete_temp', id: fileData.id })})
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    fileItem.remove();
+                    submissionData.files[category] = submissionData.files[category].filter(f => f.id !== fileData.id);
+                } else {
+                    alert('No se pudo borrar el archivo del servidor.');
+                    fileItem.style.opacity = '1';
+                    deleteButton.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert('Error de conexión al intentar borrar el archivo.');
+                fileItem.style.opacity = '1';
+                deleteButton.disabled = false;
+            })
+            .finally(() => {
+                uploadsInProgress--;
+                updateSummaryButtonState();
+            });
+        }
 
-      ultimoEnvio.documentos.forEach(docInfo => {
-        doc.text(`- ${docInfo.tipo}: ${docInfo.nombre}`, 25, yPos);
-        yPos += 10;
-      });
-    }
+        function showSummary() {
+            submissionData.nif = document.getElementById('nif').value.trim();
+            if (!submissionData.nif) { document.getElementById('nif-error').classList.remove('hidden'); return; }
+            const summarySection = document.getElementById('summary-section');
+            const summaryContent = document.getElementById('summary-content');
+            let summaryHTML = `<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">${submissionData.nif}</p></div>`;
+            Object.keys(submissionData.files).forEach(cat => {
+                const files = submissionData.files[cat];
+                if (files.length > 0) {
+                    summaryHTML += `<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${files.map(f => `<li>${f.name}</li>`).join('')}</ul></div>`;
+                }
+            });
+            if (submissionData.files['Facturas'].length === 0 && submissionData.files['Justificantes de Pago'].length === 0) {
+                 summaryHTML += `<p class="text-gray-500 mt-4">No se ha adjuntado ningún archivo.</p>`
+            }
+            summaryContent.innerHTML = summaryHTML;
+            summarySection.classList.remove('hidden');
+            summarySection.scrollIntoView();
+        }
 
-    doc.save(`justificante_envio_${ultimoEnvio.fecha.replace(/[/, :]/g, '-')}.pdf`);
-  }
-</script>
+        function finalizeSubmission() {
+            const btn = document.getElementById('final-send-button'), text = document.getElementById('send-button-text'), spinner = document.getElementById('send-spinner');
+            btn.disabled = true; text.classList.add('hidden'); spinner.classList.remove('hidden');
+            submissionData.submissionTimestamp = new Date().toISOString();
+            
+            showConfirmationLog();
+            const confSection = document.getElementById('confirmation-section');
+            confSection.classList.remove('hidden');
+            confSection.scrollIntoView();
+            btn.disabled = true;
+            spinner.classList.add('hidden');
+            text.textContent = "Procesado";
+            text.classList.remove('hidden');
+
+            const payload = { type: 'finalize', data: submissionData };
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(result => {
+                if (result.status !== 'success') { console.error("Error en el procesamiento final en el servidor:", result.message);
+                } else { console.log("Procesamiento final completado en el servidor."); }
+            })
+            .catch(error => { console.error("Error de conexión durante el procesamiento final:", error); });
+        }
+        
+        function showConfirmationLog() {
+            const logContainer = document.getElementById('confirmation-log');
+            const localDate = new Date(submissionData.submissionTimestamp).toLocaleString('es-ES');
+            let logHTML = `<p><strong>Fecha y Hora:</strong> ${localDate}</p><p><strong>NIF/CIF:</strong> ${submissionData.nif}</p>`;
+            const createFileListHTML = (cat, files) => files.length > 0 ? `<p class="mt-2"><strong>${cat} Enviadas:</strong> ${files.map(f => f.name).join(', ')}</p>` : '';
+            logHTML += createFileListHTML('Facturas', submissionData.files['Facturas']);
+            logHTML += createFileListHTML('Justificantes', submissionData.files['Justificantes de Pago']);
+            logContainer.innerHTML = logHTML;
+        }
+
+        function downloadReceipt() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 20; const margin = 15;
+
+            doc.setFontSize(18); doc.text("Justificante de Envío", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+            y += 15; doc.setFontSize(12); doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`, margin, y);
+            y += 10; doc.text(`NIF/CIF: ${submissionData.nif}`, margin, y);
+            y += 15; doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+            y += 10; doc.setFontSize(14); doc.text("Documentos Enviados:", margin, y);
+            y += 8; doc.setFontSize(11);
+            function addFileList(title, files) {
+                if(files.length > 0) {
+                    doc.setFont(undefined, 'bold'); doc.text(title, margin, y); y += 6;
+                    doc.setFont(undefined, 'normal');
+                    files.forEach(file => { y += 6; doc.text(`- ${file.name}`, margin + 4, y); }); y += 4;
+                }
+            }
+            addFileList("Facturas:", submissionData.files['Facturas']);
+            addFileList("Justificantes de Pago:", submissionData.files['Justificantes de Pago']);
+            doc.save(`Justificante-${submissionData.nif}-${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+    </script>
 </body>
 </html>
