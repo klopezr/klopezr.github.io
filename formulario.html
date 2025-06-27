@@ -114,19 +114,24 @@
                 <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6">
                     <button id="final-send-button" onclick="finalizeSubmission()" class="w-full btn flex items-center justify-center">
                        <span id="send-button-text">Confirmar y Enviar</span>
-                       <svg id="send-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-800 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
+                </div>
+                 <div id="final-progress-container" class="w-full hidden mt-4">
+                    <p class="text-sm text-center text-gray-600 mb-2">Procesando envío y generando justificante...</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="final-progress-bar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%; transition: width 1.5s ease-out;"></div>
+                    </div>
                 </div>
             </div>
 
             <div id="confirmation-section" class="hidden text-center mt-8 pt-8 border-t-2 border-dashed">
                 <svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Registrado!</h2>
-                <p class="text-gray-500 mt-2">Su solicitud ha sido recibida. El procesamiento final se completará en segundo plano.</p>
+                <h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Completado!</h2>
+                <p class="text-gray-500 mt-2">Su solicitud ha sido recibida y el justificante se ha generado correctamente.</p>
                 <div id="confirmation-log" class="text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mt-6"></div>
                 <div class="mt-8">
-                    <button onclick="downloadReceipt()" class="w-full btn">
-                        Descargar Justificante de Envío (PDF)
+                    <button id="download-receipt-button" onclick="downloadReceipt()" class="w-full btn">
+                        Descargar Justificante (PDF)
                     </button>
                 </div>
             </div>
@@ -147,12 +152,9 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOE0FtdHJK1CGUm0mUngCLkjg9AuHGnbcGKgetBR0fXhHtVDTo9izoTzLbYckEbt0lWw/exec'; 
 
-        let submissionData = {
-            nif: '',
-            files: { 'Facturas': [], 'Justificantes de Pago': [] },
-            submissionTimestamp: ''
-        };
+        let submissionData = { nif: '', files: { 'Facturas': [], 'Justificantes de Pago': [] }, submissionTimestamp: '' };
         let uploadsInProgress = 0;
+        let generatedPdfDoc = null; 
 
         function formatBytes(bytes, decimals = 2) {
             if (bytes === 0) return '0 Bytes';
@@ -161,6 +163,13 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        async function calculateFileHash(file) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         function updateSummaryButtonState() {
@@ -185,31 +194,16 @@
             event.target.value = '';
         }
 
-        function uploadFileToTemp(file, category) {
+        async function uploadFileToTemp(file, category) {
             const domId = `file-${Date.now()}-${Math.random()}`;
             const listId = category === 'Facturas' ? 'facturas-list' : 'justificantes-list';
             const fileListContainer = document.getElementById(listId);
+            const controller = new AbortController();
             
             const fileItem = document.createElement('div');
             fileItem.id = domId;
             fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <div class="flex-grow mr-4 overflow-hidden">
-                    <div class="flex justify-between items-baseline">
-                        <p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p>
-                        <span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span>
-                    </div>
-                    <div class="progress-bar-container mt-1">
-                        <div class="progress-bar"></div>
-                    </div>
-                    <p class="text-xs text-gray-400 mt-1">Subiendo...</p>
-                </div>
-                <div class="flex flex-col items-center">
-                    <button class="btn-cancel">Cancelar</button>
-                    <button class="btn-delete">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg>
-                    </button>
-                </div>`;
+            fileItem.innerHTML = `<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p><span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span></div><div class="progress-bar-container mt-1"><div class="progress-bar"></div></div><p class="text-xs text-gray-400 mt-1">Calculando hash...</p></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>`;
             fileListContainer.appendChild(fileItem);
 
             const progressBar = fileItem.querySelector('.progress-bar');
@@ -221,7 +215,6 @@
             const MAX_SIZE_MB = 35;
             if (file.size > MAX_SIZE_MB * 1024 * 1024) {
                 fileNameText.textContent = `Error: Archivo demasiado grande (Máx ${MAX_SIZE_MB}MB)`;
-                fileNameText.classList.add('text-red-500');
                 progressText.classList.add('hidden');
                 cancelButton.classList.add('hidden');
                 progressBar.style.backgroundColor = '#991B1B';
@@ -232,58 +225,58 @@
             uploadsInProgress++;
             updateSummaryButtonState();
             
-            const controller = new AbortController();
             cancelButton.onclick = () => controller.abort();
 
-            setTimeout(() => { progressBar.style.width = '30%'; }, 100);
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
-                fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'success' && result.id) {
-                        progressBar.style.width = '100%';
-                        progressText.classList.add('hidden');
-                        cancelButton.classList.add('hidden');
-                        deleteButton.style.visibility = 'visible'; 
-                        const fileData = { name: file.name, id: result.id, domId: domId };
-                        submissionData.files[category].push(fileData);
-                        deleteButton.onclick = () => removeFile(category, fileData);
-                    } else { throw new Error(result.message || 'Error desconocido.'); }
-                })
-                .catch(error => {
-                    if (error.name === 'AbortError') {
-                        console.log('Subida cancelada por el usuario.');
-                        fileItem.remove();
-                    } else {
-                        fileNameText.textContent = `Error al subir: ${file.name}`;
-                        fileNameText.classList.add('text-red-500');
-                        progressText.classList.add('hidden');
-                        cancelButton.classList.add('hidden');
-                        progressBar.style.backgroundColor = '#991B1B';
-                    }
-                })
-                .finally(() => {
-                    uploadsInProgress--;
-                    updateSummaryButtonState();
-                });
-            };
-            reader.readAsDataURL(file);
+            try {
+                const hash = await calculateFileHash(file);
+                progressText.textContent = 'Subiendo...';
+                setTimeout(() => { progressBar.style.width = '30%'; }, 100);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
+                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success' && result.id) {
+                            progressBar.style.width = '100%';
+                            progressText.classList.add('hidden');
+                            cancelButton.classList.add('hidden');
+                            deleteButton.style.visibility = 'visible'; 
+                            const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
+                            submissionData.files[category].push(fileData);
+                            deleteButton.onclick = () => removeFile(category, fileData);
+                        } else { throw new Error(result.message || 'Error desconocido.'); }
+                    })
+                    .catch(error => {
+                        if (error.name === 'AbortError') { fileItem.remove(); } 
+                        else {
+                            fileNameText.textContent = `Error al subir: ${file.name}`;
+                            fileNameText.classList.add('text-red-500');
+                            progressText.classList.add('hidden');
+                            cancelButton.classList.add('hidden');
+                            progressBar.style.backgroundColor = '#991B1B';
+                        }
+                    })
+                    .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
+                };
+                reader.readAsDataURL(file);
+
+            } catch(error) {
+                fileNameText.textContent = `Error al procesar: ${file.name}`;
+                progressText.textContent = `Error: ${error.message}`;
+                cancelButton.classList.add('hidden');
+                uploadsInProgress--;
+                updateSummaryButtonState();
+            }
         }
 
         function removeFile(category, fileData) {
             const fileItem = document.getElementById(fileData.domId);
             if (!fileItem) return;
-
             fileItem.style.opacity = '0.5';
-            const deleteButton = fileItem.querySelector('.btn-delete');
-            deleteButton.disabled = true;
-
-            uploadsInProgress++; 
-            updateSummaryButtonState();
-            
+            fileItem.querySelector('.btn-delete').disabled = true;
+            uploadsInProgress++; updateSummaryButtonState();
             fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'delete_temp', id: fileData.id })})
             .then(res => res.json())
             .then(result => {
@@ -291,20 +284,13 @@
                     fileItem.remove();
                     submissionData.files[category] = submissionData.files[category].filter(f => f.id !== fileData.id);
                 } else {
-                    alert('No se pudo borrar el archivo del servidor.');
-                    fileItem.style.opacity = '1';
-                    deleteButton.disabled = false;
+                    alert('No se pudo borrar el archivo.'); fileItem.style.opacity = '1';
+                    fileItem.querySelector('.btn-delete').disabled = false;
                 }
-            })
-            .catch(err => {
-                alert('Error de conexión al intentar borrar el archivo.');
-                fileItem.style.opacity = '1';
-                deleteButton.disabled = false;
-            })
-            .finally(() => {
-                uploadsInProgress--;
-                updateSummaryButtonState();
-            });
+            }).catch(err => {
+                alert('Error de conexión al borrar.'); fileItem.style.opacity = '1';
+                fileItem.querySelector('.btn-delete').disabled = false;
+            }).finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
         }
 
         function showSummary() {
@@ -314,41 +300,92 @@
             const summaryContent = document.getElementById('summary-content');
             let summaryHTML = `<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">${submissionData.nif}</p></div>`;
             Object.keys(submissionData.files).forEach(cat => {
-                const files = submissionData.files[cat];
-                if (files.length > 0) {
-                    summaryHTML += `<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${files.map(f => `<li>${f.name}</li>`).join('')}</ul></div>`;
+                if (submissionData.files[cat].length > 0) {
+                    summaryHTML += `<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${submissionData.files[cat].map(f => `<li>${f.name}</li>`).join('')}</ul></div>`;
                 }
             });
-            if (submissionData.files['Facturas'].length === 0 && submissionData.files['Justificantes de Pago'].length === 0) {
-                 summaryHTML += `<p class="text-gray-500 mt-4">No se ha adjuntado ningún archivo.</p>`
-            }
             summaryContent.innerHTML = summaryHTML;
             summarySection.classList.remove('hidden');
             summarySection.scrollIntoView();
         }
 
+        function generateReceiptPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 20; const margin = 15;
+            const maxWidth = doc.internal.pageSize.getWidth() - (margin * 2);
+
+            doc.setFontSize(18); doc.text("Justificante de Envío", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
+            y += 15; doc.setFontSize(12); doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`, margin, y);
+            y += 10; doc.text(`NIF/CIF: ${submissionData.nif}`, margin, y);
+            y += 15; doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+            y += 10; doc.setFontSize(14); doc.text("Documentos Enviados:", margin, y);
+            y += 8; 
+            
+            function addFileList(title, files) {
+                if(files.length > 0) {
+                    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text(title, margin, y); y += 6;
+                    doc.setFont(undefined, 'normal');
+                    files.forEach(file => {
+                        doc.setFontSize(10);
+                        const lines = doc.splitTextToSize(`- ${file.name}`, maxWidth - 4);
+                        if (y + ((lines.length + 1) * 5) > 280) { doc.addPage(); y = 20; }
+                        doc.text(lines, margin + 4, y);
+                        y += (lines.length * 5);
+                        
+                        doc.setFontSize(7);
+                        doc.setTextColor(128);
+                        doc.text(`Hash (SHA-256): ${file.hash}`, margin + 4, y);
+                        y += 5;
+                        doc.setTextColor(0);
+                    });
+                    y += 4;
+                }
+            }
+            addFileList("Facturas:", submissionData.files['Facturas']);
+            addFileList("Justificantes de Pago:", submissionData.files['Justificantes de Pago']);
+            
+            return doc;
+        }
+
         function finalizeSubmission() {
-            const btn = document.getElementById('final-send-button'), text = document.getElementById('send-button-text'), spinner = document.getElementById('send-spinner');
-            btn.disabled = true; text.classList.add('hidden'); spinner.classList.remove('hidden');
+            const btn = document.getElementById('final-send-button');
+            const progressContainer = document.getElementById('final-progress-container');
+            const progressBar = document.getElementById('final-progress-bar');
+            
+            btn.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '20%';
+            
             submissionData.submissionTimestamp = new Date().toISOString();
             
-            showConfirmationLog();
-            const confSection = document.getElementById('confirmation-section');
-            confSection.classList.remove('hidden');
-            confSection.scrollIntoView();
-            btn.disabled = true;
-            spinner.classList.add('hidden');
-            text.textContent = "Procesado";
-            text.classList.remove('hidden');
+            const pdfDoc = generateReceiptPdf();
+            generatedPdfDoc = pdfDoc;
+            submissionData.pdfBase64 = pdfDoc.output('datauristring');
+            
+            progressBar.style.width = '50%';
 
             const payload = { type: 'finalize', data: submissionData };
             fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(result => {
-                if (result.status !== 'success') { console.error("Error en el procesamiento final en el servidor:", result.message);
-                } else { console.log("Procesamiento final completado en el servidor."); }
+                if (result.status === 'success') {
+                    progressBar.style.width = '100%';
+                    setTimeout(() => {
+                        progressContainer.classList.add('hidden');
+                        showConfirmationLog();
+                        document.getElementById('confirmation-section').classList.remove('hidden');
+                        document.getElementById('download-receipt-button').disabled = false;
+                        document.getElementById('confirmation-section').scrollIntoView();
+                    }, 500);
+                } else { throw new Error(result.message || "Error en el servidor."); }
             })
-            .catch(error => { console.error("Error de conexión durante el procesamiento final:", error); });
+            .catch(error => { 
+                console.error("Error en el procesamiento final:", error);
+                alert("Ocurrió un error al procesar el envío: " + error.message);
+                progressContainer.classList.add('hidden');
+                btn.classList.remove('hidden');
+            });
         }
         
         function showConfirmationLog() {
@@ -362,26 +399,11 @@
         }
 
         function downloadReceipt() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            let y = 20; const margin = 15;
-
-            doc.setFontSize(18); doc.text("Justificante de Envío", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-            y += 15; doc.setFontSize(12); doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`, margin, y);
-            y += 10; doc.text(`NIF/CIF: ${submissionData.nif}`, margin, y);
-            y += 15; doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
-            y += 10; doc.setFontSize(14); doc.text("Documentos Enviados:", margin, y);
-            y += 8; doc.setFontSize(11);
-            function addFileList(title, files) {
-                if(files.length > 0) {
-                    doc.setFont(undefined, 'bold'); doc.text(title, margin, y); y += 6;
-                    doc.setFont(undefined, 'normal');
-                    files.forEach(file => { y += 6; doc.text(`- ${file.name}`, margin + 4, y); }); y += 4;
-                }
+            if (generatedPdfDoc) {
+                generatedPdfDoc.save(`Justificante-${submissionData.nif}-${submissionData.submissionTimestamp.slice(0,10)}.pdf`);
+            } else {
+                alert("El justificante no se ha generado todavía.");
             }
-            addFileList("Facturas:", submissionData.files['Facturas']);
-            addFileList("Justificantes de Pago:", submissionData.files['Justificantes de Pago']);
-            doc.save(`Justificante-${submissionData.nif}-${new Date().toISOString().slice(0,10)}.pdf`);
         }
     </script>
 </body>
