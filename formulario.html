@@ -10,228 +10,140 @@
     <style>
         html { scroll-behavior: smooth; }
         body { background-color: #f9fafb; }
-        .file-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0.5rem; border-radius: 0.5rem; background-color: #fff;
-            border: 1px solid #e5e7eb; margin-top: 0.5rem;
-        }
-        .progress-bar-container {
-            width: 100%; background-color: #e5e7eb; border-radius: 0.5rem;
-            overflow: hidden; height: 8px;
-        }
-        .progress-bar {
-            background-color: #DC2626; height: 100%; width: 0%;
-            transition: width 0.3s ease-in-out;
-        }
-        .btn {
-            background-color: #ffffff; color: #111827; border: 2px solid #1f2937;
-            font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem;
-            transition: all 0.2s ease-in-out; text-align: center;
-        }
-        .btn:hover:not(:disabled) {
-            background-color: #111827; color: #ffffff;
-        }
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .btn-delete {
-            background: none; border: none; padding: 0.25rem; color: #9ca3af;
-            visibility: hidden;
-        }
-        .btn-delete:hover:not(:disabled) {
-            color: #DC2626;
-        }
-        .btn-cancel {
-            background-color: #FEE2E2; color: #B91C1C;
-            border: 1px solid #FCA5A5; font-size: 0.75rem;
-            padding: 0.125rem 0.5rem; border-radius: 9999px;
-        }
-        .btn-cancel:hover {
-            background-color: #FCA5A5;
-        }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
+        .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
+        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
+        .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
+        .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-delete { background: none; border: none; padding: 0.25rem; color: #9ca3af; visibility: hidden; }
+        .btn-delete:hover:not(:disabled) { color: #DC2626; }
+        .btn-cancel { background-color: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; }
+        .btn-cancel:hover { background-color: #FCA5A5; }
+        #admin-panel input { border: 1px solid #d1d5db; padding: 0.5rem; border-radius: 0.25rem; width: 100%; color: #111827; }
+        .et-loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(255, 255, 255, 0.3); z-index: 999999; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.01s ease; }
+        .et-loader-img { width: 100px; height: auto; }
+        .loader-hidden { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body class="font-sans">
 
+    <div id="preloader" class="et-loader">
+        <img class="et-loader-img" src="https://www.publicaauditores.es/wp-content/uploads/2024/02/loader-publica-asesores-1.png" alt="et-loader">
+    </div>
+
     <header class="bg-red-600 shadow-md w-full">
-        <div class="container mx-auto max-w-4xl p-4 flex justify-center items-center relative">
-            <div class="absolute left-4">
-                <img src="PP.png" alt="Logo" class="h-10" onerror="this.style.display='none'">
-            </div>
-            <h1 class="text-lg sm:text-2xl font-bold text-white text-center w-full pl-28 sm:pl-0">
-                Formulario de Auditoría
-            </h1>
-        </div>
+        <div class="container mx-auto max-w-7xl px-4 lg:px-8 flex justify-center items-center relative py-2"><div class="absolute left-4"><img src="PP.png" alt="Logo" class="h-10" onerror="this.style.display='none'"></div><h1 class="text-lg sm:text-2xl font-bold text-white text-center w-full lg:pl-28 sm:pl-0">Formulario de Auditoría</h1></div>
     </header>
 
-    <main class="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8">
-        
-        <p class="text-center text-gray-600 mb-8">
-            <strong>Gestión Pública Auditora</strong> es una firma de servicios profesionales de auditoría que brinda una oferta de servicios basados en la calidad, la experiencia y la continua colaboración con el cliente que, unido a un profundo conocimiento sectorial de nuestra provincia, hace posible generar un valor añadido a las organizaciones a las que prestamos nuestros servicios.
-        </p>
-
-        <div class="bg-white p-8 rounded-2xl shadow-lg border">
-            
-            <div id="form-section">
-                <div class="mb-6">
-                    <label for="nif" class="block text-sm font-medium text-gray-700 mb-1">NIF/CIF (Obligatorio)</label>
-                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
-                    <input type="text" id="nif" name="nif" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Ej: 12345678A">
-                    <p id="nif-error" class="text-red-500 text-xs mt-1 hidden">El campo NIF es obligatorio para poder subir archivos.</p>
-                </div>
-
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700">Facturas (Opcional)</label>
-                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
-                    <button onclick="document.getElementById('facturas-input').click()" class="w-full btn mt-2">
-                        + Adjuntar Facturas
-                    </button>
-                    <input type="file" id="facturas-input" multiple class="hidden" onchange="handleFileSelect(event, 'Facturas')">
-                    <div id="facturas-list" class="mt-4"></div>
-                </div>
-
-                <div class="mb-8">
-                    <label class="block text-sm font-medium text-gray-700">Justificantes de Pago (Opcional)</label>
-                    <p class="text-xs text-gray-400 mb-2">Descripción</p>
-                    <button onclick="document.getElementById('justificantes-input').click()" class="w-full btn mt-2">
-                        + Adjuntar Justificantes
-                    </button>
-                    <input type="file" id="justificantes-input" multiple class="hidden" onchange="handleFileSelect(event, 'Justificantes de Pago')">
-                    <div id="justificantes-list" class="mt-4"></div>
-                </div>
-
-                <div class="border-t pt-6">
-                    <button id="summary-button" onclick="showSummary()" class="w-full btn" disabled>
-                        Ver Resumen y Enviar
-                    </button>
+    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 lg:grid lg:grid-cols-3 lg:gap-12 items-start">
+        <aside class="lg:col-span-1">
+            <div id="help-section" class="hidden lg:block lg:sticky lg:top-8 bg-gray-100 p-6 rounded-2xl border">
+                <h2 class="font-bold text-xl text-gray-800 mb-4">Guía Técnica</h2>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div><h3 class="font-semibold text-gray-700">Requerimientos Iniciales</h3><p class="mt-1">Es un requisito previo indicar un NIF/CIF válido para habilitar la funcionalidad de carga de archivos.</p></div>
+                    <div><h3 class="font-semibold text-gray-700">Proceso de Carga y Gestión</h3><ul class="list-disc list-inside mt-1 space-y-1"><li>El sistema soporta la selección múltiple de archivos por categoría.</li><li>Es posible abortar una transferencia en curso mediante el botón "Cancelar".</li><li>Una vez finalizada la carga, cada archivo puede ser eliminado individualmente mediante el icono (X).</li></ul></div>
+                    <div><h3 class="font-semibold text-gray-700">Integridad y Trazabilidad</h3><p class="mt-1">El justificante final en formato PDF incluye la marca de tiempo del envío y una firma digital única (hash SHA-256) por cada archivo, garantizando la integridad de los datos remitidos.</p></div>
                 </div>
             </div>
+        </aside>
 
-            <div id="summary-section" class="hidden mt-8 pt-8 border-t-2 border-dashed">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Resumen de la Documentación a Enviar</h2>
-                <div id="summary-content" class="space-y-4"></div>
-                <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6">
-                    <button id="final-send-button" onclick="finalizeSubmission()" class="w-full btn flex items-center justify-center">
-                       <span id="send-button-text">Confirmar y Enviar</span>
-                    </button>
-                </div>
-                 <div id="final-progress-container" class="w-full hidden mt-4">
-                    <p class="text-sm text-center text-gray-600 mb-2">Procesando envío y generando justificante...</p>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="final-progress-bar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%; transition: width 1.5s ease-out;"></div>
+        <main class="lg:col-span-2 mt-8 lg:mt-0">
+            <div class="lg:hidden mb-6 flex justify-center"><button id="toggle-help-button" onclick="toggleHelp()" class="w-auto btn text-xs py-1 px-3">Mostrar Ayuda</button></div>
+            <div id="help-section-mobile" class="hidden lg:hidden mb-6 bg-gray-100 p-6 rounded-2xl shadow-lg border"></div>
+            <p class="text-center text-gray-600 mb-8"><strong>Gestión Pública Auditora</strong> es una firma de servicios profesionales de auditoría que brinda una oferta de servicios basados en la calidad, la experiencia y la continua colaboración con el cliente que, unido a un profundo conocimiento sectorial de nuestra provincia, hace posible generar un valor añadido a las organizaciones a las que prestamos nuestros servicios.</p>
+            <div class="bg-white p-8 rounded-2xl shadow-lg border">
+                <div id="form-section">
+                    <div class="mb-6"><label for="nif" class="block text-sm font-medium text-gray-700 mb-1">NIF/CIF (Obligatorio)</label><p class="text-xs text-gray-400 mb-2">Descripción</p><input type="text" id="nif" name="nif" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Ej: 12345678A"><p id="nif-error" class="text-red-500 text-xs mt-1 hidden">El campo NIF es obligatorio.</p></div>
+                    <div id="dynamic-fields-container"></div>
+                    <div class="mb-8"><label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones/comentario (Opcional)</label><p class="text-xs text-gray-400 mb-2">Añada cualquier información adicional que considere relevante.</p><textarea id="observaciones" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"></textarea></div>
+                    <div class="border-t pt-6">
+                        <div class="mb-4"><div class="flex items-start"><input type="checkbox" id="privacy-policy" onchange="updateSummaryButtonState()" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500 mt-1"><label for="privacy-policy" class="ml-2 block text-sm text-gray-900">He leído y acepto la <a href="https://www.publicaauditores.es/politica-de-privacidad/" target="_blank" rel="noopener noreferrer" class="font-medium text-red-600 hover:underline">política de privacidad</a>.</label></div></div>
+                        <button id="summary-button" onclick="showSummary()" class="w-full btn" disabled>Ver Resumen y Enviar</button>
                     </div>
                 </div>
+                <div id="summary-section" class="hidden mt-8 pt-8 border-t-2 border-dashed"><h2 class="text-xl font-bold text-gray-800 mb-4">Resumen de la Documentación a Enviar</h2><div id="summary-content" class="space-y-4"></div><div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6"><button id="final-send-button" onclick="finalizeSubmission()" class="w-full btn flex items-center justify-center"><span id="send-button-text">Confirmar y Enviar</span></button></div><div id="final-progress-container" class="w-full hidden mt-4"><p class="text-sm text-center text-gray-600 mb-2">Procesando envío y generando justificante...</p><div class="w-full bg-gray-200 rounded-full h-2.5"><div id="final-progress-bar" class="bg-red-600 h-2.5 rounded-full" style="width: 0%; transition: width 1.5s ease-out;"></div></div></div></div>
+                <div id="confirmation-section" class="hidden text-center mt-8 pt-8 border-t-2 border-dashed"><svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Completado!</h2><p class="text-gray-500 mt-2">Su solicitud ha sido recibida y el justificante se ha generado correctamente.</p><div id="confirmation-log" class="text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mt-6"></div><div class="mt-8"><button id="download-receipt-button" onclick="downloadReceipt()" class="w-full btn" disabled>Descargar Justificante (PDF)</button></div></div>
             </div>
-
-            <div id="confirmation-section" class="hidden text-center mt-8 pt-8 border-t-2 border-dashed">
-                <svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Completado!</h2>
-                <p class="text-gray-500 mt-2">Su solicitud ha sido recibida y el justificante se ha generado correctamente.</p>
-                <div id="confirmation-log" class="text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mt-6"></div>
-                <div class="mt-8">
-                    <button id="download-receipt-button" onclick="downloadReceipt()" class="w-full btn">
-                        Descargar Justificante (PDF)
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </main>
+            <div id="admin-panel" class="hidden bg-gray-800 text-white p-8 rounded-2xl shadow-lg border mt-8"><h2 class="text-2xl font-bold mb-4">Panel de Administración</h2><div id="admin-fields-list" class="space-y-2"></div><div class="mt-6"><button onclick="addAdminField()" class="btn">Añadir Nuevo Campo</button></div><div class="mt-8 border-t border-gray-600 pt-6"><button onclick="saveAdminChanges()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Guardar Cambios y Recargar</button></div></div>
+        </main>
+    </div>
     
-    <footer class="text-center py-6 px-4">
-        <a href="https://www.publicaauditores.es/" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-red-600 transition-colors">
-            © 2025 Publica Auditores
-        </a>
-        <span class="text-sm text-gray-400 mx-2">|</span>
-        <a href="https://www.publicaauditores.es/conozcanos/" target="_blank" rel="noopener noreferrer" class="text-sm text-red-600 hover:text-red-700 transition-colors">
-            Conózcanos
-        </a>
-    </footer>
-
+    <footer class="text-center py-6 px-4"><a href="https://www.publicaauditores.es/" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-red-600 transition-colors">© 2024 Publica Auditores</a><span class="text-sm text-gray-400 mx-2">|</span><a href="https://www.publicaauditores.es/conozcanos/" target="_blank" rel="noopener noreferrer" class="text-sm text-red-600 hover:text-red-700 transition-colors">Conózcanos</a></footer>
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOE0FtdHJK1CGUm0mUngCLkjg9AuHGnbcGKgetBR0fXhHtVDTo9izoTzLbYckEbt0lWw/exec'; 
-
-        let submissionData = { nif: '', files: { 'Facturas': [], 'Justificantes de Pago': [] }, submissionTimestamp: '' };
+        let submissionData = { nif: '', files: {}, observaciones: '', submissionTimestamp: '' };
         let uploadsInProgress = 0;
         let generatedPdfDoc = null; 
-
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-        async function calculateFileHash(file) {
-            const buffer = await file.arrayBuffer();
-            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
-        function updateSummaryButtonState() {
-            const summaryButton = document.getElementById('summary-button');
-            const hasFiles = submissionData.files['Facturas'].length > 0 || submissionData.files['Justificantes de Pago'].length > 0;
-            summaryButton.disabled = uploadsInProgress > 0 || !hasFiles;
-        }
-
-        function handleFileSelect(event, category) {
-            const nifInput = document.getElementById('nif');
-            if (!nifInput.value.trim()) {
-                document.getElementById('nif-error').classList.remove('hidden');
-                nifInput.focus();
-                return;
-            }
-            document.getElementById('nif-error').classList.add('hidden');
-            nifInput.disabled = true;
-            
-            for (const file of event.target.files) {
-                uploadFileToTemp(file, category);
-            }
-            event.target.value = '';
-        }
-
-        async function uploadFileToTemp(file, category) {
+        let formConfig = [];
+        window.onload = () => { loadForm(); setupAdminAccess(); document.getElementById('help-section-mobile').innerHTML = document.getElementById('help-section').innerHTML; };
+        function setupAdminAccess() { const nifInput = document.getElementById('nif'); nifInput.addEventListener('keydown', function(event) { if (event.key === 'Enter') { event.preventDefault(); const nifValue = this.value; const pass = prompt("Introduzca la clave de acceso:"); if (pass) { const payload = { type: 'checkAdmin', nif: nifValue, password: pass }; fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }).then(res => res.json()).then(result => { if (result.status === 'success') { openAdminPanel(); } else { alert('Acceso denegado.'); } }).catch(err => alert('Error de conexión al verificar el acceso.')); } } }); }
+        function toggleHelp() { const helpSection = document.getElementById('help-section-mobile'); const helpButton = document.getElementById('toggle-help-button'); helpSection.classList.toggle('hidden'); helpButton.textContent = helpSection.classList.contains('hidden') ? 'Mostrar Ayuda' : 'Ocultar Ayuda'; }
+        function loadForm() { const preloader = document.getElementById('preloader'); fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({type: 'getFormConfig'})}).then(res => res.json()).then(response => { if (response.status === 'success') { formConfig = response.data; buildFormFields(formConfig); } else { throw new Error(response.message); }}).catch(err => { document.getElementById('dynamic-fields-container').innerHTML = `<p class="text-red-500">Error al cargar la configuración: ${err.message}</p>`; }).finally(() => { preloader.classList.add('loader-hidden'); }); }
+        function buildFormFields(fields) { const container = document.getElementById('dynamic-fields-container'); container.innerHTML = ''; submissionData.files = {}; fields.forEach(field => { submissionData.files[field.titulo] = []; const fieldHTML = `<div class="mb-8"><label class="block text-sm font-medium text-gray-700">${field.titulo}</label><p class="text-xs text-gray-400 mb-2">${field.descripcion}</p><button onclick="document.getElementById('${field.id}-input').click()" class="w-full btn mt-2">+ Adjuntar</button><input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.titulo}', '${field.id}')"><div id="${field.id}-list" class="mt-4"></div></div>`; container.innerHTML += fieldHTML; }); }
+        function formatBytes(bytes, decimals=2) { if(bytes===0)return'0 Bytes';const k=1024;const dm=decimals<0?0:decimals;const sizes=['Bytes','KB','MB','GB','TB'];const i=Math.floor(Math.log(bytes)/Math.log(k));return parseFloat((bytes/Math.pow(k,i)).toFixed(dm))+' '+sizes[i];}
+        async function calculateFileHash(file) {const buffer=await file.arrayBuffer();const hashBuffer=await crypto.subtle.digest('SHA-256',buffer);const hashArray=Array.from(new Uint8Array(hashBuffer));return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');}
+        function updateSummaryButtonState() {const summaryButton=document.getElementById('summary-button');const hasFiles=Object.values(submissionData.files).some(arr=>arr.length>0);const privacyChecked=document.getElementById('privacy-policy').checked;summaryButton.disabled=uploadsInProgress>0||!hasFiles||!privacyChecked;}
+        function handleFileSelect(event, category, fieldId){ const nifInput=document.getElementById('nif'); if(!nifInput.value.trim()){document.getElementById('nif-error').classList.remove('hidden');nifInput.focus();return;} document.getElementById('nif-error').classList.add('hidden');nifInput.disabled=true; for(const file of event.target.files){uploadFileToTemp(file, category, fieldId);} event.target.value='';}
+        async function uploadFileToTemp(file, category, fieldId) {
+            uploadsInProgress++; updateSummaryButtonState();
             const domId = `file-${Date.now()}-${Math.random()}`;
-            const listId = category === 'Facturas' ? 'facturas-list' : 'justificantes-list';
-            const fileListContainer = document.getElementById(listId);
+            const listContainer = document.getElementById(`${fieldId}-list`);
             const controller = new AbortController();
-            
             const fileItem = document.createElement('div');
             fileItem.id = domId;
             fileItem.className = 'file-item';
-            fileItem.innerHTML = `<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p><span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span></div><div class="progress-bar-container mt-1"><div class="progress-bar"></div></div><p class="text-xs text-gray-400 mt-1">Calculando hash...</p></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>`;
-            fileListContainer.appendChild(fileItem);
-
-            const progressBar = fileItem.querySelector('.progress-bar');
-            const deleteButton = fileItem.querySelector('.btn-delete');
-            const cancelButton = fileItem.querySelector('.btn-cancel');
-            const progressText = fileItem.querySelector('.text-xs');
-            const fileNameText = fileItem.querySelector('.truncate');
+            fileItem.innerHTML = `
+                <div class="flex-grow mr-4 overflow-hidden">
+                    <div class="flex justify-between items-baseline">
+                        <p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p>
+                    </div>
+                    <div class="upload-status-container mt-1">
+                        <div class="progress-bar-container"><div class="progress-bar"></div></div>
+                        <p class="status-text text-xs text-gray-400 mt-1">Preparando...</p>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <button class="btn-cancel">Cancelar</button>
+                    <button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button>
+                </div>`;
+            listContainer.appendChild(fileItem);
             
+            const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText] = [
+                fileItem.querySelector('.upload-status-container'),
+                fileItem.querySelector('.progress-bar'),
+                fileItem.querySelector('.btn-delete'),
+                fileItem.querySelector('.btn-cancel'),
+                fileItem.querySelector('.status-text'),
+                fileItem.querySelector('.truncate')
+            ];
+
             const MAX_SIZE_MB = 35;
             if (file.size > MAX_SIZE_MB * 1024 * 1024) {
                 fileNameText.textContent = `Error: Archivo demasiado grande (Máx ${MAX_SIZE_MB}MB)`;
-                progressText.classList.add('hidden');
+                uploadStatusContainer.innerHTML = '';
                 cancelButton.classList.add('hidden');
-                progressBar.style.backgroundColor = '#991B1B';
-                progressBar.style.width = '100%';
-                return;
+                uploadsInProgress--; updateSummaryButtonState(); return;
             }
-
-            uploadsInProgress++;
-            updateSummaryButtonState();
             
             cancelButton.onclick = () => controller.abort();
-
+            
             try {
+                statusText.textContent = 'Calculando hash...';
                 const hash = await calculateFileHash(file);
-                progressText.textContent = 'Subiendo...';
-                setTimeout(() => { progressBar.style.width = '30%'; }, 100);
+                
+                statusText.textContent = `Subiendo... (${formatBytes(file.size)})`;
+                
+                const sizeWarningLimit = 25 * 1024 * 1024;
+                if (file.size > sizeWarningLimit) {
+                    const warningP = document.createElement('p');
+                    warningP.className = 'text-xs text-amber-600 mt-1';
+                    warningP.textContent = 'Puede tardar varios minutos...';
+                    uploadStatusContainer.appendChild(warningP);
+                }
 
+                setTimeout(() => { progressBar.style.width = '30%'; }, 100);
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
@@ -239,172 +151,46 @@
                     .then(response => response.json())
                     .then(result => {
                         if (result.status === 'success' && result.id) {
-                            progressBar.style.width = '100%';
-                            progressText.classList.add('hidden');
-                            cancelButton.classList.add('hidden');
-                            deleteButton.style.visibility = 'visible'; 
                             const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
                             submissionData.files[category].push(fileData);
+                            
+                            uploadStatusContainer.innerHTML = `
+                                <div class="mt-1 text-xs text-gray-500">
+                                    <span>Tamaño: ${formatBytes(file.size)}</span><br>
+                                    <span class="truncate" title="${hash}">SHA-256: ${hash.substring(0, 20)}...</span>
+                                </div>`;
+                            
+                            deleteButton.style.visibility = 'visible';
+                            cancelButton.classList.add('hidden');
                             deleteButton.onclick = () => removeFile(category, fileData);
                         } else { throw new Error(result.message || 'Error desconocido.'); }
                     })
                     .catch(error => {
                         if (error.name === 'AbortError') { fileItem.remove(); } 
                         else {
-                            fileNameText.textContent = `Error al subir: ${file.name}`;
-                            fileNameText.classList.add('text-red-500');
-                            progressText.classList.add('hidden');
+                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al subir.</p>`;
                             cancelButton.classList.add('hidden');
-                            progressBar.style.backgroundColor = '#991B1B';
                         }
                     })
                     .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
                 };
                 reader.readAsDataURL(file);
-
-            } catch(error) {
-                fileNameText.textContent = `Error al procesar: ${file.name}`;
-                progressText.textContent = `Error: ${error.message}`;
+            } catch (error) {
+                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al procesar: ${error.message}</p>`;
                 cancelButton.classList.add('hidden');
-                uploadsInProgress--;
-                updateSummaryButtonState();
+                uploadsInProgress--; updateSummaryButtonState();
             }
         }
-
-        function removeFile(category, fileData) {
-            const fileItem = document.getElementById(fileData.domId);
-            if (!fileItem) return;
-            fileItem.style.opacity = '0.5';
-            fileItem.querySelector('.btn-delete').disabled = true;
-            uploadsInProgress++; updateSummaryButtonState();
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'delete_temp', id: fileData.id })})
-            .then(res => res.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    fileItem.remove();
-                    submissionData.files[category] = submissionData.files[category].filter(f => f.id !== fileData.id);
-                } else {
-                    alert('No se pudo borrar el archivo.'); fileItem.style.opacity = '1';
-                    fileItem.querySelector('.btn-delete').disabled = false;
-                }
-            }).catch(err => {
-                alert('Error de conexión al borrar.'); fileItem.style.opacity = '1';
-                fileItem.querySelector('.btn-delete').disabled = false;
-            }).finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
-        }
-
-        function showSummary() {
-            submissionData.nif = document.getElementById('nif').value.trim();
-            if (!submissionData.nif) { document.getElementById('nif-error').classList.remove('hidden'); return; }
-            const summarySection = document.getElementById('summary-section');
-            const summaryContent = document.getElementById('summary-content');
-            let summaryHTML = `<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">${submissionData.nif}</p></div>`;
-            Object.keys(submissionData.files).forEach(cat => {
-                if (submissionData.files[cat].length > 0) {
-                    summaryHTML += `<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${submissionData.files[cat].map(f => `<li>${f.name}</li>`).join('')}</ul></div>`;
-                }
-            });
-            summaryContent.innerHTML = summaryHTML;
-            summarySection.classList.remove('hidden');
-            summarySection.scrollIntoView();
-        }
-
-        function generateReceiptPdf() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            let y = 20; const margin = 15;
-            const maxWidth = doc.internal.pageSize.getWidth() - (margin * 2);
-
-            doc.setFontSize(18); doc.text("Justificante de Envío", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-            y += 15; doc.setFontSize(12); doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`, margin, y);
-            y += 10; doc.text(`NIF/CIF: ${submissionData.nif}`, margin, y);
-            y += 15; doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
-            y += 10; doc.setFontSize(14); doc.text("Documentos Enviados:", margin, y);
-            y += 8; 
-            
-            function addFileList(title, files) {
-                if(files.length > 0) {
-                    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text(title, margin, y); y += 6;
-                    doc.setFont(undefined, 'normal');
-                    files.forEach(file => {
-                        doc.setFontSize(10);
-                        const lines = doc.splitTextToSize(`- ${file.name}`, maxWidth - 4);
-                        if (y + ((lines.length + 1) * 5) > 280) { doc.addPage(); y = 20; }
-                        doc.text(lines, margin + 4, y);
-                        y += (lines.length * 5);
-                        
-                        doc.setFontSize(7);
-                        doc.setTextColor(128);
-                        doc.text(`Hash (SHA-256): ${file.hash}`, margin + 4, y);
-                        y += 5;
-                        doc.setTextColor(0);
-                    });
-                    y += 4;
-                }
-            }
-            addFileList("Facturas:", submissionData.files['Facturas']);
-            addFileList("Justificantes de Pago:", submissionData.files['Justificantes de Pago']);
-            
-            return doc;
-        }
-
-        function finalizeSubmission() {
-            const btn = document.getElementById('final-send-button');
-            const progressContainer = document.getElementById('final-progress-container');
-            const progressBar = document.getElementById('final-progress-bar');
-            
-            btn.classList.add('hidden');
-            progressContainer.classList.remove('hidden');
-            progressBar.style.width = '20%';
-            
-            submissionData.submissionTimestamp = new Date().toISOString();
-            
-            const pdfDoc = generateReceiptPdf();
-            generatedPdfDoc = pdfDoc;
-            submissionData.pdfBase64 = pdfDoc.output('datauristring');
-            
-            progressBar.style.width = '50%';
-
-            const payload = { type: 'finalize', data: submissionData };
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(res => res.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    progressBar.style.width = '100%';
-                    setTimeout(() => {
-                        progressContainer.classList.add('hidden');
-                        showConfirmationLog();
-                        document.getElementById('confirmation-section').classList.remove('hidden');
-                        document.getElementById('download-receipt-button').disabled = false;
-                        document.getElementById('confirmation-section').scrollIntoView();
-                    }, 500);
-                } else { throw new Error(result.message || "Error en el servidor."); }
-            })
-            .catch(error => { 
-                console.error("Error en el procesamiento final:", error);
-                alert("Ocurrió un error al procesar el envío: " + error.message);
-                progressContainer.classList.add('hidden');
-                btn.classList.remove('hidden');
-            });
-        }
-        
-        function showConfirmationLog() {
-            const logContainer = document.getElementById('confirmation-log');
-            const localDate = new Date(submissionData.submissionTimestamp).toLocaleString('es-ES');
-            let logHTML = `<p><strong>Fecha y Hora:</strong> ${localDate}</p><p><strong>NIF/CIF:</strong> ${submissionData.nif}</p>`;
-            const createFileListHTML = (cat, files) => files.length > 0 ? `<p class="mt-2"><strong>${cat} Enviadas:</strong> ${files.map(f => f.name).join(', ')}</p>` : '';
-            logHTML += createFileListHTML('Facturas', submissionData.files['Facturas']);
-            logHTML += createFileListHTML('Justificantes', submissionData.files['Justificantes de Pago']);
-            logContainer.innerHTML = logHTML;
-        }
-
-        function downloadReceipt() {
-            if (generatedPdfDoc) {
-                generatedPdfDoc.save(`Justificante-${submissionData.nif}-${submissionData.submissionTimestamp.slice(0,10)}.pdf`);
-            } else {
-                alert("El justificante no se ha generado todavía.");
-            }
-        }
+        function removeFile(category, fileData) { const fileItem=document.getElementById(fileData.domId);if(!fileItem)return;fileItem.style.opacity='0.5';fileItem.querySelector('.btn-delete').disabled=true;uploadsInProgress++;updateSummaryButtonState();fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'delete_temp',id:fileData.id})}).then(res=>res.json()).then(result=>{if(result.status==='success'){fileItem.remove();submissionData.files[category]=submissionData.files[category].filter(f=>f.id!==fileData.id);}else{alert('No se pudo borrar el archivo.');fileItem.style.opacity='1';fileItem.querySelector('.btn-delete').disabled=false;}}).catch(err=>{alert('Error de conexión al borrar.');fileItem.style.opacity='1';fileItem.querySelector('.btn-delete').disabled=false;}).finally(()=>{uploadsInProgress--;updateSummaryButtonState();});}
+        function showSummary() { submissionData.nif=document.getElementById('nif').value.trim();if(!submissionData.nif){document.getElementById('nif-error').classList.remove('hidden');return;}const summarySection=document.getElementById('summary-section');const summaryContent=document.getElementById('summary-content');let summaryHTML=`<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">${submissionData.nif}</p></div>`;Object.keys(submissionData.files).forEach(cat=>{if(submissionData.files[cat].length>0){summaryHTML+=`<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${submissionData.files[cat].map(f=>`<li>${f.name}</li>`).join('')}</ul></div>`;}});const observaciones = document.getElementById('observaciones').value.trim();if(observaciones){summaryHTML+=`<div class="mt-4"><h3 class="font-bold text-gray-700">Observaciones:</h3><p class="pl-2 whitespace-pre-wrap">${observaciones}</p></div>`;}summaryContent.innerHTML=summaryHTML;summarySection.classList.remove('hidden');summarySection.scrollIntoView();}
+        function generateReceiptPdf(){const{jsPDF}=window.jspdf;const doc=new jsPDF();let y=20;const margin=15;const maxWidth=doc.internal.pageSize.getWidth()-(margin*2);doc.setFontSize(18);doc.text("Justificante de Envío",doc.internal.pageSize.getWidth()/2,y,{align:'center'});y+=15;doc.setFontSize(12);doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`,margin,y);y+=10;doc.text(`NIF/CIF: ${submissionData.nif}`,margin,y);y+=10;const observaciones=submissionData.observaciones;if(observaciones){doc.setFont(undefined,'bold');doc.text('Observaciones:',margin,y);y+=6;doc.setFont(undefined,'normal');const obsLines=doc.splitTextToSize(observaciones,maxWidth);doc.text(obsLines,margin,y);y+=obsLines.length*5+4;}y+=5;doc.setDrawColor(180);doc.line(margin,y,doc.internal.pageSize.getWidth()-margin,y);y+=10;doc.setFontSize(14);doc.text("Documentos Enviados:",margin,y);y+=8;function addFileList(title,files){if(files.length>0){doc.setFont(undefined,'bold');doc.setFontSize(11);doc.text(title,margin,y);y+=6;doc.setFont(undefined,'normal');files.forEach(file=>{doc.setFontSize(10);const lines=doc.splitTextToSize(`- ${file.name}`,maxWidth-4);if(y+((lines.length+1)*5)>280){doc.addPage();y=20;}doc.text(lines,margin+4,y);y+=(lines.length*5);doc.setFontSize(7);doc.setTextColor(128);doc.text(`Hash (SHA-256): ${file.hash}`,margin+4,y);y+=5;doc.setTextColor(0);});y+=4;}}Object.keys(submissionData.files).forEach(cat=>{addFileList(cat,submissionData.files[cat]);});return doc;}
+        function finalizeSubmission() { const btn=document.getElementById('final-send-button');const progressContainer=document.getElementById('final-progress-container');const progressBar=document.getElementById('final-progress-bar');btn.classList.add('hidden');progressContainer.classList.remove('hidden');progressBar.style.width='20%';submissionData.submissionTimestamp=new Date().toISOString();submissionData.observaciones=document.getElementById('observaciones').value.trim();const pdfDoc=generateReceiptPdf();generatedPdfDoc=pdfDoc;submissionData.pdfBase64=pdfDoc.output('datauristring');progressBar.style.width='50%';const payload={type:'finalize',data:submissionData};fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)}).then(res=>res.json()).then(result=>{if(result.status==='success'){progressBar.style.width='100%';setTimeout(()=>{progressContainer.classList.add('hidden');showConfirmationLog();document.getElementById('confirmation-section').classList.remove('hidden');document.getElementById('download-receipt-button').disabled=false;document.getElementById('confirmation-section').scrollIntoView();},500);}else{throw new Error(result.message||"Error en el servidor.");}}).catch(error=>{console.error("Error en el procesamiento final:",error);alert("Ocurrió un error al procesar el envío: "+error.message);progressContainer.classList.add('hidden');btn.classList.remove('hidden');});}
+        function showConfirmationLog(){const logContainer=document.getElementById('confirmation-log');const localDate=new Date(submissionData.submissionTimestamp).toLocaleString('es-ES');let logHTML=`<p><strong>Fecha y Hora:</strong> ${localDate}</p><p><strong>NIF/CIF:</strong> ${submissionData.nif}</p>`;const observaciones=submissionData.observaciones;if(observaciones){logHTML+=`<p class="mt-2"><strong>Observaciones:</strong> ${observaciones}</p>`;}Object.keys(submissionData.files).forEach(cat=>{const files=submissionData.files[cat];if(files.length>0){logHTML+=`<p class="mt-2"><strong>${cat} Enviadas:</strong> ${files.map(f=>f.name).join(', ')}</p>`;}});logContainer.innerHTML=logHTML;}
+        function downloadReceipt(){if(generatedPdfDoc){generatedPdfDoc.save(`Justificante-${submissionData.nif}-${submissionData.submissionTimestamp.slice(0,10)}.pdf`);}else{alert("El justificante no se ha generado todavía.");}}
+        function openAdminPanel() { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('admin-panel').scrollIntoView(); const adminList = document.getElementById('admin-fields-list'); adminList.innerHTML = ''; formConfig.forEach((field) => { const fieldRow = document.createElement('div'); fieldRow.className = 'grid grid-cols-1 md:grid-cols-4 gap-2 items-center p-2 bg-gray-700 rounded'; fieldRow.innerHTML = `<input data-id="${field.id}" value="${field.titulo}" placeholder="Título del Campo"><input class="md:col-span-2" data-id="${field.id}" value="${field.descripcion}" placeholder="Descripción del Campo"><button onclick="deleteAdminField(this)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs">Eliminar</button>`; adminList.appendChild(fieldRow); }); }
+        function addAdminField() { const adminList = document.getElementById('admin-fields-list'); const newId = `custom_${Date.now()}`; const fieldRow = document.createElement('div'); fieldRow.className = 'grid grid-cols-1 md:grid-cols-4 gap-2 items-center p-2 bg-gray-700 rounded'; fieldRow.innerHTML = `<input data-id="${newId}" value="" placeholder="Nuevo Título"><input class="md:col-span-2" data-id="${newId}" value="" placeholder="Nueva Descripción"><button onclick="deleteAdminField(this)" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-xs">Eliminar</button>`; adminList.appendChild(fieldRow); }
+        function deleteAdminField(button) { button.parentElement.remove(); }
+        function saveAdminChanges() { const adminList = document.getElementById('admin-fields-list'); const newConfig = Array.from(adminList.children).map(row => { const inputs = row.querySelectorAll('input'); return { id: inputs[0].dataset.id, titulo: inputs[0].value, descripcion: inputs[1].value || 'Descripción' }; }).filter(field => field.titulo.trim() !== ''); const saveButton = event.target; saveButton.textContent = 'Guardando...'; saveButton.disabled = true; fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({type: 'saveFormConfig', data: newConfig})}).then(res => res.json()).then(result => { if (result.status === 'success') { alert('Configuración guardada. La página se recargará.'); window.location.reload(); } else { throw new Error(result.message); } }).catch(err => { alert('Error al guardar la configuración: ' + err.message); saveButton.textContent = 'Guardar Cambios y Recargar'; saveButton.disabled = false; }); }
     </script>
 </body>
 </html>
