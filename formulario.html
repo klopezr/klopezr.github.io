@@ -12,7 +12,7 @@
         body { background-color: #f9fafb; }
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
         .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
-        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
+        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.1s linear; }
         .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
         .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -29,7 +29,7 @@
 <body class="font-sans">
 
     <div id="preloader" class="et-loader">
-        <img class="et-loader-img" src="https://www.publicaauditores.es/wp-content/uploads/2024/02/loader-publica-asesores-1.png" alt="et-loader">
+        <img class="et-loader-img" src="PPT.png" alt="et-loader">
     </div>
 
     <header class="bg-red-600 shadow-md w-full">
@@ -89,7 +89,6 @@
             uploadsInProgress++; updateSummaryButtonState();
             const domId = `file-${Date.now()}-${Math.random()}`;
             const listContainer = document.getElementById(`${fieldId}-list`);
-            const controller = new AbortController();
             const fileItem = document.createElement('div');
             fileItem.id = domId;
             fileItem.className = 'file-item';
@@ -97,6 +96,7 @@
                 <div class="flex-grow mr-4 overflow-hidden">
                     <div class="flex justify-between items-baseline">
                         <p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p>
+                        <span class="file-size text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span>
                     </div>
                     <div class="upload-status-container mt-1">
                         <div class="progress-bar-container"><div class="progress-bar"></div></div>
@@ -110,12 +110,9 @@
             listContainer.appendChild(fileItem);
             
             const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText] = [
-                fileItem.querySelector('.upload-status-container'),
-                fileItem.querySelector('.progress-bar'),
-                fileItem.querySelector('.btn-delete'),
-                fileItem.querySelector('.btn-cancel'),
-                fileItem.querySelector('.status-text'),
-                fileItem.querySelector('.truncate')
+                fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'),
+                fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'),
+                fileItem.querySelector('.status-text'), fileItem.querySelector('.truncate')
             ];
 
             const MAX_SIZE_MB = 35;
@@ -126,53 +123,58 @@
                 uploadsInProgress--; updateSummaryButtonState(); return;
             }
             
-            cancelButton.onclick = () => controller.abort();
-            
+            const xhr = new XMLHttpRequest();
+            cancelButton.onclick = () => xhr.abort();
+
             try {
                 statusText.textContent = 'Calculando hash...';
                 const hash = await calculateFileHash(file);
                 
-                statusText.textContent = `Subiendo... (${formatBytes(file.size)})`;
-                
-                const sizeWarningLimit = 25 * 1024 * 1024;
-                if (file.size > sizeWarningLimit) {
-                    const warningP = document.createElement('p');
-                    warningP.className = 'text-xs text-amber-600 mt-1';
-                    warningP.textContent = 'Puede tardar varios minutos...';
-                    uploadStatusContainer.appendChild(warningP);
-                }
-
-                setTimeout(() => { progressBar.style.width = '30%'; }, 100);
-                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
-                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.status === 'success' && result.id) {
-                            const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
-                            submissionData.files[category].push(fileData);
-                            
-                            uploadStatusContainer.innerHTML = `
-                                <div class="mt-1 text-xs text-gray-500">
-                                    <span>Tamaño: ${formatBytes(file.size)}</span><br>
-                                    <span class="truncate" title="${hash}">SHA-256: ${hash.substring(0, 20)}...</span>
-                                </div>`;
-                            
-                            deleteButton.style.visibility = 'visible';
-                            cancelButton.classList.add('hidden');
-                            deleteButton.onclick = () => removeFile(category, fileData);
-                        } else { throw new Error(result.message || 'Error desconocido.'); }
-                    })
-                    .catch(error => {
-                        if (error.name === 'AbortError') { fileItem.remove(); } 
-                        else {
-                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al subir.</p>`;
-                            cancelButton.classList.add('hidden');
+                    
+                    xhr.upload.addEventListener('progress', (event) => {
+                        if (event.lengthComputable) {
+                            const percentComplete = (event.loaded / event.total) * 100;
+                            progressBar.style.width = percentComplete + '%';
+                            statusText.textContent = `Subiendo... ${Math.round(percentComplete)}%`;
                         }
-                    })
-                    .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        uploadsInProgress--; updateSummaryButtonState();
+                        if (xhr.status === 200) {
+                            const result = JSON.parse(xhr.responseText);
+                            if (result.status === 'success' && result.id) {
+                                const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
+                                submissionData.files[category].push(fileData);
+                                uploadStatusContainer.innerHTML = `<div class="mt-1 text-xs text-gray-500">SHA-256: <span class="truncate" title="${hash}">${hash.substring(0,20)}...</span></div>`;
+                                deleteButton.style.visibility = 'visible';
+                                deleteButton.onclick = () => removeFile(category, fileData);
+                            } else {
+                                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error: ${result.message || 'Error del servidor'}</p>`;
+                            }
+                        } else {
+                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de red: ${xhr.status}</p>`;
+                        }
+                        cancelButton.classList.add('hidden');
+                    });
+
+                    xhr.addEventListener('error', () => {
+                        uploadsInProgress--; updateSummaryButtonState();
+                        uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de conexión.</p>`;
+                        cancelButton.classList.add('hidden');
+                    });
+
+                    xhr.addEventListener('abort', () => {
+                        uploadsInProgress--; updateSummaryButtonState();
+                        fileItem.remove();
+                    });
+
+                    xhr.open('POST', SCRIPT_URL, true);
+                    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8'); 
+                    xhr.send(JSON.stringify(payload));
                 };
                 reader.readAsDataURL(file);
             } catch (error) {
@@ -193,4 +195,3 @@
         function saveAdminChanges() { const adminList = document.getElementById('admin-fields-list'); const newConfig = Array.from(adminList.children).map(row => { const inputs = row.querySelectorAll('input'); return { id: inputs[0].dataset.id, titulo: inputs[0].value, descripcion: inputs[1].value || 'Descripción' }; }).filter(field => field.titulo.trim() !== ''); const saveButton = event.target; saveButton.textContent = 'Guardando...'; saveButton.disabled = true; fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({type: 'saveFormConfig', data: newConfig})}).then(res => res.json()).then(result => { if (result.status === 'success') { alert('Configuración guardada. La página se recargará.'); window.location.reload(); } else { throw new Error(result.message); } }).catch(err => { alert('Error al guardar la configuración: ' + err.message); saveButton.textContent = 'Guardar Cambios y Recargar'; saveButton.disabled = false; }); }
     </script>
 </body>
-</html>
