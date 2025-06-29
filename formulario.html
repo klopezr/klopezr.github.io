@@ -12,7 +12,7 @@
         body { background-color: #f9fafb; }
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
         .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
-        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.1s linear; }
+        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.05s linear; }
         .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
         .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -39,11 +39,11 @@
     <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 lg:grid lg:grid-cols-3 lg:gap-12 items-start">
         <aside class="lg:col-span-1">
             <div id="help-section" class="hidden lg:block lg:sticky lg:top-8 bg-gray-100 p-6 rounded-2xl border">
-                <h2 class="font-bold text-xl text-gray-800 mb-4">Guía Técnica</h2>
+                <h2 class="font-bold text-xl text-gray-800 mb-4">Guía</h2>
                 <div class="space-y-4 text-sm text-gray-600">
-                    <div><h3 class="font-semibold text-gray-700">Requerimientos Iniciales</h3><p class="mt-1">Es un requisito previo indicar un NIF/CIF válido para habilitar la funcionalidad de carga de archivos.</p></div>
+                    <div><h3 class="font-semibold text-gray-700">Requisitos Iniciales</h3><p class="mt-1">Es necesario indicar un NIF/CIF válido para habilitar la funcionalidad de carga de archivos.</p></div>
                     <div><h3 class="font-semibold text-gray-700">Proceso de Carga y Gestión</h3><ul class="list-disc list-inside mt-1 space-y-1"><li>El sistema soporta la selección múltiple de archivos por categoría.</li><li>Es posible abortar una transferencia en curso mediante el botón "Cancelar".</li><li>Una vez finalizada la carga, cada archivo puede ser eliminado individualmente mediante el icono (X).</li></ul></div>
-                    <div><h3 class="font-semibold text-gray-700">Integridad y Trazabilidad</h3><p class="mt-1">El justificante final en formato PDF incluye la marca de tiempo del envío y una firma digital única (hash SHA-256) por cada archivo, garantizando la integridad de los datos remitidos.</p></div>
+                    <div><h3 class="font-semibold text-gray-700">Integridad y Trazabilidad</h3><p class="mt-1">El justificante final en formato PDF incluye la marca de tiempo del envío, documentación enviada y la firma digital única (hash SHA-256) por cada archivo, garantizando la integridad de los datos remitidos.</p></div>
                 </div>
             </div>
         </aside>
@@ -85,104 +85,7 @@
         async function calculateFileHash(file) {const buffer=await file.arrayBuffer();const hashBuffer=await crypto.subtle.digest('SHA-256',buffer);const hashArray=Array.from(new Uint8Array(hashBuffer));return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');}
         function updateSummaryButtonState() {const summaryButton=document.getElementById('summary-button');const hasFiles=Object.values(submissionData.files).some(arr=>arr.length>0);const privacyChecked=document.getElementById('privacy-policy').checked;summaryButton.disabled=uploadsInProgress>0||!hasFiles||!privacyChecked;}
         function handleFileSelect(event, category, fieldId){ const nifInput=document.getElementById('nif'); if(!nifInput.value.trim()){document.getElementById('nif-error').classList.remove('hidden');nifInput.focus();return;} document.getElementById('nif-error').classList.add('hidden');nifInput.disabled=true; for(const file of event.target.files){uploadFileToTemp(file, category, fieldId);} event.target.value='';}
-        async function uploadFileToTemp(file, category, fieldId) {
-            uploadsInProgress++; updateSummaryButtonState();
-            const domId = `file-${Date.now()}-${Math.random()}`;
-            const listContainer = document.getElementById(`${fieldId}-list`);
-            const fileItem = document.createElement('div');
-            fileItem.id = domId;
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = `
-                <div class="flex-grow mr-4 overflow-hidden">
-                    <div class="flex justify-between items-baseline">
-                        <p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p>
-                        <span class="file-size text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span>
-                    </div>
-                    <div class="upload-status-container mt-1">
-                        <div class="progress-bar-container"><div class="progress-bar"></div></div>
-                        <p class="status-text text-xs text-gray-400 mt-1">Preparando...</p>
-                    </div>
-                </div>
-                <div class="flex flex-col items-center">
-                    <button class="btn-cancel">Cancelar</button>
-                    <button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button>
-                </div>`;
-            listContainer.appendChild(fileItem);
-            
-            const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText] = [
-                fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'),
-                fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'),
-                fileItem.querySelector('.status-text'), fileItem.querySelector('.truncate')
-            ];
-
-            const MAX_SIZE_MB = 35;
-            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-                fileNameText.textContent = `Error: Archivo demasiado grande (Máx ${MAX_SIZE_MB}MB)`;
-                uploadStatusContainer.innerHTML = '';
-                cancelButton.classList.add('hidden');
-                uploadsInProgress--; updateSummaryButtonState(); return;
-            }
-            
-            const xhr = new XMLHttpRequest();
-            cancelButton.onclick = () => xhr.abort();
-
-            try {
-                statusText.textContent = 'Calculando hash...';
-                const hash = await calculateFileHash(file);
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const payload = { type: 'upload_temp', fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
-                    
-                    xhr.upload.addEventListener('progress', (event) => {
-                        if (event.lengthComputable) {
-                            const percentComplete = (event.loaded / event.total) * 100;
-                            progressBar.style.width = percentComplete + '%';
-                            statusText.textContent = `Subiendo... ${Math.round(percentComplete)}%`;
-                        }
-                    });
-
-                    xhr.addEventListener('load', () => {
-                        uploadsInProgress--; updateSummaryButtonState();
-                        if (xhr.status === 200) {
-                            const result = JSON.parse(xhr.responseText);
-                            if (result.status === 'success' && result.id) {
-                                const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
-                                submissionData.files[category].push(fileData);
-                                uploadStatusContainer.innerHTML = `<div class="mt-1 text-xs text-gray-500">SHA-256: <span class="truncate" title="${hash}">${hash.substring(0,20)}...</span></div>`;
-                                deleteButton.style.visibility = 'visible';
-                                deleteButton.onclick = () => removeFile(category, fileData);
-                            } else {
-                                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error: ${result.message || 'Error del servidor'}</p>`;
-                            }
-                        } else {
-                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de red: ${xhr.status}</p>`;
-                        }
-                        cancelButton.classList.add('hidden');
-                    });
-
-                    xhr.addEventListener('error', () => {
-                        uploadsInProgress--; updateSummaryButtonState();
-                        uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de conexión.</p>`;
-                        cancelButton.classList.add('hidden');
-                    });
-
-                    xhr.addEventListener('abort', () => {
-                        uploadsInProgress--; updateSummaryButtonState();
-                        fileItem.remove();
-                    });
-
-                    xhr.open('POST', SCRIPT_URL, true);
-                    xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8'); 
-                    xhr.send(JSON.stringify(payload));
-                };
-                reader.readAsDataURL(file);
-            } catch (error) {
-                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al procesar: ${error.message}</p>`;
-                cancelButton.classList.add('hidden');
-                uploadsInProgress--; updateSummaryButtonState();
-            }
-        }
+        async function uploadFileToTemp(file, category, fieldId) { uploadsInProgress++; updateSummaryButtonState(); const domId=`file-${Date.now()}-${Math.random()}`; const listContainer = document.getElementById(`${fieldId}-list`); const controller=new AbortController(); const fileItem=document.createElement('div');fileItem.id=domId;fileItem.className='file-item'; fileItem.innerHTML=`<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p></div><div class="upload-status-container mt-1"><div class="progress-bar-container"><div class="progress-bar"></div></div><p class="status-text text-xs text-gray-400 mt-1">Preparando... (${formatBytes(file.size)})</p></div></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>`; listContainer.appendChild(fileItem); const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText]=[fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'), fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'), fileItem.querySelector('.status-text'), fileItem.querySelector('.truncate')]; const MAX_SIZE_MB=35; if(file.size>MAX_SIZE_MB*1024*1024){fileNameText.textContent=`Error: Archivo grande (Máx ${MAX_SIZE_MB}MB)`;uploadStatusContainer.innerHTML='';cancelButton.classList.add('hidden');uploadsInProgress--;updateSummaryButtonState();return;} cancelButton.onclick=()=>controller.abort(); try{ const hash=await calculateFileHash(file); statusText.textContent='Subiendo...'; const sizeWarningLimit=25*1024*1024; if(file.size>sizeWarningLimit){const warningP=document.createElement('p');warningP.className='text-xs text-amber-600 mt-1';warningP.textContent='Puede tardar varios minutos...';uploadStatusContainer.appendChild(warningP);} setTimeout(()=>{progressBar.style.width='50%';},100); const reader=new FileReader(); reader.onload=(e)=>{ const payload={type:'upload_temp',fileName:file.name,mimeType:file.type,fileData:e.target.result.split(',')[1]}; fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload),signal:controller.signal}) .then(response=>response.json()) .then(result=>{ if(result.status==='success'&&result.id){ const fileData={name:file.name,id:result.id,hash:hash,domId:domId}; submissionData.files[category].push(fileData); progressBar.style.width='100%'; setTimeout(() => { uploadStatusContainer.innerHTML = `<div class="flex justify-between items-baseline"><span class="text-xs text-gray-500">Tamaño: ${formatBytes(file.size)}</span><span class="text-xs text-gray-500 truncate" title="${hash}">SHA-256: ${hash.substring(0,20)}...</span></div>`; deleteButton.style.visibility='visible'; cancelButton.classList.add('hidden'); deleteButton.onclick=()=>removeFile(category,fileData); }, 300); }else{throw new Error(result.message||'Error desconocido.');}}) .catch(error=>{if(error.name==='AbortError'){fileItem.remove();}else{uploadStatusContainer.innerHTML=`<p class="text-xs text-red-600 mt-1">Error al subir.</p>`;cancelButton.classList.add('hidden');}}) .finally(()=>{uploadsInProgress--;updateSummaryButtonState();}); }; reader.readAsDataURL(file); }catch(error){uploadStatusContainer.innerHTML=`<p class="text-xs text-red-600 mt-1">Error al procesar: ${error.message}</p>`;cancelButton.classList.add('hidden');uploadsInProgress--;updateSummaryButtonState();}}
         function removeFile(category, fileData) { const fileItem=document.getElementById(fileData.domId);if(!fileItem)return;fileItem.style.opacity='0.5';fileItem.querySelector('.btn-delete').disabled=true;uploadsInProgress++;updateSummaryButtonState();fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({type:'delete_temp',id:fileData.id})}).then(res=>res.json()).then(result=>{if(result.status==='success'){fileItem.remove();submissionData.files[category]=submissionData.files[category].filter(f=>f.id!==fileData.id);}else{alert('No se pudo borrar el archivo.');fileItem.style.opacity='1';fileItem.querySelector('.btn-delete').disabled=false;}}).catch(err=>{alert('Error de conexión al borrar.');fileItem.style.opacity='1';fileItem.querySelector('.btn-delete').disabled=false;}).finally(()=>{uploadsInProgress--;updateSummaryButtonState();});}
         function showSummary() { submissionData.nif=document.getElementById('nif').value.trim();if(!submissionData.nif){document.getElementById('nif-error').classList.remove('hidden');return;}const summarySection=document.getElementById('summary-section');const summaryContent=document.getElementById('summary-content');let summaryHTML=`<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">${submissionData.nif}</p></div>`;Object.keys(submissionData.files).forEach(cat=>{if(submissionData.files[cat].length>0){summaryHTML+=`<div class="mt-4"><h3 class="font-bold text-gray-700">${cat}:</h3><ul class="list-disc list-inside pl-2 text-gray-600">${submissionData.files[cat].map(f=>`<li>${f.name}</li>`).join('')}</ul></div>`;}});const observaciones = document.getElementById('observaciones').value.trim();if(observaciones){summaryHTML+=`<div class="mt-4"><h3 class="font-bold text-gray-700">Observaciones:</h3><p class="pl-2 whitespace-pre-wrap">${observaciones}</p></div>`;}summaryContent.innerHTML=summaryHTML;summarySection.classList.remove('hidden');summarySection.scrollIntoView();}
         function generateReceiptPdf(){const{jsPDF}=window.jspdf;const doc=new jsPDF();let y=20;const margin=15;const maxWidth=doc.internal.pageSize.getWidth()-(margin*2);doc.setFontSize(18);doc.text("Justificante de Envío",doc.internal.pageSize.getWidth()/2,y,{align:'center'});y+=15;doc.setFontSize(12);doc.text(`Fecha y Hora: ${new Date(submissionData.submissionTimestamp).toLocaleString('es-ES')}`,margin,y);y+=10;doc.text(`NIF/CIF: ${submissionData.nif}`,margin,y);y+=10;const observaciones=submissionData.observaciones;if(observaciones){doc.setFont(undefined,'bold');doc.text('Observaciones:',margin,y);y+=6;doc.setFont(undefined,'normal');const obsLines=doc.splitTextToSize(observaciones,maxWidth);doc.text(obsLines,margin,y);y+=obsLines.length*5+4;}y+=5;doc.setDrawColor(180);doc.line(margin,y,doc.internal.pageSize.getWidth()-margin,y);y+=10;doc.setFontSize(14);doc.text("Documentos Enviados:",margin,y);y+=8;function addFileList(title,files){if(files.length>0){doc.setFont(undefined,'bold');doc.setFontSize(11);doc.text(title,margin,y);y+=6;doc.setFont(undefined,'normal');files.forEach(file=>{doc.setFontSize(10);const lines=doc.splitTextToSize(`- ${file.name}`,maxWidth-4);if(y+((lines.length+1)*5)>280){doc.addPage();y=20;}doc.text(lines,margin+4,y);y+=(lines.length*5);doc.setFontSize(7);doc.setTextColor(128);doc.text(`Hash (SHA-256): ${file.hash}`,margin+4,y);y+=5;doc.setTextColor(0);});y+=4;}}Object.keys(submissionData.files).forEach(cat=>{addFileList(cat,submissionData.files[cat]);});return doc;}
@@ -195,3 +98,4 @@
         function saveAdminChanges() { const adminList = document.getElementById('admin-fields-list'); const newConfig = Array.from(adminList.children).map(row => { const inputs = row.querySelectorAll('input'); return { id: inputs[0].dataset.id, titulo: inputs[0].value, descripcion: inputs[1].value || 'Descripción' }; }).filter(field => field.titulo.trim() !== ''); const saveButton = event.target; saveButton.textContent = 'Guardando...'; saveButton.disabled = true; fetch(SCRIPT_URL, {method: 'POST', body: JSON.stringify({type: 'saveFormConfig', data: newConfig})}).then(res => res.json()).then(result => { if (result.status === 'success') { alert('Configuración guardada. La página se recargará.'); window.location.reload(); } else { throw new Error(result.message); } }).catch(err => { alert('Error al guardar la configuración: ' + err.message); saveButton.textContent = 'Guardar Cambios y Recargar'; saveButton.disabled = false; }); }
     </script>
 </body>
+</html>
