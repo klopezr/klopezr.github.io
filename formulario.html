@@ -12,7 +12,7 @@
         body { background-color: #f9fafb; }
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
         .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
-        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
+        .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.1s linear; }
         .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
         .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -88,73 +88,74 @@
         function handleFileSelect(event, fieldId){ const nifInput=document.getElementById('nif'); if(!nifInput.value.trim()){document.getElementById('nif-error').classList.remove('hidden');nifInput.focus();return;} document.getElementById('nif-error').classList.add('hidden');nifInput.disabled=true; for(const file of event.target.files){uploadFileToTemp(file, fieldId);} event.target.value='';}
         async function uploadFileToTemp(file, fieldId) {
             uploadsInProgress++; updateSummaryButtonState();
-            const domId=`file-${Date.now()}-${Math.random()}`;
+            const domId = `file-${Date.now()}-${Math.random()}`;
             const listContainer = document.getElementById(`${fieldId}-list`);
-            const controller=new AbortController();
-            const fileItem=document.createElement('div');fileItem.id=domId;fileItem.className='file-item';
-            fileItem.innerHTML=`<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p><span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span></div><div class="upload-status-container mt-1"><div class="progress-bar-container"><div class="progress-bar"></div></div><p class="status-text text-xs text-gray-400 mt-1">Preparando...</p></div></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>`;
+            const fileItem = document.createElement('div');
+            fileItem.id = domId;
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">${file.name}</p><span class="text-xs text-gray-500 flex-shrink-0">${formatBytes(file.size)}</span></div><div class="upload-status-container mt-1"><div class="progress-bar-container"><div class="progress-bar"></div></div><p class="status-text text-xs text-gray-400 mt-1">Preparando...</p></div></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>`;
             listContainer.appendChild(fileItem);
             
-            const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText] = [
-                fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'),
-                fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'),
-                fileItem.querySelector('.status-text'), fileItem.querySelector('.truncate')
-            ];
-
-            const MAX_SIZE_MB = 35;
-            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1 font-bold">Error: Archivo grande (Máx ${MAX_SIZE_MB}MB).</p><p class="text-xs text-gray-600 mt-1">Por favor, divida el archivo o use "Observaciones" para añadir un enlace de descarga.</p>`;
-                cancelButton.classList.add('hidden');
-                uploadsInProgress--; updateSummaryButtonState(); return;
-            }
+            const[uploadStatusContainer, progressBar, deleteButton, cancelButton, statusText, fileNameText] = [ fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'), fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'), fileItem.querySelector('.status-text'), fileItem.querySelector('.truncate') ];
             
-            cancelButton.onclick = () => controller.abort();
+            const xhr = new XMLHttpRequest();
+            cancelButton.onclick = () => xhr.abort();
 
             try {
                 statusText.textContent = 'Calculando hash...';
                 const hash = await calculateFileHash(file);
-                
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const payload = { type: 'upload_temp', nif: document.getElementById('nif').value.trim(), fileName: file.name, mimeType: file.type, fileData: e.target.result.split(',')[1] };
-                    
-                    statusText.textContent = 'Subiendo...';
-                    const sizeWarningLimit = 25 * 1024 * 1024;
-                    if (file.size > sizeWarningLimit) {
-                        const warningP = document.createElement('p');
-                        warningP.className = 'text-xs text-amber-600 mt-1';
-                        warningP.textContent = 'Puede tardar varios minutos...';
-                        uploadStatusContainer.appendChild(warningP);
-                    }
-                    setTimeout(() => { progressBar.style.width = '50%'; }, 100);
 
-                    fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), signal: controller.signal })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.status === 'success' && result.id) {
-                            const fileData = { name: file.name, id: result.id, hash: hash, domId: domId };
-                            submissionData.files[fieldId].push(fileData);
-                            progressBar.style.width = '100%';
-                            setTimeout(() => {
+                const initPayload = { type: 'initiateUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name, mimeType: file.type || 'application/octet-stream' };
+                const initResponse = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(initPayload) });
+                const initResult = await initResponse.json();
+
+                if (initResult.status !== 'success' || !initResult.data.uploadUrl) {
+                    throw new Error(initResult.message || 'No se pudo obtener la URL de subida.');
+                }
+                
+                const { uploadUrl } = initResult.data;
+
+                xhr.upload.addEventListener('progress', e => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                        statusText.textContent = `Subiendo... ${Math.round(percentComplete)}%`;
+                    }
+                });
+
+                xhr.addEventListener('loadend', async () => {
+                    if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) {
+                        statusText.textContent = 'Confirmando subida...';
+                        try {
+                            const confirmPayload = { type: 'confirmUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name };
+                            const confirmResponse = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(confirmPayload) });
+                            const confirmResult = await confirmResponse.json();
+
+                            if (confirmResult.status === 'success' && confirmResult.data.fileId) {
+                                const fileData = { name: file.name, id: confirmResult.data.fileId, hash: hash, domId: domId };
+                                submissionData.files[fieldId].push(fileData);
                                 uploadStatusContainer.innerHTML = `<div class="mt-1 text-xs text-gray-500">SHA-256: <span class="truncate" title="${hash}">${hash.substring(0, 20)}...</span></div>`;
                                 deleteButton.style.visibility = 'visible';
-                                cancelButton.classList.add('hidden');
                                 deleteButton.onclick = () => removeFile(fieldId, fileData);
-                            }, 300);
-                        } else { throw new Error(result.message || 'Error desconocido.'); }
-                    })
-                    .catch(error => {
-                        if (error.name === 'AbortError') { fileItem.remove(); } 
-                        else {
-                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al subir.</p>`;
-                            cancelButton.classList.add('hidden');
+                            } else {
+                                throw new Error(confirmResult.message || "No se pudo confirmar la subida.");
+                            }
+                        } catch (err) {
+                            uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de confirmación: ${err.message}</p>`;
                         }
-                    })
-                    .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
-                };
-                reader.readAsDataURL(file);
+                    } else {
+                         uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error de subida: ${xhr.status}</p>`;
+                    }
+                    cancelButton.classList.add('hidden');
+                    uploadsInProgress--; updateSummaryButtonState();
+                });
+                
+                xhr.open('PUT', uploadUrl, true);
+                xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                xhr.send(file);
+
             } catch (error) {
-                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error al procesar: ${error.message}</p>`;
+                uploadStatusContainer.innerHTML = `<p class="text-xs text-red-600 mt-1">Error: ${error.message}</p>`;
                 cancelButton.classList.add('hidden');
                 uploadsInProgress--; updateSummaryButtonState();
             }
