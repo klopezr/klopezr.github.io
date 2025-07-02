@@ -10,73 +10,27 @@
         .status-aprobado { background-color: #F0FDF4; color: #166534; }
         .status-no-requerido { background-color: #F3F4F6; color: #4B5563; }
         .action-btn { padding: 2px 6px; font-size: 0.75rem; border-radius: 0.25rem; color: white; }
-        
-        /* Colores de fondo para las filas */
-        .row-approved { background-color: #EBF9F1; } /* Verde claro */
-        .row-entregado { background-color: #EBF4FF; } /* Azul claro */
-        .row-requerido { background-color: #FFFBEB; } /* Amarillo claro */
-        .row-no-requerido { background-color: #F9FAFB; } /* Gris claro */
+        .row-approved { background-color: #EBF9F1; } .row-entregado { background-color: #EBF4FF; } .row-requerido { background-color: #FFFBEB; } .row-no-requerido { background-color: #F9FAFB; }
     </style>
 </head>
 <body class="bg-gray-100 p-4 sm:p-8">
     <div id="main-content" class="max-w-7xl mx-auto space-y-8 hidden">
         
-        <!-- Botones de Acceso Rápido -->
         <div class="mb-4 flex gap-4">
-            <a href="https://drive.google.com/drive/folders/1xDaos5WliByYx11cStmxY0VIB2hMTkjM" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-100 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                </svg>
-                <span>Drive</span>
-            </a>
-            <a href="https://docs.google.com/spreadsheets/d/1Yasa6V2PzziLy-NemOb9YpycAo4dYefB-iPuOZEyexM/edit" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-100 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-                  <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
-                  <path d="M10 2C6.134 2 3 3.343 3 5v3c0 1.657 3.134 3 7 3s7-1.343 7-3V5c0-1.657-3.134-3-7-3z" />
-                </svg>
-                <span>Base de Datos</span>
-            </a>
+            <a href="https://drive.google.com/drive/folders/1xDaos5WliByYx11cStmxY0VIB2hMTkjM" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg><span>Drive</span></a>
+            <a href="https://docs.google.com/spreadsheets/d/1Yasa6V2PzziLy-NemOb9YpycAo4dYefB-iPuOZEyexM/edit" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" /><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3s-7-1.343-7-3z" /><path d="M10 2C6.134 2 3 3.343 3 5v3c0 1.657 3.134 3 7 3s7-1.343 7-3V5c0-1.657-3.134-3-7-3z" /></svg><span>Base de Datos</span></a>
         </div>
         
-        <!-- Pestañas de Navegación -->
-        <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                <button onclick="showTab('clientes')" id="tab-clientes" class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gestión de Clientes</button>
-                <button onclick="showTab('nuevo-cliente')" id="tab-nuevo-cliente" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Añadir Nuevo Cliente</button>
-                <button onclick="showTab('preguntas')" id="tab-preguntas" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Editor de Preguntas</button>
-            </nav>
-        </div>
+        <div class="border-b border-gray-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button onclick="showTab('clientes')" id="tab-clientes" class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gestión de Clientes</button><button onclick="showTab('nuevo-cliente')" id="tab-nuevo-cliente" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Añadir Nuevo Cliente</button><button onclick="showTab('preguntas')" id="tab-preguntas" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Editor de Preguntas</button></nav></div>
 
-        <!-- Pestaña de Gestión de Clientes -->
         <div id="view-clientes">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow">
                 <h1 class="text-2xl font-bold mb-4">Panel de Control de Requerimientos</h1>
-                <!-- Layout modificado a 1/3 y 2/3 en pantallas grandes -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-1">
                         <h2 class="text-lg font-semibold mb-2">Clientes con Envíos</h2>
-                        <div class="flex gap-4 mb-4">
-                            <input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-2/3 p-2 border rounded-md">
-                            <select id="status-filter-select" onchange="filterClients()" class="w-1/3 p-2 border rounded-md">
-                                <option value="Todos">Todos los estados</option>
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="Aprobado">Aprobado</option>
-                                <option value="Re-solicitar">Re-solicitar</option>
-                            </select>
-                        </div>
-                        <div class="h-96 overflow-y-auto border rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIF/CIF</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Envío</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="nif-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
+                        <div class="flex gap-4 mb-4"><input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-2/3 p-2 border rounded-md"><select id="status-filter-select" onchange="filterClients()" class="w-1/3 p-2 border rounded-md"><option value="Todos">Todos</option><option value="Pendiente">Pendiente</option><option value="Aprobado">Aprobado</option><option value="Re-solicitar">Re-solicitar</option></select></div>
+                        <div class="h-96 overflow-y-auto border rounded-lg"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIF/CIF</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Envío</th></tr></thead><tbody id="nif-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div>
                     </div>
                     <div id="checklist-container" class="hidden lg:col-span-2">
                         <h2 class="text-lg font-semibold mb-2">Checklist para <span id="current-nif" class="text-red-600"></span></h2>
@@ -88,30 +42,28 @@
             </div>
         </div>
         
-        <!-- Pestaña de Añadir Nuevo Cliente -->
         <div id="view-nuevo-cliente" class="hidden">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow">
                 <h1 class="text-2xl font-bold mb-4">Añadir Nuevo Cliente y Asignar Checklist</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
                          <label for="new-nif-input" class="block text-sm font-medium text-gray-700">NIF del Nuevo Cliente</label>
-                         <input type="text" id="new-nif-input" placeholder="Introduzca NIF" class="mt-1 block w-full p-2 border rounded-md">
+                         <input type="text" id="new-nif-input" placeholder="Introduzca NIF" class="mt-1 block w-full p-2 border rounded-md" oninput="document.getElementById('add-special-cell-new-client-btn').disabled = this.value.trim() === ''">
                          <div id="new-checklist-container" class="mt-4">
-                            <h2 class="text-lg font-semibold mb-2">Seleccionar Requerimientos</h2>
-                            <input type="text" id="new-client-req-search" onkeyup="filterNewClientQuestions()" placeholder="Buscar requerimiento..." class="w-full p-2 border rounded-md mb-4">
-                            <div id="new-checklist-content" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4"></div>
-                            <button onclick="saveNewClientChecklist()" class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar Checklist para Nuevo Cliente</button>
+                             <h2 class="text-lg font-semibold mb-2">Seleccionar Requerimientos</h2>
+                             <div class="flex gap-2 mb-2">
+                                <input type="text" id="new-client-req-search" onkeyup="filterNewClientQuestions()" placeholder="Buscar requerimiento..." class="w-full p-2 border rounded-md">
+                                <button id="add-special-cell-new-client-btn" onclick="openSpecialQuestionModal(true)" class="whitespace-nowrap bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 disabled:bg-gray-300" disabled>+ Celda Especial</button>
+                             </div>
+                             <div id="new-checklist-content" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4"></div>
+                             <button onclick="saveNewClientChecklist()" class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar Checklist para Nuevo Cliente</button>
                          </div>
                     </div>
-                    <div>
-                        <h2 class="text-lg font-semibold mb-2">Vista Previa del Formulario</h2>
-                        <div id="form-preview" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4 bg-gray-50"></div>
-                    </div>
+                    <div><h2 class="text-lg font-semibold mb-2">Vista Previa del Formulario</h2><div id="form-preview" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4 bg-gray-50"></div></div>
                 </div>
             </div>
         </div>
         
-        <!-- Pestaña de Editor de Preguntas -->
         <div id="view-preguntas" class="hidden">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow mt-8">
                 <h2 class="text-xl font-bold mb-4">Editor de Preguntas</h2>
@@ -128,7 +80,29 @@
         </div>
     </div>
 
-    <!-- Modal para Añadir Nuevo Requerimiento -->
+    <div id="special-question-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Añadir Nueva Celda Especial</h3>
+                <p class="text-sm text-gray-500 mt-1">Este requerimiento incluirá archivos para que el cliente descargue.</p>
+                <div class="mt-4 px-7 py-3 space-y-4 text-left">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="special-modal-area" type="text" placeholder="Área (ej: Contabilidad)">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="special-modal-subarea" type="text" placeholder="Subárea (ej: Plantillas)">
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="special-modal-descripcion" placeholder="Descripción para el cliente (ej: Descargue, rellene y vuelva a subir estos documentos)"></textarea>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="special-modal-file">Adjuntar archivo(s) para el cliente:</label>
+                        <input class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" id="special-modal-file" type="file" multiple>
+                        <p id="special-modal-error" class="text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
+                </div>
+                <div class="items-center px-4 py-3 flex gap-4">
+                    <button id="special-modal-save-btn" onclick="handleAddNewSpecialQuestion()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Guardar y Solicitar</button>
+                    <button onclick="closeSpecialQuestionModal()" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div id="add-requirement-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
@@ -136,47 +110,31 @@
                 <div class="mt-2 px-7 py-3">
                     <div class="mb-4 text-left">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-area-select">Área</label>
-                        <select id="modal-area-select" onchange="toggleNewAreaInput(this)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        </select>
-                        <input class="hidden mt-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="modal-new-area-input" type="text" placeholder="Nombre de la nueva área">
+                        <select id="modal-area-select" onchange="toggleNewAreaInput(this)" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                        <input class="hidden mt-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-new-area-input" type="text" placeholder="Nombre de la nueva área">
                     </div>
-                    <div class="mb-4 text-left">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-subarea">Subárea</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="modal-subarea" type="text" placeholder="Ej: Facturas Trimestre 1">
-                    </div>
-                    <div class="mb-6 text-left">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-descripcion">Descripción para el cliente</label>
-                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="modal-descripcion" placeholder="Detalle del documento a solicitar"></textarea>
-                    </div>
+                    <div class="mb-4 text-left"><label class="block text-gray-700 text-sm font-bold mb-2" for="modal-subarea">Subárea</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-subarea" type="text" placeholder="Ej: Facturas Trimestre 1"></div>
+                    <div class="mb-6 text-left"><label class="block text-gray-700 text-sm font-bold mb-2" for="modal-descripcion">Descripción para el cliente</label><textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-descripcion" placeholder="Detalle del documento a solicitar"></textarea></div>
                 </div>
                 <div class="items-center px-4 py-3">
-                    <button id="modal-save-btn" onclick="handleAddNewRequirement()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300">
-                        Guardar y Solicitar
-                    </button>
-                    <button id="modal-cancel-btn" onclick="closeAddRequirementModal()" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        Cancelar
-                    </button>
+                    <button onclick="handleAddNewRequirement()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Guardar y Solicitar</button>
+                    <button onclick="closeAddRequirementModal()" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2AxcZqncicxyZ-Mk9cokiwR9Mqj-vxzUOh9A8rfuSR7zheCAno1TXFTkzLf1E5Pm9/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2AxcZqncicxyZ-Mk9cokiwR9Mqj-vxzUOh9A8rfuSR7zheCAno1TXFTkzLf1E5Pm9/exec';
         let fullChecklist = [];
-        let masterNifList = []; // Para guardar la lista completa de NIFs y poder filtrarla
+        let masterNifList = [];
         let currentNif = '';
+        let isForNewClientContext = false;
 
         async function runGAS(functionName, args = {}) {
             const payload = { type: functionName, ...args };
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload),
-                    redirect: 'follow'
-                });
+                const response = await fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload), redirect: 'follow' });
                 const result = await response.json();
                 if (result.status === 'success') {
                     return result.data;
@@ -198,8 +156,8 @@
                             document.getElementById('main-content').classList.remove('hidden');
                             showTab('clientes');
                             runGAS('getAllNifs').then(nifs => {
-                                masterNifList = nifs; // Guarda la lista maestra
-                                populateNifTable(masterNifList); // Muestra la lista completa inicialmente
+                                masterNifList = nifs;
+                                populateNifTable(masterNifList);
                             }).catch(err => alert("Error al cargar NIFs: " + err.message));
                         } else {
                             alert("Contraseña incorrecta.");
@@ -231,17 +189,9 @@
         function filterClients() {
             const searchTerm = document.getElementById('nif-search-input').value.toUpperCase();
             const statusFilter = document.getElementById('status-filter-select').value;
-            
             let filteredList = masterNifList;
-
-            if (searchTerm) {
-                filteredList = filteredList.filter(item => item.nif.toUpperCase().includes(searchTerm));
-            }
-
-            if (statusFilter !== 'Todos') {
-                filteredList = filteredList.filter(item => item.status === statusFilter);
-            }
-
+            if (searchTerm) { filteredList = filteredList.filter(item => item.nif.toUpperCase().includes(searchTerm)); }
+            if (statusFilter !== 'Todos') { filteredList = filteredList.filter(item => item.status === statusFilter); }
             populateNifTable(filteredList);
         }
 
@@ -249,7 +199,7 @@
             const tbody = document.getElementById('nif-table-body');
             tbody.innerHTML = '';
             if (!nifData || nifData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No se encontraron clientes con los filtros seleccionados.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">No se encontraron clientes.</td></tr>';
                 return;
             }
             nifData.forEach(item => {
@@ -261,17 +211,11 @@
                 statusCell.className = 'px-4 py-3';
                 let statusHtml = '';
                 switch(item.status) {
-                    case 'Aprobado':
-                        statusHtml = `<span title="Aprobado" class="text-green-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg> ${item.status}</span>`;
-                        break;
-                    case 'Re-solicitar':
-                        statusHtml = `<span title="Re-solicitar" class="text-yellow-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.001-1.742 3.001H4.42c-1.532 0-2.492-1.667-1.742-3.001l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> ${item.status}</span>`;
-                        break;
-                    default: // Pendiente
-                        statusHtml = `<span title="Pendiente de Revisión" class="text-blue-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg> ${item.status}</span>`;
+                    case 'Aprobado': statusHtml = `<span title="Aprobado" class="text-green-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg> ${item.status}</span>`; break;
+                    case 'Re-solicitar': statusHtml = `<span title="Re-solicitar" class="text-yellow-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.001-1.742 3.001H4.42c-1.532 0-2.492-1.667-1.742-3.001l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg> ${item.status}</span>`; break;
+                    default: statusHtml = `<span title="Pendiente de Revisión" class="text-blue-500 flex items-center gap-1 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg> ${item.status || 'Pendiente'}</span>`;
                 }
                 statusCell.innerHTML = statusHtml;
-                
                 row.insertCell(1).textContent = item.nif;
                 row.insertCell(2).textContent = new Date(item.timestamp).toLocaleString('es-ES');
             });
@@ -282,7 +226,7 @@
             document.getElementById('current-nif').textContent = nif;
             try {
                 const data = await runGAS('getAdminData', { nif: nif });
-                fullChecklist = data.maestro;
+                fullChecklist = data.maestro.filter(q => q.status !== 'No Requerido' || (q.adminFile && q.adminFile.length > 0));
                 buildChecklistUI();
                 buildAdminActionsUI(data.observaciones, data.justificante);
                 document.getElementById('checklist-container').classList.remove('hidden');
@@ -303,377 +247,132 @@
                 let areaHtml = `<details class="bg-gray-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer">${area}</summary><div class="mt-2 space-y-2">`;
                 groupedByArea[area].forEach(item => {
                     const currentStatus = item.status || 'No Requerido';
-                    
                     let rowClass = '';
-                    switch (currentStatus) {
-                        case 'Aprobado': rowClass = 'row-approved'; break;
-                        case 'Entregado': rowClass = 'row-entregado'; break;
-                        case 'Requerido': rowClass = 'row-requerido'; break;
-                        case 'No Requerido': rowClass = 'row-no-requerido'; break;
+                    switch (currentStatus) { case 'Aprobado': rowClass = 'row-approved'; break; case 'Entregado': rowClass = 'row-entregado'; break; case 'Requerido': rowClass = 'row-requerido'; break; case 'No Requerido': rowClass = 'row-no-requerido'; break; }
+
+                    let adminFileHtml = '';
+                    if (item.adminFile && Array.isArray(item.adminFile) && item.adminFile.length > 0) {
+                        const fileLinks = item.adminFile.map(file => `<a href="${file.url}" target="_blank" class="font-semibold hover:underline block truncate">⬇️ ${file.name}</a>`).join('');
+                        adminFileHtml = `<div class="col-span-12 text-xs text-blue-700 bg-blue-100 p-2 rounded-md mb-2 space-y-1">
+                            <p class="font-bold">Archivos adjuntos:</p>
+                            ${fileLinks}
+                        </div>`;
                     }
 
-                    let visualIndicatorHtml = '';
-                    let fileNamesHtml = '';
-                    let timestampHtml = '';
-
+                    let visualIndicatorHtml = ''; let fileNamesHtml = ''; let timestampHtml = '';
                     if (item.fileUrl && item.fileNames) {
                         visualIndicatorHtml = `<a href="${item.fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800" title="Ver archivos entregados"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg></a>`;
-                        const files = item.fileNames.split(',').map(f => f.trim());
-                        const fileListItems = files.map(f => `<li class="truncate">${f}</li>`).join('');
-                        fileNamesHtml = `<div class="text-xs text-gray-600 mt-1"><strong>Archivos:</strong><ul class="list-disc list-inside pl-2">${fileListItems}</ul></div>`;
-                        
-                        if (item.fileTimestamp) {
-                            const date = new Date(item.fileTimestamp);
-                            const formattedDate = date.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                            timestampHtml = `<span class="text-xs text-gray-500">${formattedDate}h</span>`;
-                        }
-
-                    } else {
+                        const fileListItems = item.fileNames.split(',').map(f => `<li class="truncate">${f.trim()}</li>`).join('');
+                        fileNamesHtml = `<div class="text-xs text-gray-600 mt-1"><strong>Archivos Cliente:</strong><ul class="list-disc list-inside pl-2">${fileListItems}</ul></div>`;
+                        if (item.fileTimestamp) { timestampHtml = `<span class="text-xs text-gray-500">${new Date(item.fileTimestamp).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>`; }
+                    } else if (currentStatus === 'Requerido') {
                         visualIndicatorHtml = `<span class="text-red-500" title="Pendiente de entrega"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></span>`;
                     }
 
-                    areaHtml += `
-                        <div class="grid grid-cols-12 gap-2 items-center p-2 border-b ${rowClass}">
-                            <div class="col-span-12 sm:col-span-6">
-                                <p class="font-semibold">${item.Subarea}</p>
-                                <p class="text-xs text-gray-500">${item.Descripcion}</p>
-                                ${fileNamesHtml}
-                            </div>
-                            <div class="col-span-12 sm:col-span-6 flex items-center justify-end gap-4">
-                                ${timestampHtml}
-                                ${visualIndicatorHtml}
-                                <span class="status-btn status-${currentStatus.toLowerCase().replace(/\s+/g, '-')}">${currentStatus}</span>
-                                <button onclick="updateStatus('${item.ID_Pregunta}', 'Aprobado')" class="action-btn bg-green-500 hover:bg-green-600" title="Marcar como Aprobado">✓</button>
-                                <button onclick="updateStatus('${item.ID_Pregunta}', 'Requerido')" class="action-btn bg-yellow-500 hover:bg-yellow-600" title="Volver a solicitar">⟳</button>
-                            </div>
-                        </div>`;
+                    areaHtml += `<div class="grid grid-cols-12 gap-2 items-center p-2 border-b ${rowClass}">
+                        ${adminFileHtml}
+                        <div class="col-span-12 sm:col-span-6"><p class="font-semibold">${item.Subarea}</p><p class="text-xs text-gray-500">${item.Descripcion}</p>${fileNamesHtml}</div>
+                        <div class="col-span-12 sm:col-span-6 flex items-center justify-end gap-4">${timestampHtml}${visualIndicatorHtml}<span class="status-btn status-${currentStatus.toLowerCase().replace(/\s+/g, '-')}">${currentStatus}</span><button onclick="updateStatus('${item.ID_Pregunta}', 'Aprobado')" class="action-btn bg-green-500 hover:bg-green-600" title="Marcar como Aprobado">✓</button><button onclick="updateStatus('${item.ID_Pregunta}', 'Requerido')" class="action-btn bg-yellow-500 hover:bg-yellow-600" title="Volver a solicitar">⟳</button></div>
+                    </div>`;
                 });
-                areaHtml += `<div class="mt-4"><button onclick="openAddRequirementModal()" class="text-sm text-blue-600 hover:text-blue-800">+ Añadir y solicitar nuevo requerimiento</button></div>`;
+                areaHtml += `<div class="mt-4 flex gap-4"><button onclick="openAddRequirementModal()" class="text-sm text-blue-600 hover:text-blue-800">+ Requerimiento Normal</button><button onclick="openSpecialQuestionModal(false)" class="text-sm text-yellow-600 hover:text-yellow-800">+ Celda Especial</button></div>`;
                 areaHtml += `</div></details>`;
                 container.innerHTML += areaHtml;
             }
         }
+        
+        function openSpecialQuestionModal(isNew) {
+            isForNewClientContext = isNew;
+            document.getElementById('special-modal-area').value = ''; document.getElementById('special-modal-subarea').value = ''; document.getElementById('special-modal-descripcion').value = ''; document.getElementById('special-modal-file').value = '';
+            document.getElementById('special-modal-error').classList.add('hidden');
+            document.getElementById('special-question-modal').classList.remove('hidden');
+        }
+
+        function closeSpecialQuestionModal() { document.getElementById('special-question-modal').classList.add('hidden'); }
+
+        async function handleAddNewSpecialQuestion() {
+            const saveBtn = document.getElementById('special-modal-save-btn');
+            const errorP = document.getElementById('special-modal-error');
+            errorP.classList.add('hidden');
+            const nif = isForNewClientContext ? document.getElementById('new-nif-input').value.trim() : currentNif;
+
+            const newRequirement = { nif: nif, area: document.getElementById('special-modal-area').value.trim(), subarea: document.getElementById('special-modal-subarea').value.trim(), descripcion: document.getElementById('special-modal-descripcion').value.trim() };
+            const fileInput = document.getElementById('special-modal-file');
+            const files = fileInput.files;
+
+            if (!newRequirement.nif || !newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion || files.length === 0) {
+                errorP.textContent = "Todos los campos y al menos un archivo son obligatorios.";
+                errorP.classList.remove('hidden');
+                return;
+            }
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Procesando...";
+
+            const readFileAsBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve({
+                        fileName: file.name,
+                        mimeType: file.type || 'application/octet-stream',
+                        fileData: reader.result
+                    });
+                    reader.onerror = (error) => reject(error);
+                });
+            };
+
+            try {
+                const filePromises = Array.from(files).map(readFileAsBase64);
+                const filesPayload = await Promise.all(filePromises);
+                
+                const payload = { ...newRequirement, files: filesPayload };
+                const newQuestion = await runGAS('addSpecialQuestion', { data: payload });
+
+                if (isForNewClientContext) {
+                    alert("Celda Especial creada. Ahora selecciónela de la lista y guarde el checklist del cliente.");
+                    closeSpecialQuestionModal();
+                    loadNewClientChecklist();
+                } else {
+                    fullChecklist.push(newQuestion);
+                    buildChecklistUI();
+                    alert("Celda Especial añadida. No olvide pulsar 'Guardar Cambios de Checklist' para confirmar.");
+                    closeSpecialQuestionModal();
+                }
+
+            } catch(err) {
+                 alert("Error: " + err.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = "Guardar y Solicitar";
+            }
+        }
 
         function buildAdminActionsUI(observaciones, justificante) {
-            const container = document.getElementById('admin-actions-container');
-            let obsHtml = '';
-            if (observaciones) {
-                obsHtml = `<div class="mb-4"><h4 class="font-semibold text-gray-800">Observaciones del Cliente:</h4><p class="text-sm text-gray-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;
-            }
-
-            let justHtml = '';
-            if (justificante && justificante.url) {
-                justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;
-            }
-
-            container.innerHTML = `${obsHtml}${justHtml}<div class="mt-4"><h4 class="font-semibold text-gray-800 mb-2">Estado del Expediente:</h4><div class="flex items-center gap-4"><select id="global-status-select" class="p-2 border rounded-md"><option value="Pendiente">Pendiente</option><option value="Aprobado">Aprobado</option><option value="Re-solicitar">Re-solicitar</option></select><button onclick="saveGlobalStatus()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar Estado</button></div></div>`;
-        }
-        
-        async function saveGlobalStatus() {
-            const newStatus = document.getElementById('global-status-select').value;
-            if (!currentNif || !newStatus) { alert("No se ha seleccionado NIF o estado."); return; }
-            try {
-                await runGAS('updateGlobalStatus', { nif: currentNif, newStatus: newStatus });
-                alert(`Estado del expediente para ${currentNif} actualizado a "${newStatus}".`);
-                const nifs = await runGAS('getAllNifs');
-                masterNifList = nifs;
-                filterClients();
-            } catch(err) {
-                alert("Error al guardar el estado: " + err.message);
-            }
-        }
-
-        function updateStatus(questionId, newStatus) {
-            const question = fullChecklist.find(q => q.ID_Pregunta === questionId);
-            if (question) {
-                if (newStatus === 'Aprobado' && question.status === 'Aprobado') {
-                    question.status = 'Entregado';
-                } else if (newStatus === 'Requerido' && question.status === 'Requerido') {
-                    question.status = 'No Requerido';
-                }
-                else {
-                    question.status = newStatus;
-                }
-            }
-            buildChecklistUI();
-        }
-
-        async function saveChecklist() {
-            if (!currentNif) { alert("No se ha seleccionado ningún NIF."); return; }
-            const checklistToSave = {};
-            fullChecklist.forEach(item => {
-                if(item.status && item.status !== 'No Requerido') {
-                    checklistToSave[item.ID_Pregunta] = item.status;
-                }
-            });
-            try {
-                await runGAS('saveChecklist', { data: { nif: currentNif, checklist: checklistToSave } });
-                alert("Checklist guardado con éxito para " + currentNif);
-                await loadChecklist(currentNif); 
-                const nifs = await runGAS('getAllNifs');
-                masterNifList = nifs;
-                filterClients();
-            } catch (err) {
-                alert("Error al guardar: " + err.message);
-            }
-        }
-        
-        function openAddRequirementModal() {
-            const areaSelect = document.getElementById('modal-area-select');
-            areaSelect.innerHTML = ''; 
-            const uniqueAreas = [...new Set(fullChecklist.map(item => item.Area))];
-            uniqueAreas.forEach(area => {
-                const option = document.createElement('option');
-                option.value = area;
-                option.textContent = area;
-                areaSelect.appendChild(option);
-            });
-            areaSelect.insertAdjacentHTML('beforeend', '<option value="__NEW__">** Crear Nueva Área **</option>');
-            toggleNewAreaInput(areaSelect); 
-            document.getElementById('modal-subarea').value = '';
-            document.getElementById('modal-descripcion').value = '';
-            document.getElementById('add-requirement-modal').classList.remove('hidden');
-        }
-
-        function toggleNewAreaInput(selectElement) {
-            const newAreaInput = document.getElementById('modal-new-area-input');
-            if (selectElement.value === '__NEW__') { newAreaInput.classList.remove('hidden'); } else { newAreaInput.classList.add('hidden'); }
-        }
-
-        function closeAddRequirementModal() {
-            document.getElementById('add-requirement-modal').classList.add('hidden');
-        }
-
-        async function handleAddNewRequirement() {
-            const areaSelect = document.getElementById('modal-area-select');
-            const newAreaInput = document.getElementById('modal-new-area-input');
-            let area = areaSelect.value;
-            if (area === '__NEW__') {
-                area = newAreaInput.value.trim();
-                if (!area) { alert("Por favor, introduzca un nombre para la nueva área."); return; }
-            }
-            const newRequirement = {
-                area: area,
-                subarea: document.getElementById('modal-subarea').value.trim(),
-                descripcion: document.getElementById('modal-descripcion').value.trim()
-            };
-            if (!newRequirement.subarea || !newRequirement.descripcion) { alert("Los campos Subárea y Descripción son obligatorios."); return; }
-            try {
-                const newQuestion = await runGAS('addNewQuestion', { data: newRequirement });
-                fullChecklist.push(newQuestion);
-                updateStatus(newQuestion.ID_Pregunta, 'Requerido');
-                closeAddRequirementModal();
-                buildChecklistUI();
-                alert("Nuevo requerimiento añadido y solicitado. No olvide pulsar 'Guardar Cambios' para confirmar.");
-            } catch (err) {
-                alert("Error al añadir el nuevo requerimiento: " + err.message);
-            }
-        }
-
-        async function addNewQuestionFromMaster() {
-            const newQuestion = {
-                area: document.getElementById('new-area').value.trim(),
-                subarea: document.getElementById('new-subarea').value.trim(),
-                descripcion: document.getElementById('new-desc').value.trim()
-            };
-            if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; }
-            try {
-                await runGAS('addNewQuestion', { data: newQuestion });
-                alert("Nueva pregunta añadida al maestro.");
-                document.getElementById('new-area').value = '';
-                document.getElementById('new-subarea').value = '';
-                document.getElementById('new-desc').value = '';
-                loadMaestroPreguntas();
-            } catch (err) {
-                alert("Error: " + err.message);
-            }
-        }
-
-        function filterMasterQuestions() {
-            const searchTerm = document.getElementById('master-question-search').value.toLowerCase();
-            const allQuestions = document.querySelectorAll('#maestro-preguntas-list > div');
-            allQuestions.forEach(questionDiv => {
-                const area = questionDiv.children[0].children[0].value.toLowerCase();
-                const subarea = questionDiv.children[1].children[0].value.toLowerCase();
-                const desc = questionDiv.children[2].children[0].value.toLowerCase();
-                if (area.includes(searchTerm) || subarea.includes(searchTerm) || desc.includes(searchTerm)) {
-                    questionDiv.style.display = 'grid';
-                } else {
-                    questionDiv.style.display = 'none';
-                }
-            });
-        }
-
-        async function loadMaestroPreguntas() {
-            try {
-                const maestro = await runGAS('getMaestroPreguntas');
-                const container = document.getElementById('maestro-preguntas-list');
-                container.innerHTML = '';
-                maestro.forEach(item => {
-                    container.innerHTML += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-1 border rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn action-btn bg-blue-500 hover:bg-blue-600">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn action-btn bg-green-500 hover:bg-green-600 hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="action-btn bg-red-500 hover:bg-red-600">Eliminar</button></div></div>`;
-                });
-            } catch (err) {
-                alert("Error al cargar el maestro de preguntas: " + err.message);
-            }
-        }
-
-        function editQuestion(button) {
-            const row = button.closest('.grid');
-            row.querySelectorAll('input').forEach(input => input.disabled = false);
-            row.querySelector('.edit-btn').classList.add('hidden');
-            row.querySelector('.save-btn').classList.remove('hidden');
-        }
-
-        async function saveQuestionUpdate(button) {
-            const row = button.closest('.grid');
-            const id = row.dataset.id;
-            const updatedQuestion = { id: id, area: row.children[0].children[0].value, subarea: row.children[1].children[0].value, descripcion: row.children[2].children[0].value };
-            try {
-                await runGAS('updateQuestion', { data: updatedQuestion });
-                alert("Pregunta actualizada.");
-                row.querySelectorAll('input').forEach(input => input.disabled = true);
-                row.querySelector('.edit-btn').classList.remove('hidden');
-                row.querySelector('.save-btn').classList.add('hidden');
-            } catch (err) {
-                alert("Error: " + err.message);
-            }
-        }
-
-        async function deleteQuestion(id) {
-            if (confirm(`¿Seguro que quieres eliminar la pregunta con ID "${id}" del maestro? Esta acción no se puede deshacer.`)) {
-                try {
-                    await runGAS('deleteQuestion', { id: id });
-                    alert("Pregunta eliminada.");
-                    loadMaestroPreguntas();
-                } catch (err) {
-                    alert("Error: " + err.message);
-                }
-            }
-        }
-
-        function filterNewClientQuestions() {
-            const searchTerm = document.getElementById('new-client-req-search').value.toLowerCase();
-            const allAreas = document.querySelectorAll('#new-checklist-content > details');
-            allAreas.forEach(areaDetail => {
-                const areaName = areaDetail.querySelector('summary > span').textContent.toLowerCase();
-                const allQuestions = areaDetail.querySelectorAll('div > div');
-                let areaHasVisibleQuestions = false;
-                allQuestions.forEach(questionDiv => {
-                    const label = questionDiv.querySelector('label').textContent.toLowerCase();
-                    if (areaName.includes(searchTerm) || label.includes(searchTerm)) {
-                        questionDiv.style.display = 'flex';
-                        areaHasVisibleQuestions = true;
-                    } else {
-                        questionDiv.style.display = 'none';
-                    }
-                });
-                if (areaHasVisibleQuestions) {
-                    areaDetail.style.display = 'block';
-                } else {
-                    areaDetail.style.display = 'none';
-                }
-            });
-        }
-
-        async function loadNewClientChecklist() {
-            try {
-                const maestro = await runGAS('getMaestroPreguntas');
-                fullChecklist = maestro;
-                const container = document.getElementById('new-checklist-content');
-                container.innerHTML = '';
-                const groupedByArea = maestro.reduce((acc, item) => {
-                    (acc[item.Area] = acc[item.Area] || []).push(item);
-                    return acc;
-                }, {});
-
-                for (const area in groupedByArea) {
-                    let areaHtml = `<details class="bg-gray-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer flex items-center"><input type="checkbox" class="h-5 w-5 mr-2" onchange="toggleArea(this, '${area}')"><span>${area}</span></summary><div class="mt-2 space-y-2 pl-6">`;
-                    groupedByArea[area].forEach(item => {
-                        areaHtml += `<div class="flex items-center justify-between p-2 border-b"><label for="new-check-${item.ID_Pregunta}" class="font-semibold">${item.Subarea}</label><input type="checkbox" id="new-check-${item.ID_Pregunta}" data-question-id="${item.ID_Pregunta}" data-area="${area}" class="h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500" onchange="updateFormPreview()"></div>`;
-                    });
-                    areaHtml += `</div></details>`;
-                    container.innerHTML += areaHtml;
-                }
-            } catch (err) {
-                alert("Error al cargar el maestro de preguntas: " + err.message);
-            }
-        }
-
-        function toggleArea(checkbox, areaName) {
-            const isChecked = checkbox.checked;
-            document.querySelectorAll(`#new-checklist-content input[data-area="${areaName}"]`).forEach(subCheckbox => {
-                subCheckbox.checked = isChecked;
-            });
-            updateFormPreview();
-        }
-        
-        function updateFormPreview() {
-            const previewContainer = document.getElementById('form-preview');
-            previewContainer.innerHTML = '';
-            const grouped = {};
-            document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => {
-                const questionId = checkbox.dataset.questionId;
-                const question = fullChecklist.find(q => q.ID_Pregunta === questionId);
-                if (question) {
-                    if (!grouped[question.Area]) { grouped[question.Area] = {}; }
-                    if (!grouped[question.Area][question.Subarea]) { grouped[question.Area][question.Subarea] = []; }
-                    grouped[question.Area][question.Subarea].push(question);
-                }
-            });
-            for (const areaName in grouped) {
-                const areaDetails = document.createElement('details');
-                areaDetails.className = 'bg-gray-100 rounded-lg p-2 mb-2';
-                areaDetails.open = true;
-                const areaSummary = document.createElement('summary');
-                areaSummary.className = 'font-bold text-md cursor-pointer';
-                areaSummary.textContent = areaName;
-                areaDetails.appendChild(areaSummary);
-                const areaContent = document.createElement('div');
-                areaContent.className = 'mt-1 pt-1 border-t';
-                for (const subareaName in grouped[areaName]) {
-                    const subareaDetails = document.createElement('details');
-                    subareaDetails.className = 'mt-2 ml-2 pl-2 border-l';
-                    subareaDetails.open = true;
-                    const subareaSummary = document.createElement('summary');
-                    subareaSummary.className = 'font-semibold text-sm cursor-pointer';
-                    subareaSummary.textContent = subareaName;
-                    subareaDetails.appendChild(subareaSummary);
-                    const questionsContainer = document.createElement('div');
-                    questionsContainer.className = 'mt-1 pl-2';
-                    const questions = grouped[areaName][subareaName];
-                    questions.forEach(field => {
-                        questionsContainer.innerHTML += `<div class="text-xs text-gray-700 p-1">${field.Descripcion}</div>`;
-                    });
-                    subareaDetails.appendChild(questionsContainer);
-                    areaContent.appendChild(subareaDetails);
-                }
-                areaDetails.appendChild(areaContent);
-                previewContainer.appendChild(areaDetails);
-            }
-        }
-
-        async function saveNewClientChecklist() {
-            const nif = document.getElementById('new-nif-input').value.trim();
-            if (!nif) { alert("Por favor, introduzca un NIF para el nuevo cliente."); return; }
-            const checklist = {};
-            document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => {
-                checklist[checkbox.dataset.questionId] = 'Requerido';
-            });
-            if (Object.keys(checklist).length === 0) { alert("Debe seleccionar al menos un requerimiento para el nuevo cliente."); return; }
-            try {
-                await runGAS('saveChecklist', { data: { nif: nif, checklist: checklist } });
-                alert("Checklist para nuevo cliente guardado con éxito.");
-                document.getElementById('new-nif-input').value = '';
-                document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-                updateFormPreview();
-                const nifs = await runGAS('getAllNifs');
-                masterNifList = nifs;
-                filterClients();
-                showTab('clientes');
-            } catch (err) {
-                alert("Error al guardar: " + err.message);
-            }
-        }
+            const container = document.getElementById('admin-actions-container');
+            let obsHtml = '';
+            if (observaciones) { obsHtml = `<div class="mb-4"><h4 class="font-semibold text-gray-800">Observaciones del Cliente:</h4><p class="text-sm text-gray-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;}
+            let justHtml = '';
+            if (justificante && justificante.url) { justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;}
+            container.innerHTML = `${obsHtml}${justHtml}<div class="mt-4"><h4 class="font-semibold text-gray-800 mb-2">Estado del Expediente:</h4><div class="flex items-center gap-4"><select id="global-status-select" class="p-2 border rounded-md"><option value="Pendiente">Pendiente</option><option value="Aprobado">Aprobado</option><option value="Re-solicitar">Re-solicitar</option></select><button onclick="saveGlobalStatus()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar Estado</button></div></div>`;
+        }
+        async function saveGlobalStatus() { const newStatus = document.getElementById('global-status-select').value; if (!currentNif || !newStatus) return; try { await runGAS('updateGlobalStatus', { nif: currentNif, newStatus: newStatus }); alert(`Estado para ${currentNif} actualizado.`); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch(err) { alert("Error: " + err.message); } }
+        function updateStatus(questionId, newStatus) { const question = fullChecklist.find(q => q.ID_Pregunta === questionId); if (question) { if (newStatus === 'Aprobado' && question.status === 'Aprobado') { question.status = 'Entregado'; } else if (newStatus === 'Requerido' && question.status === 'Requerido') { question.status = 'No Requerido'; } else { question.status = newStatus; } } buildChecklistUI(); }
+        async function saveChecklist() { if (!currentNif) return; const checklistToSave = {}; fullChecklist.forEach(item => { if(item.status && item.status !== 'No Requerido') { checklistToSave[item.ID_Pregunta] = { status: item.status, adminFile: item.adminFile }; } }); try { await runGAS('saveChecklist', { data: { nif: currentNif, checklist: checklistToSave } }); alert("Checklist guardado para " + currentNif); await loadChecklist(currentNif); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch (err) { alert("Error: " + err.message); } }
+        function openAddRequirementModal() { const areaSelect = document.getElementById('modal-area-select'); areaSelect.innerHTML = ''; const uniqueAreas = [...new Set(fullChecklist.map(item => item.Area))]; uniqueAreas.forEach(area => { const option = document.createElement('option'); option.value = area; option.textContent = area; areaSelect.appendChild(option); }); areaSelect.insertAdjacentHTML('beforeend', '<option value="__NEW__">** Crear Nueva Área **</option>'); toggleNewAreaInput(areaSelect); document.getElementById('modal-subarea').value = ''; document.getElementById('modal-descripcion').value = ''; document.getElementById('add-requirement-modal').classList.remove('hidden'); }
+        function toggleNewAreaInput(selectElement) { const newAreaInput = document.getElementById('modal-new-area-input'); if (selectElement.value === '__NEW__') { newAreaInput.classList.remove('hidden'); } else { newAreaInput.classList.add('hidden'); } }
+        function closeAddRequirementModal() { document.getElementById('add-requirement-modal').classList.add('hidden'); }
+        async function handleAddNewRequirement() { const areaSelect = document.getElementById('modal-area-select'); let area = areaSelect.value === '__NEW__' ? document.getElementById('modal-new-area-input').value.trim() : areaSelect.value; const newRequirement = { area: area, subarea: document.getElementById('modal-subarea').value.trim(), descripcion: document.getElementById('modal-descripcion').value.trim() }; if (!newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion) { alert("Todos los campos son obligatorios."); return; } try { const newQuestion = await runGAS('addNewQuestion', { data: newRequirement }); fullChecklist.push({ ...newQuestion, status: 'Requerido' }); closeAddRequirementModal(); buildChecklistUI(); alert("Nuevo requerimiento añadido. No olvide pulsar 'Guardar Cambios'."); } catch (err) { alert("Error: " + err.message); } }
+        async function addNewQuestionFromMaster() { const newQuestion = { area: document.getElementById('new-area').value.trim(), subarea: document.getElementById('new-subarea').value.trim(), descripcion: document.getElementById('new-desc').value.trim() }; if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; } try { await runGAS('addNewQuestion', { data: newQuestion }); alert("Nueva pregunta añadida al maestro."); document.getElementById('new-area').value = ''; document.getElementById('new-subarea').value = ''; document.getElementById('new-desc').value = ''; loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } }
+        function filterMasterQuestions() { const searchTerm = document.getElementById('master-question-search').value.toLowerCase(); document.querySelectorAll('#maestro-preguntas-list > div').forEach(div => { const text = div.textContent.toLowerCase(); div.style.display = text.includes(searchTerm) ? 'grid' : 'none'; }); }
+        async function loadMaestroPreguntas() { try { const maestro = await runGAS('getMaestroPreguntas'); const container = document.getElementById('maestro-preguntas-list'); container.innerHTML = ''; maestro.forEach(item => { container.innerHTML += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-1 border rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn action-btn bg-blue-500 hover:bg-blue-600">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn action-btn bg-green-500 hover:bg-green-600 hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="action-btn bg-red-500 hover:bg-red-600">Eliminar</button></div></div>`; }); } catch (err) { alert("Error: " + err.message); } }
+        function editQuestion(button) { const row = button.closest('.grid'); row.querySelectorAll('input').forEach(input => input.disabled = false); row.querySelector('.edit-btn').classList.add('hidden'); row.querySelector('.save-btn').classList.remove('hidden'); }
+        async function saveQuestionUpdate(button) { const row = button.closest('.grid'); const id = row.dataset.id; const updatedQuestion = { id: id, area: row.children[0].children[0].value, subarea: row.children[1].children[0].value, descripcion: row.children[2].children[0].value }; try { await runGAS('updateQuestion', { data: updatedQuestion }); alert("Pregunta actualizada."); row.querySelectorAll('input').forEach(input => input.disabled = true); row.querySelector('.edit-btn').classList.remove('hidden'); row.querySelector('.save-btn').classList.add('hidden'); } catch (err) { alert("Error: " + err.message); } }
+        async function deleteQuestion(id) { if (confirm(`¿Seguro que quieres eliminar la pregunta con ID "${id}"?`)) { try { await runGAS('deleteQuestion', { id: id }); alert("Pregunta eliminada."); loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } } }
+        function filterNewClientQuestions() { const searchTerm = document.getElementById('new-client-req-search').value.toLowerCase(); document.querySelectorAll('#new-checklist-content > details').forEach(detail => { const areaName = detail.querySelector('summary > span').textContent.toLowerCase(); let areaHasVisible = false; detail.querySelectorAll('div > div').forEach(questionDiv => { const label = questionDiv.querySelector('label').textContent.toLowerCase(); const isVisible = areaName.includes(searchTerm) || label.includes(searchTerm); questionDiv.style.display = isVisible ? 'flex' : 'none'; if (isVisible) areaHasVisible = true; }); detail.style.display = areaHasVisible ? 'block' : 'none'; }); }
+        async function loadNewClientChecklist() { try { const maestro = await runGAS('getMaestroPreguntas'); fullChecklist = maestro; const container = document.getElementById('new-checklist-content'); container.innerHTML = ''; const groupedByArea = maestro.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for (const area in groupedByArea) { let areaHtml = `<details class="bg-gray-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer flex items-center"><input type="checkbox" class="h-5 w-5 mr-2" onchange="toggleArea(this, '${area}')"><span>${area}</span></summary><div class="mt-2 space-y-2 pl-6">`; groupedByArea[area].forEach(item => { areaHtml += `<div class="flex items-center justify-between p-2 border-b"><label for="new-check-${item.ID_Pregunta}" class="font-semibold">${item.Subarea}</label><input type="checkbox" id="new-check-${item.ID_Pregunta}" data-question-id="${item.ID_Pregunta}" data-area="${area}" class="h-4 w-4" onchange="updateFormPreview()"></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } } catch (err) { alert("Error: " + err.message); } }
+        function toggleArea(checkbox, areaName) { document.querySelectorAll(`#new-checklist-content input[data-area="${areaName}"]`).forEach(subCheckbox => subCheckbox.checked = checkbox.checked); updateFormPreview(); }
+        function updateFormPreview() { const previewContainer = document.getElementById('form-preview'); previewContainer.innerHTML = ''; const grouped = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { const questionId = checkbox.dataset.questionId; const question = fullChecklist.find(q => q.ID_Pregunta === questionId); if (question) { if (!grouped[question.Area]) grouped[question.Area] = {}; if (!grouped[question.Area][question.Subarea]) grouped[question.Area][question.Subarea] = []; grouped[question.Area][question.Subarea].push(question); } }); for (const areaName in grouped) { const areaDetails = document.createElement('details'); areaDetails.className = 'bg-gray-100 rounded-lg p-2 mb-2'; areaDetails.open = true; const areaSummary = document.createElement('summary'); areaSummary.className = 'font-bold text-md cursor-pointer'; areaSummary.textContent = areaName; areaDetails.appendChild(areaSummary); const areaContent = document.createElement('div'); areaContent.className = 'mt-1 pt-1 border-t'; for (const subareaName in grouped[areaName]) { const subareaDetails = document.createElement('details'); subareaDetails.className = 'mt-2 ml-2 pl-2 border-l'; subareaDetails.open = true; const subareaSummary = document.createElement('summary'); subareaSummary.className = 'font-semibold text-sm cursor-pointer'; subareaSummary.textContent = subareaName; subareaDetails.appendChild(subareaSummary); const questionsContainer = document.createElement('div'); questionsContainer.className = 'mt-1 pl-2'; grouped[areaName][subareaName].forEach(field => { questionsContainer.innerHTML += `<div class="text-xs text-gray-700 p-1">${field.Descripcion}</div>`; }); subareaDetails.appendChild(questionsContainer); areaContent.appendChild(subareaDetails); } areaDetails.appendChild(areaContent); previewContainer.appendChild(areaDetails); } }
+        async function saveNewClientChecklist() { const nif = document.getElementById('new-nif-input').value.trim(); if (!nif) { alert("Introduzca un NIF."); return; } const checklist = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { checklist[checkbox.dataset.questionId] = 'Requerido'; }); if (Object.keys(checklist).length === 0) { alert("Seleccione al menos un requerimiento."); return; } try { await runGAS('saveChecklist', { data: { nif: nif, checklist: checklist } }); alert("Checklist guardado."); document.getElementById('new-nif-input').value = ''; document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => checkbox.checked = false); updateFormPreview(); masterNifList = await runGAS('getAllNifs'); filterClients(); showTab('clientes'); } catch (err) { alert("Error: " + err.message); } }
     </script>
 </body>
 </html>
