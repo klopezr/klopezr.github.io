@@ -137,7 +137,7 @@
                             let adminFileHtml = '';
                             if (field.adminFile && Array.isArray(field.adminFile) && field.adminFile.length > 0) {
                                 const fileLinks = field.adminFile.map(file => 
-                                    `<a href="${file.url}" target="_blank" rel="noopener noreferrer" class="btn-download">⬇️ Descargar ${file.name}</a>`
+                                    `<a href="${file.url}" class="btn-download">⬇️ Descargar ${file.name}</a>`
                                 ).join('');
 
                                 adminFileHtml = `
