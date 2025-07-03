@@ -254,12 +254,15 @@
                     if (item.adminFile && Array.isArray(item.adminFile) && item.adminFile.length > 0) {
                         const fileLinks = item.adminFile.map(file => {
                             const downloadUrl = `${SCRIPT_URL}?action=download&id=${file.id}`;
-                            return `<a href="${downloadUrl}" class="font-semibold hover:underline block truncate">⬇️ ${file.name}</a>`
+                            return `<div class="flex items-center justify-between mt-1 bg-white p-2 rounded shadow-sm">
+                                        <span class="text-gray-700 truncate pr-2">${file.name}</span>
+                                        <a href="${downloadUrl}" class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-blue-600 flex-shrink-0 no-underline">Descargar</a>
+                                    </div>`;
                         }).join('');
 
-                        adminFileHtml = `<div class="col-span-12 text-xs text-blue-700 bg-blue-100 p-2 rounded-md mb-2 space-y-1">
-                            <p class="font-bold">Archivos adjuntos:</p>
-                            ${fileLinks}
+                        adminFileHtml = `<div class="col-span-12 text-xs text-blue-800 bg-blue-100 p-2 rounded-md mb-2">
+                            <p class="font-bold mb-1">Archivos adjuntos por el administrador:</p>
+                            <div class="space-y-1">${fileLinks}</div>
                         </div>`;
                     }
 
