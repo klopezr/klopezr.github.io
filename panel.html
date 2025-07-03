@@ -75,6 +75,30 @@
             </div>
         </header>
 
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="card flex items-center gap-4">
+                <div class="p-3 bg-yellow-100 rounded-lg"><svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Clientes Pendientes</p>
+                    <p id="stat-pending" class="text-2xl font-bold text-slate-800">--</p>
+                </div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="p-3 bg-blue-100 rounded-lg"><svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Checklists Activos</p>
+                    <p id="stat-checklists" class="text-2xl font-bold text-slate-800">--</p>
+                </div>
+            </div>
+            <div class="card flex items-center gap-4">
+                <div class="p-3 bg-green-100 rounded-lg"><svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Total de Envíos</p>
+                    <p id="stat-submissions" class="text-2xl font-bold text-slate-800">--</p>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white p-2 rounded-full shadow-sm border border-slate-200">
             <nav class="flex space-x-2" aria-label="Tabs">
                 <button onclick="showTab('clientes')" id="tab-clientes" class="pill-tab">Gestión de Clientes</button>
@@ -253,8 +277,24 @@
                         if (isValid) {
                             document.getElementById('main-content').classList.remove('hidden');
                             showTab('clientes');
-                            runGAS('getAllNifs').then(nifs => { masterNifList = nifs; populateNifTable(masterNifList); }).catch(err => alert("Error al cargar NIFs: " + err.message));
-                            runGAS('getMaestroPreguntas').then(preguntas => { masterQuestionsList = preguntas; }).catch(err => alert("Error al cargar el maestro de preguntas: " + err.message));
+                            
+                            // Cargar todas las listas y estadísticas iniciales
+                            runGAS('getAllNifs').then(nifs => {
+                                masterNifList = nifs;
+                                populateNifTable(masterNifList);
+                                const pendingCount = masterNifList.filter(n => n.status === 'Pendiente' || !n.status).length;
+                                document.getElementById('stat-pending').textContent = pendingCount;
+                            }).catch(err => alert("Error al cargar NIFs: " + err.message));
+
+                            runGAS('getMaestroPreguntas').then(preguntas => {
+                                masterQuestionsList = preguntas;
+                            }).catch(err => alert("Error al cargar el maestro de preguntas: " + err.message));
+                            
+                            runGAS('getDashboardStats').then(stats => {
+                                document.getElementById('stat-submissions').textContent = stats.totalSubmissions;
+                                document.getElementById('stat-checklists').textContent = stats.activeChecklists;
+                            }).catch(err => console.error("Error al cargar stats: ", err));
+
                         } else {
                             alert("Contraseña incorrecta.");
                             document.body.innerHTML = '<h1 class="text-center text-2xl font-bold mt-10">Acceso Denegado</h1>';
@@ -305,9 +345,15 @@
 
         function filterClients() {
             const searchTerm = document.getElementById('nif-search-input').value.toUpperCase();
+            const statusFilter = document.getElementById('status-filter-select').value;
             document.querySelectorAll('#nif-list-container > div').forEach(card => {
                 const nif = card.dataset.nif.toUpperCase();
-                card.style.display = nif.includes(searchTerm) ? '' : 'none';
+                const status = card.dataset.status;
+
+                const nifMatch = nif.includes(searchTerm);
+                const statusMatch = (statusFilter === 'Todos' || status === statusFilter);
+
+                card.style.display = nifMatch && statusMatch ? '' : 'none';
             });
         }
         
@@ -323,7 +369,17 @@
                 if (item.status === 'Aprobado') statusColor = 'bg-green-100 text-green-700';
                 if (item.status === 'Re-solicitar') statusColor = 'bg-yellow-100 text-yellow-700';
                 if (item.status === 'Pendiente') statusColor = 'bg-blue-100 text-blue-700';
-                const cardHtml = `<div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-blue-500 hover:shadow-md transition" onclick="loadChecklist('${item.nif}')" data-nif="${item.nif}"><div class="flex justify-between items-center"><span class="font-bold text-slate-800 text-lg">${item.nif}</span><span class="text-xs font-semibold px-2 py-1 rounded-full ${statusColor}">${item.status || 'Pendiente'}</span></div><p class="text-sm text-slate-500 mt-1">Último envío: ${new Date(item.timestamp).toLocaleString('es-ES')}</p></div>`;
+
+                const cardHtml = `
+                    <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-blue-500 hover:shadow-md transition" 
+                         onclick="loadChecklist('${item.nif}')" data-nif="${item.nif}" data-status="${item.status || 'Pendiente'}">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 text-lg">${item.nif}</span>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${statusColor}">${item.status || 'Pendiente'}</span>
+                        </div>
+                        <p class="text-sm text-slate-500 mt-1">Último envío: ${new Date(item.timestamp).toLocaleString('es-ES')}</p>
+                    </div>
+                `;
                 container.innerHTML += cardHtml;
             });
         }
