@@ -21,7 +21,7 @@
             <a href="https://docs.google.com/spreadsheets/d/1Yasa6V2PzziLy-NemOb9YpycAo4dYefB-iPuOZEyexM/edit" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg shadow hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" /><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3s-7-1.343-7-3z" /><path d="M10 2C6.134 2 3 3.343 3 5v3c0 1.657 3.134 3 7 3s7-1.343 7-3V5c0-1.657-3.134-3-7-3z" /></svg><span>Base de Datos</span></a>
         </div>
         
-        <div class="border-b border-gray-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button onclick="showTab('clientes')" id="tab-clientes" class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gestión de Clientes</button><button onclick="showTab('nuevo-cliente')" id="tab-nuevo-cliente" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Añadir Nuevo Cliente</button><button onclick="showTab('preguntas')" id="tab-preguntas" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Editor de Preguntas</button></nav></div>
+        <div class="border-b border-gray-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button onclick="showTab('clientes')" id="tab-clientes" class="border-red-500 text-red-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gestión de Clientes</button><button onclick="showTab('nuevo-cliente')" id="tab-nuevo-cliente" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Añadir/Editar Cliente</button><button onclick="showTab('preguntas')" id="tab-preguntas" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Editor de Preguntas</button></nav></div>
 
         <div id="view-clientes">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow">
@@ -44,11 +44,16 @@
         
         <div id="view-nuevo-cliente" class="hidden">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow">
-                <h1 class="text-2xl font-bold mb-4">Añadir Nuevo Cliente y Asignar Checklist</h1>
+                <h1 class="text-2xl font-bold mb-4">Añadir o Editar Checklist de Cliente</h1>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                         <label for="new-nif-input" class="block text-sm font-medium text-gray-700">NIF del Nuevo Cliente</label>
-                         <input type="text" id="new-nif-input" placeholder="Introduzca NIF" class="mt-1 block w-full p-2 border rounded-md" oninput="document.getElementById('add-special-cell-new-client-btn').disabled = this.value.trim() === ''">
+                        <div class="flex items-end gap-2">
+                             <div class="flex-grow">
+                                <label for="new-nif-input" class="block text-sm font-medium text-gray-700">NIF del Cliente</label>
+                                <input type="text" id="new-nif-input" placeholder="Introduzca NIF para crear" class="mt-1 block w-full p-2 border rounded-md" oninput="handleNifInputChange()">
+                             </div>
+                             <button onclick="resetNewClientForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Limpiar</button>
+                         </div>
                          <div id="new-checklist-container" class="mt-4">
                              <h2 class="text-lg font-semibold mb-2">Seleccionar Requerimientos</h2>
                              <div class="flex gap-2 mb-2">
@@ -56,10 +61,22 @@
                                 <button id="add-special-cell-new-client-btn" onclick="openSpecialQuestionModal(true)" class="whitespace-nowrap bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 disabled:bg-gray-300" disabled>+ Celda Especial</button>
                              </div>
                              <div id="new-checklist-content" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4"></div>
-                             <button onclick="saveNewClientChecklist()" class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar Checklist para Nuevo Cliente</button>
+                             <button onclick="saveNewClientChecklist()" class="mt-4 w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Guardar Checklist</button>
                          </div>
                     </div>
-                    <div><h2 class="text-lg font-semibold mb-2">Vista Previa del Formulario</h2><div id="form-preview" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4 bg-gray-50"></div></div>
+                    <div>
+                        <div id="existing-clients-section">
+                            <h2 class="text-lg font-semibold mb-2">Clientes con Formulario Creado</h2>
+                             <input type="text" id="existing-client-search" onkeyup="filterExistingClients()" placeholder="Buscar NIF para editar..." class="w-full p-2 border rounded-md mb-2">
+                             <div class="h-48 overflow-y-auto border rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <tbody id="existing-clients-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <h2 class="text-lg font-semibold mb-2 mt-6">Vista Previa del Formulario</h2>
+                        <div id="form-preview" class="space-y-4 h-96 overflow-y-auto border rounded-lg p-4 bg-gray-50"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,7 +84,6 @@
         <div id="view-preguntas" class="hidden">
             <div class="bg-white p-6 sm:p-8 rounded-lg shadow mt-8">
                 <h2 class="text-xl font-bold mb-4">Editor de Preguntas</h2>
-                
                 <div class="mb-8 p-4 border rounded-lg bg-gray-50">
                     <h3 class="text-lg font-bold mb-4">Añadir Nueva Pregunta</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -160,8 +176,8 @@
         let fullChecklist = [];
         let masterNifList = [];
         let masterQuestionsList = [];
-        let currentNif = '';
         let isForNewClientContext = false;
+        let currentNifForChecklist = '';
 
         async function runGAS(functionName, args = {}) {
             const payload = { type: functionName, ...args };
@@ -220,8 +236,12 @@
             document.getElementById(`view-${tabName}`).classList.remove('hidden');
             document.getElementById(`tab-${tabName}`).classList.add('border-red-500', 'text-red-600');
             document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            
             if (tabName === 'preguntas') loadMaestroPreguntas();
-            if (tabName === 'nuevo-cliente') loadNewClientChecklist();
+            if (tabName === 'nuevo-cliente') {
+                loadNewClientChecklist(); 
+                runGAS('getNifsFromChecklist').then(populateExistingClientsTable);
+            }
         }
 
         function populateAreaDropdown(selectElementId, sourceData) {
@@ -268,7 +288,6 @@
                 const row = tbody.insertRow();
                 row.className = 'cursor-pointer hover:bg-gray-100';
                 row.onclick = () => loadChecklist(item.nif);
-
                 const statusCell = row.insertCell(0);
                 statusCell.className = 'px-4 py-3';
                 let statusHtml = '';
@@ -284,7 +303,7 @@
         }
 
         async function loadChecklist(nif) {
-            currentNif = nif;
+            currentNifForChecklist = nif;
             document.getElementById('current-nif').textContent = nif;
             const checklistContainer = document.getElementById('checklist-container');
             checklistContainer.classList.remove('hidden');
@@ -329,7 +348,6 @@
                                         <a href="${downloadUrl}" target="_blank" class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-blue-600 flex-shrink-0 no-underline" style="text-decoration: none;">Descargar</a>
                                     </div>`;
                         }).join('');
-
                         adminFileHtml = `<div class="col-span-12 text-xs text-blue-800 bg-blue-100 p-2 rounded-md mb-2">
                             <p class="font-bold mb-1">Archivos adjuntos por el administrador:</p>
                             <div class="space-y-1">${fileLinks}</div>
@@ -362,92 +380,35 @@
              </div>`);
         }
         
-        function openAddRequirementModal() {
-            populateAreaDropdown('modal-area-select', masterQuestionsList);
-            handleAreaSelectChange(document.getElementById('modal-area-select'), 'modal-new-area-input');
-            document.getElementById('modal-subarea').value = '';
-            document.getElementById('modal-descripcion').value = '';
-            document.getElementById('add-requirement-modal').classList.remove('hidden');
-        }
-
-        function openSpecialQuestionModal(isNew) {
-            isForNewClientContext = isNew;
-            populateAreaDropdown('special-modal-area-select', masterQuestionsList);
-            handleAreaSelectChange(document.getElementById('special-modal-area-select'), 'special-modal-new-area-input');
-            document.getElementById('special-modal-subarea').value = ''; 
-            document.getElementById('special-modal-descripcion').value = ''; 
-            document.getElementById('special-modal-file').value = '';
-            document.getElementById('special-modal-error').classList.add('hidden');
-            document.getElementById('special-question-modal').classList.remove('hidden');
-        }
-
-        function openRemainingQuestionsModal() {
-            const listContainer = document.getElementById('remaining-questions-list');
-            listContainer.innerHTML = '';
-            const checklistIds = new Set(fullChecklist.map(q => q.ID_Pregunta));
-            const remainingQuestions = masterQuestionsList.filter(q => !checklistIds.has(q.ID_Pregunta));
-
-            if (remainingQuestions.length === 0) {
-                alert("No hay más requerimientos disponibles para añadir. Todas las preguntas del maestro ya están en el checklist.");
-                return;
-            }
-
-            const grouped = remainingQuestions.reduce((acc, item) => {
-                (acc[item.Area] = acc[item.Area] || []).push(item);
-                return acc;
-            }, {});
-
-            let html = '';
-            for (const area in grouped) {
-                html += `<details class="bg-gray-100 p-2 rounded" open><summary class="font-bold cursor-pointer">${area}</summary><div class="mt-2 pl-4 space-y-2">`;
-                grouped[area].forEach(q => {
-                    html += `<div class="flex items-center"><input type="checkbox" id="rem-check-${q.ID_Pregunta}" value="${q.ID_Pregunta}" class="h-4 w-4 mr-2"><label for="rem-check-${q.ID_Pregunta}">${q.Subarea} <span class="text-xs text-gray-500">(${q.Descripcion})</span></label></div>`;
-                });
-                html += `</div></details>`;
-            }
-            listContainer.innerHTML = html;
-            document.getElementById('remaining-questions-modal').classList.remove('hidden');
-        }
-
+        function openAddRequirementModal() { populateAreaDropdown('modal-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('modal-area-select'), 'modal-new-area-input'); document.getElementById('modal-subarea').value = ''; document.getElementById('modal-descripcion').value = ''; document.getElementById('add-requirement-modal').classList.remove('hidden'); }
+        function openSpecialQuestionModal(isNew) { isForNewClientContext = isNew; populateAreaDropdown('special-modal-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('special-modal-area-select'), 'special-modal-new-area-input'); document.getElementById('special-modal-subarea').value = ''; document.getElementById('special-modal-descripcion').value = ''; document.getElementById('special-modal-file').value = ''; document.getElementById('special-modal-error').classList.add('hidden'); document.getElementById('special-question-modal').classList.remove('hidden'); }
+        function openRemainingQuestionsModal() { const listContainer = document.getElementById('remaining-questions-list'); listContainer.innerHTML = ''; const checklistIds = new Set(fullChecklist.map(q => q.ID_Pregunta)); const remainingQuestions = masterQuestionsList.filter(q => !checklistIds.has(q.ID_Pregunta)); if (remainingQuestions.length === 0) { alert("No hay más requerimientos disponibles para añadir."); return; } const grouped = remainingQuestions.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); let html = ''; for (const area in grouped) { html += `<details class="bg-gray-100 p-2 rounded" open><summary class="font-bold cursor-pointer">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(q => { html += `<div class="flex items-center"><input type="checkbox" id="rem-check-${q.ID_Pregunta}" value="${q.ID_Pregunta}" class="h-4 w-4 mr-2"><label for="rem-check-${q.ID_Pregunta}">${q.Subarea} <span class="text-xs text-gray-500">(${q.Descripcion})</span></label></div>`; }); html += `</div></details>`; } listContainer.innerHTML = html; document.getElementById('remaining-questions-modal').classList.remove('hidden'); }
         function closeRemainingQuestionsModal() { document.getElementById('remaining-questions-modal').classList.add('hidden'); }
-
-        function handleSaveRemainingQuestions() {
-            const addedQuestions = [];
-            document.querySelectorAll('#remaining-questions-list input:checked').forEach(checkbox => {
-                const questionId = checkbox.value;
-                const questionData = masterQuestionsList.find(q => q.ID_Pregunta === questionId);
-                if (questionData && !fullChecklist.some(q => q.ID_Pregunta === questionId)) {
-                   fullChecklist.push({ ...questionData, status: 'Requerido', adminFile: null });
-                   addedQuestions.push(questionData.Subarea);
-                }
-            });
-
-            if (addedQuestions.length > 0) {
-                buildChecklistUI();
-                alert(`Requerimientos añadidos: ${addedQuestions.join(', ')}.\n\nNo olvide pulsar 'Guardar Cambios de Checklist' para confirmar.`);
-            }
-            closeRemainingQuestionsModal();
-        }
-
+        function handleSaveRemainingQuestions() { const addedQuestions = []; document.querySelectorAll('#remaining-questions-list input:checked').forEach(checkbox => { const questionId = checkbox.value; const questionData = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (questionData && !fullChecklist.some(q => q.ID_Pregunta === questionId)) { fullChecklist.push({ ...questionData, status: 'Requerido', adminFile: null }); addedQuestions.push(questionData.Subarea); } }); if (addedQuestions.length > 0) { buildChecklistUI(); alert(`Requerimientos añadidos: ${addedQuestions.join(', ')}.\n\nNo olvide pulsar 'Guardar Cambios de Checklist' para confirmar.`); } closeRemainingQuestionsModal(); }
         function closeSpecialQuestionModal() { document.getElementById('special-question-modal').classList.add('hidden'); }
-        async function handleAddNewSpecialQuestion() { const saveBtn = document.getElementById('special-modal-save-btn'); const errorP = document.getElementById('special-modal-error'); errorP.classList.add('hidden'); const nif = isForNewClientContext ? document.getElementById('new-nif-input').value.trim() : currentNif; const areaSelect = document.getElementById('special-modal-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('special-modal-new-area-input').value.trim(); } const newRequirement = { nif: nif, area: area, subarea: document.getElementById('special-modal-subarea').value.trim(), descripcion: document.getElementById('special-modal-descripcion').value.trim() }; const files = document.getElementById('special-modal-file').files; if (!newRequirement.nif || !newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion || files.length === 0) { errorP.textContent = "Todos los campos y al menos un archivo son obligatorios."; errorP.classList.remove('hidden'); return; } saveBtn.disabled = true; saveBtn.textContent = "Procesando..."; const readFileAsBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve({ fileName: file.name, mimeType: file.type || 'application/octet-stream', fileData: reader.result }); reader.onerror = (error) => reject(error); }); try { const filePromises = Array.from(files).map(readFileAsBase64); const filesPayload = await Promise.all(filePromises); const payload = { ...newRequirement, files: filesPayload }; const newQuestion = await runGAS('addSpecialQuestion', { data: payload }); if (isForNewClientContext) { alert("Celda Especial creada. Ahora selecciónela de la lista y guarde el checklist del cliente."); masterQuestionsList = await runGAS('getMaestroPreguntas'); closeSpecialQuestionModal(); loadNewClientChecklist(); } else { fullChecklist.push(newQuestion); buildChecklistUI(); alert("Celda Especial añadida. No olvide pulsar 'Guardar Cambios de Checklist' para confirmar."); closeSpecialQuestionModal(); } } catch(err) { alert("Error: " + err.message); } finally { saveBtn.disabled = false; saveBtn.textContent = "Guardar y Solicitar"; } }
+        async function handleAddNewSpecialQuestion() { const saveBtn = document.getElementById('special-modal-save-btn'); const errorP = document.getElementById('special-modal-error'); errorP.classList.add('hidden'); const nif = isForNewClientContext ? document.getElementById('new-nif-input').value.trim() : currentNifForChecklist; const areaSelect = document.getElementById('special-modal-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('special-modal-new-area-input').value.trim(); } const newRequirement = { nif: nif, area: area, subarea: document.getElementById('special-modal-subarea').value.trim(), descripcion: document.getElementById('special-modal-descripcion').value.trim() }; const files = document.getElementById('special-modal-file').files; if (!newRequirement.nif || !newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion || files.length === 0) { errorP.textContent = "Todos los campos y al menos un archivo son obligatorios."; errorP.classList.remove('hidden'); return; } saveBtn.disabled = true; saveBtn.textContent = "Procesando..."; const readFileAsBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve({ fileName: file.name, mimeType: file.type || 'application/octet-stream', fileData: reader.result }); reader.onerror = (error) => reject(error); }); try { const filePromises = Array.from(files).map(readFileAsBase64); const filesPayload = await Promise.all(filePromises); const payload = { ...newRequirement, files: filesPayload }; const newQuestion = await runGAS('addSpecialQuestion', { data: payload }); if (isForNewClientContext) { alert("Celda Especial creada. Ahora selecciónela de la lista y guarde el checklist del cliente."); masterQuestionsList = await runGAS('getMaestroPreguntas'); closeSpecialQuestionModal(); loadNewClientChecklist(); } else { fullChecklist.push(newQuestion); buildChecklistUI(); alert("Celda Especial añadida. No olvide pulsar 'Guardar Cambios de Checklist' para confirmar."); closeSpecialQuestionModal(); } } catch(err) { alert("Error: " + err.message); } finally { saveBtn.disabled = false; saveBtn.textContent = "Guardar y Solicitar"; } }
         function buildAdminActionsUI(observaciones, justificante) { const container = document.getElementById('admin-actions-container'); let obsHtml = ''; if (observaciones) { obsHtml = `<div class="mb-4"><h4 class="font-semibold text-gray-800">Observaciones del Cliente:</h4><p class="text-sm text-gray-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;} let justHtml = ''; if (justificante && justificante.url) { justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;} container.innerHTML = `${obsHtml}${justHtml}<div class="mt-4"><h4 class="font-semibold text-gray-800 mb-2">Estado del Expediente:</h4><div class="flex items-center gap-4"><select id="global-status-select" class="p-2 border rounded-md"><option value="Pendiente">Pendiente</option><option value="Aprobado">Aprobado</option><option value="Re-solicitar">Re-solicitar</option></select><button onclick="saveGlobalStatus()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar Estado</button></div></div>`; }
-        async function saveGlobalStatus() { const newStatus = document.getElementById('global-status-select').value; if (!currentNif || !newStatus) return; try { await runGAS('updateGlobalStatus', { nif: currentNif, newStatus: newStatus }); alert(`Estado para ${currentNif} actualizado.`); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch(err) { alert("Error: " + err.message); } }
+        async function saveGlobalStatus() { const newStatus = document.getElementById('global-status-select').value; if (!currentNifForChecklist || !newStatus) return; try { await runGAS('updateGlobalStatus', { nif: currentNifForChecklist, newStatus: newStatus }); alert(`Estado para ${currentNifForChecklist} actualizado.`); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch(err) { alert("Error: " + err.message); } }
         function updateStatus(questionId, newStatus) { const question = fullChecklist.find(q => q.ID_Pregunta === questionId); if (question) { if (newStatus === 'Aprobado' && question.status === 'Aprobado') { question.status = 'Entregado'; } else if (newStatus === 'Requerido' && question.status === 'Requerido') { question.status = 'No Requerido'; } else { question.status = newStatus; } } buildChecklistUI(); }
-        async function saveChecklist() { if (!currentNif) return; const checklistToSave = {}; fullChecklist.forEach(item => { if(item.status && item.status !== 'No Requerido') { checklistToSave[item.ID_Pregunta] = { status: item.status, adminFile: item.adminFile }; } }); try { await runGAS('saveChecklist', { data: { nif: currentNif, checklist: checklistToSave } }); alert("Checklist guardado para " + currentNif); await loadChecklist(currentNif); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch (err) { alert("Error: " + err.message); } }
+        async function saveChecklist() { if (!currentNifForChecklist) return; const checklistToSave = {}; fullChecklist.forEach(item => { if(item.status && item.status !== 'No Requerido') { checklistToSave[item.ID_Pregunta] = { status: item.status, adminFile: item.adminFile }; } }); try { await runGAS('saveChecklist', { data: { nif: currentNifForChecklist, checklist: checklistToSave } }); alert("Checklist guardado para " + currentNifForChecklist); await loadChecklist(currentNifForChecklist); masterNifList = await runGAS('getAllNifs'); filterClients(); } catch (err) { alert("Error: " + err.message); } }
         function closeAddRequirementModal() { document.getElementById('add-requirement-modal').classList.add('hidden'); }
         async function handleAddNewRequirement() { const areaSelect = document.getElementById('modal-area-select'); let area = areaSelect.value === '__NEW__' ? document.getElementById('modal-new-area-input').value.trim() : areaSelect.value; const newRequirement = { area: area, subarea: document.getElementById('modal-subarea').value.trim(), descripcion: document.getElementById('modal-descripcion').value.trim() }; if (!newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion) { alert("Todos los campos son obligatorios."); return; } try { const newQuestion = await runGAS('addNewQuestion', { data: newRequirement }); fullChecklist.push({ ...newQuestion, status: 'Requerido' }); closeAddRequirementModal(); buildChecklistUI(); alert("Nuevo requerimiento añadido. No olvide pulsar 'Guardar Cambios'."); } catch (err) { alert("Error: " + err.message); } }
         async function addNewQuestionFromMaster() { const areaSelect = document.getElementById('new-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('new-area-input').value.trim(); } const newQuestion = { area: area, subarea: document.getElementById('new-subarea').value.trim(), descripcion: document.getElementById('new-desc').value.trim() }; if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; } try { await runGAS('addNewQuestion', { data: newQuestion }); alert("Nueva pregunta añadida al maestro."); document.getElementById('new-subarea').value = ''; document.getElementById('new-desc').value = ''; await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } }
         function filterMasterQuestions() { const searchTerm = document.getElementById('master-question-search').value.toLowerCase(); document.querySelectorAll('#maestro-preguntas-list > details').forEach(detail => { const areaName = detail.querySelector('summary').textContent.toLowerCase(); let areaHasVisible = false; detail.querySelectorAll('div.grid').forEach(questionDiv => { const text = questionDiv.textContent.toLowerCase(); const isVisible = areaName.includes(searchTerm) || text.includes(searchTerm); questionDiv.style.display = isVisible ? 'grid' : 'none'; if (isVisible) areaHasVisible = true; }); detail.style.display = areaHasVisible ? 'block' : 'none'; }); }
-        async function loadMaestroPreguntas() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('maestro-preguntas-list'); container.innerHTML = ''; const grouped = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for(const area in grouped) { let areaHtml = `<details class="bg-gray-100 p-2 rounded" open><summary class="font-bold cursor-pointer">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(item => { areaHtml += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-1 border rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn action-btn bg-blue-500 hover:bg-blue-600">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn action-btn bg-green-500 hover:bg-green-600 hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="action-btn bg-red-500 hover:bg-red-600">Eliminar</button></div></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } populateAreaDropdown('new-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('new-area-select'), 'new-area-input'); } catch (err) { alert("Error: " + err.message); } }
+        async function loadMaestroPreguntas() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('maestro-preguntas-list'); container.innerHTML = ''; const grouped = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for(const area in grouped) { let areaHtml = `<details class="bg-gray-100 p-2 rounded mb-2" open><summary class="font-bold cursor-pointer">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(item => { areaHtml += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-1 border rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-1 border rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn action-btn bg-blue-500 hover:bg-blue-600">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn action-btn bg-green-500 hover:bg-green-600 hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="action-btn bg-red-500 hover:bg-red-600">Eliminar</button></div></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } populateAreaDropdown('new-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('new-area-select'), 'new-area-input'); } catch (err) { alert("Error: " + err.message); } }
         function editQuestion(button) { const row = button.closest('.grid'); row.querySelectorAll('input').forEach(input => input.disabled = false); row.querySelector('.edit-btn').classList.add('hidden'); row.querySelector('.save-btn').classList.remove('hidden'); }
         async function saveQuestionUpdate(button) { const row = button.closest('.grid'); const id = row.dataset.id; const updatedQuestion = { id: id, area: row.children[0].children[0].value, subarea: row.children[1].children[0].value, descripcion: row.children[2].children[0].value }; try { await runGAS('updateQuestion', { data: updatedQuestion }); alert("Pregunta actualizada."); row.querySelectorAll('input').forEach(input => input.disabled = true); row.querySelector('.edit-btn').classList.remove('hidden'); row.querySelector('.save-btn').classList.add('hidden'); } catch (err) { alert("Error: " + err.message); } }
         async function deleteQuestion(id) { if (confirm(`¿Seguro que quieres eliminar la pregunta con ID "${id}"?`)) { try { await runGAS('deleteQuestion', { id: id }); alert("Pregunta eliminada."); await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } } }
         function filterNewClientQuestions() { const searchTerm = document.getElementById('new-client-req-search').value.toLowerCase(); document.querySelectorAll('#new-checklist-content > details').forEach(detail => { const areaName = detail.querySelector('summary > span').textContent.toLowerCase(); let areaHasVisible = false; detail.querySelectorAll('div > div').forEach(questionDiv => { const label = questionDiv.querySelector('label').textContent.toLowerCase(); const isVisible = areaName.includes(searchTerm) || label.includes(searchTerm); questionDiv.style.display = isVisible ? 'flex' : 'none'; if (isVisible) areaHasVisible = true; }); detail.style.display = areaHasVisible ? 'block' : 'none'; }); }
-        async function loadNewClientChecklist() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('new-checklist-content'); container.innerHTML = ''; const groupedByArea = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for (const area in groupedByArea) { let areaHtml = `<details class="bg-gray-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer flex items-center"><input type="checkbox" class="h-5 w-5 mr-2" onchange="toggleArea(this, '${area}')"><span>${area}</span></summary><div class="mt-2 space-y-2 pl-6">`; groupedByArea[area].forEach(item => { areaHtml += `<div class="flex items-center justify-between p-2 border-b"><label for="new-check-${item.ID_Pregunta}" class="font-semibold">${item.Subarea}</label><input type="checkbox" id="new-check-${item.ID_Pregunta}" data-question-id="${item.ID_Pregunta}" data-area="${area}" class="h-4 w-4" onchange="updateFormPreview()"></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } } catch (err) { alert("Error: " + err.message); } }
+        async function loadNewClientChecklist() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('new-checklist-content'); container.innerHTML = ''; const groupedByArea = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for (const area in groupedByArea) { let areaHtml = `<details class="bg-gray-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer flex items-center"><input type="checkbox" class="h-5 w-5 mr-2" onchange="toggleArea(this, '${area}')"><span>${area}</span></summary><div class="mt-2 space-y-2 pl-6">`; groupedByArea[area].forEach(item => { areaHtml += `<div class="flex items-center justify-between p-2 border-b"><label for="new-check-${item.ID_Pregunta}" class="font-semibold">${item.Subarea}</label><input type="checkbox" id="new-check-${item.ID_Pregunta}" data-question-id="${item.ID_Pregunta}" data-area="${area}" class="h-4 w-4" onchange="updateFormPreview()"></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } resetNewClientForm(); } catch (err) { alert("Error: " + err.message); } }
         function toggleArea(checkbox, areaName) { document.querySelectorAll(`#new-checklist-content input[data-area="${areaName}"]`).forEach(subCheckbox => subCheckbox.checked = checkbox.checked); updateFormPreview(); }
         function updateFormPreview() { const previewContainer = document.getElementById('form-preview'); previewContainer.innerHTML = ''; const grouped = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { const questionId = checkbox.dataset.questionId; const question = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (question) { if (!grouped[question.Area]) grouped[question.Area] = {}; if (!grouped[question.Area][question.Subarea]) grouped[question.Area][question.Subarea] = []; grouped[question.Area][question.Subarea].push(question); } }); for (const areaName in grouped) { const areaDetails = document.createElement('details'); areaDetails.className = 'bg-gray-100 rounded-lg p-2 mb-2'; areaDetails.open = true; const areaSummary = document.createElement('summary'); areaSummary.className = 'font-bold text-md cursor-pointer'; areaSummary.textContent = areaName; areaDetails.appendChild(areaSummary); const areaContent = document.createElement('div'); areaContent.className = 'mt-1 pt-1 border-t'; for (const subareaName in grouped[areaName]) { const subareaDetails = document.createElement('details'); subareaDetails.className = 'mt-2 ml-2 pl-2 border-l'; subareaDetails.open = true; const subareaSummary = document.createElement('summary'); subareaSummary.className = 'font-semibold text-sm cursor-pointer'; subareaSummary.textContent = subareaName; subareaDetails.appendChild(subareaSummary); const questionsContainer = document.createElement('div'); questionsContainer.className = 'mt-1 pl-2'; grouped[areaName][subareaName].forEach(field => { questionsContainer.innerHTML += `<div class="text-xs text-gray-700 p-1">${field.Descripcion}</div>`; }); subareaDetails.appendChild(questionsContainer); areaContent.appendChild(subareaDetails); } areaDetails.appendChild(areaContent); previewContainer.appendChild(areaDetails); } }
-        async function saveNewClientChecklist() { const nif = document.getElementById('new-nif-input').value.trim(); if (!nif) { alert("Introduzca un NIF."); return; } const checklist = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { checklist[checkbox.dataset.questionId] = 'Requerido'; }); if (Object.keys(checklist).length === 0) { alert("Seleccione al menos un requerimiento."); return; } try { await runGAS('saveChecklist', { data: { nif: nif, checklist: checklist } }); alert("Checklist guardado."); document.getElementById('new-nif-input').value = ''; document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => checkbox.checked = false); updateFormPreview(); masterNifList = await runGAS('getAllNifs'); filterClients(); showTab('clientes'); } catch (err) { alert("Error: " + err.message); } }
+        async function saveNewClientChecklist() { const nif = document.getElementById('new-nif-input').value.trim().toUpperCase(); if (!nif) { alert("Introduzca un NIF."); return; } const checklist = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { checklist[checkbox.dataset.questionId] = 'Requerido'; }); if (Object.keys(checklist).length === 0) { if(!confirm("No ha seleccionado ningún requerimiento. ¿Desea guardar el formulario para este cliente vacío?")) { return; } } try { await runGAS('saveChecklist', { data: { nif: nif, checklist: checklist } }); alert(`Checklist para ${nif} guardado.`); resetNewClientForm(); showTab('clientes'); } catch (err) { alert("Error: " + err.message); } }
+        function populateExistingClientsTable(nifList) { const tbody = document.getElementById('existing-clients-table-body'); tbody.innerHTML = ''; if(!nifList || nifList.length === 0) { tbody.innerHTML = `<tr><td class="p-4 text-center text-gray-500">No hay clientes con checklist.</td></tr>`; return;} nifList.forEach(nif => { const row = tbody.insertRow(); row.className = 'cursor-pointer hover:bg-gray-100'; row.onclick = () => loadClientForEditing(nif); row.innerHTML = `<td class="px-4 py-2">${nif}</td>`; }); }
+        function filterExistingClients() { const searchTerm = document.getElementById('existing-client-search').value.toUpperCase(); document.querySelectorAll('#existing-clients-table-body tr').forEach(row => { const nifCell = row.cells[0]; if(nifCell) { row.style.display = nifCell.textContent.toUpperCase().includes(searchTerm) ? '' : 'none'; } }); }
+        async function loadClientForEditing(nif) { document.getElementById('new-nif-input').value = nif; document.getElementById('add-special-cell-new-client-btn').disabled = false; try { const data = await runGAS('getAdminData', { nif: nif }); const requiredIds = new Set(data.maestro.filter(q => q.status === 'Requerido' || q.status === 'Entregado' || q.status === 'Aprobado').map(q => q.ID_Pregunta)); document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => { checkbox.checked = requiredIds.has(checkbox.dataset.questionId); }); updateFormPreview(); } catch (err) { alert(`Error al cargar datos de ${nif}: ${err.message}`); } }
+        function resetNewClientForm() { document.getElementById('new-nif-input').value = ''; document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(c => c.checked = false); updateFormPreview(); document.getElementById('add-special-cell-new-client-btn').disabled = true;}
+        function handleNifInputChange() { const nif = document.getElementById('new-nif-input').value.trim(); document.getElementById('add-special-cell-new-client-btn').disabled = nif === ''; if (nif === '') { resetNewClientForm(); } }
     </script>
 </body>
 </html>
