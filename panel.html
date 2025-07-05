@@ -334,7 +334,8 @@
 			const emailData = {
 				to: document.getElementById('email-to').value,
 				subject: document.getElementById('email-subject').value,
-				body: document.getElementById('email-body').value.replace(/\n/g, '<br>')
+				body: document.getElementById('email-body').value.replace(/\n/g, '<br>'),
+				nif: currentNifForChecklist
 		};
 
 		if (!emailData.to || !emailData.subject) {
