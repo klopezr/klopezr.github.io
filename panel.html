@@ -61,9 +61,6 @@
         <header class="flex justify-between items-center">
             <h1 class="text-3xl font-bold text-slate-800">Panel de Control</h1>
             <div class="flex items-center gap-4">
-                <button title="Modo Oscuro (Próximamente)" class="p-2 rounded-full hover:bg-slate-200 transition">
-                    <svg class="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                </button>
                 <a href="https://drive.google.com/drive/folders/1xDaos5WliByYx11cStmxY0VIB2hMTkjM" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
                     <svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
                     <span>Drive</span>
@@ -86,14 +83,14 @@
             <div class="card flex items-center gap-4">
                 <div class="p-3 bg-blue-100 rounded-lg"><svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
                 <div>
-                    <p class="text-sm font-medium text-slate-500">Checklists Activos</p>
+                    <p class="text-sm font-medium text-slate-500">Clientes Activos</p>
                     <p id="stat-checklists" class="text-2xl font-bold text-slate-800">--</p>
                 </div>
             </div>
             <div class="card flex items-center gap-4">
                 <div class="p-3 bg-green-100 rounded-lg"><svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></div>
                 <div>
-                    <p class="text-sm font-medium text-slate-500">Total de Envíos</p>
+                    <p class="text-sm font-medium text-slate-500">Envíos recibidos</p>
                     <p id="stat-submissions" class="text-2xl font-bold text-slate-800">--</p>
                 </div>
             </div>
@@ -111,9 +108,20 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div class="lg:col-span-1">
                     <h2 class="text-xl font-bold text-slate-800 mb-4">Clientes con Envíos</h2>
-                    <div class="flex gap-2 mb-4">
-                        <input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50">
-                    </div>
+                    <div class="relative flex gap-2 mb-4">
+						<input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50">
+    
+						<button onclick="toggleStatusFilterMenu(event)" class="p-2 border border-slate-300 rounded-md hover:bg-slate-200 transition">
+							<svg id="filter-icon" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+						</button>
+
+						<div id="status-filter-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10">
+							<a onclick="applyStatusFilter('Todos')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Todos los estados</a>
+							<a onclick="applyStatusFilter('Pendiente')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Pendiente</a>
+							<a onclick="applyStatusFilter('Aprobado')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Aprobado</a>
+							<a onclick="applyStatusFilter('Re-solicitar')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Re-solicitar</a>
+						</div>
+					</div>
                     <div id="nif-list-container" class="space-y-2 h-[32rem] overflow-y-auto pr-2"></div>
                 </div>
                 <div id="checklist-container" class="hidden lg:col-span-2">
@@ -245,14 +253,34 @@
     </div>
 
     <script>
-        // --- INICIO SCRIPT COMPLETO Y VERIFICADO ---
+        // --- SCRIPT ---
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2AxcZqncicxyZ-Mk9cokiwR9Mqj-vxzUOh9A8rfuSR7zheCAno1TXFTkzLf1E5Pm9/exec';
         let fullChecklist = [];
         let masterNifList = [];
         let masterQuestionsList = [];
         let isForNewClientContext = false;
         let currentNifForChecklist = '';
+		let activeStatusFilter = 'Todos'; 
 
+        function toggleStatusFilterMenu(event) {
+            event.stopPropagation(); 
+            document.getElementById('status-filter-menu').classList.toggle('hidden');
+        }
+
+        function applyStatusFilter(status) {
+            activeStatusFilter = status;
+            const filterIcon = document.getElementById('filter-icon');
+            if (status === 'Todos') {
+                filterIcon.classList.remove('text-blue-600');
+                filterIcon.classList.add('text-slate-600');
+            } else {
+                filterIcon.classList.remove('text-slate-600');
+                filterIcon.classList.add('text-blue-600');
+            }
+            filterClients(); 
+            document.getElementById('status-filter-menu').classList.add('hidden'); 
+        }
+		
         async function runGAS(functionName, args = {}) {
             const payload = { type: functionName, ...args };
             try {
@@ -278,7 +306,7 @@
                             document.getElementById('main-content').classList.remove('hidden');
                             showTab('clientes');
                             
-                            // Cargar todas las listas y estadísticas iniciales
+                            // Inicio
                             runGAS('getAllNifs').then(nifs => {
                                 masterNifList = nifs;
                                 populateNifTable(masterNifList);
@@ -294,7 +322,7 @@
                                 document.getElementById('stat-submissions').textContent = stats.totalSubmissions;
                                 document.getElementById('stat-checklists').textContent = stats.activeChecklists;
                             }).catch(err => console.error("Error al cargar stats: ", err));
-
+                            window.addEventListener('click', () => document.getElementById('status-filter-menu').classList.add('hidden'));
                         } else {
                             alert("Contraseña incorrecta.");
                             document.body.innerHTML = '<h1 class="text-center text-2xl font-bold mt-10">Acceso Denegado</h1>';
@@ -345,13 +373,12 @@
 
         function filterClients() {
             const searchTerm = document.getElementById('nif-search-input').value.toUpperCase();
-            const statusFilter = document.getElementById('status-filter-select').value;
             document.querySelectorAll('#nif-list-container > div').forEach(card => {
                 const nif = card.dataset.nif.toUpperCase();
                 const status = card.dataset.status;
 
                 const nifMatch = nif.includes(searchTerm);
-                const statusMatch = (statusFilter === 'Todos' || status === statusFilter);
+                const statusMatch = (activeStatusFilter === 'Todos' || status === activeStatusFilter);
 
                 card.style.display = nifMatch && statusMatch ? '' : 'none';
             });
