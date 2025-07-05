@@ -200,7 +200,6 @@
                                 `;
                             }
 
-                            // --- CAMBIO: AUMENTADO EL TAMAÑO DEL TEXTO DE DESCRIPCIÓN ---
                             fieldDiv.innerHTML = `${adminFileHtml}<p class="text-sm text-gray-600 mb-2">${field.descripcion}</p><button onclick="document.getElementById('${field.id}-input').click()" class="w-full btn mt-2">+ Adjuntar Archivo(s)</button><input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')"><div id="${field.id}-list" class="mt-4"></div>`;
                             questionsContainer.appendChild(fieldDiv);
                         });
