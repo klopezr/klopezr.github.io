@@ -18,6 +18,9 @@
 		.btn-primary:disabled { background-color: #d1d5db; color: #9ca3af; border-color: #d1d5db; cursor: not-allowed; }
         .btn-secondary { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
         .btn-secondary:hover { background-color: #e2e8f0; border-color: #94a3b8; }
+		.btn-icon-active { background-color: #475569;  cursor: pointer; transition: background-color 0.2s; }
+		.btn-icon-active:hover { background-color: #1f2937; }
+		.btn-icon-disabled { background-color: #e2e8f0;  color: #94a3b8;  cursor: not-allowed; pointer-events: none; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -103,12 +106,6 @@
                     <h2 class="text-xl font-bold text-slate-800 mb-4">Checklist para <span id="current-nif" class="text-blue-600"></span></h2>
                     <div id="checklist-content" class="space-y-4 h-[28rem] overflow-y-auto p-1"></div>
                     <div id="admin-actions-container" class="mt-4 p-4 border-t border-slate-200"></div>
-                    <div class="mt-4 flex items-stretch gap-4">
-						<button onclick="saveChecklist()" class="w-3/4 btn-primary">Guardar Cambios de Checklist</button>
-						<button onclick="openEmailModal()" class="w-1/4 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition" title="Enviar correo al cliente">
-							Enviar email
-						</button>
-					</div>
                 </div>
             </div>
         </div>
@@ -137,13 +134,20 @@
                             <button id="add-special-cell-new-client-btn" onclick="openSpecialQuestionModal(true)" class="whitespace-nowrap bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 disabled:bg-slate-300 font-semibold transition" disabled>+ Celda Especial</button>
                          </div>
                          <div id="new-checklist-content" class="space-y-2 h-96 overflow-y-auto border border-slate-200 rounded-lg p-3"></div>
-                         <div class="mt-4 flex items-stretch gap-4">
-                             <button onclick="saveNewClientChecklist()" class="w-3/4 btn-primary">Guardar Checklist</button>
-    
-                             <button id="send-email-btn-nuevo-cliente" onclick="openEmailModal()" class="w-1/4 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition disabled:bg-slate-300 disabled:cursor-not-allowed" title="Enviar correo al cliente" disabled>
+                         <div class="mt-4 flex items-stretch gap-2">
+                             <button onclick="saveNewClientChecklist()" class="flex-grow btn-primary">Guardar Checklist</button>
+
+                             <button id="send-email-btn-nuevo-cliente" onclick="openEmailModal()" class="whitespace-nowrap bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition disabled:bg-slate-300 disabled:cursor-not-allowed" title="Enviar correo al cliente" disabled>
                                  Enviar email
                              </button>
-                         </div>
+                             <a  href="${currentClientData.emailsFolderUrl || '#'}" 
+                                 target="_blank" 
+                                 id="view-emails-btn-nuevo-cliente"
+                                 class="text-white font-semibold rounded-lg flex items-center justify-center p-3 ${currentClientData.emailsFolderUrl ? 'btn-icon-active' : 'btn-icon-disabled'}" 
+                                 title="${currentClientData.emailsFolderUrl ? 'Ver correos enviados' : 'No hay correos enviados'}">
+                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             </a>
+                             </div>
                      </div>
                 </div>
                 <div>
@@ -255,6 +259,24 @@
         let currentNifForChecklist = '';
 		let activeStatusFilter = 'Todos';
 		let currentClientData = {};
+	
+	
+		function updateViewEmailsButtonState() {
+			const viewEmailsBtn = document.getElementById('view-emails-btn-nuevo-cliente');
+  		  if (!viewEmailsBtn) return; // Si no está el botón, no hacemos nada
+
+  		  if (currentClientData && currentClientData.emailsFolderUrl) {
+    		    viewEmailsBtn.href = currentClientData.emailsFolderUrl;
+     		   viewEmailsBtn.classList.add('btn-icon-active');
+      		  viewEmailsBtn.classList.remove('btn-icon-disabled');
+      		  viewEmailsBtn.title = 'Ver correos enviados';
+    		} else {
+      		  viewEmailsBtn.href = '#';
+       		 viewEmailsBtn.classList.add('btn-icon-disabled');
+      		  viewEmailsBtn.classList.remove('btn-icon-active');
+      		  viewEmailsBtn.title = 'No hay correos enviados';
+    		}
+		}
 		
 		function handleStatCardClick(tab, filter = null) {
     		showTab(tab);
@@ -608,14 +630,59 @@
                 areaHtml += `</div></details>`;
                 container.innerHTML += areaHtml;
             }
-            container.insertAdjacentHTML('beforeend', `<div class="mt-4 flex gap-4 border-t border-slate-200 pt-4">
-                <button onclick="openRemainingQuestionsModal()" class="btn-secondary text-green-700 border-green-300 hover:bg-green-100">+ Resto de subáreas</button>
-                <button onclick="openAddRequirementModal()" class="btn-secondary text-blue-700 border-blue-300 hover:bg-blue-100">+ Requerimiento Normal</button>
-                <button onclick="openSpecialQuestionModal(false)" class="btn-secondary text-yellow-700 border-yellow-300 hover:bg-yellow-100">+ Celda Especial</button>
-             </div>`);
+
+            container.insertAdjacentHTML('beforeend', `
+                <div class="mt-6 pt-4 border-t-2 border-slate-300 space-y-4">
+                    <div class="flex gap-4">
+                        <button onclick="openRemainingQuestionsModal()" class="btn-secondary text-green-700 border-green-300 hover:bg-green-100 flex-1">+ Resto de subáreas</button>
+                        <button onclick="openAddRequirementModal()" class="btn-secondary text-blue-700 border-blue-300 hover:bg-blue-100 flex-1">+ Requerimiento Normal</button>
+                        <button onclick="openSpecialQuestionModal(false)" class="btn-secondary text-yellow-700 border-yellow-300 hover:bg-yellow-100 flex-1">+ Celda Especial</button>
+                    </div>
+
+                    <div class="flex items-stretch gap-2">
+                        <button onclick="saveChecklist()" class="flex-grow btn-primary">Guardar Cambios de Checklist</button>
+            
+                        <button onclick="openEmailModal()" class="whitespace-nowrap bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition" title="Enviar correo al cliente">
+                            Enviar email
+                        </button>
+            
+                        <a  href="${currentClientData.emailsFolderUrl || '#'}" 
+                            target="_blank" 
+                            class="text-white font-semibold rounded-lg flex items-center justify-center p-3 ${currentClientData.emailsFolderUrl ? 'btn-icon-active' : 'btn-icon-disabled'}"
+                            title="${currentClientData.emailsFolderUrl ? 'Ver correos enviados' : 'No hay correos enviados'}">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </a>
+                    </div>
+                </div>
+            `);
         }
         
-        function buildAdminActionsUI(observaciones, justificante) { const container = document.getElementById('admin-actions-container'); let obsHtml = ''; if (observaciones) { obsHtml = `<div class="mb-4"><h4 class="font-semibold text-slate-800">Observaciones del Cliente:</h4><p class="text-sm text-slate-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;} let justHtml = ''; if (justificante && justificante.url) { justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;} container.innerHTML = `${obsHtml}${justHtml}<div class="mt-4"><h4 class="font-semibold text-slate-800 mb-2">Estado del Expediente:</h4><div class="flex items-center gap-4"><select id="global-status-select" class="p-2 border border-slate-300 rounded-md"><option value="Pendiente">Pendiente</option><option value="Aprobado">Aprobado</option><option value="Re-solicitar">Re-solicitar</option></select><button onclick="saveGlobalStatus()" class="btn-primary">Guardar Estado</button></div></div>`; }
+        function buildAdminActionsUI(observaciones, justificante) {
+            const container = document.getElementById('admin-actions-container');
+    
+            let obsHtml = '';
+            if (observaciones) {
+                obsHtml = `<div class="mb-4"><h4 class="font-semibold text-slate-800">Observaciones del Cliente:</h4><p class="text-sm text-slate-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;
+            }
+    
+            let justHtml = '';
+            if (justificante && justificante.url) {
+                justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;
+            }
+
+            container.innerHTML = `${obsHtml}${justHtml}
+                <div class="mt-4">
+                    <h4 class="font-semibold text-slate-800 mb-2">Estado del Expediente:</h4>
+                    <div class="flex items-center gap-2">
+                        <select id="global-status-select" class="p-2 border border-slate-300 rounded-md flex-grow">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Re-solicitar">Re-solicitar</option>
+                        </select>
+                        <button onclick="saveGlobalStatus()" class="btn-primary">Guardar Estado</button>
+                    </div>
+                </div>`;
+        }
         async function saveGlobalStatus() { const newStatus = document.getElementById('global-status-select').value; if (!currentNifForChecklist || !newStatus) return; try { await runGAS('updateGlobalStatus', { nif: currentNifForChecklist, newStatus: newStatus }); alert(`Estado para ${currentNifForChecklist} actualizado.`); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch(err) { alert("Error: " + err.message); } }
         function updateStatus(questionId, newStatus) { const question = fullChecklist.find(q => q.ID_Pregunta === questionId); if (question) { if (newStatus === 'Aprobado' && question.status === 'Aprobado') { question.status = 'Entregado'; } else if (newStatus === 'Requerido' && question.status === 'Requerido') { question.status = 'No Requerido'; } else { question.status = newStatus; } } buildChecklistUI(); }
         async function saveChecklist() { if (!currentNifForChecklist) return; const checklistToSave = {}; fullChecklist.forEach(item => { if(item.status && item.status !== 'No Requerido') { checklistToSave[item.ID_Pregunta] = { status: item.status, adminFile: item.adminFile }; } }); try { await runGAS('saveChecklist', { data: { nif: currentNifForChecklist, checklist: checklistToSave } }); alert("Checklist guardado para " + currentNifForChecklist); await loadChecklist(currentNifForChecklist); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch (err) { alert("Error: " + err.message); } }
@@ -640,20 +707,20 @@
         async function saveNewClientChecklist() { const nif = document.getElementById('new-nif-input').value.trim().toUpperCase(); const email = document.getElementById('new-email-input').value.trim(); if (!nif) { alert("Introduzca un NIF."); return; } const checklist = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { checklist[checkbox.dataset.questionId] = 'Requerido'; }); if (Object.keys(checklist).length === 0) { if(!confirm("No ha seleccionado ningún requerimiento. ¿Desea guardar el formulario para este cliente vacío?")) { return; } } try { await runGAS('saveChecklist', { data: { nif: nif, email: email, checklist: checklist } }); alert(`Checklist para ${nif} guardado.`); resetNewClientForm(); showTab('clientes'); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch (err) { alert("Error: " + err.message); } }
 		function populateExistingClientsTable(nifList) { existingClientNifs = nifList || []; const tbody = document.getElementById('existing-clients-table-body'); tbody.innerHTML = ''; if(!nifList || nifList.length === 0) {  tbody.innerHTML = `<tr><td class="p-4 text-center text-slate-500">No hay clientes con checklist.</td></tr>`;  return; }  nifList.forEach(nif => {  const row = tbody.insertRow();  row.className = 'cursor-pointer hover:bg-slate-50';  row.onclick = () => loadClientForEditing(nif);  row.innerHTML = `<td class="px-4 py-2 text-slate-700 font-medium">${nif}</td>`;  }); }
         function filterExistingClients() { const searchTerm = document.getElementById('existing-client-search').value.toUpperCase(); document.querySelectorAll('#existing-clients-table-body tr').forEach(row => { const nifCell = row.cells[0]; if(nifCell) { row.style.display = nifCell.textContent.toUpperCase().includes(searchTerm) ? '' : 'none'; } }); }
-		async function loadClientForEditing(nif) { currentNifForChecklist = nif; document.getElementById('new-nif-input').value = nif; document.getElementById('add-special-cell-new-client-btn').disabled = false; document.getElementById('new-email-input').value = ''; try { const data = await runGAS('getAdminData', { nif: nif }); currentClientData = data; if (data.email) { document.getElementById('new-email-input').value = data.email; } const requiredIds = new Set(data.maestro.filter(q => q.status === 'Requerido' || q.status === 'Entregado' || q.status === 'Aprobado').map(q => q.ID_Pregunta)); document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => { const questionId = checkbox.dataset.questionId; if (checkbox.id.startsWith('new-check-')) { checkbox.checked = requiredIds.has(questionId); } }); updateFormPreview(); updateEmailButtonState(); } catch (err) { alert(`Error al cargar datos de ${nif}: ${err.message}`); } }
-        function resetNewClientForm() { document.getElementById('new-nif-input').value = ''; document.getElementById('new-email-input').value = '';  document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(c => c.checked = false); updateFormPreview(); document.getElementById('add-special-cell-new-client-btn').disabled = true; updateEmailButtonState();}
+		async function loadClientForEditing(nif) { currentNifForChecklist = nif; document.getElementById('new-nif-input').value = nif; document.getElementById('add-special-cell-new-client-btn').disabled = false; document.getElementById('new-email-input').value = ''; try { const data = await runGAS('getAdminData', { nif: nif }); currentClientData = data; if (data.email) { document.getElementById('new-email-input').value = data.email; } const requiredIds = new Set(data.maestro.filter(q => q.status === 'Requerido' || q.status === 'Entregado' || q.status === 'Aprobado').map(q => q.ID_Pregunta)); document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => { const questionId = checkbox.dataset.questionId; if (checkbox.id.startsWith('new-check-')) { checkbox.checked = requiredIds.has(questionId); } }); updateFormPreview(); updateEmailButtonState(); updateViewEmailsButtonState(); } catch (err) { alert(`Error al cargar datos de ${nif}: ${err.message}`); } }
+        function resetNewClientForm() { document.getElementById('new-nif-input').value = ''; document.getElementById('new-email-input').value = '';  document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(c => c.checked = false); updateFormPreview(); document.getElementById('add-special-cell-new-client-btn').disabled = true; currentClientData = {};  updateEmailButtonState(); updateViewEmailsButtonState(); document.getElementById('view-emails-btn-nuevo-cliente').classList.add('btn-icon-disabled'); document.getElementById('view-emails-btn-nuevo-cliente').classList.remove('btn-icon-active');} 
         function handleNifInputChange() { const nifInput = document.getElementById('new-nif-input'); const nif = nifInput.value.trim().toUpperCase(); currentNifForChecklist = nif; document.getElementById('add-special-cell-new-client-btn').disabled = nif === ''; updateEmailButtonState(); if (nif === '') { resetNewClientForm();  return; } if (existingClientNifs.includes(nif)) { loadClientForEditing(nif); } }
     </script>
-<div id="email-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl leading-6 font-medium text-gray-900">Enviar Requerimiento por Correo</h3>
-            <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
-        </div>
-        <div id="email-modal-content" class="space-y-4">
-            <div class="text-center p-8">Cargando datos...</div>
+    <div id="email-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl leading-6 font-medium text-gray-900">Enviar Requerimiento por Correo</h3>
+                <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div id="email-modal-content" class="space-y-4">
+                <div class="text-center p-8">Cargando datos...</div>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>
