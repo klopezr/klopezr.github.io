@@ -7,52 +7,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9; /* bg-slate-100 */
-        }
-        .card {
-            background-color: white;
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem; /* p-6 */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            border: 1px solid #e2e8f0; /* border-slate-200 */
-        }
-        .pill-tab {
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 600;
-            transition: all 0.3s ease-in-out;
-            font-size: 0.875rem;
-        }
-        .pill-tab.active {
-            background-color: #2563eb; /* bg-blue-600 */
-            color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        .pill-tab.inactive {
-            background-color: transparent;
-            color: #475569; /* text-slate-600 */
-        }
-        .pill-tab.inactive:hover {
-            background-color: #e2e8f0; /* bg-slate-200 */
-        }
-        .btn-primary {
-             background-color: #2563eb; color: white; padding: 0.6rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background-color: #1d4ed8;
-        }
-        .btn-primary:disabled {
-            background-color: #94a3b8;
-            cursor: not-allowed;
-        }
-        .btn-secondary {
-            background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s;
-        }
-        .btn-secondary:hover {
-            background-color: #e2e8f0; border-color: #94a3b8;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); border: 1px solid #e2e8f0; }
+		.pill-tab { padding: 0.6rem 1.25rem; border-radius: 2rem;  font-weight: 600; transition: all 0.2s ease-in-out; font-size: 0.875rem; border: 1px solid transparent; }
+		.pill-tab.active { background-color: #1f2937;  color: white; border-color: #1f2937;  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+		.pill-tab.inactive { background-color: #ffffff;  color: #1f2937;  border-color: #d1d5db; }
+		.pill-tab.inactive:hover { border-color: #1f2937;  background-color: #f9fafb; }
+		.btn-primary { background-color: #ffffff; color: #1f2937; border: 2px solid #1f2937;  padding: 0.6rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
+		.btn-primary:hover:not(:disabled) { background-color: #1f2937;  color: #ffffff; }
+		.btn-primary:disabled { background-color: #d1d5db; color: #9ca3af; border-color: #d1d5db; cursor: not-allowed; }
+        .btn-secondary { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-secondary:hover { background-color: #e2e8f0; border-color: #94a3b8; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -145,7 +110,7 @@
                     <div class="flex items-end gap-2">
                          <div class="flex-grow">
                             <label for="new-nif-input" class="block text-sm font-medium text-slate-700">NIF del Cliente</label>
-                            <input type="text" id="new-nif-input" placeholder="Introduzca NIF para crear" class="mt-1 block w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50" oninput="handleNifInputChange()">
+                            <input type="text" id="new-nif-input" placeholder="Introduzca NIF para editar o crear" class="mt-1 block w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50" onchange="handleNifInputChange()">
                          </div>
                          <button onclick="resetNewClientForm()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 transition">Limpiar</button>
                     </div>
@@ -263,6 +228,7 @@
         let fullChecklist = [];
         let masterNifList = [];
         let masterQuestionsList = [];
+		let existingClientNifs = [];
         let isForNewClientContext = false;
         let currentNifForChecklist = '';
 		let activeStatusFilter = 'Todos'; 
@@ -614,11 +580,11 @@
         function toggleArea(checkbox, areaName) { document.querySelectorAll(`#new-checklist-content input[data-area="${areaName}"]`).forEach(subCheckbox => subCheckbox.checked = checkbox.checked); updateFormPreview(); }
         function updateFormPreview() { const previewContainer = document.getElementById('form-preview'); previewContainer.innerHTML = ''; const grouped = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { const questionId = checkbox.dataset.questionId; const question = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (question) { if (!grouped[question.Area]) grouped[question.Area] = {}; if (!grouped[question.Area][question.Subarea]) grouped[question.Area][question.Subarea] = []; grouped[question.Area][question.Subarea].push(question); } }); for (const areaName in grouped) { const areaDetails = document.createElement('details'); areaDetails.className = 'bg-slate-100 rounded-lg p-2 mb-2'; areaDetails.open = true; const areaSummary = document.createElement('summary'); areaSummary.className = 'font-bold text-md cursor-pointer text-slate-700'; areaSummary.textContent = areaName; areaDetails.appendChild(areaSummary); const areaContent = document.createElement('div'); areaContent.className = 'mt-1 pt-1 border-t border-slate-200'; for (const subareaName in grouped[areaName]) { const subareaDetails = document.createElement('details'); subareaDetails.className = 'mt-2 ml-2 pl-2 border-l border-slate-300'; subareaDetails.open = true; const subareaSummary = document.createElement('summary'); subareaSummary.className = 'font-semibold text-sm cursor-pointer text-slate-600'; subareaSummary.textContent = subareaName; subareaDetails.appendChild(subareaSummary); const questionsContainer = document.createElement('div'); questionsContainer.className = 'mt-1 pl-2'; grouped[areaName][subareaName].forEach(field => { questionsContainer.innerHTML += `<div class="text-sm text-slate-700 p-1">${field.Descripcion}</div>`; }); subareaDetails.appendChild(questionsContainer); areaContent.appendChild(subareaDetails); } areaDetails.appendChild(areaContent); previewContainer.appendChild(areaDetails); } }
         async function saveNewClientChecklist() { const nif = document.getElementById('new-nif-input').value.trim().toUpperCase(); if (!nif) { alert("Introduzca un NIF."); return; } const checklist = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { checklist[checkbox.dataset.questionId] = 'Requerido'; }); if (Object.keys(checklist).length === 0) { if(!confirm("No ha seleccionado ningún requerimiento. ¿Desea guardar el formulario para este cliente vacío?")) { return; } } try { await runGAS('saveChecklist', { data: { nif: nif, checklist: checklist } }); alert(`Checklist para ${nif} guardado.`); resetNewClientForm(); showTab('clientes'); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch (err) { alert("Error: " + err.message); } }
-        function populateExistingClientsTable(nifList) { const tbody = document.getElementById('existing-clients-table-body'); tbody.innerHTML = ''; if(!nifList || nifList.length === 0) { tbody.innerHTML = `<tr><td class="p-4 text-center text-slate-500">No hay clientes con checklist.</td></tr>`; return;} nifList.forEach(nif => { const row = tbody.insertRow(); row.className = 'cursor-pointer hover:bg-slate-50'; row.onclick = () => loadClientForEditing(nif); row.innerHTML = `<td class="px-4 py-2 text-slate-700 font-medium">${nif}</td>`; }); }
+        function populateExistingClientsTable(nifList) { existingClientNifs = nifList || [];  const tbody = document.getElementById('existing-clients-table-body'); tbody.innerHTML = ''; if(!nifList || nifList.length === 0) { tbody.innerHTML = `<tr><td class="p-4 text-center text-slate-500">No hay clientes con checklist.</td></tr>`; return;} nifList.forEach(nif => { const row = tbody.insertRow(); row.className = 'cursor-pointer hover:bg-slate-50'; row.onclick = () => loadClientForEditing(nif); row.innerHTML = `<td class="px-4 py-2 text-slate-700 font-medium">${nif}</td>`; }); }
         function filterExistingClients() { const searchTerm = document.getElementById('existing-client-search').value.toUpperCase(); document.querySelectorAll('#existing-clients-table-body tr').forEach(row => { const nifCell = row.cells[0]; if(nifCell) { row.style.display = nifCell.textContent.toUpperCase().includes(searchTerm) ? '' : 'none'; } }); }
         async function loadClientForEditing(nif) { document.getElementById('new-nif-input').value = nif; document.getElementById('add-special-cell-new-client-btn').disabled = false; try { const data = await runGAS('getAdminData', { nif: nif }); const requiredIds = new Set(data.maestro.filter(q => q.status === 'Requerido' || q.status === 'Entregado' || q.status === 'Aprobado').map(q => q.ID_Pregunta)); document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => { const questionId = checkbox.dataset.questionId; if(checkbox.id.startsWith('new-check-')) { checkbox.checked = requiredIds.has(questionId); } }); updateFormPreview(); } catch (err) { alert(`Error al cargar datos de ${nif}: ${err.message}`); } }
         function resetNewClientForm() { document.getElementById('new-nif-input').value = ''; document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(c => c.checked = false); updateFormPreview(); document.getElementById('add-special-cell-new-client-btn').disabled = true;}
-        function handleNifInputChange() { const nif = document.getElementById('new-nif-input').value.trim(); document.getElementById('add-special-cell-new-client-btn').disabled = nif === ''; if (nif === '') { resetNewClientForm(); } }
+        function handleNifInputChange() { const nifInput = document.getElementById('new-nif-input'); const nif = nifInput.value.trim().toUpperCase(); document.getElementById('add-special-cell-new-client-btn').disabled = nif === ''; if (nif === '') { resetNewClientForm(); return; } if (existingClientNifs.includes(nif)) { console.log(`El NIF ${nif} ya existe. Cargando sus datos...`); loadClientForEditing(nif); } }
     </script>
 <div id="email-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
