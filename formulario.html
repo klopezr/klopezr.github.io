@@ -13,7 +13,7 @@
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
         .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
         .progress-bar { background-color: #DC2626; height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
-        .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.75rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
+        .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.15rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
         .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-delete { background: none; border: none; padding: 0.25rem; color: #9ca3af; visibility: hidden; }
@@ -27,6 +27,9 @@
         details > summary::-webkit-details-marker { display: none; }
         details[open] > summary svg { transform: rotate(180deg); }
         summary svg { transition: transform 0.2s; }
+		.drop-zone { border: 2px dashed #e5e7eb; border-radius: 0.95rem; padding: 1rem; text-align: center; color: #6b7280; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; } 
+		.drop-zone.drag-over {  background-color: #EFF6FF; border-color: #2563eb; }
+
     </style>
 </head>
 <body class="font-sans">
@@ -200,8 +203,50 @@
                                 `;
                             }
 
-                            fieldDiv.innerHTML = `${adminFileHtml}<p class="text-sm text-gray-600 mb-2">${field.descripcion}</p><button onclick="document.getElementById('${field.id}-input').click()" class="w-full btn mt-2">+ Adjuntar Archivo(s)</button><input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')"><div id="${field.id}-list" class="mt-4"></div>`;
+                            fieldDiv.innerHTML = `
+								${adminFileHtml}
+								<p class="text-sm text-gray-600 mb-2">${field.descripcion}</p>
+    
+								<div id="drop-zone-${field.id}" class="drop-zone mt-2">
+									<p class="text-gray-500">Arrastra y suelta los archivos aquí</p>
+									<p class="text-gray-400 text-sm my-2">o</p>
+									<button type="button" onclick="document.getElementById('${field.id}-input').click()" class="btn mt-2 lg:mt-0">+ Seleccionar Archivo(s)</button>
+									<input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')">
+								</div>
+								<div id="${field.id}-list" class="mt-4"></div>
+							`;
                             questionsContainer.appendChild(fieldDiv);
+							const dropZone = fieldDiv.querySelector(`#drop-zone-${field.id}`);
+
+							if (dropZone) {
+							  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+							    dropZone.addEventListener(eventName, (e) => {
+									e.preventDefault();
+									e.stopPropagation();
+								}, false);
+							   });
+
+							['dragenter', 'dragover'].forEach(eventName => {
+ 							 dropZone.addEventListener(eventName, () => {
+ 							   dropZone.classList.add('drag-over');
+ 							 }, false);
+							});
+
+							['dragleave', 'drop'].forEach(eventName => {
+							  dropZone.addEventListener(eventName, () => {
+ 							   dropZone.classList.remove('drag-over');
+ 							 }, false);
+							});
+
+							dropZone.addEventListener('drop', (e) => {
+							  const files = e.dataTransfer.files;
+ 							 if (files.length) {
+  							  for (const file of files) {
+ 							     uploadFileToTemp(file, field.id);
+ 							   }
+ 							 }
+							}, false);
+							}
                         });
                     }
                     subareaDetails.appendChild(questionsContainer);
