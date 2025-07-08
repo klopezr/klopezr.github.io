@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); border: 1px solid #e2e8f0; }
+		.pill-tab { padding: 0.6rem 1.25rem; border-radius: 2rem;  font-weight: 600; transition: all 0.2s ease-in-out; font-size: 0.875rem; border: 1px solid transparent; }
+		.pill-tab.active { background-color: #1f2937;  color: white; border-color: #1f2937;  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+		.pill-tab.inactive { background-color: #ffffff;  color: #1f2937;  border-color: #d1d5db; }
+		.pill-tab.inactive:hover { border-color: #1f2937;  background-color: #f9fafb; }
+		.btn-primary { background-color: #ffffff; color: #1f2937; border: 2px solid #1f2937;  padding: 0.6rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
+		.btn-primary:hover:not(:disabled) { background-color: #1f2937;  color: #ffffff; }
+		.btn-primary:disabled { background-color: #d1d5db; color: #9ca3af; border-color: #d1d5db; cursor: not-allowed; }
+        .btn-secondary { background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-secondary:hover { background-color: #e2e8f0; border-color: #94a3b8; }
+		.btn-icon-active { background-color: #475569;  cursor: pointer; transition: background-color 0.2s; }
+		.btn-icon-active:hover { background-color: #1f2937; }
+		.btn-icon-disabled { background-color: #e2e8f0;  color: #94a3b8;  cursor: not-allowed; pointer-events: none; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div id="main-content" class="max-w-7xl mx-auto space-y-6 hidden">
+        
+        <header class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-slate-800">Panel de Control</h1>
+            <div class="flex items-center gap-4">
+			
+				<a href="https://klopezr.github.io/formulario" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+					<svg class="h-5 w-5 text-red-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+					<span>Formulario</span>
+				</a>
+                <a href="https://drive.google.com/drive/folders/1ASGGWKORq1iCYPVnvsVuVjDfY54ZHDg0" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+                    <svg class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path></svg>
+                    <span>Drive</span>
+                </a>
+                <a href="https://docs.google.com/spreadsheets/d/1FQTiKMi188CxgqiWoC_GU64O5atBou2N--uKAtm_ezA/edit" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+                    <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"></path><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3s-7-1.343-7-3z"></path><path d="M10 2C6.134 2 3 3.343 3 5v3c0 1.657 3.134 3 7 3s7-1.343 7-3V5c0-1.657-3.134-3-7-3z"></path></svg>
+                    <span>Base de Datos</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <div class="card p-4 lg:col-span-2 flex items-center gap-4">
+                <div class="text-center p-2 pr-4 border-r border-slate-200">
+                    <svg class="mx-auto h-6 w-6 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p class="text-sm font-semibold text-slate-600 mt-1">Formularios</p>
+                </div>
+                <div class="flex-grow grid grid-cols-3 divide-x divide-slate-200 text-center">
+                    <div onclick="handleStatCardClick('clientes', 'Todos')" class="cursor-pointer p-2 hover:bg-slate-50 rounded-l-lg">
+                        <p class="text-sm font-medium text-slate-500">Total Recibidos</p>
+                        <p id="stat-submissions" class="text-2xl font-bold text-slate-800">--</p>
+                    </div>
+                    <div onclick="handleStatCardClick('clientes', 'Pendiente')" class="cursor-pointer p-2 hover:bg-slate-50">
+                        <p class="text-sm font-medium text-slate-500">Sin revisar</p>
+                        <p id="stat-pending" class="text-2xl font-bold text-yellow-600">--</p>
+                    </div>
+                    <div class="p-2">
+                        <p class="text-sm font-medium text-slate-500">Sin Respuesta</p>
+                        <p id="stat-no-response" class="text-2xl font-bold text-red-600">--</p>
+                    </div>
+                </div>
+            </div>
+
+                <div onclick="handleStatCardClick('nuevo-cliente')" class="card flex items-center gap-4 cursor-pointer hover:bg-slate-50 hover:border-blue-500 transition">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">Clientes Activos</p>
+                        <p id="stat-checklists" class="text-2xl font-bold text-slate-800">--</p>
+                    </div>
+                </div>
+            </div>
+    
+        <div class="bg-white p-2 rounded-full shadow-sm border border-slate-200">
+            <nav class="flex space-x-2" aria-label="Tabs">
+                <button onclick="showTab('clientes')" id="tab-clientes" class="pill-tab">Gestión de Clientes</button>
+                <button onclick="showTab('nuevo-cliente')" id="tab-nuevo-cliente" class="pill-tab">Añadir/Editar Cliente</button>
+                <button onclick="showTab('preguntas')" id="tab-preguntas" class="pill-tab">Editor de Preguntas</button>
+            </nav>
+        </div>
+
+        <div id="view-clientes" class="card">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">Clientes con Envíos</h2>
+                    <div class="relative flex gap-2 mb-4">
+						<input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50">
+    
+						<button onclick="toggleStatusFilterMenu(event)" class="p-2 border border-slate-300 rounded-md hover:bg-slate-200 transition">
+							<svg id="filter-icon" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+						</button>
+
+						<div id="status-filter-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10">
+							<a onclick="applyStatusFilter('Todos')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Todos los estados</a>
+							<a onclick="applyStatusFilter('Pendiente')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Pendiente</a>
+							<a onclick="applyStatusFilter('Aprobado')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Aprobado</a>
+							<a onclick="applyStatusFilter('Re-solicitar')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Re-solicitar</a>
+						</div>
+					</div>
+                    <div id="nif-list-container" class="space-y-2 h-[32rem] overflow-y-auto pr-2"></div>
+                </div>
+                <div id="checklist-container" class="hidden lg:col-span-2">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">Checklist para <span id="current-nif" class="text-blue-600"></span></h2>
+                    <div id="checklist-content" class="space-y-4 h-[28rem] overflow-y-auto p-1"></div>
+                    <div id="admin-actions-container" class="mt-4 p-4 border-t border-slate-200"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="view-nuevo-cliente" class="hidden card">
+             <h1 class="text-2xl font-bold text-slate-800 mb-6">Añadir o Editar Checklist de Cliente</h1>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label for="new-nif-input" class="block text-sm font-medium text-slate-700">NIF del Cliente</label>
+                            <input type="text" id="new-nif-input" placeholder="Introducir NIF..." class="mt-1 block w-full p-2 border border-slate-300 rounded-md" onchange="handleNifInputChange()">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="new-nombre-cliente-input" class="block text-sm font-medium text-slate-700">Nombre del Cliente</label>
+                            <input type="text" id="new-nombre-cliente-input" placeholder="Nombre completo o razón social" class="mt-1 block w-full p-2 border border-slate-300 rounded-md">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="new-email-input" class="block text-sm font-medium text-slate-700">Email del Cliente</label>
+                            <input type="email" id="new-email-input" placeholder="correo@ejemplo.com" class="mt-1 block w-full p-2 border border-slate-300 rounded-md" oninput="updateEmailButtonState()">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="resetNewClientForm()" class="w-full px-4 py-2 bg-slate-200 text-slate-700 rounded-md hover:bg-slate-300 transition">Limpiar</button>
+                        </div>
+                    </div>
+                     <div id="new-checklist-container" class="mt-4">
+                         <h3 class="text-lg font-semibold text-slate-700 mb-2">Seleccionar Requerimientos</h3>
+                         <div class="flex gap-2 mb-2">
+                            <input type="text" id="new-client-req-search" onkeyup="filterNewClientQuestions()" placeholder="Buscar requerimiento..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50">
+                            <button id="add-special-cell-new-client-btn" onclick="openSpecialQuestionModal(true)" class="whitespace-nowrap bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 disabled:bg-slate-300 font-semibold transition" disabled>+ Celda Especial</button>
+                         </div>
+                         <div id="new-checklist-content" class="space-y-2 h-96 overflow-y-auto border border-slate-200 rounded-lg p-3"></div>
+                         <div class="mt-4 flex items-stretch gap-2">
+                             <button onclick="saveNewClientChecklist()" class="flex-grow btn-primary">Guardar Checklist</button>
+
+                             <button id="send-email-btn-nuevo-cliente" onclick="openEmailModal()" class="whitespace-nowrap bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition disabled:bg-slate-300 disabled:cursor-not-allowed" title="Enviar correo al cliente" disabled>
+                                 Enviar email
+                             </button>
+                             <a  href="${currentClientData.emailsFolderUrl || '#'}" 
+                                 target="_blank" 
+                                 id="view-emails-btn-nuevo-cliente"
+                                 class="text-white font-semibold rounded-lg flex items-center justify-center p-3 ${currentClientData.emailsFolderUrl ? 'btn-icon-active' : 'btn-icon-disabled'}" 
+                                 title="${currentClientData.emailsFolderUrl ? 'Ver correos enviados' : 'No hay correos enviados'}">
+                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                             </a>
+                             </div>
+                     </div>
+                </div>
+                <div>
+                    <div id="existing-clients-section">
+                        <h3 class="text-lg font-semibold text-slate-700 mb-2">Clientes con Formulario Creado</h3>
+                         <input type="text" id="existing-client-search" onkeyup="filterExistingClients()" placeholder="Buscar NIF para editar..." class="w-full p-2 border border-slate-300 rounded-md mb-2 focus:ring-2 focus:ring-blue-500/50">
+                         <div class="h-48 overflow-y-auto border rounded-lg">
+                            <table class="min-w-full"><tbody id="existing-clients-table-body" class="divide-y divide-slate-200"></tbody></table>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-2 mt-6">Vista Previa del Formulario</h3>
+                    <div id="form-preview" class="space-y-2 h-96 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="view-preguntas" class="hidden card">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">Editor de Preguntas</h2>
+            <div class="mb-8 p-6 border border-slate-200 rounded-xl bg-slate-50">
+                <h3 class="text-xl font-semibold mb-4 text-slate-700">Añadir Nueva Pregunta</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="new-area-select" class="block text-sm font-medium text-slate-700 mb-1">Área</label>
+                        <select id="new-area-select" onchange="handleAreaSelectChange(this, 'new-area-input')" class="p-2 border border-slate-300 rounded-md w-full focus:ring-2 focus:ring-blue-500/50"></select>
+                        <input type="text" id="new-area-input" placeholder="Nombre de la nueva área" class="p-2 border border-slate-300 rounded-md mt-2 w-full hidden focus:ring-2 focus:ring-blue-500/50">
+                    </div>
+                    <div>
+                       <label for="new-subarea" class="block text-sm font-medium text-slate-700 mb-1">Subárea</label>
+                       <input type="text" id="new-subarea" placeholder="Ej: Modelo 190" class="p-2 border border-slate-300 rounded-md w-full focus:ring-2 focus:ring-blue-500/50">
+                    </div>
+                    <div>
+                       <label for="new-desc" class="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
+                       <input type="text" id="new-desc" placeholder="Descripción para el usuario" class="p-2 border border-slate-300 rounded-md w-full focus:ring-2 focus:ring-blue-500/50">
+                    </div>
+                </div>
+                <button onclick="addNewQuestionFromMaster()" class="mt-4 w-full bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition">Añadir nueva pregunta</button>
+            </div>
+            <h3 class="text-xl font-semibold mb-4 pt-6 border-t border-slate-200 text-slate-700">Lista de Preguntas Maestras</h3>
+            <input type="text" id="master-question-search" onkeyup="filterMasterQuestions()" placeholder="Buscar en todas las preguntas..." class="w-full p-2 border border-slate-300 rounded-md mb-4 focus:ring-2 focus:ring-blue-500/50">
+            <div id="maestro-preguntas-list" class="space-y-4"></div>
+        </div>
+    </div>
+    
+    <div id="special-question-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Añadir Nueva Celda Especial</h3>
+                <p class="text-sm text-gray-500 mt-1">Este requerimiento incluirá archivos para que el cliente descargue.</p>
+                <div class="mt-4 px-7 py-3 space-y-4 text-left">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="special-modal-area-select">Área</label>
+                        <select id="special-modal-area-select" onchange="handleAreaSelectChange(this, 'special-modal-new-area-input')" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"></select>
+                        <input type="text" id="special-modal-new-area-input" placeholder="Nombre de la nueva área" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mt-2 hidden">
+                    </div>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="special-modal-subarea" type="text" placeholder="Subárea (ej: Plantillas)">
+                    <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="special-modal-descripcion" placeholder="Descripción para el cliente (ej: Descargue, rellene y vuelva a subir estos documentos)"></textarea>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="special-modal-file">Adjuntar archivo(s) para el cliente:</label>
+                        <input class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" id="special-modal-file" type="file" multiple>
+                        <p id="special-modal-error" class="text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
+                </div>
+                <div class="items-center px-4 py-3 flex gap-4">
+                    <button id="special-modal-save-btn" onclick="handleAddNewSpecialQuestion()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Guardar y Solicitar</button>
+                    <button onclick="closeSpecialQuestionModal()" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="add-requirement-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Añadir y Solicitar Nuevo Requerimiento</h3>
+                <div class="mt-2 px-7 py-3">
+                    <div class="mb-4 text-left">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="modal-area-select">Área</label>
+                        <select id="modal-area-select" onchange="handleAreaSelectChange(this, 'modal-new-area-input')" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+                        <input class="hidden mt-2 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-new-area-input" type="text" placeholder="Nombre de la nueva área">
+                    </div>
+                    <div class="mb-4 text-left"><label class="block text-gray-700 text-sm font-bold mb-2" for="modal-subarea">Subárea</label><input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-subarea" type="text" placeholder="Ej: Facturas Trimestre 1"></div>
+                    <div class="mb-6 text-left"><label class="block text-gray-700 text-sm font-bold mb-2" for="modal-descripcion">Descripción para el cliente</label><textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700" id="modal-descripcion" placeholder="Detalle del documento a solicitar"></textarea></div>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button onclick="handleAddNewRequirement()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Guardar y Solicitar</button>
+                    <button onclick="closeAddRequirementModal()" class="mt-2 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="remaining-questions-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Añadir Requerimientos Pendientes</h3>
+            <div id="remaining-questions-list" class="mt-4 space-y-4 max-h-96 overflow-y-auto p-4 border rounded-md"></div>
+            <div class="items-center px-4 py-3 flex gap-4 mt-4">
+                <button onclick="handleSaveRemainingQuestions()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-700">Añadir Seleccionados</button>
+                <button onclick="closeRemainingQuestionsModal()" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SCRIPT ---
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZh9hHxnO1Ge2fhrWHdcRgKSvOnOCy6lD5gG2sDBdfmx_nDmm3ytBQLWpZqKCrd76w/exec';
+        let fullChecklist = [];
+        let masterNifList = [];
+        let masterQuestionsList = [];
+		let existingClientNifs = [];
+        let isForNewClientContext = false;
+        let currentNifForChecklist = '';
+		let activeStatusFilter = 'Todos';
+		let currentClientData = {};
+	
+	
+		function updateViewEmailsButtonState() {
+			const viewEmailsBtn = document.getElementById('view-emails-btn-nuevo-cliente');
+  		  if (!viewEmailsBtn) return; // Si no está el botón, no hacemos nada
+
+  		  if (currentClientData && currentClientData.emailsFolderUrl) {
+    		    viewEmailsBtn.href = currentClientData.emailsFolderUrl;
+     		   viewEmailsBtn.classList.add('btn-icon-active');
+      		  viewEmailsBtn.classList.remove('btn-icon-disabled');
+      		  viewEmailsBtn.title = 'Ver correos enviados';
+    		} else {
+      		  viewEmailsBtn.href = '#';
+       		 viewEmailsBtn.classList.add('btn-icon-disabled');
+      		  viewEmailsBtn.classList.remove('btn-icon-active');
+      		  viewEmailsBtn.title = 'No hay correos enviados';
+    		}
+		}
+		
+		function handleStatCardClick(tab, filter = null) {
+    		showTab(tab);
+    		if (filter) {
+     		   if (tab === 'clientes') {
+            		applyStatusFilter(filter);
+      		  }
+    		}
+		}
+		
+		function updateEmailButtonState() {
+		   const nif = document.getElementById('new-nif-input').value;
+ 		   const email = document.getElementById('new-email-input').value;
+ 		   const emailButton = document.getElementById('send-email-btn-nuevo-cliente');
+  		  emailButton.disabled = !nif || !email;
+		}
+		
+		async function openEmailModal() {
+            const modal = document.getElementById('email-modal');
+            const content = document.getElementById('email-modal-content');
+            modal.classList.remove('hidden');
+            content.innerHTML = '<div class="text-center p-8">Cargando datos del cliente...</div>'; // Muestra un mensaje de carga
+
+            try {
+                // 1. Volvemos a pedir los datos actualizados del cliente, incluyendo las plantillas.
+                const data = await runGAS('getAdminData', { nif: currentNifForChecklist });
+                currentClientData = data;
+
+                // 2. Verificamos que el cliente tiene un email
+                if (!currentClientData || !currentClientData.email) {
+                    content.innerHTML = `<p class="text-red-600 text-center p-4">No se encontró una dirección de correo para el NIF <b>${currentNifForChecklist}</b>.</p><p class="text-center text-sm text-slate-500 mt-2">Asegúrate de que el cliente esté guardado con un email en la pestaña 'Añadir/Editar Cliente'.</p>`;
+                    return;
+                }
+
+                // 3. Construimos el desplegable de plantillas
+                let templateOptions = '';
+                if (currentClientData.templates && Object.keys(currentClientData.templates).length > 0) {
+                    templateOptions = Object.keys(currentClientData.templates).map(name => `<option value="${name}">${name}</option>`).join('');
+                }
+
+                // 4. Construimos el contenido del modal
+                content.innerHTML = `
+                    <div>
+                        <label for="email-to" class="block text-sm font-medium text-slate-700">Para:</label>
+                        <input type="email" id="email-to" class="mt-1 block w-full p-2 border border-slate-300 rounded-md bg-slate-100" value="${currentClientData.email}" readonly>
+                    </div>
+                    <div>
+                        <label for="email-template" class="block text-sm font-medium text-slate-700">Seleccionar Plantilla:</label>
+                        <select id="email-template" onchange="loadEmailTemplate(this.value)" class="mt-1 block w-full p-2 border border-slate-300 rounded-md">
+                        <option value="">-- Seleccione un modelo --</option>
+                        ${templateOptions}
+                    </select>
+                    </div>
+                    <div>
+                        <label for="email-subject" class="block text-sm font-medium text-slate-700">Asunto:</label>
+                        <input type="text" id="email-subject" class="mt-1 block w-full p-2 border border-slate-300 rounded-md">
+                    </div>
+                    <div>
+                        <label for="email-body" class="block text-sm font-medium text-slate-700">Cuerpo del Mensaje:</label>
+                        <textarea id="email-body" rows="10" class="mt-1 block w-full p-2 border border-slate-300 rounded-md"></textarea>
+                    </div>
+                    <div class="text-right">
+                        <button id="send-email-btn" onclick="sendEmail()" class="btn-primary">Enviar Correo</button>
+                    </div>
+                `;
+
+                window.emailTemplates = currentClientData.templates || {};
+            } catch (err) {
+                content.innerHTML = `<p class="text-red-600 text-center p-4">Error al cargar los datos del cliente: ${err.message}</p>`;
+            }
+        }
+
+		/**
+         * --- NUEVA FUNCIÓN CENTRALIZADA ---
+         * Carga TODOS los datos de un cliente (checklist, nombre, email, plantillas, etc.)
+         * y los guarda en las variables globales para que estén disponibles en toda la app.
+         */
+        async function loadFullClientData(nif) {
+            currentNifForChecklist = nif; // Establece el NIF activo
+            try {
+                const data = await runGAS('getAdminData', { nif: nif });
+                currentClientData = data; // Guarda todos los datos del cliente
+                fullChecklist = data.maestro.filter(q => q.status !== 'No Requerido' || (q.adminFile && q.adminFile.length > 0));
+                return true; // Indica que la carga fue exitosa
+            } catch (err) {
+                alert(`Error al cargar datos de ${nif}: ${err.message}`);
+                return false; // Indica que la carga falló
+            }
+        }
+		
+		function closeEmailModal() {
+			document.getElementById('email-modal').classList.add('hidden');
+			window.emailTemplates = null; 
+		}
+
+		function loadEmailTemplate(templateName) {
+			if (!templateName || !window.emailTemplates) {
+				document.getElementById('email-subject').value = '';
+				document.getElementById('email-body').value = '';
+				return;
+			}
+				const template = window.emailTemplates[templateName];
+				document.getElementById('email-subject').value = template.subject;
+				document.getElementById('email-body').value = template.body.replace(/<br>/g, '\\n'); 
+		}
+
+		function sendEmail() {
+			const sendBtn = document.getElementById('send-email-btn');
+			const emailData = {
+				to: document.getElementById('email-to').value,
+				subject: document.getElementById('email-subject').value,
+				body: document.getElementById('email-body').value.replace(/\n/g, '<br>'),
+				nif: currentNifForChecklist
+		};
+
+		if (!emailData.to || !emailData.subject) {
+			alert("El destinatario y el asunto son obligatorios.");
+			return;
+		}
+
+		sendBtn.disabled = true;
+		sendBtn.textContent = 'Enviando...';
+
+		runGAS('sendEmail', { data: emailData })
+			.then(response => {
+				alert("¡Correo enviado con éxito!");
+				closeEmailModal();
+			})
+			.catch(err => {
+				alert(`Error al enviar el correo: ${err.message}`);
+			})
+			.finally(() => {
+				sendBtn.disabled = false;
+				sendBtn.textContent = 'Enviar Correo';
+			});
+		}
+
+        function toggleStatusFilterMenu(event) {
+            event.stopPropagation(); 
+            document.getElementById('status-filter-menu').classList.toggle('hidden');
+        }
+
+        function applyStatusFilter(status) {
+            activeStatusFilter = status;
+            const filterIcon = document.getElementById('filter-icon');
+            if (status === 'Todos') {
+                filterIcon.classList.remove('text-blue-600');
+                filterIcon.classList.add('text-slate-600');
+            } else {
+                filterIcon.classList.remove('text-slate-600');
+                filterIcon.classList.add('text-blue-600');
+            }
+            filterClients(); 
+            document.getElementById('status-filter-menu').classList.add('hidden'); 
+        }
+		
+        async function runGAS(functionName, args = {}) {
+            const payload = { type: functionName, ...args };
+            try {
+                document.body.style.cursor = 'wait';
+                const response = await fetch(SCRIPT_URL, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload), redirect: 'follow' });
+                const result = await response.json();
+                if (result.status === 'success') return result.data;
+                else throw new Error(result.message || 'Error desconocido del servidor.');
+            } catch (error) {
+                console.error('Error en runGAS:', error);
+                throw new Error(`Fallo en la comunicación con el servidor: ${error.message}`);
+            } finally {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        window.onload = () => {
+            const password = prompt("Introduzca la contraseña para acceder al panel:");
+            if (password) {
+                runGAS('checkAdminPassword', { password: password })
+                    .then(isValid => {
+                        if (isValid) {
+                            document.getElementById('main-content').classList.remove('hidden');
+                            showTab('clientes');
+                            
+                            // --- INICIO DE LA LÓGICA CORREGIDA ---
+                            
+                            // 1. Obtenemos todas las listas de NIFs necesarias en paralelo
+                            Promise.all([
+                                runGAS('getAllNifs'),             // NIFs que han enviado algo
+                                runGAS('getNifsFromChecklist')    // NIFs a los que se les creó un formulario
+                            ]).then(([submittedNifs, allClientNifs]) => {
+                                // 2. Poblar la lista principal de clientes con envíos
+                                masterNifList = submittedNifs;
+                                populateNifTable(submittedNifs);
+
+                                // 3. Calcular y poblar las estadísticas
+                                const pendingCount = submittedNifs.filter(n => n.status === 'Pendiente' || n.status === 'Re-solicitar').length;
+                                const totalSubmissions = new Set(submittedNifs.map(n => n.nif)).size;
+                                
+                                // CORRECCIÓN: Accedemos a la propiedad .nif del objeto antes de convertir a mayúsculas
+                                const submittedNifSet = new Set(submittedNifs.map(n => n.nif.toUpperCase()));
+                                const noResponseCount = allClientNifs.filter(client => !submittedNifSet.has(client.nif.toUpperCase())).length;
+
+                                // 4. Actualizamos la interfaz
+                                document.getElementById('stat-pending').textContent = pendingCount;
+                                document.getElementById('stat-submissions').textContent = totalSubmissions;
+                                document.getElementById('stat-no-response').textContent = noResponseCount;
+                                
+                            }).catch(err => alert("Error al cargar las listas de NIFs: " + err.message));
+
+                            // --- FIN DE LA LÓGICA CORREGIDA ---
+
+                            runGAS('getMaestroPreguntas').then(preguntas => {
+                                masterQuestionsList = preguntas;
+                            }).catch(err => alert("Error al cargar el maestro de preguntas: " + err.message));
+                            
+                            runGAS('getDashboardStats').then(stats => {
+                                document.getElementById('stat-checklists').textContent = stats.activeChecklists;
+                            }).catch(err => console.error("Error al cargar stats: ", err));
+                            
+                            window.addEventListener('click', () => {
+                                const menu = document.getElementById('status-filter-menu');
+                                if(menu) menu.classList.add('hidden');
+                            });
+
+                        } else {
+                            alert("Contraseña incorrecta.");
+                            document.body.innerHTML = '<h1 class="text-center text-2xl font-bold mt-10">Acceso Denegado</h1>';
+                        }
+                    }).catch(err => {
+                        alert("Error de conexión: " + err.message);
+                        document.body.innerHTML = '<h1 class="text-center text-2xl font-bold mt-10">Error de Conexión</h1>';
+                    });
+            } else {
+                document.body.innerHTML = '<h1 class="text-center text-2xl font-bold mt-10">Acceso Cancelado</h1>';
+            }
+        };
+        function showTab(tabName) {
+            const tabs = ['clientes', 'nuevo-cliente', 'preguntas'];
+            tabs.forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`tab-${id}`).classList.remove('active');
+                document.getElementById(`tab-${id}`).classList.add('inactive');
+            });
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.remove('inactive');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            if (tabName === 'preguntas') loadMaestroPreguntas();
+            if (tabName === 'nuevo-cliente') {
+                loadNewClientChecklist();
+                runGAS('getNifsFromChecklist').then(populateExistingClientsTable);
+            }
+        }
+
+        function populateAreaDropdown(selectElementId, sourceData) {
+            const selectElement = document.getElementById(selectElementId);
+            const uniqueAreas = [...new Set(sourceData.map(item => item.Area).filter(Boolean))];
+            selectElement.innerHTML = '<option value="">Seleccione un área...</option>';
+            uniqueAreas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = area;
+                option.textContent = area;
+                selectElement.appendChild(option);
+            });
+            selectElement.insertAdjacentHTML('beforeend', '<option value="__NEW__">** Crear Nueva Área **</option>');
+        }
+        
+        function handleAreaSelectChange(selectElement, inputElementId) {
+            const inputElement = document.getElementById(inputElementId);
+            inputElement.style.display = selectElement.value === '__NEW__' ? 'block' : 'none';
+        }
+
+        function filterClients() {
+            const searchTerm = document.getElementById('nif-search-input').value.toUpperCase();
+            document.querySelectorAll('#nif-list-container > div').forEach(card => {
+                const nif = card.dataset.nif.toUpperCase();
+                const nombre = card.dataset.nombre.toUpperCase();
+                const status = card.dataset.status;
+
+                const nifMatch = nif.includes(searchTerm);
+                const nombreMatch = nombre.includes(searchTerm);
+                const statusMatch = (activeStatusFilter === 'Todos' || status === activeStatusFilter);
+
+                card.style.display = (nifMatch || nombreMatch) && statusMatch ? '' : 'none';
+            });
+        }
+        
+        function populateNifTable(nifData) {
+            const container = document.getElementById('nif-list-container');
+            container.innerHTML = '';
+            if (!nifData || nifData.length === 0) {
+                container.innerHTML = '<p class="text-center p-4 text-slate-500">No se encontraron clientes.</p>';
+                return;
+            }
+            nifData.forEach(item => {
+                let statusColor = 'bg-slate-100 text-slate-600';
+                if (item.status === 'Aprobado') statusColor = 'bg-green-100 text-green-700';
+                if (item.status === 'Re-solicitar') statusColor = 'bg-yellow-100 text-yellow-700';
+                if (item.status === 'Pendiente') statusColor = 'bg-blue-100 text-blue-700';
+
+                const cardHtml = `
+                    <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-blue-500 hover:shadow-md transition" 
+                         onclick="loadChecklist('${item.nif}')" data-nif="${item.nif}" data-nombre="${item.nombre || ''}" data-status="${item.status || 'Pendiente'}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <p class="font-bold text-slate-800 text-lg">${item.nombre || item.nif}</p>
+                                <p class="text-sm text-slate-500">${item.nif}</p>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${statusColor} flex-shrink-0">${item.status || 'Pendiente'}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 text-right">Último envío: ${new Date(item.timestamp).toLocaleString('es-ES')}</p>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        async function loadChecklist(nif) {
+            document.getElementById('current-nif').textContent = nif;
+            const checklistContainer = document.getElementById('checklist-container');
+            const contentDiv = document.getElementById('checklist-content');
+            checklistContainer.classList.remove('hidden');
+            
+            // Muestra el efecto de carga
+            let skeletonHtml = '';
+            for(let i=0; i<3; i++) { skeletonHtml += `<div class="animate-pulse space-y-3 p-4 bg-slate-50 rounded-lg"><div class="h-6 bg-slate-200 rounded w-1/3"></div><div class="space-y-2"><div class="h-12 bg-slate-200 rounded"></div><div class="h-12 bg-slate-200 rounded"></div></div></div>`; }
+            contentDiv.innerHTML = skeletonHtml;
+            document.getElementById('admin-actions-container').innerHTML = '';
+
+            // Llama a la nueva función centralizada
+            const success = await loadFullClientData(nif);
+
+            if (success) {
+                // Actualiza la interfaz con los datos ya cargados en las variables globales
+                const displayName = currentClientData.nombre ? `${currentClientData.nombre} (${nif})` : nif;
+                document.getElementById('current-nif').textContent = displayName;
+                buildChecklistUI();
+                buildAdminActionsUI(currentClientData.observaciones, currentClientData.justificante);
+            } else {
+                 contentDiv.innerHTML = `<div class="text-center p-10 text-red-500">Error al cargar datos.</div>`;
+            }
+        }
+
+
+        function buildChecklistUI() {
+            const container = document.getElementById('checklist-content');
+            container.innerHTML = '';
+            if (!fullChecklist || fullChecklist.length === 0) { container.innerHTML = '<p class="text-center p-8 text-slate-500">Este cliente no tiene requerimientos asignados.</p>'; }
+            const groupedByArea = fullChecklist.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {});
+            for (const area in groupedByArea) {
+                let areaHtml = `<details class="bg-slate-50 p-4 rounded-xl mb-4" open><summary class="font-bold text-lg cursor-pointer text-slate-700">${area}</summary><div class="mt-2 space-y-2">`;
+                groupedByArea[area].forEach(item => {
+                    const currentStatus = item.status || 'No Requerido';
+                    let statusClasses = 'bg-slate-100 text-slate-600';
+                    if (currentStatus === 'Aprobado') statusClasses = 'bg-green-100 text-green-700';
+                    if (currentStatus === 'Requerido') statusClasses = 'bg-yellow-100 text-yellow-700';
+                    if (currentStatus === 'Entregado') statusClasses = 'bg-blue-100 text-blue-700';
+
+                    let adminFileHtml = '';
+                    if (item.adminFile && Array.isArray(item.adminFile) && item.adminFile.length > 0) {
+                        const fileLinks = item.adminFile.map(file => {
+                            const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.id}`;
+                            return `<div class="flex items-center justify-between mt-1 bg-white p-2 rounded-md shadow-sm"><span class="text-slate-700 truncate pr-2">${file.name}</span><a href="${downloadUrl}" target="_blank" class="bg-blue-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-blue-600 flex-shrink-0 no-underline" style="text-decoration: none;">Descargar</a></div>`;
+                        }).join('');
+                        adminFileHtml = `<div class="col-span-12 text-sm text-blue-800 bg-blue-50 p-3 rounded-lg mb-3"><p class="font-semibold mb-1">Archivos adjuntos:</p><div class="space-y-1">${fileLinks}</div></div>`;
+                    }
+
+                    let clientFileHtml = '';
+                    if (item.fileUrl && item.fileNames) {
+                        const fileListItems = item.fileNames.split(',').map(f => `<li class="truncate" title="${f.trim()}">${f.trim()}</li>`).join('');
+                        const timestampHtml = item.fileTimestamp ? `<span class="text-xs text-slate-500 ml-auto">${new Date(item.fileTimestamp).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>` : '';
+                        clientFileHtml = `<div class="col-span-12 text-sm text-slate-600 mt-2 bg-slate-100 p-3 rounded-lg">
+                            <div class="flex justify-between items-center mb-1">
+                                <strong class="text-slate-700">Archivos del Cliente:</strong>
+                                <a href="${item.fileUrl}" target="_blank" class="text-blue-600 hover:text-blue-800" title="Abrir carpeta de archivos">${timestampHtml} <svg class="inline-block h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg></a>
+                            </div>
+                            <ul class="list-disc list-inside pl-2">${fileListItems}</ul>
+                        </div>`;
+                    }
+
+                    areaHtml += `<div class="bg-white p-3 rounded-lg border border-slate-200">
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="col-span-8">
+                                <p class="font-semibold text-slate-800">${item.Subarea}</p>
+                                <p class="text-sm text-slate-500">${item.Descripcion}</p>
+                            </div>
+                            <div class="col-span-4 flex items-center justify-end gap-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${statusClasses}">${currentStatus}</span>
+                                <button onclick="updateStatus('${item.ID_Pregunta}', 'Aprobado')" class="bg-green-500 hover:bg-green-600 text-white rounded-md p-1.5 transition" title="Marcar como Aprobado"><svg class="w-4 h-4" fill="white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg></button>
+                                <button onclick="updateStatus('${item.ID_Pregunta}', 'Requerido')" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded-md p-1.5 transition" title="Volver a solicitar"><svg class="w-4 h-4" fill="white" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201-4.42 5.5 5.5 0 019.201 4.42zm-1.566-4.42a4 4 0 10-5.932 4.027l-2.433 2.433a1 1 0 001.414 1.414l2.433-2.433A4 4 0 0013.746 7z" clip-rule="evenodd" /></svg></button>
+                            </div>
+                            ${adminFileHtml}
+                            ${clientFileHtml}
+                        </div>
+                    </div>`;
+                });
+                areaHtml += `</div></details>`;
+                container.innerHTML += areaHtml;
+            }
+
+            container.insertAdjacentHTML('beforeend', `
+                <div class="mt-6 pt-4 border-t-2 border-slate-300 space-y-4">
+                    <div class="flex gap-4">
+                        <button onclick="openRemainingQuestionsModal()" class="btn-secondary text-green-700 border-green-300 hover:bg-green-100 flex-1">+ Resto de subáreas</button>
+                        <button onclick="openAddRequirementModal()" class="btn-secondary text-blue-700 border-blue-300 hover:bg-blue-100 flex-1">+ Requerimiento Normal</button>
+                        <button onclick="openSpecialQuestionModal(false)" class="btn-secondary text-yellow-700 border-yellow-300 hover:bg-yellow-100 flex-1">+ Celda Especial</button>
+                    </div>
+
+                    <div class="flex items-stretch gap-2">
+                        <button onclick="saveChecklist()" class="flex-grow btn-primary">Guardar Cambios de Checklist</button>
+            
+                        <button onclick="openEmailModal()" class="whitespace-nowrap bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition" title="Enviar correo al cliente">
+                            Enviar email
+                        </button>
+            
+                        <a  href="${currentClientData.emailsFolderUrl || '#'}" 
+                            target="_blank" 
+                            class="text-white font-semibold rounded-lg flex items-center justify-center p-3 ${currentClientData.emailsFolderUrl ? 'btn-icon-active' : 'btn-icon-disabled'}"
+                            title="${currentClientData.emailsFolderUrl ? 'Ver correos enviados' : 'No hay correos enviados'}">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </a>
+                    </div>
+                </div>
+            `);
+        }
+        
+        function buildAdminActionsUI(observaciones, justificante) {
+            const container = document.getElementById('admin-actions-container');
+    
+            let obsHtml = '';
+            if (observaciones) {
+                obsHtml = `<div class="mb-4"><h4 class="font-semibold text-slate-800">Observaciones del Cliente:</h4><p class="text-sm text-slate-600 bg-yellow-100 p-2 rounded-md mt-1 whitespace-pre-wrap">${observaciones}</p></div>`;
+            }
+    
+            let justHtml = '';
+            if (justificante && justificante.url) {
+                justHtml = `<div class="mb-4"><a href="${justificante.url}" target="_blank" class="text-blue-600 hover:underline flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>Ver Justificante de Envío</a></div>`;
+            }
+
+            container.innerHTML = `${obsHtml}${justHtml}
+                <div class="mt-4">
+                    <h4 class="font-semibold text-slate-800 mb-2">Estado del Expediente:</h4>
+                    <div class="flex items-center gap-2">
+                        <select id="global-status-select" class="p-2 border border-slate-300 rounded-md flex-grow">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Re-solicitar">Re-solicitar</option>
+                        </select>
+                        <button onclick="saveGlobalStatus()" class="btn-primary">Guardar Estado</button>
+                    </div>
+                </div>`;
+        }
+        async function saveGlobalStatus() { const newStatus = document.getElementById('global-status-select').value; if (!currentNifForChecklist || !newStatus) return; try { await runGAS('updateGlobalStatus', { nif: currentNifForChecklist, newStatus: newStatus }); alert(`Estado para ${currentNifForChecklist} actualizado.`); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch(err) { alert("Error: " + err.message); } }
+        function updateStatus(questionId, newStatus) { const question = fullChecklist.find(q => q.ID_Pregunta === questionId); if (question) { if (newStatus === 'Aprobado' && question.status === 'Aprobado') { question.status = 'Entregado'; } else if (newStatus === 'Requerido' && question.status === 'Requerido') { question.status = 'No Requerido'; } else { question.status = newStatus; } } buildChecklistUI(); }
+        async function saveChecklist() { if (!currentNifForChecklist) return; const checklistToSave = {}; fullChecklist.forEach(item => { if(item.status && item.status !== 'No Requerido') { checklistToSave[item.ID_Pregunta] = { status: item.status, adminFile: item.adminFile }; } }); try { await runGAS('saveChecklist', { data: { nif: currentNifForChecklist, checklist: checklistToSave } }); alert("Checklist guardado para " + currentNifForChecklist); await loadChecklist(currentNifForChecklist); masterNifList = await runGAS('getAllNifs'); populateNifTable(masterNifList); } catch (err) { alert("Error: " + err.message); } }
+        function openAddRequirementModal() { populateAreaDropdown('modal-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('modal-area-select'), 'modal-new-area-input'); document.getElementById('modal-subarea').value = ''; document.getElementById('modal-descripcion').value = ''; document.getElementById('add-requirement-modal').classList.remove('hidden'); }
+        function closeAddRequirementModal() { document.getElementById('add-requirement-modal').classList.add('hidden'); }
+        async function handleAddNewRequirement() { const areaSelect = document.getElementById('modal-area-select'); let area = areaSelect.value === '__NEW__' ? document.getElementById('modal-new-area-input').value.trim() : areaSelect.value; const newRequirement = { area: area, subarea: document.getElementById('modal-subarea').value.trim(), descripcion: document.getElementById('modal-descripcion').value.trim() }; if (!newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion) { alert("Todos los campos son obligatorios."); return; } try { const newQuestion = await runGAS('addNewQuestion', { data: newRequirement }); fullChecklist.push({ ...newQuestion, status: 'Requerido' }); closeAddRequirementModal(); buildChecklistUI(); alert("Nuevo requerimiento añadido. No olvide pulsar 'Guardar Cambios'."); } catch (err) { alert("Error: " + err.message); } }
+        function openSpecialQuestionModal(isNew) { isForNewClientContext = isNew; populateAreaDropdown('special-modal-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('special-modal-area-select'), 'special-modal-new-area-input'); document.getElementById('special-modal-subarea').value = ''; document.getElementById('special-modal-descripcion').value = ''; document.getElementById('special-modal-file').value = ''; document.getElementById('special-modal-error').classList.add('hidden'); document.getElementById('special-question-modal').classList.remove('hidden'); }
+        function closeSpecialQuestionModal() { document.getElementById('special-question-modal').classList.add('hidden'); }
+        async function handleAddNewSpecialQuestion() { const saveBtn = document.getElementById('special-modal-save-btn'); const errorP = document.getElementById('special-modal-error'); errorP.classList.add('hidden'); const nif = isForNewClientContext ? document.getElementById('new-nif-input').value.trim() : currentNifForChecklist; const areaSelect = document.getElementById('special-modal-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('special-modal-new-area-input').value.trim(); } const newRequirement = { nif: nif, area: area, subarea: document.getElementById('special-modal-subarea').value.trim(), descripcion: document.getElementById('special-modal-descripcion').value.trim() }; const files = document.getElementById('special-modal-file').files; if (!newRequirement.nif || !newRequirement.area || !newRequirement.subarea || !newRequirement.descripcion || files.length === 0) { errorP.textContent = "Todos los campos y al menos un archivo son obligatorios."; errorP.classList.remove('hidden'); return; } saveBtn.disabled = true; saveBtn.textContent = "Procesando..."; const readFileAsBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve({ fileName: file.name, mimeType: file.type || 'application/octet-stream', fileData: reader.result }); reader.onerror = (error) => reject(error); }); try { const filePromises = Array.from(files).map(readFileAsBase64); const filesPayload = await Promise.all(filePromises); const payload = { ...newRequirement, files: filesPayload }; const newQuestion = await runGAS('addSpecialQuestion', { data: payload }); if (isForNewClientContext) { alert("Celda Especial creada. Ahora selecciónela de la lista y guarde el checklist del cliente."); masterQuestionsList = await runGAS('getMaestroPreguntas'); closeSpecialQuestionModal(); loadNewClientChecklist(); } else { fullChecklist.push(newQuestion); buildChecklistUI(); alert("Celda Especial añadida. No olvide pulsar 'Guardar Cambios de Checklist' para confirmar."); closeSpecialQuestionModal(); } } catch(err) { alert("Error: " + err.message); } finally { saveBtn.disabled = false; saveBtn.textContent = "Guardar y Solicitar"; } }
+        function openRemainingQuestionsModal() { const listContainer = document.getElementById('remaining-questions-list'); listContainer.innerHTML = ''; const checklistIds = new Set(fullChecklist.map(q => q.ID_Pregunta)); const remainingQuestions = masterQuestionsList.filter(q => !checklistIds.has(q.ID_Pregunta)); if (remainingQuestions.length === 0) { alert("No hay más requerimientos disponibles para añadir."); return; } const grouped = remainingQuestions.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); let html = ''; for (const area in grouped) { html += `<details class="bg-slate-100 p-2 rounded" open><summary class="font-bold cursor-pointer text-slate-700">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(q => { html += `<div class="flex items-center"><input type="checkbox" id="rem-check-${q.ID_Pregunta}" value="${q.ID_Pregunta}" class="h-4 w-4 mr-2"><label for="rem-check-${q.ID_Pregunta}" class="text-slate-800">${q.Subarea} <span class="text-xs text-slate-500">(${q.Descripcion})</span></label></div>`; }); html += `</div></details>`; } listContainer.innerHTML = html; document.getElementById('remaining-questions-modal').classList.remove('hidden'); }
+        function closeRemainingQuestionsModal() { document.getElementById('remaining-questions-modal').classList.add('hidden'); }
+        function handleSaveRemainingQuestions() { const addedQuestions = []; document.querySelectorAll('#remaining-questions-list input:checked').forEach(checkbox => { const questionId = checkbox.value; const questionData = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (questionData && !fullChecklist.some(q => q.ID_Pregunta === questionId)) { fullChecklist.push({ ...questionData, status: 'Requerido', adminFile: null }); addedQuestions.push(questionData.Subarea); } }); if (addedQuestions.length > 0) { buildChecklistUI(); alert(`Requerimientos añadidos: ${addedQuestions.join(', ')}.\n\nNo olvide pulsar 'Guardar Cambios de Checklist' para confirmar.`); } closeRemainingQuestionsModal(); }
+        async function addNewQuestionFromMaster() { const areaSelect = document.getElementById('new-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('new-area-input').value.trim(); } const newQuestion = { area: area, subarea: document.getElementById('new-subarea').value.trim(), descripcion: document.getElementById('new-desc').value.trim() }; if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; } try { await runGAS('addNewQuestion', { data: newQuestion }); alert("Nueva pregunta añadida al maestro."); document.getElementById('new-subarea').value = ''; document.getElementById('new-desc').value = ''; await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } }
+        function filterMasterQuestions() { const searchTerm = document.getElementById('master-question-search').value.toLowerCase(); document.querySelectorAll('#maestro-preguntas-list > details').forEach(detail => { const areaName = detail.querySelector('summary').textContent.toLowerCase(); let areaHasVisible = false; detail.querySelectorAll('div.grid').forEach(questionDiv => { const text = questionDiv.textContent.toLowerCase(); const isVisible = areaName.includes(searchTerm) || text.includes(searchTerm); questionDiv.style.display = isVisible ? 'grid' : 'none'; if (isVisible) areaHasVisible = true; }); detail.style.display = areaHasVisible ? 'block' : 'none'; }); }
+        async function loadMaestroPreguntas() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('maestro-preguntas-list'); container.innerHTML = ''; const grouped = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for(const area in grouped) { let areaHtml = `<details class="bg-slate-100 p-2 rounded mb-2" open><summary class="font-bold cursor-pointer text-slate-700">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(item => { areaHtml += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b border-slate-200" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn btn-secondary">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn btn-primary hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition">Eliminar</button></div></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } populateAreaDropdown('new-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('new-area-select'), 'new-area-input'); } catch (err) { alert("Error: " + err.message); } }
+        function editQuestion(button) { const row = button.closest('.grid'); row.querySelectorAll('input').forEach(input => input.disabled = false); row.querySelector('.edit-btn').classList.add('hidden'); row.querySelector('.save-btn').classList.remove('hidden'); }
+        async function saveQuestionUpdate(button) { const row = button.closest('.grid'); const id = row.dataset.id; const updatedQuestion = { id: id, area: row.children[0].children[0].value, subarea: row.children[1].children[0].value, descripcion: row.children[2].children[0].value }; try { await runGAS('updateQuestion', { data: updatedQuestion }); alert("Pregunta actualizada."); row.querySelectorAll('input').forEach(input => input.disabled = true); row.querySelector('.edit-btn').classList.remove('hidden'); row.querySelector('.save-btn').classList.add('hidden'); } catch (err) { alert("Error: " + err.message); } }
+        async function deleteQuestion(id) { if (confirm(`¿Seguro que quieres eliminar la pregunta con ID "${id}"?`)) { try { await runGAS('deleteQuestion', { id: id }); alert("Pregunta eliminada."); await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } } }
+        async function loadNewClientChecklist() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('new-checklist-content'); container.innerHTML = ''; const groupedByArea = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for (const area in groupedByArea) { let areaHtml = `<details class="bg-slate-50 p-4 rounded-lg" open><summary class="font-bold text-lg cursor-pointer flex items-center"><input type="checkbox" class="h-5 w-5 mr-2" onchange="toggleArea(this, '${area}')"><span>${area}</span></summary><div class="mt-2 space-y-2 pl-6">`; groupedByArea[area].forEach(item => { areaHtml += `<div class="flex items-center justify-between p-2 border-b"><label for="new-check-${item.ID_Pregunta}" class="font-semibold text-slate-700">${item.Subarea}</label><input type="checkbox" id="new-check-${item.ID_Pregunta}" data-question-id="${item.ID_Pregunta}" data-area="${area}" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" onchange="updateFormPreview()"></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } resetNewClientForm(); } catch (err) { alert("Error: " + err.message); } }
+        function toggleArea(checkbox, areaName) { document.querySelectorAll(`#new-checklist-content input[data-area="${areaName}"]`).forEach(subCheckbox => subCheckbox.checked = checkbox.checked); updateFormPreview(); }
+        function updateFormPreview() { const previewContainer = document.getElementById('form-preview'); previewContainer.innerHTML = ''; const grouped = {}; document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => { const questionId = checkbox.dataset.questionId; const question = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (question) { if (!grouped[question.Area]) grouped[question.Area] = {}; if (!grouped[question.Area][question.Subarea]) grouped[question.Area][question.Subarea] = []; grouped[question.Area][question.Subarea].push(question); } }); for (const areaName in grouped) { const areaDetails = document.createElement('details'); areaDetails.className = 'bg-slate-100 rounded-lg p-2 mb-2'; areaDetails.open = true; const areaSummary = document.createElement('summary'); areaSummary.className = 'font-bold text-md cursor-pointer text-slate-700'; areaSummary.textContent = areaName; areaDetails.appendChild(areaSummary); const areaContent = document.createElement('div'); areaContent.className = 'mt-1 pt-1 border-t border-slate-200'; for (const subareaName in grouped[areaName]) { const subareaDetails = document.createElement('details'); subareaDetails.className = 'mt-2 ml-2 pl-2 border-l border-slate-300'; subareaDetails.open = true; const subareaSummary = document.createElement('summary'); subareaSummary.className = 'font-semibold text-sm cursor-pointer text-slate-600'; subareaSummary.textContent = subareaName; subareaDetails.appendChild(subareaSummary); const questionsContainer = document.createElement('div'); questionsContainer.className = 'mt-1 pl-2'; grouped[areaName][subareaName].forEach(field => { questionsContainer.innerHTML += `<div class="text-sm text-slate-700 p-1">${field.Descripcion}</div>`; }); subareaDetails.appendChild(questionsContainer); areaContent.appendChild(subareaDetails); } areaDetails.appendChild(areaContent); previewContainer.appendChild(areaDetails); } }
+        async function saveNewClientChecklist() {
+            const nif = document.getElementById('new-nif-input').value.trim().toUpperCase();
+            const nombre = document.getElementById('new-nombre-cliente-input').value.trim();
+            const email = document.getElementById('new-email-input').value.trim();
+            
+            if (!nif) {
+                alert("Introduzca un NIF.");
+                return;
+            }
+            
+            const checklist = {};
+            document.querySelectorAll('#new-checklist-content input[data-question-id]:checked').forEach(checkbox => {
+                checklist[checkbox.dataset.questionId] = 'Requerido';
+            });
+            
+            if (Object.keys(checklist).length === 0) {
+                if(!confirm("No ha seleccionado ningún requerimiento. ¿Desea guardar el formulario para este cliente vacío?")) {
+                    return;
+                }
+            }
+
+            try {
+                await runGAS('saveChecklist', { data: { nif: nif, nombre: nombre, email: email, checklist: checklist } });
+                alert(`Checklist para ${nif} guardado.`);
+                resetNewClientForm();
+
+                // --- LÍNEA MODIFICADA ---
+                // En lugar de cambiar de pestaña, actualizamos las listas en segundo plano
+                runGAS('getNifsFromChecklist').then(populateExistingClientsTable); 
+                runGAS('getAllNifs').then(nifs => { masterNifList = nifs; });
+                
+            } catch (err) {
+                alert("Error al guardar: " + err.message);
+            }
+        }
+		function populateExistingClientsTable(clientList) {
+            existingClientNifs = clientList || [];
+            const tbody = document.getElementById('existing-clients-table-body');
+            tbody.innerHTML = '';
+            if(!clientList || clientList.length === 0) {
+                tbody.innerHTML = `<tr><td class="p-4 text-center text-slate-500" colspan="2">No hay clientes con checklist.</td></tr>`;
+                return;
+            }
+            clientList.forEach(client => {
+                const row = tbody.insertRow();
+                row.className = 'cursor-pointer hover:bg-slate-50';
+                row.onclick = () => loadClientForEditing(client.nif);
+                row.innerHTML = `<td class="px-4 py-2 text-slate-700 font-medium">${client.nif}</td>
+                                 <td class="px-4 py-2 text-slate-600">${client.nombre || ''}</td>`;
+            });
+        }
+        function filterExistingClients() {
+            const searchTerm = document.getElementById('existing-client-search').value.toUpperCase();
+            document.querySelectorAll('#existing-clients-table-body tr').forEach(row => {
+                if (row.cells.length > 1) { // Asegurarse de que no sea la fila de "no hay clientes"
+                    const nif = row.cells[0].textContent.toUpperCase();
+                    const nombre = row.cells[1].textContent.toUpperCase();
+                    row.style.display = (nif.includes(searchTerm) || nombre.includes(searchTerm)) ? '' : 'none';
+                }
+            });
+        }
+		async function loadClientForEditing(nif) {
+            document.getElementById('new-nif-input').value = nif;
+            document.getElementById('add-special-cell-new-client-btn').disabled = false;
+            document.getElementById('new-nombre-cliente-input').value = 'Cargando...';
+            document.getElementById('new-email-input').value = '';
+
+            // Llama a la nueva función centralizada
+            const success = await loadFullClientData(nif);
+
+            if(success) {
+                // Actualiza la interfaz con los datos ya cargados
+                document.getElementById('new-nombre-cliente-input').value = currentClientData.nombre || '';
+                document.getElementById('new-email-input').value = currentClientData.email || '';
+                
+                const requiredIds = new Set(fullChecklist.map(q => q.ID_Pregunta));
+                document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(checkbox => {
+                    const questionId = checkbox.dataset.questionId;
+                    if(checkbox.id.startsWith('new-check-')) {
+                        checkbox.checked = requiredIds.has(questionId);
+                    }
+                });
+                updateFormPreview();
+                updateEmailButtonState();
+                updateViewEmailsButtonState();
+            } else {
+                 document.getElementById('new-nombre-cliente-input').value = 'Error al cargar';
+            }
+        }
+        function resetNewClientForm() {
+            document.getElementById('new-nif-input').value = '';
+            document.getElementById('new-nombre-cliente-input').value = '';
+            document.getElementById('new-email-input').value = ''; 
+            document.querySelectorAll('#new-checklist-content input[type="checkbox"]').forEach(c => c.checked = false);
+            updateFormPreview();
+            document.getElementById('add-special-cell-new-client-btn').disabled = true;
+            currentClientData = {}; 
+            updateEmailButtonState();
+            updateViewEmailsButtonState();
+        } 
+        function handleNifInputChange() { const nifInput = document.getElementById('new-nif-input'); const nif = nifInput.value.trim().toUpperCase(); currentNifForChecklist = nif; document.getElementById('add-special-cell-new-client-btn').disabled = nif === ''; updateEmailButtonState(); if (nif === '') { resetNewClientForm();  return; } if (existingClientNifs.includes(nif)) { loadClientForEditing(nif); } }
+    </script>
+    <div id="email-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl leading-6 font-medium text-gray-900">Enviar Requerimiento por Correo</h3>
+                <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div id="email-modal-content" class="space-y-4">
+                <div class="text-center p-8">Cargando datos...</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
