@@ -30,7 +30,7 @@
             <h1 class="text-3xl font-bold text-slate-800">Panel de Control</h1>
             <div class="flex items-center gap-4">
 			
-				<a href="https://klopezr.github.io/formulario" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
+				<a href="https://klopezr.github.io/formulario1" target="_blank" class="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-200 transition">
 					<svg class="h-5 w-5 text-red-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
 					<span>Formulario</span>
@@ -93,11 +93,20 @@
                 <div class="lg:col-span-1">
                     <h2 class="text-xl font-bold text-slate-800 mb-4">Clientes con Envíos</h2>
                     <div class="relative flex gap-2 mb-4">
+  
 						<input type="text" id="nif-search-input" onkeyup="filterClients()" placeholder="Buscar por NIF..." class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500/50">
     
 						<button onclick="toggleStatusFilterMenu(event)" class="p-2 border border-slate-300 rounded-md hover:bg-slate-200 transition">
 							<svg id="filter-icon" class="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
 						</button>
+						
+						<button onclick="refreshClientList()" title="Refrescar Lista" class="p-2 border border-slate-300 rounded-md hover:bg-slate-200 transition">
+							<svg class="w-5 h-5 text-slate-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+								<path d="M0 0h24v24H0z" fill="none"/>
+								<path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+							</svg>
+						</button>
+
 
 						<div id="status-filter-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10">
 							<a onclick="applyStatusFilter('Todos')" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer">Todos los estados</a>
@@ -269,11 +278,27 @@
         let currentNifForChecklist = '';
 		let activeStatusFilter = 'Todos';
 		let currentClientData = {};
-	
-	
+
+        function refreshClientList() {
+            const container = document.getElementById('nif-list-container');
+            container.innerHTML = '<p class="text-center p-4 text-slate-500">Recargando...</p>';
+
+            runGAS('getAllNifs').then(nifs => {
+                masterNifList = nifs;
+                populateNifTable(masterNifList);
+                const pendingCount = masterNifList.filter(n => n.status === 'Pendiente' || n.status === 'Re-solicitar' || !n.status).length;
+                document.getElementById('stat-pending').textContent = pendingCount;
+            }).catch(err => alert("Error al recargar NIFs: " + err.message));
+
+            runGAS('getDashboardStats').then(stats => {
+                document.getElementById('stat-submissions').textContent = stats.totalSubmissions;
+                document.getElementById('stat-checklists').textContent = stats.activeChecklists;
+            }).catch(err => console.error("Error al recargar stats: ", err));
+        }
+		
 		function updateViewEmailsButtonState() {
 			const viewEmailsBtn = document.getElementById('view-emails-btn-nuevo-cliente');
-  		  if (!viewEmailsBtn) return; // Si no está el botón, no hacemos nada
+  		  if (!viewEmailsBtn) return; 
 
   		  if (currentClientData && currentClientData.emailsFolderUrl) {
     		    viewEmailsBtn.href = currentClientData.emailsFolderUrl;
@@ -308,26 +333,22 @@
             const modal = document.getElementById('email-modal');
             const content = document.getElementById('email-modal-content');
             modal.classList.remove('hidden');
-            content.innerHTML = '<div class="text-center p-8">Cargando datos del cliente...</div>'; // Muestra un mensaje de carga
+            content.innerHTML = '<div class="text-center p-8">Cargando datos del cliente...</div>'; 
 
             try {
-                // 1. Volvemos a pedir los datos actualizados del cliente, incluyendo las plantillas.
                 const data = await runGAS('getAdminData', { nif: currentNifForChecklist });
                 currentClientData = data;
 
-                // 2. Verificamos que el cliente tiene un email
                 if (!currentClientData || !currentClientData.email) {
                     content.innerHTML = `<p class="text-red-600 text-center p-4">No se encontró una dirección de correo para el NIF <b>${currentNifForChecklist}</b>.</p><p class="text-center text-sm text-slate-500 mt-2">Asegúrate de que el cliente esté guardado con un email en la pestaña 'Añadir/Editar Cliente'.</p>`;
                     return;
                 }
 
-                // 3. Construimos el desplegable de plantillas
                 let templateOptions = '';
                 if (currentClientData.templates && Object.keys(currentClientData.templates).length > 0) {
                     templateOptions = Object.keys(currentClientData.templates).map(name => `<option value="${name}">${name}</option>`).join('');
                 }
 
-                // 4. Construimos el contenido del modal
                 content.innerHTML = `
                     <div>
                         <label for="email-to" class="block text-sm font-medium text-slate-700">Para:</label>
@@ -359,21 +380,16 @@
             }
         }
 
-		/**
-         * --- NUEVA FUNCIÓN CENTRALIZADA ---
-         * Carga TODOS los datos de un cliente (checklist, nombre, email, plantillas, etc.)
-         * y los guarda en las variables globales para que estén disponibles en toda la app.
-         */
         async function loadFullClientData(nif) {
             currentNifForChecklist = nif; // Establece el NIF activo
             try {
                 const data = await runGAS('getAdminData', { nif: nif });
-                currentClientData = data; // Guarda todos los datos del cliente
+                currentClientData = data; 
                 fullChecklist = data.maestro.filter(q => q.status !== 'No Requerido' || (q.adminFile && q.adminFile.length > 0));
-                return true; // Indica que la carga fue exitosa
+                return true; 
             } catch (err) {
                 alert(`Error al cargar datos de ${nif}: ${err.message}`);
-                return false; // Indica que la carga falló
+                return false; 
             }
         }
 		
@@ -468,33 +484,25 @@
                             document.getElementById('main-content').classList.remove('hidden');
                             showTab('clientes');
                             
-                            // --- INICIO DE LA LÓGICA CORREGIDA ---
                             
-                            // 1. Obtenemos todas las listas de NIFs necesarias en paralelo
                             Promise.all([
-                                runGAS('getAllNifs'),             // NIFs que han enviado algo
-                                runGAS('getNifsFromChecklist')    // NIFs a los que se les creó un formulario
+                                runGAS('getAllNifs'),             
+                                runGAS('getNifsFromChecklist')    
                             ]).then(([submittedNifs, allClientNifs]) => {
-                                // 2. Poblar la lista principal de clientes con envíos
                                 masterNifList = submittedNifs;
                                 populateNifTable(submittedNifs);
 
-                                // 3. Calcular y poblar las estadísticas
                                 const pendingCount = submittedNifs.filter(n => n.status === 'Pendiente' || n.status === 'Re-solicitar').length;
                                 const totalSubmissions = new Set(submittedNifs.map(n => n.nif)).size;
                                 
-                                // CORRECCIÓN: Accedemos a la propiedad .nif del objeto antes de convertir a mayúsculas
                                 const submittedNifSet = new Set(submittedNifs.map(n => n.nif.toUpperCase()));
                                 const noResponseCount = allClientNifs.filter(client => !submittedNifSet.has(client.nif.toUpperCase())).length;
 
-                                // 4. Actualizamos la interfaz
                                 document.getElementById('stat-pending').textContent = pendingCount;
                                 document.getElementById('stat-submissions').textContent = totalSubmissions;
                                 document.getElementById('stat-no-response').textContent = noResponseCount;
                                 
                             }).catch(err => alert("Error al cargar las listas de NIFs: " + err.message));
-
-                            // --- FIN DE LA LÓGICA CORREGIDA ---
 
                             runGAS('getMaestroPreguntas').then(preguntas => {
                                 masterQuestionsList = preguntas;
@@ -607,17 +615,14 @@
             const contentDiv = document.getElementById('checklist-content');
             checklistContainer.classList.remove('hidden');
             
-            // Muestra el efecto de carga
             let skeletonHtml = '';
             for(let i=0; i<3; i++) { skeletonHtml += `<div class="animate-pulse space-y-3 p-4 bg-slate-50 rounded-lg"><div class="h-6 bg-slate-200 rounded w-1/3"></div><div class="space-y-2"><div class="h-12 bg-slate-200 rounded"></div><div class="h-12 bg-slate-200 rounded"></div></div></div>`; }
             contentDiv.innerHTML = skeletonHtml;
             document.getElementById('admin-actions-container').innerHTML = '';
 
-            // Llama a la nueva función centralizada
             const success = await loadFullClientData(nif);
 
             if (success) {
-                // Actualiza la interfaz con los datos ya cargados en las variables globales
                 const displayName = currentClientData.nombre ? `${currentClientData.nombre} (${nif})` : nif;
                 document.getElementById('current-nif').textContent = displayName;
                 buildChecklistUI();
@@ -748,7 +753,7 @@
         function openRemainingQuestionsModal() { const listContainer = document.getElementById('remaining-questions-list'); listContainer.innerHTML = ''; const checklistIds = new Set(fullChecklist.map(q => q.ID_Pregunta)); const remainingQuestions = masterQuestionsList.filter(q => !checklistIds.has(q.ID_Pregunta)); if (remainingQuestions.length === 0) { alert("No hay más requerimientos disponibles para añadir."); return; } const grouped = remainingQuestions.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); let html = ''; for (const area in grouped) { html += `<details class="bg-slate-100 p-2 rounded" open><summary class="font-bold cursor-pointer text-slate-700">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(q => { html += `<div class="flex items-center"><input type="checkbox" id="rem-check-${q.ID_Pregunta}" value="${q.ID_Pregunta}" class="h-4 w-4 mr-2"><label for="rem-check-${q.ID_Pregunta}" class="text-slate-800">${q.Subarea} <span class="text-xs text-slate-500">(${q.Descripcion})</span></label></div>`; }); html += `</div></details>`; } listContainer.innerHTML = html; document.getElementById('remaining-questions-modal').classList.remove('hidden'); }
         function closeRemainingQuestionsModal() { document.getElementById('remaining-questions-modal').classList.add('hidden'); }
         function handleSaveRemainingQuestions() { const addedQuestions = []; document.querySelectorAll('#remaining-questions-list input:checked').forEach(checkbox => { const questionId = checkbox.value; const questionData = masterQuestionsList.find(q => q.ID_Pregunta === questionId); if (questionData && !fullChecklist.some(q => q.ID_Pregunta === questionId)) { fullChecklist.push({ ...questionData, status: 'Requerido', adminFile: null }); addedQuestions.push(questionData.Subarea); } }); if (addedQuestions.length > 0) { buildChecklistUI(); alert(`Requerimientos añadidos: ${addedQuestions.join(', ')}.\n\nNo olvide pulsar 'Guardar Cambios de Checklist' para confirmar.`); } closeRemainingQuestionsModal(); }
-        async function addNewQuestionFromMaster() { const areaSelect = document.getElementById('new-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('new-area-input').value.trim(); } const newQuestion = { area: area, subarea: document.getElementById('new-subarea').value.trim(), descripcion: document.getElementById('new-desc').value.trim() }; if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; } try { await runGAS('addNewQuestion', { data: newQuestion }); alert("Nueva pregunta añadida al maestro."); document.getElementById('new-subarea').value = ''; document.getElementById('new-desc').value = ''; await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } }
+        async function addNewQuestionFromMaster() { const areaSelect = document.getElementById('new-area-select'); let area = areaSelect.value; if (area === '__NEW__') { area = document.getElementById('new-area-input').value.trim(); } const newQuestion = { area: area, subarea: document.getElementById('new-subarea').value.trim(), descripcion: document.getElementById('new-desc').value.trim() }; if (!newQuestion.area || !newQuestion.subarea || !newQuestion.descripcion) { alert("Todos los campos son obligatorios."); return; } try { await runGAS('addNewQuestion', { data: newQuestion }); alert("Nueva pregunta añadida a la base de datos."); document.getElementById('new-subarea').value = ''; document.getElementById('new-desc').value = ''; await loadMaestroPreguntas(); } catch (err) { alert("Error: " + err.message); } }
         function filterMasterQuestions() { const searchTerm = document.getElementById('master-question-search').value.toLowerCase(); document.querySelectorAll('#maestro-preguntas-list > details').forEach(detail => { const areaName = detail.querySelector('summary').textContent.toLowerCase(); let areaHasVisible = false; detail.querySelectorAll('div.grid').forEach(questionDiv => { const text = questionDiv.textContent.toLowerCase(); const isVisible = areaName.includes(searchTerm) || text.includes(searchTerm); questionDiv.style.display = isVisible ? 'grid' : 'none'; if (isVisible) areaHasVisible = true; }); detail.style.display = areaHasVisible ? 'block' : 'none'; }); }
         async function loadMaestroPreguntas() { try { masterQuestionsList = await runGAS('getMaestroPreguntas'); const container = document.getElementById('maestro-preguntas-list'); container.innerHTML = ''; const grouped = masterQuestionsList.reduce((acc, item) => { (acc[item.Area] = acc[item.Area] || []).push(item); return acc; }, {}); for(const area in grouped) { let areaHtml = `<details class="bg-slate-100 p-2 rounded mb-2" open><summary class="font-bold cursor-pointer text-slate-700">${area}</summary><div class="mt-2 pl-4 space-y-2">`; grouped[area].forEach(item => { areaHtml += `<div class="grid grid-cols-12 gap-4 items-center p-2 border-b border-slate-200" data-id="${item.ID_Pregunta}"><div class="col-span-3"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Area}" disabled></div><div class="col-span-3"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Subarea}" disabled></div><div class="col-span-4"><input class="w-full p-2 border border-slate-300 rounded" value="${item.Descripcion}" disabled></div><div class="col-span-2 flex justify-end gap-2"><button onclick="editQuestion(this)" class="edit-btn btn-secondary">Editar</button><button onclick="saveQuestionUpdate(this)" class="save-btn btn-primary hidden">Guardar</button><button onclick="deleteQuestion('${item.ID_Pregunta}')" class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition">Eliminar</button></div></div>`; }); areaHtml += `</div></details>`; container.innerHTML += areaHtml; } populateAreaDropdown('new-area-select', masterQuestionsList); handleAreaSelectChange(document.getElementById('new-area-select'), 'new-area-input'); } catch (err) { alert("Error: " + err.message); } }
         function editQuestion(button) { const row = button.closest('.grid'); row.querySelectorAll('input').forEach(input => input.disabled = false); row.querySelector('.edit-btn').classList.add('hidden'); row.querySelector('.save-btn').classList.remove('hidden'); }
@@ -783,8 +788,6 @@
                 alert(`Checklist para ${nif} guardado.`);
                 resetNewClientForm();
 
-                // --- LÍNEA MODIFICADA ---
-                // En lugar de cambiar de pestaña, actualizamos las listas en segundo plano
                 runGAS('getNifsFromChecklist').then(populateExistingClientsTable); 
                 runGAS('getAllNifs').then(nifs => { masterNifList = nifs; });
                 
@@ -824,11 +827,9 @@
             document.getElementById('new-nombre-cliente-input').value = 'Cargando...';
             document.getElementById('new-email-input').value = '';
 
-            // Llama a la nueva función centralizada
             const success = await loadFullClientData(nif);
 
             if(success) {
-                // Actualiza la interfaz con los datos ya cargados
                 document.getElementById('new-nombre-cliente-input').value = currentClientData.nombre || '';
                 document.getElementById('new-email-input').value = currentClientData.email || '';
                 
