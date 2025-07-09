@@ -204,17 +204,17 @@
                             }
 
                             fieldDiv.innerHTML = `
-								${adminFileHtml}
-								<p class="text-sm text-gray-600 mb-2">${field.descripcion}</p>
-    
-								<div id="drop-zone-${field.id}" class="drop-zone mt-2">
-									<p class="text-gray-500">Arrastra y suelta los archivos aquí</p>
-									<p class="text-gray-400 text-sm my-2">o</p>
-									<button type="button" onclick="document.getElementById('${field.id}-input').click()" class="btn mt-2 lg:mt-0">+ Seleccionar Archivo(s)</button>
-									<input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')">
-								</div>
-								<div id="${field.id}-list" class="mt-4"></div>
-							`;
+                                ${adminFileHtml}
+                                <p class="text-sm text-gray-600 mb-2">${field.descripcion}</p>
+
+                                <div id="drop-zone-${field.id}" class="drop-zone mt-2 cursor-pointer" onclick="document.getElementById('${field.id}-input').click()">
+                                    <p class="text-gray-500">Arrastra los archivos aquí o <span class="font-semibold text-red-600 hover:underline">haz clic</span> para seleccionar</p>
+                                    <p class="text-xs text-gray-400 mt-1">Puedes seleccionar múltiples archivos</p>
+                                    <input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')">
+                                </div>
+                                <div id="${field.id}-list" class="mt-4"></div>
+                                `;
+
                             questionsContainer.appendChild(fieldDiv);
 							const dropZone = fieldDiv.querySelector(`#drop-zone-${field.id}`);
 
