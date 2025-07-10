@@ -204,6 +204,10 @@
             text-decoration: underline;
         }
 
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -288,8 +292,52 @@
             #main-content { padding: 20px; height: auto; margin-top: 60px; }
             #menu-toggle { display: block; }
             h2 { font-size: 1.5em; }
-            table { font-size: 0.9em; }
         }
+
+        /* --- ESTILOS PARA TABLAS RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .table-wrapper {
+                border: none;
+            }
+
+            table thead {
+                display: none; /* Ocultar los encabezados originales */
+            }
+
+            table tr {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                background: var(--white-color);
+            }
+
+            table td {
+                display: block;
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            table td:last-child {
+                border-bottom: 0;
+            }
+
+            table td::before {
+                content: attr(data-label); /* Usar el atributo data-label como encabezado */
+                position: absolute;
+                left: 10px;
+                width: calc(50% - 20px);
+                padding-right: 10px;
+                white-space: normal;
+                text-align: left;
+                font-weight: bold;
+                color: var(--primary-color);
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -309,76 +357,80 @@
         <div id="Procedimientos" class="tabcontent">
             <h2>Paso 1: Determinar el Procedimiento de Adjudicación (LCSP)</h2>
             <div class="card">
-                <h3>Tabla Resumen de Procedimientos y Umbrales (Actualizado 2024-2025)</h3>
+                <h3>Tabla Resumen de Procedimientos y Umbrales</h3>
                 <p>El procedimiento se determina por el tipo de contrato, su Valor Estimado (VEC) y si está sujeto a regulación armonizada (SARA).</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Procedimiento</th>
-                            <th>Umbrales de Cuantía (VEC)</th>
-                            <th>Regulación Principal</th>
-                            <th>Plazos Mínimos de Publicación</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Abierto (SARA)</strong></td>
-                            <td>Obras: > 5.538.000 €<br>S/S: > 143.000 € (AGE) / > 221.000 € (Resto)</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
-                            <td>35 días (reducibles)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Abierto (No SARA)</strong></td>
-                            <td>Obras: ≤ 5.538.000 €<br>S/S: ≤ 143.000 € / ≤ 221.000 €</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
-                            <td>Obras: 26 días<br>S/S: 15 días</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Abierto Simplificado (PAS)</strong></td>
-                            <td>Obras: ≤ 2.000.000 €<br>S/S: ≤ 143.000 €</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159" target="_blank">Art. 159 LCSP</a></td>
-                            <td>Obras: 20 días<br>S/S: 15 días</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Abierto Super-simplificado (PASS)</strong></td>
-                            <td>Obras: &lt; 80.000 €<br>S/S: &lt; 60.000 €</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-6" target="_blank">Art. 159.6 LCSP</a></td>
-                            <td>10 días hábiles</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Contrato Menor</strong></td>
-                            <td>Obras: &lt; 40.000 €<br>S/S: &lt; 15.000 €</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art118" target="_blank">Art. 118 LCSP</a></td>
-                            <td>No exige publicación</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Negociado Sin Publicidad</strong></td>
-                            <td>Casos tasados</td>
-                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art168" target="_blank">Art. 168 LCSP</a></td>
-                            <td>No exige publicación</td>
-                        </tr>
-                    </tbody>
-                </table>
-                 <button class="secondary-btn" onclick="toggleForal()">Consultar Régimen Foral de Navarra</button>
-                 <div id="foral-info" class="hidden" style="margin-top: 20px;">
-                    <h4>Régimen Foral de Contratación Pública (Navarra)</h4>
-                     <table>
-                         <thead>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
                             <tr>
                                 <th>Procedimiento</th>
-                                <th>Contratos de Obras (VEC)</th>
-                                <th>Suministros y Servicios (VEC)</th>
+                                <th>Umbrales de Cuantía (VEC)</th>
+                                <th>Regulación Principal</th>
+                                <th>Plazos Mínimos de Publicación</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td><strong>Abierto (SARA)</strong></td><td>> 5.538.000 €</td><td>> 221.000 €</td></tr>
-                            <tr><td><strong>Abierto (No SARA)</strong></td><td>≤ 5.538.000 €</td><td>≤ 221.000 €</td></tr>
-                            <tr><td><strong>Abierto Simplificado</strong></td><td>≤ 1.000.000 €</td><td>≤ 221.000 €</td></tr>
-                            <tr><td><strong>Abierto Reducido</strong></td><td>≤ 300.000 €</td><td>≤ 100.000 €</td></tr>
-                            <tr><td><strong>Abierto Superreducido</strong></td><td>≤ 100.000 €</td><td>≤ 60.000 €</td></tr>
-                            <tr><td><strong>Contrato Menor</strong></td><td>&lt; 40.000 €</td><td>&lt; 15.000 €</td></tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Abierto (SARA)</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Obras: > 5.538.000 €<br>S/S: > 143.000 € (AGE) / > 221.000 € (Resto)</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">35 días (reducibles)</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Abierto (No SARA)</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Obras: ≤ 5.538.000 €<br>S/S: ≤ 143.000 € / ≤ 221.000 €</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">Obras: 26 días<br>S/S: 15 días</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Abierto Simplificado (PAS)</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Obras: ≤ 2.000.000 €<br>S/S: ≤ 143.000 €</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159" target="_blank">Art. 159 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">Obras: 20 días<br>S/S: 15 días</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Abierto Super-simplificado (PASS)</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Obras: &lt; 80.000 €<br>S/S: &lt; 60.000 €</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-6" target="_blank">Art. 159.6 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">10 días hábiles</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Contrato Menor</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Obras: &lt; 40.000 €<br>S/S: &lt; 15.000 €</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art118" target="_blank">Art. 118 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">No exige publicación</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento"><strong>Negociado Sin Publicidad</strong></td>
+                                <td data-label="Umbrales de Cuantía (VEC)">Casos tasados</td>
+                                <td data-label="Regulación Principal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art168" target="_blank">Art. 168 LCSP</a></td>
+                                <td data-label="Plazos de Publicación">No exige publicación</td>
+                            </tr>
                         </tbody>
                     </table>
+                </div>
+                 <button class="secondary-btn" onclick="toggleForal()">Consultar Régimen Foral de Navarra</button>
+                 <div id="foral-info" class="hidden" style="margin-top: 20px;">
+                    <h4>Régimen Foral de Contratación Pública (Navarra)</h4>
+                    <div class="table-wrapper">
+                         <table>
+                            <thead>
+                                <tr>
+                                    <th>Procedimiento</th>
+                                    <th>Contratos de Obras (VEC)</th>
+                                    <th>Suministros y Servicios (VEC)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td data-label="Procedimiento"><strong>Abierto (SARA)</strong></td><td data-label="Obras (VEC)">> 5.538.000 €</td><td data-label="Suministros/Servicios (VEC)">> 221.000 €</td></tr>
+                                <tr><td data-label="Procedimiento"><strong>Abierto (No SARA)</strong></td><td data-label="Obras (VEC)">≤ 5.538.000 €</td><td data-label="Suministros/Servicios (VEC)">≤ 221.000 €</td></tr>
+                                <tr><td data-label="Procedimiento"><strong>Abierto Simplificado</strong></td><td data-label="Obras (VEC)">≤ 1.000.000 €</td><td data-label="Suministros/Servicios (VEC)">≤ 221.000 €</td></tr>
+                                <tr><td data-label="Procedimiento"><strong>Abierto Reducido</strong></td><td data-label="Obras (VEC)">≤ 300.000 €</td><td data-label="Suministros/Servicios (VEC)">≤ 100.000 €</td></tr>
+                                <tr><td data-label="Procedimiento"><strong>Abierto Superreducido</strong></td><td data-label="Obras (VEC)">≤ 100.000 €</td><td data-label="Suministros/Servicios (VEC)">≤ 60.000 €</td></tr>
+                                <tr><td data-label="Procedimiento"><strong>Contrato Menor</strong></td><td data-label="Obras (VEC)">&lt; 40.000 €</td><td data-label="Suministros/Servicios (VEC)">&lt; 15.000 €</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                  </div>
             </div>
     
@@ -409,38 +461,40 @@
              <div class="card">
                  <h3>Tabla de Competencias (Régimen General Local)</h3>
                  <p>La competencia se distribuye según el valor y la duración del contrato, conforme a la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">Disposición Adicional Segunda de la LCSP</a>.</p>
-                 <table>
-                     <thead>
-                         <tr>
-                             <th>Órgano Competente</th>
-                             <th>Criterio y Límite</th>
-                             <th>Referencia Legal</th>
-                         </tr>
-                     </thead>
-                     <tbody>
-                         <tr>
-                             <td rowspan="2"><strong>Alcalde / Presidente</strong></td>
-                             <td>Valor: ≤ 10% recursos ordinarios Y ≤ 6M€</td>
-                             <td rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.a) LCSP</a></td>
-                         </tr>
-                         <tr>
-                             <td>Duración: ≤ 4 años (incl. prórrogas)</td>
-                         </tr>
-                         <tr>
-                             <td rowspan="2"><strong>Pleno</strong></td>
-                             <td>Valor: > 10% recursos ordinarios O > 6M€</td>
-                              <td rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.b) LCSP</a></td>
-                         </tr>
-                         <tr>
-                              <td>Duración: > 4 años</td>
-                         </tr>
-                          <tr>
-                             <td><strong>Junta de Gobierno Local</strong></td>
-                             <td>Todos los contratos en Municipios de Gran Población</td>
-                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2, párrafo 2º</a></td>
-                         </tr>
-                     </tbody>
-                 </table>
+                 <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Órgano Competente</th>
+                                <th>Criterio y Límite</th>
+                                <th>Referencia Legal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td data-label="Órgano Competente" rowspan="2"><strong>Alcalde / Presidente</strong></td>
+                                <td data-label="Criterio y Límite">Valor: ≤ 10% recursos ordinarios Y ≤ 6M€</td>
+                                <td data-label="Referencia Legal" rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.a) LCSP</a></td>
+                            </tr>
+                            <tr>
+                                <td data-label="Criterio y Límite">Duración: ≤ 4 años (incl. prórrogas)</td>
+                            </tr>
+                            <tr>
+                                <td data-label="Órgano Competente" rowspan="2"><strong>Pleno</strong></td>
+                                <td data-label="Criterio y Límite">Valor: > 10% recursos ordinarios O > 6M€</td>
+                                 <td data-label="Referencia Legal" rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.b) LCSP</a></td>
+                            </tr>
+                            <tr>
+                                 <td data-label="Criterio y Límite">Duración: > 4 años</td>
+                            </tr>
+                             <tr>
+                                <td data-label="Órgano Competente"><strong>Junta de Gobierno Local</strong></td>
+                                <td data-label="Criterio y Límite">Todos los contratos en Municipios de Gran Población</td>
+                                <td data-label="Referencia Legal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2, párrafo 2º</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                 </div>
              </div>
      
              <div class="card">
@@ -467,32 +521,34 @@
              <h2>Paso 3: Determinar la Mesa de Contratación</h2>
              <div class="card">
                  <h3>Obligatoriedad y Composición de la Mesa</h3>
-                 <table>
-                     <thead>
-                         <tr>
-                             <th>Procedimiento</th>
-                             <th>Intervención de la Mesa</th>
-                             <th>Referencia Legal</th>
-                         </tr>
-                     </thead>
-                     <tbody>
-                         <tr>
-                             <td>Abierto, Restringido, Licitación con Negociación, Diálogo Competitivo, Asociación para la innovación</td>
-                             <td>Preceptiva</td>
-                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art326" target="_blank">Art. 326.1 LCSP</a></td>
-                         </tr>
-                         <tr>
-                             <td>Abierto Simplificado (PAS / PASS)</td>
-                             <td>Potestativa (si no se constituye, las funciones las asume una oficina o servicio)</td>
-                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-4" target="_blank">Art. 159.4.d) LCSP</a></td>
-                         </tr>
-                         <tr>
-                             <td>Contrato Menor, Derivados de Acuerdo Marco o Sistema Dinámico, Negociado sin publicidad</td>
-                             <td>No aplica</td>
-                             <td>Exclusión por su naturaleza</td>
-                         </tr>
-                     </tbody>
-                 </table>
+                 <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Procedimiento</th>
+                                <th>Intervención de la Mesa</th>
+                                <th>Referencia Legal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td data-label="Procedimiento">Abierto, Restringido, Licitación con Negociación, Diálogo Competitivo, Asociación para la innovación</td>
+                                <td data-label="Intervención de la Mesa">Preceptiva</td>
+                                <td data-label="Referencia Legal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art326" target="_blank">Art. 326.1 LCSP</a></td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento">Abierto Simplificado (PAS / PASS)</td>
+                                <td data-label="Intervención de la Mesa">Potestativa (si no se constituye, las funciones las asume una oficina o servicio)</td>
+                                <td data-label="Referencia Legal"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-4" target="_blank">Art. 159.4.d) LCSP</a></td>
+                            </tr>
+                            <tr>
+                                <td data-label="Procedimiento">Contrato Menor, Derivados de Acuerdo Marco o Sistema Dinámico, Negociado sin publicidad</td>
+                                <td data-label="Intervención de la Mesa">No aplica</td>
+                                <td data-label="Referencia Legal">Exclusión por su naturaleza</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                 </div>
              </div>
      
              <div class="card">
