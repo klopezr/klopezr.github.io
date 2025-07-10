@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Avanzado de Contratación Pública</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f4f7f9;
+            --white-color: #ffffff;
+            --border-color: #dee2e6;
+            --text-color: #343a40;
+            --light-blue-bg: #eaf5ff;
+            --success-color: #27ae60;
+            --danger-color: #c0392b;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            display: flex;
+        }
+
+        #sidebar {
+            width: 250px;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            transform: translateX(0);
+        }
+
+        #sidebar-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        #sidebar-header h1 {
+            font-size: 1.5em;
+            margin: 0;
+            color: var(--white-color);
+        }
+
+        .nav-button {
+            background-color: transparent;
+            color: var(--white-color);
+            border: none;
+            padding: 15px 20px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s, padding-left 0.2s;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 25px;
+        }
+
+        .nav-button.active {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        #main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .tabcontent {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background-color: var(--white-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h2, h3, h4 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        h2 { font-size: 1.8em; padding-bottom: 10px; border-bottom: 2px solid var(--secondary-color); }
+        h3 { font-size: 1.4em; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="number"], input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            padding: 14px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+        
+        .secondary-btn {
+             background: #7f8c8d;
+             color: white;
+             border: none;
+             padding: 10px 15px;
+             border-radius: 5px;
+             cursor: pointer;
+             transition: background-color 0.2s;
+             margin-top: 15px;
+        }
+
+        .secondary-btn:hover {
+            background: #95a5a6;
+        }
+
+        .result-box {
+            background-color: var(--light-blue-bg);
+            border-left: 5px solid var(--secondary-color);
+            padding: 25px;
+            margin-top: 25px;
+            border-radius: 6px;
+        }
+
+        .legal-ref {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 15px;
+            background-color: #ecf0f1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #e9ecef;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .warning { color: var(--danger-color); font-weight: 600; }
+        .info { color: var(--success-color); font-weight: 600; }
+        .hidden { display: none; }
+       
+        .fases-lista { list-style-type: none; counter-reset: fase; padding-left: 0; }
+        .fases-lista li {
+            counter-increment: fase;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--white-color);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid #bdc3c7;
+            position: relative;
+            border-radius: 0 8px 8px 0;
+            transition: border-left-color 0.3s;
+        }
+        .fases-lista li:hover { border-left-color: var(--secondary-color); }
+        .fases-lista li::before {
+            content: counter(fase);
+            background: var(--secondary-color);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: inline-block;
+            text-align: center;
+            line-height: 35px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .fases-lista li strong { display: block; color: var(--primary-color); font-size: 1.1em; }
+
+        #menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 992px) {
+            body { flex-direction: column; }
+            #sidebar {
+                width: 250px;
+                height: 100%;
+                position: fixed;
+                z-index: 1000;
+                transform: translateX(-100%);
+                box-shadow: 5px 0px 15px rgba(0,0,0,0.2);
+            }
+            #sidebar.show { transform: translateX(0); }
+            #main-content { padding: 20px; height: auto; margin-top: 60px; }
+            #menu-toggle { display: block; }
+            h2 { font-size: 1.5em; }
+            table { font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <button id="menu-toggle">☰</button>
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h1>Asistente Contratación Pública</h1>
+        </div>
+        <button class="nav-button" onclick="openTab(event, 'Procedimientos')" id="defaultOpen">Procedimiento (LCSP)</button>
+        <button class="nav-button" onclick="openTab(event, 'Organo')">Órgano Contratación</button>
+        <button class="nav-button" onclick="openTab(event, 'Mesa')">Mesa Contratación</button>
+        <button class="nav-button" onclick="openTab(event, 'Fases')">Fases Procedimiento Común</button>
+    </div>
+
+    <div id="main-content">
+        
+        <div id="Procedimientos" class="tabcontent">
+            <h2>Paso 1: Determinar el Procedimiento de Adjudicación (LCSP)</h2>
+            <div class="card">
+                <h3>Tabla Resumen de Procedimientos y Umbrales (Actualizado 2024-2025)</h3>
+                <p>El procedimiento se determina por el tipo de contrato, su Valor Estimado (VEC) y si está sujeto a regulación armonizada (SARA).</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Procedimiento</th>
+                            <th>Umbrales de Cuantía (VEC)</th>
+                            <th>Regulación Principal</th>
+                            <th>Plazos Mínimos de Publicación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Abierto (SARA)</strong></td>
+                            <td>Obras: > 5.538.000 €<br>S/S: > 143.000 € (AGE) / > 221.000 € (Resto)</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
+                            <td>35 días (reducibles)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Abierto (No SARA)</strong></td>
+                            <td>Obras: ≤ 5.538.000 €<br>S/S: ≤ 143.000 € / ≤ 221.000 €</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a></td>
+                            <td>Obras: 26 días<br>S/S: 15 días</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Abierto Simplificado (PAS)</strong></td>
+                            <td>Obras: ≤ 2.000.000 €<br>S/S: ≤ 143.000 €</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159" target="_blank">Art. 159 LCSP</a></td>
+                            <td>Obras: 20 días<br>S/S: 15 días</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Abierto Super-simplificado (PASS)</strong></td>
+                            <td>Obras: &lt; 80.000 €<br>S/S: &lt; 60.000 €</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-6" target="_blank">Art. 159.6 LCSP</a></td>
+                            <td>10 días hábiles</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contrato Menor</strong></td>
+                            <td>Obras: &lt; 40.000 €<br>S/S: &lt; 15.000 €</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art118" target="_blank">Art. 118 LCSP</a></td>
+                            <td>No exige publicación</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Negociado Sin Publicidad</strong></td>
+                            <td>Casos tasados</td>
+                            <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art168" target="_blank">Art. 168 LCSP</a></td>
+                            <td>No exige publicación</td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <button class="secondary-btn" onclick="toggleForal()">Consultar Régimen Foral de Navarra</button>
+                 <div id="foral-info" class="hidden" style="margin-top: 20px;">
+                    <h4>Régimen Foral de Contratación Pública (Navarra)</h4>
+                     <table>
+                         <thead>
+                            <tr>
+                                <th>Procedimiento</th>
+                                <th>Contratos de Obras (VEC)</th>
+                                <th>Suministros y Servicios (VEC)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Abierto (SARA)</strong></td><td>> 5.538.000 €</td><td>> 221.000 €</td></tr>
+                            <tr><td><strong>Abierto (No SARA)</strong></td><td>≤ 5.538.000 €</td><td>≤ 221.000 €</td></tr>
+                            <tr><td><strong>Abierto Simplificado</strong></td><td>≤ 1.000.000 €</td><td>≤ 221.000 €</td></tr>
+                            <tr><td><strong>Abierto Reducido</strong></td><td>≤ 300.000 €</td><td>≤ 100.000 €</td></tr>
+                            <tr><td><strong>Abierto Superreducido</strong></td><td>≤ 100.000 €</td><td>≤ 60.000 €</td></tr>
+                            <tr><td><strong>Contrato Menor</strong></td><td>&lt; 40.000 €</td><td>&lt; 15.000 €</td></tr>
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+    
+            <div class="card">
+                <h3>Calcular Procedimiento Específico</h3>
+                <label for="tipoContrato">Tipo de Contrato:</label>
+                <select id="tipoContrato">
+                    <option value="">-- Seleccione el tipo --</option>
+                    <option value="obras">Obras</option>
+                    <option value="suministros">Suministros</option>
+                    <option value="servicios">Servicios</option>
+                </select>
+
+                <label for="valorProcedimiento">Valor Estimado del Contrato (€, sin IVA):</label>
+                <input type="number" id="valorProcedimiento" placeholder="Ej: 50000">
+
+                <label for="isAge">
+                    <input type="checkbox" id="isAge"> ¿Es AGE, Organismo Autónomo o Entidad Gestora de la S.S.?
+                </label>
+    
+                <button class="action-btn" onclick="calculateProcedimiento()">Determinar Procedimiento</button>
+            </div>
+            <div id="resultProcedimiento" class="result-box hidden"></div>
+        </div>
+
+        <div id="Organo" class="tabcontent">
+             <h2>Paso 2: Determinar el Órgano de Contratación Local</h2>
+             <div class="card">
+                 <h3>Tabla de Competencias (Régimen General Local)</h3>
+                 <p>La competencia se distribuye según el valor y la duración del contrato, conforme a la <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">Disposición Adicional Segunda de la LCSP</a>.</p>
+                 <table>
+                     <thead>
+                         <tr>
+                             <th>Órgano Competente</th>
+                             <th>Criterio y Límite</th>
+                             <th>Referencia Legal</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         <tr>
+                             <td rowspan="2"><strong>Alcalde / Presidente</strong></td>
+                             <td>Valor: ≤ 10% recursos ordinarios Y ≤ 6M€</td>
+                             <td rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.a) LCSP</a></td>
+                         </tr>
+                         <tr>
+                             <td>Duración: ≤ 4 años (incl. prórrogas)</td>
+                         </tr>
+                         <tr>
+                             <td rowspan="2"><strong>Pleno</strong></td>
+                             <td>Valor: > 10% recursos ordinarios O > 6M€</td>
+                              <td rowspan="2"><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2.b) LCSP</a></td>
+                         </tr>
+                         <tr>
+                              <td>Duración: > 4 años</td>
+                         </tr>
+                          <tr>
+                             <td><strong>Junta de Gobierno Local</strong></td>
+                             <td>Todos los contratos en Municipios de Gran Población</td>
+                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.2, párrafo 2º</a></td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+     
+             <div class="card">
+                 <h3>Calcular Competencia Específica</h3>
+                 <label for="recursos">Recursos Ordinarios del Presupuesto (€):</label>
+                 <input type="number" id="recursos" placeholder="Ej: 5000000">
+     
+                 <label for="valorOrgano">Valor Estimado del Contrato (€, sin IVA):</label>
+                 <input type="number" id="valorOrgano" placeholder="Ej: 300000">
+     
+                 <label for="duracion">Duración del Contrato (años, incluidas prórrogas):</label>
+                 <input type="number" id="duracion" placeholder="Ej: 2">
+                 
+                 <label for="granPoblacion">
+                     <input type="checkbox" id="granPoblacion"> ¿Es un Municipio de Gran Población?
+                 </label>
+     
+                 <button class="action-btn" onclick="calculateOrgano()">Determinar Órgano Competente</button>
+             </div>
+             <div id="resultOrgano" class="result-box hidden"></div>
+        </div>
+
+        <div id="Mesa" class="tabcontent">
+             <h2>Paso 3: Determinar la Mesa de Contratación</h2>
+             <div class="card">
+                 <h3>Obligatoriedad y Composición de la Mesa</h3>
+                 <table>
+                     <thead>
+                         <tr>
+                             <th>Procedimiento</th>
+                             <th>Intervención de la Mesa</th>
+                             <th>Referencia Legal</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         <tr>
+                             <td>Abierto, Restringido, Licitación con Negociación, Diálogo Competitivo, Asociación para la innovación</td>
+                             <td>Preceptiva</td>
+                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art326" target="_blank">Art. 326.1 LCSP</a></td>
+                         </tr>
+                         <tr>
+                             <td>Abierto Simplificado (PAS / PASS)</td>
+                             <td>Potestativa (si no se constituye, las funciones las asume una oficina o servicio)</td>
+                             <td><a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-4" target="_blank">Art. 159.4.d) LCSP</a></td>
+                         </tr>
+                         <tr>
+                             <td>Contrato Menor, Derivados de Acuerdo Marco o Sistema Dinámico, Negociado sin publicidad</td>
+                             <td>No aplica</td>
+                             <td>Exclusión por su naturaleza</td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+     
+             <div class="card">
+                 <h3>Configurador de la Mesa</h3>
+                 <label for="procedimientoMesa">Seleccione el procedimiento de adjudicación:</label>
+                 <select id="procedimientoMesa" onchange="handleProcedimientoChange()">
+                     <option value="">-- Seleccione una opción --</option>
+                     <optgroup label="Mesa Preceptiva">
+                         <option value="abierto">Abierto</option>
+                         <option value="restringido">Restringido</option>
+                         <option value="negociado_con_pub">Licitación con Negociación</option>
+                     </optgroup>
+                     <optgroup label="Mesa Potestativa">
+                         <option value="pas">Abierto Simplificado (PAS / PASS)</option>
+                     </optgroup>
+                     <optgroup label="Sin Mesa">
+                         <option value="menor">Contrato Menor</option>
+                         <option value="acuerdo_marco">Derivado de Acuerdo Marco</option>
+                     </optgroup>
+                 </select>
+     
+                 <div id="mesaPotestativaDiv" class="hidden">
+                     <label for="constituyeMesa">Para este procedimiento la mesa es potestativa. ¿Desea constituirla?</label>
+                     <select id="constituyeMesa" onchange="handleDecisionMesaChange()">
+                         <option value="">-- Seleccione --</option>
+                         <option value="si">Sí, constituir Mesa</option>
+                         <option value="no">No, las funciones las asume un servicio/oficina</option>
+                     </select>
+                 </div>
+     
+                 <div id="organoLocalDiv" class="hidden">
+                     <label for="organoLocal">Órgano de contratación competente:</label>
+                     <select id="organoLocal">
+                         <option value="">-- Seleccione --</option>
+                         <option value="pleno">El Pleno</option>
+                         <option value="alcalde">El Alcalde o la Junta de Gobierno Local</option>
+                     </select>
+                 </div>
+                 
+                 <button class="action-btn hidden" id="calculateMesaBtn" onclick="calculateMesa()" style="margin-top: 20px;">Analizar Mesa de Contratación</button>
+             </div>
+             <div id="resultMesa" class="result-box hidden"></div>
+        </div>
+        
+        <div id="Fases" class="tabcontent">
+            <h2>Fases del Procedimiento Común de Contratación (LCSP)</h2>
+            <div class="card">
+                <ol class="fases-lista">
+                    <li>
+                        <strong>Inicio del Expediente</strong>
+                        <span>Justificación de la necesidad y del objeto. Elaboración y aprobación de Pliegos (PCAP y PPTP). Certificado de existencia de crédito. Fiscalización previa. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art116" target="_blank">Art. 116 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Aprobación y Apertura</strong>
+                        <span>El órgano de contratación aprueba el expediente y la apertura del procedimiento, y dispone el gasto correspondiente. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art117" target="_blank">Art. 117 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Publicación y Licitación</strong>
+                        <span>Publicación del anuncio de licitación en el Perfil de Contratante y, si es SARA, en el DOUE. Comienza el plazo para presentar ofertas. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art135" target="_blank">Art. 135 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Evaluación de Ofertas</strong>
+                        <span>La Mesa de Contratación (o servicio competente) califica la documentación y evalúa las ofertas según los criterios de adjudicación. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art150" target="_blank">Art. 150 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Propuesta de Adjudicación</strong>
+                        <span>La Mesa propone al órgano de contratación la adjudicación a favor del licitador con la mejor oferta.</span>
+                    </li>
+                     <li>
+                        <strong>Requerimiento de Documentación</strong>
+                        <span>Se requiere al licitador propuesto para que presente la documentación justificativa (garantía definitiva, etc.). (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art150" target="_blank">Art. 150.2 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Adjudicación</strong>
+                        <span>El órgano de contratación adjudica el contrato. Se notifica y se publica en el Perfil de Contratante. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art151" target="_blank">Art. 151 LCSP</a>)</span>
+                    </li>
+                    <li>
+                        <strong>Formalización</strong>
+                        <span>El contrato se perfecciona con su formalización en documento administrativo. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art153" target="_blank">Art. 153 LCSP</a>)</span>
+                    </li>
+                     <li>
+                        <strong>Ejecución y Extinción</strong>
+                        <span>Ejecución de las prestaciones, con sus posibles incidencias (modificados, prórrogas, etc.), hasta su cumplimiento y extinción. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art192" target="_blank">Arts. 192 y ss. LCSP</a>)</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("defaultOpen").click();
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sidebar.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', (e) => {
+                const target = e.target;
+                if (!sidebar.contains(target) && !menuToggle.contains(target)) {
+                    sidebar.classList.remove('show');
+                }
+            });
+        });
+
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            
+            const navbuttons = document.getElementsByClassName("nav-button");
+            for (let i = 0; i < navbuttons.length; i++) {
+                navbuttons[i].className = navbuttons[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 992 && sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        }
+
+        function toggleForal() {
+            const foralInfo = document.getElementById('foral-info');
+            foralInfo.classList.toggle('hidden');
+        }
+        
+        function calculateProcedimiento() {
+            const tipo = document.getElementById('tipoContrato').value;
+            const valor = parseFloat(document.getElementById('valorProcedimiento').value);
+            const isAge = document.getElementById('isAge').checked;
+            const resultDiv = document.getElementById('resultProcedimiento');
+
+            let html = '<h3>Resultado: Procedimiento de Adjudicación Aplicable (LCSP)</h3>';
+
+            if (!tipo || isNaN(valor)) {
+                html += '<p class="warning">Por favor, seleccione un tipo de contrato e introduzca un valor estimado válido.</p>';
+                resultDiv.innerHTML = html;
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const umbralObrasSARA = 5538000;
+            const umbralServiciosSARA = isAge ? 143000 : 221000;
+
+            let esSARA = false;
+            let procedimiento = '', fundamento = '', plazo = '', notas = '';
+
+            if (tipo === 'obras') {
+                esSARA = valor > umbralObrasSARA;
+                if (valor < 40000) {
+                    procedimiento = 'Contrato Menor';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art118" target="_blank">Art. 118 LCSP</a>';
+                    plazo = 'No aplica publicación.';
+                } else if (valor < 80000) {
+                    procedimiento = 'Abierto Simplificado Abreviado (PASS)';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-6" target="_blank">Art. 159.6 LCSP</a>';
+                    plazo = '10 días hábiles.';
+                } else if (valor <= 2000000) {
+                    procedimiento = 'Abierto Simplificado (PAS)';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159" target="_blank">Art. 159.1 LCSP</a>';
+                    plazo = '20 días naturales.';
+                } else {
+                    procedimiento = 'Abierto';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a>';
+                    plazo = esSARA ? '35 días naturales.' : '26 días naturales.';
+                }
+            } else if (tipo === 'suministros' || tipo === 'servicios') {
+                 esSARA = valor > umbralServiciosSARA;
+                if (valor < 15000) {
+                    procedimiento = 'Contrato Menor';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art118" target="_blank">Art. 118 LCSP</a>';
+                    plazo = 'No aplica publicación.';
+                } else if (valor < 60000 && (tipo === 'suministros' || !['servicios especiales del anexo IV', 'prestaciones de carácter intelectual'].includes(tipo))) {
+                    procedimiento = 'Abierto Simplificado Abreviado (PASS)';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-6" target="_blank">Art. 159.6 LCSP</a>';
+                    plazo = '10 días hábiles.';
+                    if(tipo==='servicios') notas += '<p class="warning">Atención: El procedimiento PASS no es aplicable a contratos de servicios con prestaciones de carácter intelectual.</p>';
+                } else if (valor <= umbralServiciosSARA) {
+                    procedimiento = 'Abierto Simplificado (PAS)';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159" target="_blank">Art. 159.1 LCSP</a>';
+                    plazo = '15 días naturales.';
+                } else {
+                    procedimiento = 'Abierto';
+                    fundamento = '<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art156" target="_blank">Art. 156 LCSP</a>';
+                    plazo = esSARA ? '35 días naturales.' : '15 días naturales.';
+                }
+            }
+            
+            html += `<p>Para un contrato de <strong>${tipo}</strong> con un VEC de <strong>${valor.toLocaleString('es-ES')} €</strong>:</p>`;
+            html += `<p class="info" style="font-size: 1.2em; text-align: center;"><strong>${procedimiento}</strong></p>`;
+            html += `<ul>
+                        <li><strong>Regulación:</strong> <span class="${esSARA ? 'warning' : 'info'}">${esSARA ? 'Sujeto a Regulación Armonizada (SARA)' : 'No SARA'}</span></li>
+                        <li><strong>Plazo Mínimo de Licitación:</strong> ${plazo}</li>
+                     </ul>`;
+            if(esSARA) notas += '<p>Al ser un contrato SARA, requiere publicación en el Diario Oficial de la Unión Europea (DOUE).</p>';
+            if(notas) html += `<div class="legal-ref">${notas}</div>`;
+            html += `<div class="legal-ref"><strong>Fundamento Jurídico Principal:</strong> ${fundamento}</div>`;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function calculateOrgano() {
+            const recursos = parseFloat(document.getElementById('recursos').value);
+            const valor = parseFloat(document.getElementById('valorOrgano').value);
+            const duracion = parseFloat(document.getElementById('duracion').value);
+            const granPoblacion = document.getElementById('granPoblacion').checked;
+            const resultDiv = document.getElementById('resultOrgano');
+            
+            let html = '<h3>Resultado: Órgano de Contratación Competente</h3>';
+
+            if (isNaN(recursos) || isNaN(valor) || isNaN(duracion)) {
+                html += '<p class="warning">Por favor, complete todos los campos numéricos.</p>';
+            } else if (granPoblacion) {
+                html += `<p>En los Municipios de Gran Población, el órgano de contratación es siempre la <strong>Junta de Gobierno Local</strong>.</p>`;
+            } else {
+                const limiteDiezPorCiento = recursos * 0.10;
+                const superaValor = valor > limiteDiezPorCiento || valor > 6000000;
+                const superaDuracion = duracion > 4;
+
+                if (superaValor || superaDuracion) {
+                    html += `<p>El órgano de contratación competente es <strong>el Pleno</strong>, ya que se supera al menos uno de los límites:</p><ul>`;
+                    if (valor > limiteDiezPorCiento) html += `<li>El valor (${valor.toLocaleString('es-ES')} €) supera el 10% de los recursos ordinarios (${limiteDiezPorCiento.toLocaleString('es-ES')} €).</li>`;
+                    if (valor > 6000000) html += `<li>El valor (${valor.toLocaleString('es-ES')} €) supera el límite de 6.000.000 €.</li>`;
+                    if (superaDuracion) html += `<li>La duración (${duracion} años) supera el límite de 4 años.</li>`;
+                    html += `</ul>`;
+                } else {
+                    html += `<p>El órgano de contratación competente es <strong>el Alcalde o Presidente</strong>, al no superarse ningún límite.</p>`;
+                }
+            }
+            html += `<div class="legal-ref"><strong>Fundamento Jurídico:</strong> <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">Disposición Adicional Segunda de la LCSP</a>.</div>`;
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function handleProcedimientoChange() {
+            const procedimiento = document.getElementById('procedimientoMesa').value;
+            const potestativos = ['pas'];
+            const sinMesa = ['menor', 'acuerdo_marco'];
+            
+            document.getElementById('mesaPotestativaDiv').classList.add('hidden');
+            document.getElementById('organoLocalDiv').classList.add('hidden');
+            document.getElementById('calculateMesaBtn').classList.add('hidden');
+            document.getElementById('resultMesa').classList.add('hidden');
+
+            if (potestativos.includes(procedimiento)) {
+                document.getElementById('mesaPotestativaDiv').classList.remove('hidden');
+                document.getElementById('calculateMesaBtn').classList.remove('hidden');
+            } else if (sinMesa.includes(procedimiento)) {
+                document.getElementById('calculateMesaBtn').classList.remove('hidden');
+            } else if (procedimiento) {
+                document.getElementById('organoLocalDiv').classList.remove('hidden');
+                document.getElementById('calculateMesaBtn').classList.remove('hidden');
+            }
+        }
+
+        function handleDecisionMesaChange() {
+            const decision = document.getElementById('constituyeMesa').value;
+            if (decision === 'si') {
+                document.getElementById('organoLocalDiv').classList.remove('hidden');
+            } else {
+                document.getElementById('organoLocalDiv').classList.add('hidden');
+            }
+        }
+
+        function calculateMesa() {
+            const procedimiento = document.getElementById('procedimientoMesa').value;
+            const constituyeMesa = document.getElementById('constituyeMesa').value;
+            const organoLocal = document.getElementById('organoLocal').value;
+            const resultDiv = document.getElementById('resultMesa');
+            
+            let html = '<h3>Resultado: Análisis de la Mesa de Contratación</h3>';
+            const sinMesa = ['menor', 'acuerdo_marco'];
+            const potestativos = ['pas'];
+
+            if (!procedimiento) {
+                 html += '<p class="warning">Por favor, seleccione un procedimiento.</p>';
+            } else if (sinMesa.includes(procedimiento)) {
+                html += `<p>Para el procedimiento seleccionado, la ley <strong>no prevé la constitución de una mesa de contratación</strong>.</p>`;
+            } else if (potestativos.includes(procedimiento) && constituyeMesa === 'no') {
+                html += `<p>Ha decidido <strong>no constituir</strong> la mesa. En este caso, sus funciones las asume el servicio u oficina que designe el órgano de contratación.</p>`;
+                html += `<div class="legal-ref"><strong>Fundamento:</strong> <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art159-4" target="_blank">Art. 159.4.d) LCSP</a></div>`;
+            } else {
+                if (!organoLocal && (constituyeMesa === 'si' || !potestativos.includes(procedimiento))) {
+                    html += '<p class="warning">Por favor, seleccione el órgano de contratación competente.</p>';
+                } else {
+                     html += `<h4>Composición de la Mesa (Entidades Locales)</h4>`;
+                     html += `<ul>
+                              <li><strong>Presidente:</strong> Un miembro de la Corporación (Concejal) o un funcionario.</li>
+                              <li><strong>Vocales (mínimo 3):</strong>
+                                  <ul>
+                                      <li><strong>Nato 1:</strong> El Secretario de la Corporación o titular de asesoramiento jurídico.</li>
+                                      <li><strong>Nato 2:</strong> El Interventor o titular de control económico-presupuestario.</li>
+                                      <li><strong>Otros:</strong> Personal funcionario, laboral o miembros electos.</li>
+                                  </ul>
+                              </li>
+                              <li><strong>Secretario de la Mesa:</strong> Un funcionario de la Corporación (con voz, pero sin voto).</li>
+                          </ul>`;
+                     
+                     html += `<h4>Reglas Clave:</h4>`;
+                     if (organoLocal === 'alcalde') {
+                         html += `<p class="warning"><strong>Incompatibilidad:</strong> Si contrata el Alcalde/JGL, <strong>el Alcalde NO puede formar parte de la mesa</strong> (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#art324" target="_blank">Art. 324 LCSP</a>).</p>`;
+                     } else {
+                         html += `<p class="info"><strong>Compatibilidad:</strong> Si contrata el Pleno, <strong>el Alcalde SÍ puede formar parte de la mesa</strong>.</p>`;
+                     }
+                     html += `<p class="warning"><strong>Regla del Tercio:</strong> Los cargos públicos electos <strong>no pueden suponer más de 1/3 del total de miembros de la mesa</strong>. (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#da2" target="_blank">DA 2ª.7 LCSP</a>)</p>`;
+                }
+            }
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
