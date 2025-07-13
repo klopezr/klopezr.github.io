@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plazos de Procedimientos de Contratación Pública en España</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        h1, h2, h3 {
+            color: #1a3c6e;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            font-size: 16px;
+        }
+        th {
+            background-color: #1a3c6e;
+            color: white !important;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr.procedure-separator {
+            background-color: #e8eef4;
+            font-weight: bold;
+            color: #1a3c6e;
+            border-top: 2px solid #1a3c6e;
+            border-bottom: 2px solid #1a3c6e;
+        }
+        tr.procedure-separator td {
+            border: none;
+            padding: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+        td[data-label="Notas"] {
+            display: block;
+            font-style: italic;
+            font-size: 14px;
+            color: #555;
+            padding: 4px 12px 12px;
+            border: none;
+        }
+        @media screen and (max-width: 768px) {
+            table {
+                display: block;
+                overflow-x: auto;
+                border-radius: 12px;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                display: block;
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                background-color: #fff;
+            }
+            td {
+                display: block;
+                text-align: right;
+                font-size: 14px;
+                position: relative;
+                padding-left: 50%;
+                border: none;
+                border-bottom: 1px solid #eee;
+            }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 12px;
+                width: 45%;
+                font-weight: bold;
+                text-align: left;
+            }
+            td[data-label="Notas"] {
+                font-style: italic;
+                font-size: 13px;
+                color: #555;
+                padding: 8px 12px;
+                border-bottom: none;
+            }
+            tr.procedure-separator {
+                border: 2px solid #1a3c6e;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                background-color: #e8eef4;
+            }
+            tr.procedure-separator td {
+                text-align: center;
+                padding: 10px;
+                font-size: 16px;
+                border-bottom: none;
+            }
+            tr:not(.procedure-separator) td:last-child {
+                border-bottom: none;
+            }
+        }
+        .calculator {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f4f7fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .calculator label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #1a3c6e;
+        }
+        .calculator select, .calculator input[type="checkbox"] {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .calculator button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #1a3c6e, #2a5b9e);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+        }
+        .calculator button:hover {
+            background: linear-gradient(135deg, #2a5b9e, #3a7ade);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        .calculator button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #resultados {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #resultados ul {
+            list-style: none;
+            padding: 0;
+        }
+        #resultados li {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        #resultados li strong {
+            color: #1a3c6e;
+        }
+        @media screen and (max-width: 768px) {
+            .calculator, #resultados {
+                padding: 15px;
+            }
+            .calculator select, .calculator input[type="checkbox"], #resultados {
+                max-width: 100%;
+            }
+            .calculator button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+        a {
+            color: #1a3c6e;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        [aria-hidden="true"] {
+            display: none;
+        }
+        body, th, td, .calculator label, .calculator button, #resultados {
+            color: #333;
+        }
+        .calculator button {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plazos de Procedimientos de Contratación Pública en España</h1>
+    <p>A continuación, se detallan los plazos mínimos establecidos por la <a href="https://www.boe.es/eli/es/l/2017/11/08/9/con" target="_blank">Ley 9/2017, de 8 de noviembre, de Contratos del Sector Público (LCSP)</a> para todas las etapas de los procedimientos de contratación pública en España, incluyendo inicio, presentación de ofertas, consultas previas, requerimientos, bajas anormales, adjudicación y recursos. Los plazos están expresados en días naturales, salvo que se indique lo contrario.</p>
+    <table role="grid">
+        <thead>
+            <tr>
+                <th scope="col">Procedimiento</th>
+                <th scope="col">Tipo de Contrato</th>
+                <th scope="col">Etapa</th>
+                <th scope="col">Plazo</th>
+                <th scope="col">Artículo LCSP</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Abierto (Sujeto a Regulación Armonizada)</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Abierto (Sujeto a Regulación Armonizada)</td>
+                <td data-label="Tipo de Contrato">Obras, Suministros, Servicios</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Plazo para consultas previas al anuncio, si se realizan.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Suministros, Servicios</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">35 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art135" target="_blank">Art. 135</a></td>
+                <td data-label="Notas">Reducible a 30 días si se aceptan ofertas electrónicas.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Suministros, Servicios</td>
+                <td data-label="Etapa">Apertura de Ofertas</td>
+                <td data-label="Plazo">Máximo 20 días naturales tras fin de presentación</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Suministros, Servicios</td>
+                <td data-label="Etapa">Requerimientos (p. ej., subsanación)</td>
+                <td data-label="Plazo">10 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Plazo para subsanar documentación o aclaraciones.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Suministros, Servicios</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">15 días hábiles (solo precio) o 2 meses (múltiples criterios)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable en 15 días hábiles si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Concesiones de Obras y Servicios</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Concesiones de Obras y Servicios</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">30 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art135" target="_blank">Art. 135</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Concesiones de Obras y Servicios</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">10 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación o aclaraciones.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Concesiones de Obras y Servicios</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">2 meses (múltiples criterios)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Abierto (No Sujeto a Regulación Armonizada)</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="4" style="display: none;">Abierto (No Sujeto a Regulación Armonizada)</td>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">10 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">15 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art135" target="_blank">Art. 135</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">15 días hábiles (solo precio) o 1 mes (múltiples criterios)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Concesiones</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">10 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Concesiones</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">26 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art135" target="_blank">Art. 135</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Concesiones</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras, Concesiones</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">1 mes</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Abierto Simplificado</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="4" style="display: none;">Abierto Simplificado</td>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">10 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Valor estimado ≤ 139.000 € (suministros/servicios).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">15 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art140" target="_blank">Art. 140</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">15 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">10 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Valor estimado ≤ 2.000.000 €.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">20 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art140" target="_blank">Art. 140</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Obras</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">15 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Abierto Súper Simplificado</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="4" style="display: none;">Abierto Súper Simplificado</td>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">5 días hábiles (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Valor estimado ≤ 60.000 € (suministros/servicios).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">10 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art140" target="_blank">Art. 140</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">3 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Suministros, Servicios</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">10 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Compras Corrientes</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">5 días hábiles (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Para bienes disponibles en el mercado.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Compras Corrientes</td>
+                <td data-label="Etapa">Anuncio a Presentación de Ofertas</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art140" target="_blank">Art. 140</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Compras Corrientes</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">3 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Compras Corrientes</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">7 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Restringido (Sujeto a Regulación Armonizada)</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Restringido (Sujeto a Regulación Armonizada)</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Anuncio a Presentación de Solicitudes de Participación</td>
+                <td data-label="Plazo">30 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art143" target="_blank">Art. 143</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Invitación a Presentar Ofertas</td>
+                <td data-label="Plazo">10 días naturales tras selección de candidatos</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art143" target="_blank">Art. 143</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">10 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación o aclaraciones.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">2 meses</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Restringido (No Sujeto a Regulación Armonizada)</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Restringido (No Sujeto a Regulación Armonizada)</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">10 días naturales (mínimo)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Anuncio a Presentación de Solicitudes de Participación</td>
+                <td data-label="Plazo">10 días naturales</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art143" target="_blank">Art. 143</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Invitación a Presentar Ofertas</td>
+                <td data-label="Plazo">5 días naturales tras selección</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art143" target="_blank">Art. 143</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">5 días hábiles</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">1 mes</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Licitación con Negociación</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Licitación con Negociación</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (armonizada); 10 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Anuncio a Presentación de Solicitudes de Participación</td>
+                <td data-label="Plazo">30 días naturales (armonizada); 10 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art144" target="_blank">Art. 144</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Negociación</td>
+                <td data-label="Plazo">Flexible, definido en pliego</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art144" target="_blank">Art. 144</a></td>
+                <td data-label="Notas">Depende del procedimiento.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">10 días hábiles (armonizada); 5 días hábiles (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">2 meses (armonizada); 1 mes (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Diálogo Competitivo</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Diálogo Competitivo</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (armonizada); 10 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Anuncio a Presentación de Solicitudes de Participación</td>
+                <td data-label="Plazo">30 días naturales (armonizada); 10 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art145" target="_blank">Art. 145</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Diálogo</td>
+                <td data-label="Plazo">Flexible, definido en pliego</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art145" target="_blank">Art. 145</a></td>
+                <td data-label="Notas">Duración según necesidades del procedimiento.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">10 días hábiles (armonizada); 5 días hábiles (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">2 meses (armonizada); 1 mes (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Asociación para la Innovación</td></tr>
+            <tr>
+                <td data-label="Procedimiento" rowspan="5" style="display: none;">Asociación para la Innovación</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Consultas Previas</td>
+                <td data-label="Plazo">15 días naturales (armonizada); 10 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a></td>
+                <td data-label="Notas">Si aplica.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Anuncio a Presentación de Solicitudes de Participación</td>
+                <td data-label="Plazo">30 días naturales (armonizada); 20 días naturales (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art146" target="_blank">Art. 146</a></td>
+                <td data-label="Notas">-</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Fase de Investigación</td>
+                <td data-label="Plazo">Flexible, definido en pliego</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art146" target="_blank">Art. 146</a></td>
+                <td data-label="Notas">Depende del proyecto.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Requerimientos</td>
+                <td data-label="Plazo">10 días hábiles (armonizada); 5 días hábiles (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a></td>
+                <td data-label="Notas">Para subsanación.</td>
+            </tr>
+            <tr>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Adjudicación</td>
+                <td data-label="Plazo">2 meses (armonizada); 1 mes (no armonizada)</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a></td>
+                <td data-label="Notas">Ampliable si hay bajas anormales (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</td>
+            </tr>
+            <tr class="procedure-separator" aria-hidden="true"><td colspan="5">Recurso Especial</td></tr>
+            <tr>
+                <td data-label="Procedimiento">Todos</td>
+                <td data-label="Tipo de Contrato">Todos</td>
+                <td data-label="Etapa">Recurso Especial en Materia de Contratación</td>
+                <td data-label="Plazo">15 días hábiles desde notificación de adjudicación o exclusión</td>
+                <td data-label="Artículo LCSP"><a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art44" target="_blank">Art. 44</a></td>
+                <td data-label="Notas">Aplicable a contratos sujetos a regulación armonizada o ciertos casos específicos.</td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>Notas Adicionales</h2>
+    <ul>
+        <li>Los plazos se cuentan desde la publicación del anuncio en el <a href="https://ted.europa.eu/" target="_blank">Diario Oficial de la Unión Europea (DOUE)</a> para contratos sujetos a regulación armonizada, o en la <a href="https://contrataciondelestado.es/" target="_blank">Plataforma de Contratación del Sector Público</a> para los no armonizados.</li>
+        <li><strong>Bajas Anormales</strong>: Si se identifican ofertas anormalmente bajas, el plazo de adjudicación puede extenderse en 15 días hábiles para evaluación (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art149" target="_blank">Art. 149</a>).</li>
+        <li><strong>Consultas Previas</strong>: Son opcionales y se realizan antes del anuncio de licitación para recabar información del mercado (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art115" target="_blank">Art. 115</a>).</li>
+        <li><strong>Requerimientos</strong>: Plazos para subsanar documentación o responder a aclaraciones solicitadas por la administración (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art139" target="_blank">Art. 139</a>).</li>
+        <li><strong>Recursos</strong>: El recurso especial en materia de contratación debe presentarse en 15 días hábiles desde la notificación de adjudicación o exclusión, según lo establecido en el <a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#art44" target="_blank">Art. 44</a>.</li>
+        <li>Los plazos en días naturales incluyen todos los días, salvo que el último día sea no laborable, en cuyo caso se prorroga al primer día laborable siguiente.</li>
+        <li>Fuente: <a href="https://www.administracion.gob.es/" target="_blank">administracion.gob.es</a>, <a href="https://www.boe.es/eli/es/l/2017/11/08/9/con" target="_blank">Ley 9/2017, de Contratos del Sector Público</a>.</li>
+    </ul>
+    <h2>Calculadora de Plazos</h2>
+    <p>Selecciona el procedimiento y tipo de contrato para conocer los plazos aplicables.</p>
+    <div class="calculator" role="form" aria-labelledby="calculadora-title">
+        <h3 id="calculadora-title" aria-hidden="true">Calculadora de Plazos</h3>
+        <label for="procedimiento">Procedimiento:</label>
+        <select id="procedimiento" aria-label="Seleccionar procedimiento">
+            <option>Abierto (Sujeto a Regulación Armonizada)</option>
+            <option>Abierto (No Sujeto a Regulación Armonizada)</option>
+            <option>Abierto Simplificado</option>
+            <option>Abierto Súper Simplificado</option>
+            <option>Restringido (Sujeto a Regulación Armonizada)</option>
+            <option>Restringido (No Sujeto a Regulación Armonizada)</option>
+            <option>Licitación con Negociación</option>
+            <option>Diálogo Competitivo</option>
+            <option>Asociación para la Innovación</option>
+        </select>
+        <label for="tipoContrato">Tipo de Contrato:</label>
+        <select id="tipoContrato" aria-label="Seleccionar tipo de contrato">
+            <option>Obras</option>
+            <option>Suministros</option>
+            <option>Servicios</option>
+            <option>Concesiones</option>
+            <option>Compras Corrientes</option>
+            <option>Todos</option>
+        </select>
+        <label for="bajasAnormales">¿Incluye bajas anormales?</label>
+        <input type="checkbox" id="bajasAnormales" aria-label="Incluir bajas anormales">
+        <button onclick="calcularPlazos()" aria-label="Calcular plazos">Calcular Plazos</button>
+    </div>
+    <div id="resultados" role="region" aria-live="polite"></div>
+    <p>Actualizado a octubre de 2025. Basado en la <a href="https://www.boe.es/eli/es/l/2017/11/08/9/con" target="_blank">Ley de Contratos del Sector Público (LCSP)</a>.</p>
+    <script>
+        const plazosData = [
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Suministros, Servicios", etapa: "Consultas Previas", plazo: "15 días naturales (mínimo)", articulo: "Art. 115", notas: "Plazo para consultas previas al anuncio, si se realizan." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Suministros, Servicios", etapa: "Anuncio a Presentación de Ofertas", plazo: "35 días naturales", articulo: "Art. 135", notas: "Reducible a 30 días si se aceptan ofertas electrónicas." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Suministros, Servicios", etapa: "Apertura de Ofertas", plazo: "Máximo 20 días naturales tras fin de presentación", articulo: "Art. 139", notas: "" },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Suministros, Servicios", etapa: "Requerimientos (p. ej., subsanación)", plazo: "10 días hábiles", articulo: "Art. 139", notas: "Plazo para subsanar documentación o aclaraciones." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Suministros, Servicios", etapa: "Adjudicación", plazo: "15 días hábiles (solo precio) o 2 meses (múltiples criterios)", articulo: "Art. 149", notas: "Ampliable en 15 días hábiles si hay bajas anormales." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Concesiones de Obras y Servicios", etapa: "Consultas Previas", plazo: "15 días naturales (mínimo)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Concesiones de Obras y Servicios", etapa: "Anuncio a Presentación de Ofertas", plazo: "30 días naturales", articulo: "Art. 135", notas: "" },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Concesiones de Obras y Servicios", etapa: "Requerimientos", plazo: "10 días hábiles", articulo: "Art. 139", notas: "Para subsanación o aclaraciones." },
+            { procedimiento: "Abierto (Sujeto a Regulación Armonizada)", tipoContrato: "Concesiones de Obras y Servicios", etapa: "Adjudicación", plazo: "2 meses (múltiples criterios)", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Suministros, Servicios", etapa: "Consultas Previas", plazo: "10 días naturales (mínimo)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Suministros, Servicios", etapa: "Anuncio a Presentación de Ofertas", plazo: "15 días naturales", articulo: "Art. 135", notas: "" },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Suministros, Servicios", etapa: "Requerimientos", plazo: "5 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Suministros, Servicios", etapa: "Adjudicación", plazo: "15 días hábiles (solo precio) o 1 mes (múltiples criterios)", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Concesiones", etapa: "Consultas Previas", plazo: "10 días naturales (mínimo)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Concesiones", etapa: "Anuncio a Presentación de Ofertas", plazo: "26 días naturales", articulo: "Art. 135", notas: "" },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Concesiones", etapa: "Requerimientos", plazo: "5 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto (No Sujeto a Regulación Armonizada)", tipoContrato: "Obras, Concesiones", etapa: "Adjudicación", plazo: "1 mes", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Consultas Previas", plazo: "10 días naturales (mínimo)", articulo: "Art. 115", notas: "Valor estimado ≤ 139.000 € (suministros/servicios)." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Anuncio a Presentación de Ofertas", plazo: "15 días naturales", articulo: "Art. 140", notas: "" },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Requerimientos", plazo: "5 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Adjudicación", plazo: "15 días hábiles", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Obras", etapa: "Consultas Previas", plazo: "10 días naturales (mínimo)", articulo: "Art. 115", notas: "Valor estimado ≤ 2.000.000 €." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Obras", etapa: "Anuncio a Presentación de Ofertas", plazo: "20 días naturales", articulo: "Art. 140", notas: "" },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Obras", etapa: "Requerimientos", plazo: "5 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto Simplificado", tipoContrato: "Obras", etapa: "Adjudicación", plazo: "15 días hábiles", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Consultas Previas", plazo: "5 días hábiles (mínimo)", articulo: "Art. 115", notas: "Valor estimado ≤ 60.000 € (suministros/servicios)." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Anuncio a Presentación de Ofertas", plazo: "10 días hábiles", articulo: "Art. 140", notas: "" },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Requerimientos", plazo: "3 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Suministros, Servicios", etapa: "Adjudicación", plazo: "10 días hábiles", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Compras Corrientes", etapa: "Consultas Previas", plazo: "5 días hábiles (mínimo)", articulo: "Art. 115", notas: "Para bienes disponibles en el mercado." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Compras Corrientes", etapa: "Anuncio a Presentación de Ofertas", plazo: "5 días hábiles", articulo: "Art. 140", notas: "" },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Compras Corrientes", etapa: "Requerimientos", plazo: "3 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Abierto Súper Simplificado", tipoContrato: "Compras Corrientes", etapa: "Adjudicación", plazo: "7 días hábiles", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Restringido (Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Consultas Previas", plazo: "15 días naturales (mínimo)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Restringido (Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Anuncio a Presentación de Solicitudes de Participación", plazo: "30 días naturales", articulo: "Art. 143", notas: "" },
+            { procedimiento: "Restringido (Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Invitación a Presentar Ofertas", plazo: "10 días naturales tras selección de candidatos", articulo: "Art. 143", notas: "" },
+            { procedimiento: "Restringido (Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Requerimientos", plazo: "10 días hábiles", articulo: "Art. 139", notas: "Para subsanación o aclaraciones." },
+            { procedimiento: "Restringido (Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Adjudicación", plazo: "2 meses", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Restringido (No Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Consultas Previas", plazo: "10 días naturales (mínimo)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Restringido (No Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Anuncio a Presentación de Solicitudes de Participación", plazo: "10 días naturales", articulo: "Art. 143", notas: "" },
+            { procedimiento: "Restringido (No Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Invitación a Presentar Ofertas", plazo: "5 días naturales tras selección", articulo: "Art. 143", notas: "" },
+            { procedimiento: "Restringido (No Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Requerimientos", plazo: "5 días hábiles", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Restringido (No Sujeto a Regulación Armonizada)", tipoContrato: "Todos", etapa: "Adjudicación", plazo: "1 mes", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Licitación con Negociación", tipoContrato: "Todos", etapa: "Consultas Previas", plazo: "15 días naturales (armonizada); 10 días naturales (no armonizada)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Licitación con Negociación", tipoContrato: "Todos", etapa: "Anuncio a Presentación de Solicitudes de Participación", plazo: "30 días naturales (armonizada); 10 días naturales (no armonizada)", articulo: "Art. 144", notas: "" },
+            { procedimiento: "Licitación con Negociación", tipoContrato: "Todos", etapa: "Negociación", plazo: "Flexible, definido en pliego", articulo: "Art. 144", notas: "Depende del procedimiento." },
+            { procedimiento: "Licitación con Negociación", tipoContrato: "Todos", etapa: "Requerimientos", plazo: "10 días hábiles (armonizada); 5 días hábiles (no armonizada)", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Licitación con Negociación", tipoContrato: "Todos", etapa: "Adjudicación", plazo: "2 meses (armonizada); 1 mes (no armonizada)", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Diálogo Competitivo", tipoContrato: "Todos", etapa: "Consultas Previas", plazo: "15 días naturales (armonizada); 10 días naturales (no armonizada)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Diálogo Competitivo", tipoContrato: "Todos", etapa: "Anuncio a Presentación de Solicitudes de Participación", plazo: "30 días naturales (armonizada); 10 días naturales (no armonizada)", articulo: "Art. 145", notas: "" },
+            { procedimiento: "Diálogo Competitivo", tipoContrato: "Todos", etapa: "Diálogo", plazo: "Flexible, definido en pliego", articulo: "Art. 145", notas: "Duración según necesidades del procedimiento." },
+            { procedimiento: "Diálogo Competitivo", tipoContrato: "Todos", etapa: "Requerimientos", plazo: "10 días hábiles (armonizada); 5 días hábiles (no armonizada)", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Diálogo Competitivo", tipoContrato: "Todos", etapa: "Adjudicación", plazo: "2 meses (armonizada); 1 mes (no armonizada)", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Asociación para la Innovación", tipoContrato: "Todos", etapa: "Consultas Previas", plazo: "15 días naturales (armonizada); 10 días naturales (no armonizada)", articulo: "Art. 115", notas: "Si aplica." },
+            { procedimiento: "Asociación para la Innovación", tipoContrato: "Todos", etapa: "Anuncio a Presentación de Solicitudes de Participación", plazo: "30 días naturales (armonizada); 20 días naturales (no armonizada)", articulo: "Art. 146", notas: "" },
+            { procedimiento: "Asociación para la Innovación", tipoContrato: "Todos", etapa: "Fase de Investigación", plazo: "Flexible, definido en pliego", articulo: "Art. 146", notas: "Depende del proyecto." },
+            { procedimiento: "Asociación para la Innovación", tipoContrato: "Todos", etapa: "Requerimientos", plazo: "10 días hábiles (armonizada); 5 días hábiles (no armonizada)", articulo: "Art. 139", notas: "Para subsanación." },
+            { procedimiento: "Asociación para la Innovación", tipoContrato: "Todos", etapa: "Adjudicación", plazo: "2 meses (armonizada); 1 mes (no armonizada)", articulo: "Art. 149", notas: "Ampliable si hay bajas anormales." },
+            { procedimiento: "Todos", tipoContrato: "Todos", etapa: "Recurso Especial en Materia de Contratación", plazo: "15 días hábiles desde notificación de adjudicación o exclusión", articulo: "Art. 44", notas: "Aplicable a contratos sujetos a regulación armonizada o ciertos casos específicos." }
+        ];
+        function calcularPlazos() {
+            const procedimiento = document.getElementById('procedimiento').value;
+            const tipoContrato = document.getElementById('tipoContrato').value;
+            const bajasAnormales = document.getElementById('bajasAnormales').checked;
+            const resultadosDiv = document.getElementById('resultados');
+            let resultados = plazosData.filter(item => {
+                if (item.procedimiento === "Todos" && item.tipoContrato === "Todos") {
+                    return item.etapa === "Recurso Especial en Materia de Contratación";
+                }
+                return item.procedimiento === procedimiento && 
+                       (item.tipoContrato === tipoContrato || item.tipoContrato === "Todos" || 
+                        (tipoContrato === "Obras" && item.tipoContrato.includes("Obras")) ||
+                        (tipoContrato === "Suministros" && item.tipoContrato.includes("Suministros")) ||
+                        (tipoContrato === "Servicios" && item.tipoContrato.includes("Servicios")) ||
+                        (tipoContrato === "Concesiones" && item.tipoContrato.includes("Concesiones")));
+            });
+            if (resultados.length === 0) {
+                resultadosDiv.innerHTML = '<p>No se encontraron plazos para la combinación seleccionada.</p>';
+                return;
+            }
+            const recurso = plazosData.find(item => item.etapa === "Recurso Especial en Materia de Contratación");
+            if (!resultados.some(item => item.etapa === "Recurso Especial en Materia de Contratación")) {
+                resultados.push(recurso);
+            }
+            let output = '<h3>Plazos para ' + procedimiento + ' - ' + tipoContrato + '</h3><ul>';
+            resultados.forEach(item => {
+                let plazo = item.plazo;
+                if (bajasAnormales && item.etapa === "Adjudicación" && item.notas.includes("bajas anormales")) {
+                    plazo += " (ampliable en 15 días hábiles por bajas anormales)";
+                }
+                output += `<li><strong>${item.etapa}</strong>: ${plazo} (<a href="https://www.boe.es/eli/es/l/2017/11/08/9/con#${item.articulo.toLowerCase()}" target="_blank">${item.articulo}</a>)`;
+                if (item.notas) {
+                    output += ` - Notas: ${item.notas}`;
+                }
+                output += '</li>';
+            });
+            output += '</ul>';
+            resultadosDiv.innerHTML = output;
+        }
+    </script>
+</body>
+</html>
