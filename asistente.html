@@ -55,7 +55,7 @@
 
         .nav-button {
             background-color: transparent;
-            color: var(--white-color);
+            color: var(--white-color) !important; /* Importante para que el enlace <a> se vea blanco */
             border: none;
             padding: 15px 20px;
             width: 100%;
@@ -67,11 +67,13 @@
             margin-bottom: 8px;
             display: flex;
             align-items: center;
+            text-decoration: none; /* Asegurar que no haya subrayado */
         }
         
         .nav-button:hover {
             background-color: rgba(255, 255, 255, 0.1);
             padding-left: 25px;
+            text-decoration: none; /* Quitar subrayado en hover */
         }
 
         .nav-button.active {
@@ -349,6 +351,7 @@
         <button class="nav-button" onclick="openTab(event, 'Procedimientos')" id="defaultOpen">Procedimiento (LCSP)</button>
         <button class="nav-button" onclick="openTab(event, 'Organo')">Órgano Contratación</button>
         <button class="nav-button" onclick="openTab(event, 'Mesa')">Mesa Contratación</button>
+        <a href="plazos.html" class="nav-button">Cálculo de Plazos</a>
         <button class="nav-button" onclick="openTab(event, 'Fases')">Fases Procedimiento Común</button>
     </div>
 
@@ -357,7 +360,7 @@
         <div id="Procedimientos" class="tabcontent">
             <h2>Paso 1: Determinar el Procedimiento de Adjudicación (LCSP)</h2>
             <div class="card">
-                <h3>Tabla Resumen de Procedimientos y Umbrales</h3>
+                <h3>Tabla Resumen de Procedimientos y Umbrales (Actualizado 2024-2025)</h3>
                 <p>El procedimiento se determina por el tipo de contrato, su Valor Estimado (VEC) y si está sujeto a regulación armonizada (SARA).</p>
                 <div class="table-wrapper">
                     <table>
@@ -671,7 +674,11 @@
             }
 
             document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
+            // Check if evt is not null and has a currentTarget before adding the active class
+            if (evt && evt.currentTarget) {
+               evt.currentTarget.className += " active";
+            }
+
 
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth <= 992 && sidebar.classList.contains('show')) {
