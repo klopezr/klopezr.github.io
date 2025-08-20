@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Incendios Forestales - España</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; overflow: hidden; }
+        #map { height: 100vh; width: 100%; position: relative; }
+        .header { position: absolute; top: 0; left: 0; right: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0)); z-index: 1000; padding: 20px; pointer-events: none; }
+        .header-content { max-width: 1200px; margin: 0 auto; pointer-events: auto; }
+        .header h1 { color: white; font-size: 28px; font-weight: 600; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; }
+        .header h1 i { color: #ff6b6b; }
+        .fab { position: absolute; right: 20px; width: 50px; height: 50px; background: white; border: none; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; z-index: 1001; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .fab i { font-size: 20px; }
+        .menu-toggle { top: 100px; }
+        .menu-toggle i { color: #333; }
+        .info-toggle { top: 165px; }
+        .info-toggle i { color: #2196F3; }
+        .bugs-toggle { top: 230px; }
+        .bugs-toggle i { color: #ff9800; }
+        .sidebar { position: absolute; top: 100px; right: 80px; width: 320px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; max-height: calc(100vh - 120px); overflow-y: auto; transition: all 0.3s ease; opacity: 0; transform: translateX(20px); pointer-events: none; }
+        .sidebar.show { opacity: 1; transform: translateX(0); pointer-events: auto; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h2 { font-size: 18px; color: #333; }
+        .controls { padding: 20px; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 8px; }
+        .day-slider-container { display: flex; align-items: center; gap: 15px; }
+        #day-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #ddd; border-radius: 5px; outline: none; opacity: 0.7; transition: opacity .2s; }
+        #day-slider:hover { opacity: 1; }
+        #day-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #ff6b6b; cursor: pointer; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        #day-slider::-moz-range-thumb { width: 20px; height: 20px; background: #ff6b6b; cursor: pointer; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        #day-slider-value { font-weight: 600; color: #ff6b6b; min-width: 60px; }
+        .legend { padding: 20px; border-top: 1px solid #e0e0e0; }
+        .legend h3 { font-size: 16px; color: #333; margin-bottom: 15px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .legend-color { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .legend-text { font-size: 14px; color: #666; }
+        .stats { padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px; }
+        .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .stat-label { font-size: 14px; color: #666; }
+        .stat-value { font-size: 16px; font-weight: 600; color: #333; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 2000; display: none; }
+        .loading.show { display: block; }
+        .loading i { font-size: 24px; color: #ff6b6b; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .message-box { position: absolute; left: 50%; transform: translateX(-50%); color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 2000; display: none; align-items: center; gap: 10px; max-width: 90%; text-align: center; }
+        .message-box.show { display: flex; }
+        .error-message { bottom: 20px; background: #f44336; }
+        .info-message { top: 80px; background: rgba(33, 150, 243, 0.9); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 12px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 24px; color: #333; }
+        .modal-close { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; transition: color 0.3s; }
+        .modal-close:hover { color: #333; }
+        .modal-body { padding: 20px; }
+        .modal-body h3 { font-size: 18px; color: #333; margin: 20px 0 10px; }
+        .modal-body p { font-size: 16px; line-height: 1.6; color: #555; margin-bottom: 15px; }
+        .code-block { background: #f5f5f5; border-left: 4px solid #2196F3; padding: 15px; border-radius: 4px; margin: 15px 0; font-family: monospace; font-size: 14px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .fire-marker { background: radial-gradient(circle, #ff6b6b 0%, #ff4444 100%); border: 2px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(255, 68, 68, 0.5); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
+        .leaflet-popup-content { margin: 0; padding: 0; }
+        .fire-popup { padding: 15px; min-width: 250px; }
+        .fire-popup h4 { margin: 0 0 10px 0; color: #333; font-size: 16px; }
+        .fire-popup p { margin: 5px 0; font-size: 14px; color: #666; display: flex; justify-content: space-between; }
+        .fire-popup p strong { color: #555; }
+        .fire-popup .confidence { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-top: 10px; }
+        .confidence-high { background: #ffebee; color: #c62828; }
+        .confidence-medium { background: #fff3e0; color: #ef6c00; }
+        .confidence-low { background: #e8f5e9; color: #2e7d32; }
+        #debugConsole { position: absolute; width: 350px; height: 300px; background: rgba(20, 20, 20, 0.9); border: 1px solid #555; border-radius: 12px; z-index: 4000; display: none; flex-direction: column; box-shadow: 0 5px 25px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        #debugConsole.show { display: flex; }
+        .console-header { padding: 10px 15px; background: rgba(0,0,0,0.5); border-bottom: 1px solid #555; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; cursor: move; }
+        .console-header-buttons button { background: none; border: none; color: white; font-size: 16px; cursor: pointer; margin-left: 15px; opacity: 0.8; transition: opacity 0.2s; }
+        .console-header-buttons button:hover { opacity: 1; }
+        #console-output { flex-grow: 1; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 13px; color: #f1f1f1; }
+        .log-line { padding: 2px 5px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); white-space: pre-wrap; word-break: break-all; }
+        .log-warn { color: #ffd700; }
+        .log-error { color: #ff6b6b; }
+        .log-timestamp { color: #888; margin-right: 5px; }
+        .leaflet-control-layers { box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-radius: 12px; border: none; }
+        .leaflet-control-layers-toggle { width: 50px !important; height: 50px !important; }
+        .leaflet-right .leaflet-control { margin-right: 20px; }
+        .leaflet-top .leaflet-control { margin-top: 295px; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: calc(100% - 40px); right: 20px; top: 100px; }
+            .header h1 { font-size: 20px; }
+            .modal-content { max-width: 95%; }
+            #debugConsole { position: fixed; width: calc(100% - 20px); left: 10px; top: unset; bottom: 10px; height: 30%; border-radius: 12px; }
+            .leaflet-top .leaflet-control { margin-top: 295px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div class="header">
+        <div class="header-content">
+            <h1><i class="fas fa-fire"></i> Mapa de Incendios Forestales en Tiempo Real</h1>
+        </div>
+    </div>
+
+    <button class="fab menu-toggle" onclick="toggleMenu()" title="Controles"><i class="fas fa-sliders-h"></i></button>
+    <button class="fab info-toggle" onclick="toggleInfoModal()" title="Información"><i class="fas fa-info"></i></button>
+    <button class="fab bugs-toggle" onclick="toggleBugsConsole()" title="Consola de depuración"><i class="fas fa-bug"></i></button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Controles del Mapa</h2>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label>Seleccionar Rango de Días</label>
+                <div class="day-slider-container">
+                    <input type="range" min="1" max="7" value="1" class="slider" id="day-slider">
+                    <span id="day-slider-value">1 día</span>
+                </div>
+            </div>
+        </div>
+        <div class="stats">
+             <div class="stat-item">
+                <span class="stat-label">Mostrando datos para:</span>
+                <span class="stat-value" id="dateRangeLabel"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Incendios Activos (24h):</span>
+                <span class="stat-value" id="activeCount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Total Mostrado:</span>
+                <span class="stat-value" id="totalCount">0</span>
+            </div>
+        </div>
+        <div class="legend">
+            <h3>Leyenda de Confianza</h3>
+            <div class="legend-item"><div class="legend-color" style="background: #ff4444;"></div><span class="legend-text">Alta (≥80%)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #ff8800;"></div><span class="legend-text">Media (50-79%)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #ffaa00;"></div><span class="legend-text">Baja (&lt;50%)</span></div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <i class="fas fa-spinner"></i>
+        <p style="margin-top: 10px; color: #666;">Cargando datos...</p>
+    </div>
+
+    <div class="message-box error-message" id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorText">Error al cargar los datos</span>
+    </div>
+    <div class="message-box info-message" id="infoMessage">
+        <i class="fas fa-info-circle"></i>
+        <span id="infoText"></span>
+    </div>
+
+    <div class="modal" id="infoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cómo funciona esta aplicación</h2>
+                <button class="modal-close" onclick="toggleInfoModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Esta aplicación web muestra datos de incendios forestales casi en tiempo real utilizando tecnologías modernas y APIs públicas.</p>
+                <h3>Fuente y Obtención de Datos</h3>
+                <p>Los datos de incendios se obtienen de la API <strong>NASA FIRMS</strong>. Para asegurar la carga de datos, la aplicación siempre usa la **fecha real actual** para las peticiones automáticas, mostrando los incendios de la última semana.</p>
+                <p>Para mejorar la precisión, combina datos de dos satélites:</p>
+                <ul style="margin-left: 20px; line-height: 1.6;">
+                    <li><strong>VIIRS (SNPP):</strong> Alta resolución (375m).</li>
+                    <li><strong>MODIS (Terra/Aqua):</strong> Amplia cobertura (1km).</li>
+                </ul>
+                <h3>Ejemplo de Llamada a la API (VIIRS)</h3>
+                <p>Para obtener datos de España para una fecha específica, se realiza una llamada similar a esta:</p>
+                <div class="code-block" id="api-example-code"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="debugConsole">
+        <div class="console-header" id="consoleHeader">
+            <span><i class="fas fa-terminal"></i> Consola de Depuración</span>
+            <div class="console-header-buttons">
+                <button onclick="copyConsoleLog()" title="Copiar Logs"><i class="fas fa-copy"></i></button>
+                <button onclick="toggleBugsConsole()" title="Cerrar Consola"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div id="console-output"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        const originalConsole = {
+            log: console.log.bind(console),
+            warn: console.warn.bind(console),
+            error: console.error.bind(console),
+        };
+
+        function appendToConsole(args, level) {
+            const consoleOutput = document.getElementById('console-output');
+            if (!consoleOutput) return;
+            const line = document.createElement('div');
+            line.className = `log-line log-${level}`;
+            const timestamp = new Date().toLocaleTimeString();
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'log-timestamp';
+            timestampSpan.textContent = `[${timestamp}]`;
+            line.appendChild(timestampSpan);
+            const message = Array.from(args).map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    try { return JSON.stringify(arg, null, 2); } catch (e) { return '[Object circular]'; }
+                }
+                return String(arg);
+            }).join(' ');
+            const messageSpan = document.createElement('span');
+            messageSpan.textContent = message;
+            line.appendChild(messageSpan);
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) { originalConsole.log(...args); appendToConsole(args, 'log'); };
+        console.warn = function(...args) { originalConsole.warn(...args); appendToConsole(args, 'warn'); };
+        console.error = function(...args) { originalConsole.error(...args); appendToConsole(args, 'error'); };
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri', maxZoom: 18
+        });
+
+        const mapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+	        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	        subdomains: 'abcd',
+	        maxZoom: 20
+        });
+
+        const labelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+	        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	        subdomains: 'abcd',
+            pane: 'shadowPane',
+	        maxZoom: 20
+        });
+
+        let map = L.map('map', {
+            center: [40.4168, -3.7038],
+            zoom: 6,
+            layers: [satelliteLayer, labelsLayer]
+        });
+
+        const NASA_API_KEY = '4bd030a2741b2f891a660d1022acff49';
+        const FIRE_DATA_SOURCES = ['VIIRS_SNPP_NRT', 'MODIS_NRT'];
+        const AUTO_REFRESH_INTERVAL = 300000;
+        const SPAIN_BOUNDS = {
+            lat: { min: 35, max: 44 },
+            lon: { min: -19, max: 5 }
+        };
+
+        let fireMarkers = L.markerClusterGroup();
+        
+        const baseMaps = {
+            "Satélite": satelliteLayer,
+            "Mapa": mapLayer
+        };
+        const overlayMaps = {
+            "Incendios": fireMarkers,
+            "Etiquetas": labelsLayer
+        };
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+        map.addLayer(fireMarkers);
+        
+        let allFireData = [];
+
+        async function fetchFireDataForDay(dateStr, source) {
+            console.log(`Pidiendo datos del MUNDO para ${source} en el día ${dateStr}...`);
+            const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${NASA_API_KEY}/${source}/world/1/${dateStr}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const csvData = await response.text();
+                if (csvData.trim() === '' || csvData.length < 100) {
+                    console.log(`Respuesta vacía de ${source} para ${dateStr}.`);
+                    return [];
+                }
+                return parseCSV(csvData);
+            } catch (error) {
+                console.error(`Fallo en la petición fetch para ${source} en ${dateStr}:`, error);
+                throw error; 
+            }
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n').slice(1);
+            const fires = [];
+            lines.forEach(line => {
+                if (line.trim()) {
+                    const [latitude, longitude, brightness, scan, track, acq_date, acq_time, satellite, confidence, version, bright_t31, frp, daynight] = line.split(',');
+                    if (latitude && longitude) {
+                        fires.push({
+                            lat: parseFloat(latitude), lng: parseFloat(longitude),
+                            confidence: parseInt(confidence) || 0, brightness: parseFloat(brightness) || 0,
+                            frp: parseFloat(frp) || 0,
+                            satellite: satellite, daynight: daynight,
+                            date: acq_date, time: `${acq_time.slice(0, 2)}:${acq_time.slice(2, 4)}`,
+                        });
+                    }
+                }
+            });
+            return fires;
+        }
+
+        function createFireMarker(fire) { 
+            const confidence = fire.confidence;
+            let color, size;
+            if (confidence >= 80) { color = '#ff4444'; size = 12; } 
+            else if (confidence >= 50) { color = '#ff8800'; size = 10; } 
+            else { color = '#ffaa00'; size = 8; }
+            const marker = L.circleMarker([fire.lat, fire.lng], {
+                radius: size, fillColor: color, color: 'white',
+                weight: 2, opacity: 1, fillOpacity: 0.8, className: 'fire-marker'
+            });
+            const confidenceClass = confidence >= 80 ? 'confidence-high' : confidence >= 50 ? 'confidence-medium' : 'confidence-low';
+            const confidenceText = confidence >= 80 ? 'Alta' : confidence >= 50 ? 'Media' : 'Baja';
+            
+            marker.bindPopup(`<div class="fire-popup">
+                <h4><i class="fas fa-fire"></i> Incendio Detectado</h4>
+                <p><strong>Fecha/Hora (UTC):</strong> <span>${fire.date} ${fire.time}</span></p>
+                <p><strong>Intensidad (FRP):</strong> <span>${fire.frp.toFixed(1)} MW</span></p>
+                <p><strong>Brillo:</strong> <span>${fire.brightness.toFixed(1)} K</span></p>
+                <p><strong>Satélite:</strong> <span>${fire.satellite}</span></p>
+                <p><strong>Detección:</strong> <span>${fire.daynight === 'D' ? 'Diurna' : 'Nocturna'}</span></p>
+                <span class="confidence ${confidenceClass}">Confianza: ${confidenceText} (${fire.confidence}%)</span>
+            </div>`);
+            return marker;
+        }
+
+        async function loadFireData(days = 1) {
+            console.log('-------------------------------------------');
+            console.log(`Iniciando carga de datos para los últimos ${days} días...`);
+            showLoading(true);
+            hideError();
+
+            try {
+                const today = new Date();
+                const startDate = new Date();
+                startDate.setDate(today.getDate() - (days - 1));
+                
+                let datesToFetch = [];
+                let currentDate = new Date(startDate);
+                
+                console.log(`Usando fechas reales: desde ${startDate.toISOString().split('T')[0]} hasta ${today.toISOString().split('T')[0]}`);
+
+                while(currentDate <= today) {
+                    datesToFetch.push(currentDate.toISOString().split('T')[0]);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                let fetchPromises = [];
+                for (const dateStr of datesToFetch) {
+                    for (const source of FIRE_DATA_SOURCES) {
+                        fetchPromises.push(fetchFireDataForDay(dateStr, source));
+                    }
+                }
+                
+                const results = await Promise.allSettled(fetchPromises);
+                
+                let allFiresFromWorld = [], uniqueFires = new Set(), apiErrorMessages = [];
+
+                results.forEach((result) => {
+                    if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+                        result.value.forEach(fire => {
+                            const fireKey = `${fire.lat.toFixed(4)},${fire.lng.toFixed(4)},${fire.date},${fire.time}`;
+                            if (!uniqueFires.has(fireKey)) {
+                                allFiresFromWorld.push(fire);
+                                uniqueFires.add(fireKey);
+                            }
+                        });
+                    } else {
+                        const reason = result.reason?.message || 'Error desconocido';
+                        if (!apiErrorMessages.includes(reason)) apiErrorMessages.push(reason);
+                    }
+                });
+
+                if (apiErrorMessages.length > 0) showError(`Error de API: ${apiErrorMessages.join(' | ')}`);
+
+                console.log(`Total de incendios únicos del MUNDO: ${allFiresFromWorld.length}`);
+                
+                const firesInSpain = allFiresFromWorld.filter(fire => 
+                    fire.lat >= SPAIN_BOUNDS.lat.min && fire.lat <= SPAIN_BOUNDS.lat.max &&
+                    fire.lng >= SPAIN_BOUNDS.lon.min && fire.lng <= SPAIN_BOUNDS.lon.max
+                );
+
+                console.log(`Incendios filtrados dentro de España: ${firesInSpain.length}`);
+
+                if (firesInSpain.length === 0 && apiErrorMessages.length === 0) {
+                    showInfo(`No se detectaron incendios en España en los últimos ${days} día(s).`);
+                }
+                
+                allFireData = firesInSpain;
+                
+                console.log(`Total incendios mostrados: ${firesInSpain.length}.`);
+                updateLayers();
+                updateStats(days);
+                console.log('Mapa actualizado correctamente.');
+
+            } catch (error) {
+                console.error('Error general al cargar los datos:', error);
+                showError('Ocurrió un error inesperado.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateLayers() { 
+            fireMarkers.clearLayers();
+            const nowUTC = new Date();
+            const twentyFourHoursAgoUTC = new Date(nowUTC.getTime() - (24 * 60 * 60 * 1000));
+            
+            const activeFires = allFireData.filter(fire => new Date(`${fire.date}T${fire.time}:00Z`) >= twentyFourHoursAgoUTC);
+            
+            const markers = allFireData.map(fire => createFireMarker(fire));
+            fireMarkers.addLayers(markers);
+
+            document.getElementById('activeCount').textContent = activeFires.length;
+            document.getElementById('totalCount').textContent = allFireData.length;
+        }
+
+        function updateStats(days) { 
+            document.getElementById('dateRangeLabel').textContent = `Últimos ${days} día(s)`;
+        }
+        
+        function toggleMenu() { 
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+        
+        function toggleInfoModal() { 
+            const todayStr = new Date().toISOString().split('T')[0];
+            const codeBlock = document.getElementById('api-example-code');
+            codeBlock.textContent = `GET https://firms.modaps.eosdis.nasa.gov/api/country/csv/SUA_API_KEY/VIIRS_SNPP_NRT/ESP/1/${todayStr}`;
+            document.getElementById('infoModal').classList.toggle('show'); 
+        }
+
+        function showLoading(show) { document.getElementById('loading').classList.toggle('show', show); }
+        function hideError() { document.getElementById('errorMessage').classList.remove('show'); }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 10000);
+        }
+        
+        function showInfo(message) {
+            const infoDiv = document.getElementById('infoMessage');
+            document.getElementById('infoText').textContent = message;
+            infoDiv.classList.add('show');
+            setTimeout(() => infoDiv.classList.remove('show'), 5000);
+        }
+        
+        function toggleBugsConsole() {
+            const consoleEl = document.getElementById('debugConsole');
+            if (window.innerWidth > 768 && !consoleEl.style.top) {
+                const bugsButton = document.querySelector('.bugs-toggle');
+                const rect = bugsButton.getBoundingClientRect();
+                consoleEl.style.top = `${rect.top}px`;
+                consoleEl.style.left = `${rect.left - consoleEl.offsetWidth - 10}px`;
+            }
+            consoleEl.classList.toggle('show'); 
+        }
+
+        function copyConsoleLog() {
+            const logText = document.getElementById('console-output').innerText;
+            const textArea = document.createElement("textarea");
+            textArea.value = logText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showInfo('Logs copiados al portapapeles');
+            } catch (err) {
+                console.error('No se pudo copiar el texto: ', err);
+                showError('Error al copiar los logs');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function makeDraggable(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            const header = document.getElementById("consoleHeader");
+            if (header) {
+                header.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                if (window.innerWidth <= 768) return;
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Aplicación inicializada. DOM listo.');
+            
+            const daySlider = document.getElementById('day-slider');
+            const daySliderValue = document.getElementById('day-slider-value');
+
+            daySlider.addEventListener('input', () => {
+                const days = daySlider.value;
+                daySliderValue.textContent = `${days} día${days > 1 ? 's' : ''}`;
+            });
+
+            daySlider.addEventListener('change', () => {
+                loadFireData(parseInt(daySlider.value, 10));
+            });
+            
+            makeDraggable(document.getElementById('debugConsole'));
+
+            loadFireData(1);
+            setInterval(() => {
+                const days = parseInt(document.getElementById('day-slider').value, 10);
+                loadFireData(days);
+            }, AUTO_REFRESH_INTERVAL);
+            console.log(`Actualización automática configurada cada ${AUTO_REFRESH_INTERVAL / 60000} minutos.`);
+        });
+    </script>
+</body>
+</html>
+
