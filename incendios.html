@@ -44,6 +44,7 @@
         .legend h3 { font-size: 16px; color: #333; margin-bottom: 15px; }
         .legend-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .legend-color { width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .legend-size { background-color: #ccc; display: flex; align-items: center; justify-content: center; }
         .legend-text { font-size: 14px; color: #666; }
         .stats { padding: 20px; background: #f8f9fa; border-radius: 8px; margin: 20px; }
         .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
@@ -144,10 +145,15 @@
             </div>
         </div>
         <div class="legend">
-            <h3>Leyenda de Confianza</h3>
-            <div class="legend-item"><div class="legend-color" style="background: #ff4444;"></div><span class="legend-text">Alta (≥80%)</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #ff8800;"></div><span class="legend-text">Media (50-79%)</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #ffaa00;"></div><span class="legend-text">Baja (&lt;50%)</span></div>
+            <h3>Confianza (Color)</h3>
+            <div class="legend-item"><div class="legend-color" style="background: #ff4444;"></div><span class="legend-text">Alta</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #ff8800;"></div><span class="legend-text">Media</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #ffaa00;"></div><span class="legend-text">Baja</span></div>
+            <h3 style="margin-top: 20px;">Intensidad (Tamaño)</h3>
+            <div class="legend-item"><div class="legend-size" style="width: 8px; height: 8px; border-radius: 50%;"></div><span class="legend-text">Baja (&lt;50 MW)</span></div>
+            <div class="legend-item"><div class="legend-size" style="width: 12px; height: 12px; border-radius: 50%;"></div><span class="legend-text">Media (&lt;250 MW)</span></div>
+            <div class="legend-item"><div class="legend-size" style="width: 16px; height: 16px; border-radius: 50%;"></div><span class="legend-text">Alta (&lt;500 MW)</span></div>
+            <div class="legend-item"><div class="legend-size" style="width: 20px; height: 20px; border-radius: 50%;"></div><span class="legend-text">Extrema (&ge;500 MW)</span></div>
         </div>
     </div>
 
@@ -320,18 +326,22 @@
             return fires;
         }
 
+        function getRadiusFromFRP(frp) {
+            if (frp < 50) return 8;
+            if (frp < 250) return 12;
+            if (frp < 500) return 16;
+            return 20;
+        }
+
         function createFireMarker(fire) { 
-            const confidence = fire.confidence;
-            let color, size;
-            if (confidence >= 80) { color = '#ff4444'; size = 12; } 
-            else if (confidence >= 50) { color = '#ff8800'; size = 10; } 
-            else { color = '#ffaa00'; size = 8; }
+            const color = fire.confidence >= 80 ? '#ff4444' : fire.confidence >= 50 ? '#ff8800' : '#ffaa00';
+            const size = getRadiusFromFRP(fire.frp);
             const marker = L.circleMarker([fire.lat, fire.lng], {
                 radius: size, fillColor: color, color: 'white',
                 weight: 2, opacity: 1, fillOpacity: 0.8, className: 'fire-marker'
             });
-            const confidenceClass = confidence >= 80 ? 'confidence-high' : confidence >= 50 ? 'confidence-medium' : 'confidence-low';
-            const confidenceText = confidence >= 80 ? 'Alta' : confidence >= 50 ? 'Media' : 'Baja';
+            const confidenceClass = fire.confidence >= 80 ? 'confidence-high' : fire.confidence >= 50 ? 'confidence-medium' : 'confidence-low';
+            const confidenceText = fire.confidence >= 80 ? 'Alta' : fire.confidence >= 50 ? 'Media' : 'Baja';
             
             marker.bindPopup(`<div class="fire-popup">
                 <h4><i class="fas fa-fire"></i> Incendio Detectado</h4>
@@ -556,4 +566,3 @@
     </script>
 </body>
 </html>
-
