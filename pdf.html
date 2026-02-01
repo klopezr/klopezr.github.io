@@ -9,6 +9,14 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+	<script>
+  	  MobileDragDrop.polyfill({
+   	     dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride
+   	 });    
+  	  window.addEventListener('touchmove', function() {}, {passive: false});
+	</script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
 
     <script>
         tailwind.config = {
@@ -40,13 +48,13 @@
         .stamp-element:hover, .text-element:hover { border-color: #94a3b8; }
         .stamp-element.selected, .text-element.selected { border-color: #0ea5e9; z-index: 50; }
         
-        .stamp-handle, .text-handle { position: absolute; width: 12px; height: 12px; background: #0ea5e9; border: 2px solid white; border-radius: 50%; bottom: -6px; right: -6px; cursor: nwse-resize; display: none; }
+        .stamp-handle, .text-handle { position: absolute; width: 16px; height: 16px; background: #0ea5e9; border: 2px solid white; border-radius: 50%; bottom: -6px; right: -6px; cursor: nwse-resize; display: none; }
         .stamp-element.selected .stamp-handle, .text-element.selected .text-handle { display: block; }
         
-        .stamp-rotate, .text-rotate { position: absolute; width: 24px; height: 24px; background: white; color: #0ea5e9; border: 1px solid #0ea5e9; border-radius: 50%; top: -30px; left: 50%; transform: translateX(-50%); cursor: grab; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stamp-rotate, .text-rotate { position: absolute; width: 32px; height: 32px; background: white; color: #0ea5e9; border: 1px solid #0ea5e9; border-radius: 50%; top: -30px; left: 50%; transform: translateX(-50%); cursor: grab; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .stamp-element.selected .stamp-rotate, .text-element.selected .text-rotate { display: flex; }
 
-        .stamp-delete, .text-delete { position: absolute; width: 20px; height: 20px; background: #ef4444; color: white; border-radius: 50%; top: -10px; right: -10px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stamp-delete, .text-delete { position: absolute; width: 24px; height: 24px; background: #ef4444; color: white; border-radius: 50%; top: -10px; right: -10px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .stamp-element.selected .stamp-delete, .text-element.selected .text-delete { display: flex; }
 
         .text-content { width: 100%; height: 100%; background: transparent; border: none; outline: none; resize: none; overflow: hidden; font-family: Helvetica, sans-serif; line-height: 1.2; color: #000; padding: 5px; margin: 0; cursor: move; box-sizing: border-box; }
@@ -73,10 +81,14 @@
 
     <main class="flex-1 relative overflow-hidden flex">
         
-        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col p-5 shrink-0 z-50 overflow-y-auto transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
-            <button onclick="toggleMobileMenu()" class="md:hidden absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <i class="ph-bold ph-x text-xl"></i>
-            </button>
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col p-5 shrink-0 z-[100] overflow-y-auto transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
+    
+            <div class="flex items-center justify-between mb-4 md:hidden">
+                <span class="text-sm font-bold text-slate-500 px-2">Menú</span>
+                <button onclick="toggleMobileMenu()" class="text-slate-500 hover:bg-slate-100 p-2 rounded-lg transition">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+            </div>
 
             <div class="mb-6">
                 <button onclick="document.getElementById('input-org').click()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md transition">
@@ -191,7 +203,7 @@
             document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`menu-${mode}`).classList.add('active');
 
-            if (window.innerWidth < 768) {
+            if (window.innerWidth < 768 && mode !== 'stamp' && mode !== 'text') {
                 document.getElementById('sidebar').classList.add('-translate-x-full');
             }
 
@@ -321,6 +333,9 @@
                 r.onload = ev => {
                     app.lastStampImg = ev.target.result;
                     addStampToVisiblePage();
+                    if (window.innerWidth < 768) {
+                        document.getElementById('sidebar').classList.add('-translate-x-full');
+                    }
                 };
                 r.readAsDataURL(f);
             }
@@ -626,6 +641,10 @@
             const layer = document.getElementById(`stamp-layer-${uid}`);
             renderTextElement(textItem, layer);
             showToast('Texto añadido');
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
         }
 
         function renderStampElement(stamp, layer) {
@@ -677,73 +696,100 @@
             let initialX, initialY, initialW, initialH, initialFontSize;
             const prefix = type === 'stamp' ? 'stamp' : 'text';
 
-            el.addEventListener('mousedown', (e) => {
-                const wasSelected = el.classList.contains('selected');
-
-                if(e.target.closest(`.${prefix}-delete`)) {
-                    if(type === 'stamp') app.stamps = app.stamps.filter(s => s.id !== item.id);
-                    else app.texts = app.texts.filter(t => t.id !== item.id);
-                    el.remove();
-                    return;
+            function getCoords(e) {
+                if(e.touches && e.touches.length > 0) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 }
-                
-                document.querySelectorAll('.stamp-element, .text-element').forEach(s => s.classList.remove('selected'));
-                el.classList.add('selected');
+                return { x: e.clientX, y: e.clientY };
+            }
 
-                if(e.target.closest(`.${prefix}-rotate`)) {
-                    e.preventDefault(); e.stopPropagation();
-                    const rect = el.getBoundingClientRect();
-                    centerX = rect.left + rect.width / 2;
-                    centerY = rect.top + rect.height / 2;
-                    startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-                    document.addEventListener('mousemove', doRotate);
-                    document.addEventListener('mouseup', stopRotate);
+            const startEvents = ['mousedown', 'touchstart'];
+            
+            startEvents.forEach(evt => {
+                el.addEventListener(evt, (e) => {
+                    if(e.type === 'touchstart' && !e.target.closest('textarea')) {
+                        if(e.target.closest(`.${prefix}-rotate`) || e.target.classList.contains(`${prefix}-handle`)) {
+                            e.preventDefault();
+                        }
+                    }
 
-                } else if(e.target.classList.contains(`${prefix}-handle`)) {
-                    e.preventDefault(); e.stopPropagation();
-                    initialX = e.clientX;
-                    initialY = e.clientY;
-                    initialW = item.w;
-                    initialH = item.h;
-                    initialFontSize = item.fontSize || 24;
-                    document.addEventListener('mousemove', doResize);
-                    document.addEventListener('mouseup', stopResize);
-                } else if (e.target.tagName === 'TEXTAREA') {
-                    if(!wasSelected) {
-                        e.preventDefault();
-                        initialX = e.clientX;
-                        initialY = e.clientY;
+                    const coords = getCoords(e);
+                    const wasSelected = el.classList.contains('selected');
+
+                    if(e.target.closest(`.${prefix}-delete`)) {
+                        if(type === 'stamp') app.stamps = app.stamps.filter(s => s.id !== item.id);
+                        else app.texts = app.texts.filter(t => t.id !== item.id);
+                        el.remove();
+                        return;
+                    }
+                    
+                    document.querySelectorAll('.stamp-element, .text-element').forEach(s => s.classList.remove('selected'));
+                    el.classList.add('selected');
+
+                    initialX = coords.x;
+                    initialY = coords.y;
+
+                    if(e.target.closest(`.${prefix}-rotate`)) {
+                        e.preventDefault(); e.stopPropagation();
+                        const rect = el.getBoundingClientRect();
+                        centerX = rect.left + rect.width / 2;
+                        centerY = rect.top + rect.height / 2;
+                        startAngle = Math.atan2(coords.y - centerY, coords.x - centerX);
+                        
+                        addListeners(doRotate, stopAction);
+
+                    } else if(e.target.classList.contains(`${prefix}-handle`)) {
+                        e.preventDefault(); e.stopPropagation();
+                        initialW = item.w;
+                        initialH = item.h;
+                        initialFontSize = item.fontSize || 24;
+                        addListeners(doResize, stopAction);
+
+                    } else if (e.target.tagName === 'TEXTAREA') {
+                        if(!wasSelected) {
+                            startLeft = item.x;
+                            startTop = item.y;
+                            addListeners(doDrag, stopAction);
+                        }
+                    } else {
+                        if(e.cancelable) e.preventDefault();
                         startLeft = item.x;
                         startTop = item.y;
-                        document.addEventListener('mousemove', doDrag);
-                        document.addEventListener('mouseup', stopDrag);
+                        addListeners(doDrag, stopAction);
                     }
-                } else {
-                    e.preventDefault();
-                    initialX = e.clientX;
-                    initialY = e.clientY;
-                    startLeft = item.x;
-                    startTop = item.y;
-                    document.addEventListener('mousemove', doDrag);
-                    document.addEventListener('mouseup', stopDrag);
-                }
+                }, { passive: false });
             });
 
+            function addListeners(moveFn, endFn) {
+                document.addEventListener('mousemove', moveFn);
+                document.addEventListener('mouseup', endFn);
+                document.addEventListener('touchmove', moveFn, { passive: false });
+                document.addEventListener('touchend', endFn);
+            }
+
+            function removeListeners(moveFn, endFn) {
+                document.removeEventListener('mousemove', moveFn);
+                document.removeEventListener('mouseup', endFn);
+                document.removeEventListener('touchmove', moveFn);
+                document.removeEventListener('touchend', endFn);
+            }
+
             function doDrag(e) {
-                const dx = e.clientX - initialX;
-                const dy = e.clientY - initialY;
+                if(e.type === 'touchmove') e.preventDefault(); 
+                const coords = getCoords(e);
+                const dx = coords.x - initialX;
+                const dy = coords.y - initialY;
+                
                 item.x = startLeft + dx;
                 item.y = startTop + dy;
                 el.style.left = item.x + 'px';
                 el.style.top = item.y + 'px';
             }
-            function stopDrag() {
-                document.removeEventListener('mousemove', doDrag);
-                document.removeEventListener('mouseup', stopDrag);
-            }
 
             function doResize(e) {
-                const dx = e.clientX - initialX;
+                if(e.type === 'touchmove') e.preventDefault();
+                const coords = getCoords(e);
+                const dx = coords.x - initialX;
                 const newW = Math.max(20, initialW + dx);
                 let newH = item.h;
                 
@@ -751,7 +797,7 @@
                     const ratio = initialH / initialW;
                     newH = newW * ratio;
                 } else {
-                    const dy = e.clientY - initialY;
+                    const dy = coords.y - initialY;
                     newH = Math.max(20, initialH + dy);
                     const scaleFactor = newH / initialH;
                     item.fontSize = Math.max(8, initialFontSize * scaleFactor);
@@ -763,21 +809,21 @@
                 el.style.width = item.w + 'px';
                 el.style.height = item.h + 'px';
             }
-            function stopResize() {
-                document.removeEventListener('mousemove', doResize);
-                document.removeEventListener('mouseup', stopResize);
-            }
 
             function doRotate(e) {
-                const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                if(e.type === 'touchmove') e.preventDefault();
+                const coords = getCoords(e);
+                const currentAngle = Math.atan2(coords.y - centerY, coords.x - centerX);
                 const deg = (currentAngle - startAngle) * (180 / Math.PI);
                 item.r = (item.r || 0) + deg;
                 startAngle = currentAngle;
                 el.style.transform = `rotate(${item.r}deg)`;
             }
-            function stopRotate() {
-                document.removeEventListener('mousemove', doRotate);
-                document.removeEventListener('mouseup', stopRotate);
+
+            function stopAction(e) {
+                removeListeners(doDrag, stopAction);
+                removeListeners(doResize, stopAction);
+                removeListeners(doRotate, stopAction);
             }
         }
 
