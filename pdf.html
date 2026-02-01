@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+	<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4726/4726010.png">
     
     <script>
         MobileDragDrop.polyfill({
@@ -84,6 +85,18 @@
     padding-right: 1.2rem;
 	z-index: 100;
     position: absolute;
+}
+
+#sidebar {
+    box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.text-element.selected { 
+    z-index: 50 !important; 
+}
+
+.text-element.selected div[onmousedown] {
+    z-index: 60;
 }
     </style>
 </head>
@@ -877,6 +890,7 @@ function renderTextElement(textItem, layer) {
                             startTop = item.y;
                             addListeners(doDrag, stopAction);
                         }
+						return;
                     } else {
                         if(e.cancelable) e.preventDefault();
                         startLeft = item.x;
