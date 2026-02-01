@@ -766,11 +766,12 @@ function renderTextElement(textItem, layer) {
     if(textItem.r) el.style.transform = `rotate(${textItem.r}deg)`;
     
     el.innerHTML = `
-        <div class="absolute -top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white border-2 border-slate-300 p-2 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] hidden group-[.selected]:flex z-[200] min-w-[210px]" 
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white border-2 border-slate-300 p-2 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] hidden group-[.selected]:flex z-[200] min-w-[280px]" 
              onmousedown="event.stopPropagation()" 
              ontouchstart="event.stopPropagation()"
              onclick="event.stopPropagation()">
-            <select class="flex-1 bg-slate-50 border border-slate-300 text-[11px] font-bold rounded px-2 py-1 outline-none focus:border-brand-500 cursor-pointer h-10" 
+            
+            <select class="w-24 bg-slate-50 border border-slate-300 text-[11px] font-bold rounded px-1 py-1 outline-none focus:border-brand-500 cursor-pointer h-10" 
                     onchange="changeFont('${textItem.id}', this.value)"
                     onmousedown="event.stopPropagation()"
                     ontouchstart="event.stopPropagation()">
@@ -781,7 +782,17 @@ function renderTextElement(textItem, layer) {
                 <option value="Courier" ${textItem.fontFamily === 'Courier' ? 'selected' : ''}>Mono</option>
                 <option value="Courier-Bold" ${textItem.fontFamily === 'Courier-Bold' ? 'selected' : ''}>Mono B</option>
             </select>
+
+            <input type="number" 
+                   value="${Math.round(textItem.fontSize)}" 
+                   min="8" max="200"
+                   class="w-14 h-10 bg-slate-50 border border-slate-300 text-[11px] font-bold rounded px-1 text-center outline-none focus:border-brand-500"
+                   onchange="changeFontSizeManual('${textItem.id}', this.value)"
+                   onmousedown="event.stopPropagation()"
+                   ontouchstart="event.stopPropagation()">
+
             <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
             <input type="color" 
                    value="${textItem.color || '#000000'}" 
                    class="w-10 h-10 rounded border border-slate-300 bg-white cursor-pointer shrink-0 p-0 overflow-hidden"
@@ -1307,6 +1318,21 @@ window.changeFont = (id, fontName) => {
             const textarea = el.querySelector('textarea');
             textarea.style.fontFamily = fontName;
             textarea.style.fontWeight = fontName.includes('Bold') ? 'bold' : 'normal';
+        }
+    }
+}
+
+window.changeFontSizeManual = (id, newSize) => {
+    const textItem = app.texts.find(t => t.id === id);
+    if(textItem) {
+        const size = parseFloat(newSize);
+        if(size >= 8 && size <= 200) {
+            textItem.fontSize = size;
+            const el = document.getElementById(id);
+            if(el) {
+                const textarea = el.querySelector('textarea');
+                textarea.style.fontSize = size + 'px';
+            }
         }
     }
 }
