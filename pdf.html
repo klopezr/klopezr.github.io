@@ -117,7 +117,7 @@
                     <i class="ph-duotone ph-stack text-xl"></i> Organizar Páginas
                 </button>
                 <button onclick="setMode('extract')" id="menu-extract" class="sidebar-menu-btn">
-                    <i class="ph-duotone ph-scissors text-xl"></i> Extraer / Borrar
+                    <i class="ph-duotone ph-scissors text-xl"></i> Extraer Páginas
                 </button>
                 <div class="h-px bg-slate-100 my-2"></div>
                 <button onclick="setMode('stamp')" id="menu-stamp" class="sidebar-menu-btn">
@@ -126,6 +126,9 @@
                 <div id="stamp-submenu" class="hidden pl-4 space-y-2 mt-2 border-l-2 border-brand-100 ml-4">
                     <button onclick="document.getElementById('input-stamp').click()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
                         <i class="ph-bold ph-image"></i> Cargar Imagen
+                    </button>
+                    <button onclick="openSignatureModal()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
+                        <i class="ph-bold ph-pen-nib"></i> Firma manual
                     </button>
                     <button onclick="copyStampToAll()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
                         <i class="ph-bold ph-copy"></i> Copiar en todas
@@ -141,6 +144,12 @@
                 <div id="text-submenu" class="hidden pl-4 space-y-2 mt-2 border-l-2 border-brand-100 ml-4">
                     <button onclick="addTextToVisiblePage()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
                         <i class="ph-bold ph-plus"></i> Nuevo Texto
+                    </button>
+                    <button onclick="addPageNumbers()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
+                        <i class="ph-bold ph-list-numbers"></i> Numerar Páginas
+                    </button>
+                    <button onclick="syncPageNumberStyle()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
+                        <i class="ph-bold ph-copy"></i> Copiar estilo a todas
                     </button>
                 </div>
             </div>
@@ -181,6 +190,53 @@
 
         <input type="file" id="input-org" class="hidden" multiple accept="application/pdf">
         <input type="file" id="input-stamp" class="hidden" accept="image/*">
+		
+		<div id="signature-modal" class="fixed inset-0 bg-black/50 z-[200] hidden flex items-center justify-center backdrop-blur-sm opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-md mx-4 transform scale-95 transition-transform duration-200" id="sig-panel">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-slate-700">Dibujar Firma</h3>
+                <button onclick="closeSignatureModal()" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="border-2 border-slate-100 rounded-xl bg-slate-50 relative touch-none overflow-hidden h-48 cursor-crosshair" id="sig-area">
+                <canvas id="sig-canvas" class="w-full h-full"></canvas>
+                <div class="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-200 text-sm">
+                    Dibuja aquí
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-4">
+                <button onclick="clearSignature()" class="flex-1 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-medium">Borrar</button>
+                <button onclick="saveSignature()" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-brand-500/20">Usar Firma</button>
+            </div>
+        </div>
+    </div>
+	
+	<div id="pagination-modal" class="fixed inset-0 bg-black/50 z-[200] hidden flex items-center justify-center backdrop-blur-sm opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 transform scale-95 transition-transform duration-200" id="pag-panel">
+            <h3 class="font-bold text-lg text-slate-700 mb-4">Configurar Numeración</h3>
+            
+            <div class="space-y-4">
+                <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
+                    <input type="checkbox" id="pag-skip-cover" class="w-5 h-5 text-brand-600 rounded focus:ring-brand-500">
+                    <div class="text-sm">
+                        <div class="font-semibold text-slate-700">Omitir primera página</div>
+                        <div class="text-xs text-slate-500">No numerar la portada</div>
+                    </div>
+                </label>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Empezar a contar desde:</label>
+                    <input type="number" id="pag-start-num" value="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closePaginationModal()" class="flex-1 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-medium">Cancelar</button>
+                <button onclick="applyPagination()" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-brand-500/20">Aplicar</button>
+            </div>
+        </div>
+    </div>
 
     </main>
 
@@ -321,6 +377,10 @@
             
             e.target.value = ''; 
             document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('workspace-stamp').classList.add('hidden'); 
+            document.getElementById('stamp-submenu').classList.add('hidden');   
+            document.getElementById('text-submenu').classList.add('hidden');    
+            
             const grid = document.getElementById('workspace-grid');
             grid.classList.remove('hidden');
             document.getElementById('btn-final').disabled = false;
@@ -536,6 +596,8 @@
                     `;
                 } else {
                     const fileName = app.files.find(f => f.id === item.fileId)?.name || '???';
+                    const pageNumberLabel = index + 1;
+
                     innerHTML = `
                         <div class="${containerStyle}" style="${containerInlineStyle}">
                             <img src="${item.thumb}" style="${rotationStyle}" class="max-w-full max-h-full object-contain pointer-events-none transition-transform">
@@ -543,11 +605,13 @@
                                 <div style="${rotationStyle}; width:100%; height:100%;">${stampsOverlay}</div>
                             </div>
                             <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono z-10">
-                                Pag ${item.pageIdx + 1}
+                                Pag ${pageNumberLabel}
                             </div>
                             ${app.mode === 'extract' && item.selected ? 
                                 `<div class="absolute inset-0 bg-brand-500/10 flex items-center justify-center z-20">
-                                    <div class="bg-brand-500 text-white rounded-full p-1"><i class="ph-bold ph-check"></i></div>
+                                    <div class="bg-brand-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+                                        <i class="ph-bold ph-check text-xl"></i>
+                                    </div>
                                 </div>` : ''}
                         </div>
                         <div class="mt-auto px-1">
@@ -1083,6 +1147,206 @@
             document.getElementById('toast-txt').innerText = msg;
             t.classList.remove('opacity-0', 'translate-y-2');
             setTimeout(() => t.classList.add('opacity-0', 'translate-y-2'), 3000);
+        }
+		
+		window.addPageNumbers = () => {
+            if (app.pages.length === 0) return showToast('No hay páginas');
+            
+            const modal = document.getElementById('pagination-modal');
+            const panel = document.getElementById('pag-panel');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                panel.classList.remove('scale-95');
+                panel.classList.add('scale-100');
+            }, 10);
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+		
+		window.syncPageNumberStyle = () => {
+            const selectedEl = document.querySelector('.text-element.selected');
+            if(!selectedEl) return showToast('Selecciona un número primero');
+            
+            const sourceItem = app.texts.find(t => t.id === selectedEl.id);
+            if(!sourceItem || !sourceItem.isPageNumber) return showToast('El elemento no es un número de página');
+
+            let count = 0;
+            app.texts.forEach(t => {
+                if(t.isPageNumber && t.id !== sourceItem.id) {
+                    t.fontSize = sourceItem.fontSize;
+                    t.w = sourceItem.w;
+                    t.h = sourceItem.h;
+                    count++;
+                }
+            });
+            
+            if(count > 0) {
+                renderStampView();
+                showToast('Estilo aplicado a todas las páginas');
+            } else {
+                showToast('No hay otras páginas para actualizar');
+            }
+            
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        window.closePaginationModal = () => {
+            const modal = document.getElementById('pagination-modal');
+            const panel = document.getElementById('pag-panel');
+            
+            modal.classList.add('opacity-0');
+            panel.classList.remove('scale-100');
+            panel.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        window.applyPagination = () => {
+            const skipCover = document.getElementById('pag-skip-cover').checked;
+            let val = parseInt(document.getElementById('pag-start-num').value);
+            const startNum = isNaN(val) ? 1 : val;
+            
+            app.pages.forEach((page, index) => {
+                const existing = app.texts.find(t => t.isPageNumber && t.pageUid === page.uId);
+                if(existing) {
+                    app.texts = app.texts.filter(t => t.id !== existing.id);
+                }
+
+                if (skipCover && index === 0) return;
+
+                let displayNum;
+                if (skipCover) {
+                    displayNum = startNum + (index - 1);
+                } else {
+                    displayNum = startNum + index;
+                }
+
+                const textItem = {
+                    id: Date.now() + Math.random().toString(),
+                    pageUid: page.uId,
+                    text: `Pág ${displayNum}`,
+                    x: (page.w / 2) - 50, 
+                    y: page.h - 40,
+                    w: 100, h: 30, r: 0,
+                    fontSize: 16,
+                    isPageNumber: true 
+                };
+                app.texts.push(textItem);
+            });
+
+            if(app.mode === 'stamp' || app.mode === 'text') {
+                renderStampView();
+            }
+            
+            showToast('Páginas numeradas');
+            closePaginationModal();
+        }
+		
+		let sigCanvas, sigCtx, isDrawing = false;
+
+        function openSignatureModal() {
+            const modal = document.getElementById('signature-modal');
+            const panel = document.getElementById('sig-panel');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                panel.classList.remove('scale-95');
+                panel.classList.add('scale-100');
+                initCanvas();
+            }, 10);
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function closeSignatureModal() {
+            const modal = document.getElementById('signature-modal');
+            const panel = document.getElementById('sig-panel');
+            
+            modal.classList.add('opacity-0');
+            panel.classList.remove('scale-100');
+            panel.classList.add('scale-95');
+            
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function initCanvas() {
+            const area = document.getElementById('sig-area');
+            sigCanvas = document.getElementById('sig-canvas');
+            
+            const rect = area.getBoundingClientRect();
+            sigCanvas.width = rect.width;
+            sigCanvas.height = rect.height;
+            
+            sigCtx = sigCanvas.getContext('2d');
+            sigCtx.lineWidth = 3;
+            sigCtx.lineCap = 'round';
+            sigCtx.strokeStyle = '#000000';
+            
+            ['mousedown', 'touchstart'].forEach(ev => 
+                sigCanvas.addEventListener(ev, startDraw, {passive: false}));
+            ['mousemove', 'touchmove'].forEach(ev => 
+                sigCanvas.addEventListener(ev, drawing, {passive: false}));
+            ['mouseup', 'touchend', 'mouseleave'].forEach(ev => 
+                sigCanvas.addEventListener(ev, stopDraw));
+        }
+
+        function getSigCoords(e) {
+            const rect = sigCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDraw(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const {x, y} = getSigCoords(e);
+            sigCtx.beginPath();
+            sigCtx.moveTo(x, y);
+        }
+
+        function drawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const {x, y} = getSigCoords(e);
+            sigCtx.lineTo(x, y);
+            sigCtx.stroke();
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+            sigCtx.closePath();
+        }
+
+        window.clearSignature = () => {
+            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        }
+
+        window.saveSignature = () => {
+            const dataUrl = sigCanvas.toDataURL('image/png');
+            const blank = document.createElement('canvas');
+            blank.width = sigCanvas.width;
+            blank.height = sigCanvas.height;
+            
+            if (dataUrl === blank.toDataURL()) {
+                showToast('Dibuja algo primero');
+                return;
+            }
+
+            app.lastStampImg = dataUrl;
+            addStampToVisiblePage();
+            closeSignatureModal();
         }
 
         setMode('files');
