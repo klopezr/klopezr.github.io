@@ -518,6 +518,8 @@
                 const containerStyle = `relative bg-slate-100 rounded-lg overflow-hidden border border-slate-100 mb-2 mx-auto flex items-center justify-center`;
 
                 let innerHTML = '';
+                const rotationStyle = item.rotation ? `transform: rotate(${item.rotation}deg); transition: transform 0.3s;` : '';
+
                 if (app.mode === 'files') {
                     innerHTML = `
                         <div class="${containerStyle}" style="${containerInlineStyle}">
@@ -536,13 +538,15 @@
                     const fileName = app.files.find(f => f.id === item.fileId)?.name || '???';
                     innerHTML = `
                         <div class="${containerStyle}" style="${containerInlineStyle}">
-                            <img src="${item.thumb}" class="max-w-full max-h-full object-contain pointer-events-none">
-                            <div class="absolute inset-0" style="container-type: size; width: 100%; height: 100%;">${stampsOverlay}</div>
-                            <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono">
+                            <img src="${item.thumb}" style="${rotationStyle}" class="max-w-full max-h-full object-contain pointer-events-none transition-transform">
+                            <div class="absolute inset-0" style="container-type: size; width: 100%; height: 100%; pointer-events: none;">
+                                <div style="${rotationStyle}; width:100%; height:100%;">${stampsOverlay}</div>
+                            </div>
+                            <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono z-10">
                                 Pag ${item.pageIdx + 1}
                             </div>
                             ${app.mode === 'extract' && item.selected ? 
-                                `<div class="absolute inset-0 bg-brand-500/10 flex items-center justify-center">
+                                `<div class="absolute inset-0 bg-brand-500/10 flex items-center justify-center z-20">
                                     <div class="bg-brand-500 text-white rounded-full p-1"><i class="ph-bold ph-check"></i></div>
                                 </div>` : ''}
                         </div>
@@ -550,14 +554,27 @@
                             <div class="text-[10px] text-slate-400 truncate">${fileName}</div>
                         </div>
                         ${(app.mode === 'pages' || app.mode === 'extract') ? 
-                            `<button onclick="deletePage(event, ${index})" class="absolute -top-1 -right-1 bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-600 scale-90">
+                            `
+                            <button onclick="rotatePage(event, ${index})" class="absolute -top-1 -left-1 bg-white text-brand-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-brand-50 scale-90 z-30 ring-1 ring-slate-200">
+                                <i class="ph-bold ph-arrow-clockwise"></i>
+                            </button>
+                            <button onclick="deletePage(event, ${index})" class="absolute -top-1 -right-1 bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-600 scale-90 z-30">
                                 <i class="ph-bold ph-x"></i>
-                            </button>` : ''}
+                            </button>
+                            ` : ''}
                     `;
                 }
                 el.innerHTML = innerHTML;
                 grid.appendChild(el);
             });
+        }
+		
+		window.rotatePage = (e, index) => {
+            if(e) e.stopPropagation();
+            const p = app.pages[index];
+            p.rotation = (p.rotation || 0) + 90;
+            if (p.rotation >= 360) p.rotation = 0;
+            renderGrid();
         }
 
         async function renderStampView() {
@@ -571,7 +588,9 @@
                 const file = app.files.find(f => f.id === pItem.fileId);
                 const js = await pdfjsLib.getDocument(await file.doc.save()).promise;
                 const page = await js.getPage(pItem.pageIdx + 1);
-                const viewport = page.getViewport({ scale: 1.0 });
+                
+                const rotation = pItem.rotation || 0;
+                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
 
                 const wrap = document.createElement('div');
                 wrap.className = 'relative bg-white shadow-2xl mb-8 max-w-full';
@@ -591,7 +610,11 @@
                 canvas.style.display = 'block'; 
 
                 wrap.appendChild(canvas);
-                page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport });
+                
+                await page.render({ 
+                    canvasContext: canvas.getContext('2d'), 
+                    viewport: viewport 
+                }).promise;
 
                 const layer = document.createElement('div');
                 layer.className = 'absolute inset-0';
@@ -979,6 +1002,10 @@
                     const sourceFile = app.files.find(f => f.id === pItem.fileId);
                     if (sourceFile) {
                         const [copiedPage] = await newDoc.copyPages(sourceFile.doc, [pItem.pageIdx]);
+                        
+                        const currentRotation = copiedPage.getRotation().angle;
+                        copiedPage.setRotation(degrees(currentRotation + (pItem.rotation || 0)));
+
                         const { width, height } = copiedPage.getSize();
                         
                         const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
