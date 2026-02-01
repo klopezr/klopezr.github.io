@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestor PDF Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        
+        .draggable-item { cursor: grab; transition: all 0.2s; position: relative; }
+        .draggable-item.dragging { opacity: 0.5; transform: scale(0.95); cursor: grabbing; }
+        .draggable-item.over { border: 2px dashed #0ea5e9; transform: scale(1.02); }
+        
+        .sidebar-menu-btn { width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem; color: #64748b; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; margin-bottom: 0.5rem; }
+        .sidebar-menu-btn:hover { background-color: #e2e8f0; color: #0f172a; }
+        .sidebar-menu-btn.active { background-color: #e0f2fe; color: #0284c7; font-weight: 600; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .stamp-element { position: absolute; cursor: move; border: 2px dashed transparent; }
+        .stamp-element:hover { border-color: #94a3b8; }
+        .stamp-element.selected { border-color: #0ea5e9; z-index: 50; }
+        
+        .stamp-handle { position: absolute; width: 12px; height: 12px; background: #0ea5e9; border: 2px solid white; border-radius: 50%; bottom: -6px; right: -6px; cursor: nwse-resize; display: none; }
+        .stamp-element.selected .stamp-handle { display: block; }
+        
+        .stamp-rotate { position: absolute; width: 24px; height: 24px; background: white; color: #0ea5e9; border: 1px solid #0ea5e9; border-radius: 50%; top: -30px; left: 50%; transform: translateX(-50%); cursor: grab; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stamp-element.selected .stamp-rotate { display: flex; }
+
+        .stamp-delete { position: absolute; width: 20px; height: 20px; background: #ef4444; color: white; border-radius: 50%; top: -10px; right: -10px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stamp-element.selected .stamp-delete { display: flex; }
+    </style>
+</head>
+<body class="h-screen flex flex-col text-slate-800 overflow-hidden">
+
+    <header class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-40 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-brand-600 text-white p-2 rounded-lg"><i class="ph-bold ph-files text-xl"></i></div>
+            <h1 class="font-bold text-xl tracking-tight text-slate-800">Gestor PDF</h1>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="saveState()" class="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios
+            </button>
+            <button onclick="finalizePDF()" id="btn-final" disabled class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95">
+                <i class="ph-bold ph-download-simple"></i> Finalizar y exportar
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 relative overflow-hidden flex">
+        
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col p-5 shrink-0 z-20 overflow-y-auto">
+            <div class="mb-6">
+                <button onclick="document.getElementById('input-org').click()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md transition">
+                    <i class="ph-bold ph-plus"></i> Añadir PDFs
+                </button>
+            </div>
+
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 uppercase mb-3 px-2">Modos</p>
+                <button onclick="setMode('files')" id="menu-files" class="sidebar-menu-btn active">
+                    <i class="ph-duotone ph-folder-open text-xl"></i> Archivos
+                </button>
+                <button onclick="setMode('pages')" id="menu-pages" class="sidebar-menu-btn">
+                    <i class="ph-duotone ph-stack text-xl"></i> Organizar Páginas
+                </button>
+                <button onclick="setMode('extract')" id="menu-extract" class="sidebar-menu-btn">
+                    <i class="ph-duotone ph-scissors text-xl"></i> Extraer / Borrar
+                </button>
+                <div class="h-px bg-slate-100 my-2"></div>
+                <button onclick="setMode('stamp')" id="menu-stamp" class="sidebar-menu-btn">
+                    <i class="ph-duotone ph-stamp text-xl"></i> Añadir Sello
+                </button>
+
+                <div id="stamp-submenu" class="hidden pl-4 space-y-2 mt-2 border-l-2 border-brand-100 ml-4">
+                    <button onclick="document.getElementById('input-stamp').click()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
+                        <i class="ph-bold ph-image"></i> Cargar Imagen
+                    </button>
+                    <button onclick="copyStampToAll()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1">
+                        <i class="ph-bold ph-copy"></i> Copiar en todas
+                    </button>
+                    <div class="text-[10px] text-slate-400 mt-2 italic">
+                        Usa Ctrl+C / Ctrl+V para copiar sellos
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-slate-100">
+                <button onclick="resetAll()" class="w-full text-red-500 hover:bg-red-50 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-trash"></i> Limpiar Todo
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-1 relative bg-slate-50/50 overflow-hidden flex flex-col">
+            
+            <div class="h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0">
+                <h2 id="workspace-title" class="font-semibold text-slate-700">Vista de Archivos</h2>
+                <div id="workspace-info" class="text-sm text-slate-500">0 documentos cargados</div>
+            </div>
+
+            <div id="workspace-grid" class="flex-1 overflow-y-auto p-6 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 content-start pb-20">
+            </div>
+
+            <div id="workspace-stamp" class="hidden flex-1 overflow-y-auto p-8 flex flex-col items-center gap-8 bg-slate-200 pb-32">
+            </div>
+
+            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 pointer-events-none">
+                <div class="bg-white p-6 rounded-full shadow-sm mb-4">
+                    <i class="ph-duotone ph-files text-4xl text-brand-500 opacity-80"></i>
+                </div>
+                <p class="text-lg font-medium text-slate-600">No hay archivos cargados</p>
+                <p class="text-sm">Sube tus PDFs para comenzar a editar</p>
+            </div>
+
+        </div>
+
+        <input type="file" id="input-org" class="hidden" multiple accept="application/pdf">
+        <input type="file" id="input-stamp" class="hidden" accept="image/*">
+
+    </main>
+
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm font-medium opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-3 transform translate-y-2">
+        <i class="ph-fill ph-check-circle text-green-400 text-lg"></i> <span id="toast-txt">Mensaje</span>
+    </div>
+
+    <script>
+        const { PDFDocument, rgb, degrees } = PDFLib;
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let app = {
+            mode: 'files', 
+            files: [],     
+            pages: [],
+            stamps: [], 
+            lastStampImg: null,
+            clipboard: null
+        };
+
+        function setMode(mode) {
+            app.mode = mode;
+            
+            document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`menu-${mode}`).classList.add('active');
+
+            const grid = document.getElementById('workspace-grid');
+            const stampView = document.getElementById('workspace-stamp');
+            const stampSubmenu = document.getElementById('stamp-submenu');
+            const info = document.getElementById('workspace-info');
+            const empty = document.getElementById('empty-state');
+
+            if (app.files.length === 0) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                stampView.classList.add('hidden');
+                return;
+            } else {
+                empty.classList.add('hidden');
+            }
+
+            const titles = { 
+                files: 'Archivos Completos', 
+                pages: 'Organizar Páginas', 
+                extract: 'Extraer / Borrar',
+                stamp: 'Editor de Sellos'
+            };
+            document.getElementById('workspace-title').innerText = titles[mode];
+
+            if (mode === 'stamp') {
+                grid.classList.add('hidden');
+                stampView.classList.remove('hidden');
+                stampSubmenu.classList.remove('hidden');
+                info.innerText = 'Arrastra, rota y ajusta el sello';
+                renderStampView();
+            } else {
+                grid.classList.remove('hidden');
+                stampView.classList.add('hidden');
+                stampSubmenu.classList.add('hidden');
+                if (mode === 'files') info.innerText = `${app.files.length} archivos | ${app.pages.length} páginas`;
+                else info.innerText = `${app.pages.length} páginas`;
+                renderGrid();
+            }
+        }
+
+        document.getElementById('input-org').addEventListener('change', async (e) => {
+            if(e.target.files.length === 0) return;
+            showToast('Procesando documentos...', false); 
+            
+            for(let f of e.target.files) {
+                try {
+                    const buff = await f.arrayBuffer();
+                    const doc = await PDFDocument.load(buff);
+                    const js = await pdfjsLib.getDocument(buff).promise;
+                    const fileId = Math.random().toString(36).substr(2);
+
+                    const p1 = await js.getPage(1);
+                    const vp = p1.getViewport({scale:0.3});
+                    const cvs = document.createElement('canvas');
+                    cvs.width = vp.width; cvs.height = vp.height;
+                    await p1.render({canvasContext:cvs.getContext('2d'), viewport:vp}).promise;
+
+                    app.files.push({ 
+                        id: fileId, 
+                        name: f.name, 
+                        doc: doc, 
+                        thumb: cvs.toDataURL() 
+                    });
+
+                    for(let i=0; i<doc.getPageCount(); i++) {
+                        const pi = await js.getPage(i+1);
+                        const vpi = pi.getViewport({scale:0.2});
+                        const cvsi = document.createElement('canvas');
+                        cvsi.width = vpi.width; cvsi.height = vpi.height;
+                        await pi.render({canvasContext:cvsi.getContext('2d'), viewport:vpi}).promise;
+                        
+                        app.pages.push({ 
+                            uId: Math.random().toString(36), 
+                            fileId: fileId, 
+                            pageIdx: i, 
+                            thumb: cvsi.toDataURL(), 
+                            selected: true 
+                        });
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error al cargar ' + f.name);
+                }
+            }
+            
+            e.target.value = ''; 
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('btn-final').disabled = false;
+            
+            if(app.mode === 'stamp') {
+                document.getElementById('workspace-grid').classList.add('hidden');
+                document.getElementById('workspace-stamp').classList.remove('hidden');
+                renderStampView();
+            } else {
+                document.getElementById('workspace-grid').classList.remove('hidden');
+                document.getElementById('workspace-stamp').classList.add('hidden');
+                renderGrid();
+            }
+            
+            showToast('Documentos añadidos correctamente');
+        });
+
+        document.getElementById('input-stamp').addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if(f) {
+                const r = new FileReader();
+                r.onload = ev => {
+                    app.lastStampImg = ev.target.result;
+                    addStampToVisiblePage();
+                };
+                r.readAsDataURL(f);
+            }
+            e.target.value = '';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if(app.mode !== 'stamp') return;
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                const selected = document.querySelector('.stamp-element.selected');
+                if(selected) {
+                    const stamp = app.stamps.find(s => s.id === selected.id);
+                    if(stamp) {
+                        app.clipboard = { ...stamp };
+                        showToast('Sello copiado');
+                    }
+                }
+            }
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                if(app.clipboard) {
+                    const activeWrapper = getVisiblePageWrapper();
+                    if(activeWrapper) {
+                        const uid = activeWrapper.dataset.uid;
+                        const pageWidth = parseFloat(activeWrapper.dataset.w || 800);
+                        const pageHeight = parseFloat(activeWrapper.dataset.h || 1000);
+
+                        const newStamp = {
+                            ...app.clipboard,
+                            id: Date.now().toString(),
+                            pageUid: uid,
+                            x: (pageWidth - app.clipboard.w) / 2, 
+                            y: (pageHeight - app.clipboard.h) / 2
+                        };
+                        app.stamps.push(newStamp);
+                        const layer = document.getElementById(`stamp-layer-${uid}`);
+                        renderStampElement(newStamp, layer);
+                        showToast('Sello pegado en página actual');
+                    }
+                }
+            }
+        });
+
+        function getVisiblePageWrapper() {
+            const container = document.getElementById('workspace-stamp');
+            const wrappers = Array.from(container.children);
+            if (wrappers.length === 0) return null;
+
+            const containerRect = container.getBoundingClientRect();
+            let bestWrap = wrappers[0];
+            let maxOverlap = 0;
+
+            wrappers.forEach(w => {
+                const r = w.getBoundingClientRect();
+                const overlap = Math.min(r.bottom, containerRect.bottom) - Math.max(r.top, containerRect.top);
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
+                    bestWrap = w;
+                }
+            });
+            return bestWrap;
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('workspace-grid');
+            grid.innerHTML = '';
+            
+            let itemsToShow = app.mode === 'files' ? app.files : app.pages;
+
+            itemsToShow.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = `draggable-item bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex flex-col group hover:shadow-md transition-all relative`;
+                
+                if (app.mode === 'pages' || app.mode === 'files') {
+                    el.draggable = true;
+                    el.addEventListener('dragstart', e => { e.dataTransfer.setData('idx', index); el.classList.add('dragging'); });
+                    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+                    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+                    el.addEventListener('dragleave', () => el.classList.remove('over'));
+                    el.addEventListener('drop', e => handleDrop(e, index));
+                }
+
+                if (app.mode === 'extract') {
+                    el.onclick = () => toggleSelection(index);
+                    if (item.selected) {
+                        el.classList.add('ring-2', 'ring-brand-500', 'bg-brand-50');
+                    } else {
+                        el.classList.add('opacity-50', 'grayscale');
+                    }
+                }
+
+                let innerHTML = '';
+                if (app.mode === 'files') {
+                    innerHTML = `
+                        <div class="relative bg-slate-100 aspect-[1/1.4] rounded-lg overflow-hidden border border-slate-100 mb-2">
+                            <img src="${item.thumb}" class="w-full h-full object-contain pointer-events-none">
+                        </div>
+                        <div class="mt-auto px-1">
+                            <div class="text-xs font-semibold text-slate-700 truncate" title="${item.name}">${item.name}</div>
+                            <div class="text-[10px] text-slate-400">${item.doc.getPageCount()} páginas</div>
+                        </div>
+                        <button onclick="deleteFile('${item.id}')" class="absolute top-1 right-1 bg-white text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50">
+                            <i class="ph-bold ph-trash"></i>
+                        </button>
+                    `;
+                } else {
+                    const fileName = app.files.find(f => f.id === item.fileId)?.name || '???';
+                    innerHTML = `
+                        <div class="relative bg-slate-100 aspect-[1/1.4] rounded-lg overflow-hidden border border-slate-100 mb-2">
+                            <img src="${item.thumb}" class="w-full h-full object-contain pointer-events-none">
+                            <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono">
+                                Pag ${item.pageIdx + 1}
+                            </div>
+                            ${app.mode === 'extract' && item.selected ? 
+                                `<div class="absolute inset-0 bg-brand-500/10 flex items-center justify-center">
+                                    <div class="bg-brand-500 text-white rounded-full p-1"><i class="ph-bold ph-check"></i></div>
+                                </div>` : ''}
+                        </div>
+                        <div class="mt-auto px-1">
+                            <div class="text-[10px] text-slate-400 truncate">${fileName}</div>
+                        </div>
+                        ${(app.mode === 'pages' || app.mode === 'extract') ? 
+                            `<button onclick="deletePage(event, ${index})" class="absolute -top-1 -right-1 bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-600 scale-90">
+                                <i class="ph-bold ph-x"></i>
+                            </button>` : ''}
+                    `;
+                }
+                el.innerHTML = innerHTML;
+                grid.appendChild(el);
+            });
+        }
+
+        async function renderStampView() {
+            const container = document.getElementById('workspace-stamp');
+            container.innerHTML = '';
+
+            for (let i = 0; i < app.pages.length; i++) {
+                const pItem = app.pages[i];
+                if(app.mode === 'extract' && !pItem.selected) continue;
+
+                const file = app.files.find(f => f.id === pItem.fileId);
+                const js = await pdfjsLib.getDocument(await file.doc.save()).promise;
+                const page = await js.getPage(pItem.pageIdx + 1);
+                const viewport = page.getViewport({ scale: 1.0 });
+
+                const wrap = document.createElement('div');
+                wrap.className = 'relative bg-white shadow-md mb-8';
+                wrap.style.width = viewport.width + 'px';
+                wrap.style.height = viewport.height + 'px';
+                wrap.dataset.uid = pItem.uId;
+                wrap.dataset.w = viewport.width;
+                wrap.dataset.h = viewport.height;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                wrap.appendChild(canvas);
+                page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport });
+
+                const layer = document.createElement('div');
+                layer.className = 'absolute inset-0';
+                layer.id = `stamp-layer-${pItem.uId}`;
+                wrap.appendChild(layer);
+
+                container.appendChild(wrap);
+
+                const existingStamp = app.stamps.find(s => s.pageUid === pItem.uId);
+                if(existingStamp) renderStampElement(existingStamp, layer);
+            }
+        }
+
+        function addStampToVisiblePage() {
+            if(!app.lastStampImg) return;
+            
+            const visibleWrapper = getVisiblePageWrapper();
+            if(!visibleWrapper) return showToast('No se detectó ninguna página visible');
+            
+            const uid = visibleWrapper.dataset.uid;
+            const pageWidth = parseFloat(visibleWrapper.dataset.w || 800);
+            const pageHeight = parseFloat(visibleWrapper.dataset.h || 1000);
+            
+            const stamp = {
+                id: Date.now().toString(),
+                pageUid: uid,
+                img: app.lastStampImg,
+                x: (pageWidth - 150) / 2, 
+                y: (pageHeight - 150) / 2, 
+                w: 150, h: 150, r: 0
+            };
+            app.stamps.push(stamp);
+            
+            const layer = document.getElementById(`stamp-layer-${uid}`);
+            renderStampElement(stamp, layer);
+            showToast('Sello añadido en página actual');
+        }
+
+        function renderStampElement(stamp, layer) {
+            const el = document.createElement('div');
+            el.className = 'stamp-element';
+            el.id = stamp.id;
+            el.style.left = stamp.x + 'px';
+            el.style.top = stamp.y + 'px';
+            el.style.width = stamp.w + 'px';
+            el.style.height = stamp.h + 'px';
+            if(stamp.r) el.style.transform = `rotate(${stamp.r}deg)`;
+            
+            el.innerHTML = `
+                <img src="${stamp.img}" class="w-full h-full object-contain pointer-events-none">
+                <div class="stamp-rotate"><i class="ph-bold ph-arrows-clockwise"></i></div>
+                <div class="stamp-handle"></div>
+                <div class="stamp-delete"><i class="ph-bold ph-x"></i></div>
+            `;
+            
+            layer.appendChild(el);
+            setupStampInteraction(el, stamp);
+        }
+
+        function setupStampInteraction(el, stamp) {
+            let startX, startY, startW, startH, startLeft, startTop, startAngle;
+            let centerX, centerY;
+
+            el.addEventListener('mousedown', (e) => {
+                if(e.target.closest('.stamp-delete')) {
+                    app.stamps = app.stamps.filter(s => s.id !== stamp.id);
+                    el.remove();
+                    return;
+                }
+                
+                document.querySelectorAll('.stamp-element').forEach(s => s.classList.remove('selected'));
+                el.classList.add('selected');
+
+                if(e.target.closest('.stamp-rotate')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const rect = el.getBoundingClientRect();
+                    centerX = rect.left + rect.width / 2;
+                    centerY = rect.top + rect.height / 2;
+                    startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                    
+                    document.addEventListener('mousemove', doRotate);
+                    document.addEventListener('mouseup', stopRotate);
+
+                } else if(e.target.classList.contains('stamp-handle')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    startX = e.clientX;
+                    startW = stamp.w;
+                    startH = stamp.h;
+                    document.addEventListener('mousemove', doResize);
+                    document.addEventListener('mouseup', stopResize);
+                } else {
+                    e.preventDefault();
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startLeft = stamp.x;
+                    startTop = stamp.y;
+                    document.addEventListener('mousemove', doDrag);
+                    document.addEventListener('mouseup', stopDrag);
+                }
+            });
+
+            function doDrag(e) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                stamp.x = startLeft + dx;
+                stamp.y = startTop + dy;
+                el.style.left = stamp.x + 'px';
+                el.style.top = stamp.y + 'px';
+            }
+            function stopDrag() {
+                document.removeEventListener('mousemove', doDrag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+
+            function doResize(e) {
+                const dx = e.clientX - startX;
+                const newW = Math.max(20, startW + dx);
+                const ratio = startH / startW;
+                stamp.w = newW;
+                stamp.h = newW * ratio;
+                el.style.width = stamp.w + 'px';
+                el.style.height = stamp.h + 'px';
+            }
+            function stopResize() {
+                document.removeEventListener('mousemove', doResize);
+                document.removeEventListener('mouseup', stopResize);
+            }
+
+            function doRotate(e) {
+                const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                const deg = (currentAngle - startAngle) * (180 / Math.PI);
+                
+                stamp.r = (stamp.r || 0) + deg;
+                startAngle = currentAngle;
+                
+                el.style.transform = `rotate(${stamp.r}deg)`;
+            }
+            function stopRotate() {
+                document.removeEventListener('mousemove', doRotate);
+                document.removeEventListener('mouseup', stopRotate);
+            }
+        }
+
+        window.copyStampToAll = () => {
+            const selectedEl = document.querySelector('.stamp-element.selected');
+            if(!selectedEl) return showToast('Selecciona un sello primero');
+            
+            const stampId = selectedEl.id;
+            const sourceStamp = app.stamps.find(s => s.id === stampId);
+            if(!sourceStamp) return;
+
+            app.pages.forEach(p => {
+                if(p.uId === sourceStamp.pageUid) return;
+                
+                app.stamps = app.stamps.filter(s => s.pageUid !== p.uId);
+                
+                const wrap = document.querySelector(`[data-uid="${p.uId}"]`);
+                let targetX = sourceStamp.x;
+                let targetY = sourceStamp.y;
+
+                if(wrap) {
+                    const pw = parseFloat(wrap.dataset.w);
+                    const ph = parseFloat(wrap.dataset.h);
+                    targetX = Math.min(targetX, pw - sourceStamp.w);
+                    targetY = Math.min(targetY, ph - sourceStamp.h);
+                    targetX = Math.max(0, targetX);
+                    targetY = Math.max(0, targetY);
+                }
+
+                const newStamp = { 
+                    ...sourceStamp, 
+                    id: Date.now() + Math.random().toString(), 
+                    pageUid: p.uId,
+                    x: targetX,
+                    y: targetY
+                };
+                app.stamps.push(newStamp);
+                
+                const layer = document.getElementById(`stamp-layer-${p.uId}`);
+                if(layer) {
+                    layer.innerHTML = '';
+                    renderStampElement(newStamp, layer);
+                }
+            });
+            showToast('Sello copiado a todas las páginas');
+        }
+
+        function handleDrop(e, targetIndex) {
+            e.preventDefault();
+            const srcIndex = parseInt(e.dataTransfer.getData('idx'));
+            if (srcIndex !== targetIndex) {
+                if (app.mode === 'files') {
+                    const [movedFile] = app.files.splice(srcIndex, 1);
+                    app.files.splice(targetIndex, 0, movedFile);
+                    
+                    let newPagesOrder = [];
+                    app.files.forEach(file => {
+                        const filePages = app.pages.filter(p => p.fileId === file.id);
+                        newPagesOrder = newPagesOrder.concat(filePages);
+                    });
+                    app.pages = newPagesOrder;
+                } else if (app.mode === 'pages') {
+                    const [movedItem] = app.pages.splice(srcIndex, 1);
+                    app.pages.splice(targetIndex, 0, movedItem);
+                }
+                
+                renderGrid();
+            }
+        }
+
+        function toggleSelection(index) {
+            app.pages[index].selected = !app.pages[index].selected;
+            renderGrid();
+        }
+
+        window.deleteFile = (id) => {
+            app.files = app.files.filter(f => f.id !== id);
+            app.pages = app.pages.filter(p => p.fileId !== id);
+            renderGrid();
+            showToast('Archivo eliminado');
+        }
+
+        window.deletePage = (e, index) => {
+            if(e) e.stopPropagation();
+            app.pages.splice(index, 1);
+            renderGrid();
+        }
+
+        window.resetAll = () => {
+            if(confirm('¿Borrar todo y empezar de cero?')) {
+                app.files = [];
+                app.pages = [];
+                app.stamps = [];
+                renderGrid();
+                document.getElementById('empty-state').classList.remove('hidden');
+            }
+        }
+
+        window.saveState = () => {
+            showToast('Cambios guardados en memoria');
+        }
+
+        window.finalizePDF = async () => {
+            if (app.pages.length === 0) return showToast('No hay páginas para procesar');
+            
+            const btn = document.getElementById('btn-final');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Generando...`;
+            btn.disabled = true;
+
+            try {
+                const newDoc = await PDFDocument.create();
+                const pagesToProcess = app.mode === 'extract' ? app.pages.filter(p => p.selected) : app.pages;
+
+                if(pagesToProcess.length === 0) throw new Error("No hay páginas seleccionadas");
+
+                const embeddedImages = {};
+
+                for (const pItem of pagesToProcess) {
+                    const sourceFile = app.files.find(f => f.id === pItem.fileId);
+                    if (sourceFile) {
+                        const [copiedPage] = await newDoc.copyPages(sourceFile.doc, [pItem.pageIdx]);
+                        
+                        const stamp = app.stamps.find(s => s.pageUid === pItem.uId);
+                        if(stamp) {
+                            let img = embeddedImages[stamp.img];
+                            if(!img) {
+                                const imgBytes = await fetch(stamp.img).then(res => res.arrayBuffer());
+                                if(stamp.img.startsWith('data:image/png')) img = await newDoc.embedPng(imgBytes);
+                                else img = await newDoc.embedJpg(imgBytes);
+                                embeddedImages[stamp.img] = img;
+                            }
+                            
+                            const { width, height } = copiedPage.getSize();
+                            
+                            const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                            const canvas = layer.parentElement.querySelector('canvas');
+                            const scaleX = width / canvas.width;
+                            const scaleY = height / canvas.height;
+
+                            const rotRad = (stamp.r || 0) * (Math.PI/180);
+                            
+                            copiedPage.drawImage(img, {
+                                x: stamp.x * scaleX,
+                                y: height - ((stamp.y + stamp.h) * scaleY),
+                                width: stamp.w * scaleX,
+                                height: stamp.h * scaleY,
+                                rotate: degrees(-(stamp.r || 0))
+                            });
+                        }
+
+                        newDoc.addPage(copiedPage);
+                    }
+                }
+
+                const pdfBytes = await newDoc.save();
+                download(pdfBytes, 'documento_final.pdf');
+                showToast('¡PDF Generado con éxito!');
+
+            } catch (err) {
+                console.error(err);
+                showToast('Error: ' + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        function download(data, filename) {
+            const blob = new Blob([data], {type: 'application/pdf'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function showToast(msg, icon = true) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-txt').innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-2');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-2'), 3000);
+        }
+
+        setMode('files');
+
+    </script>
+</body>
+</html>
