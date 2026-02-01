@@ -216,6 +216,7 @@
                     const fileId = Math.random().toString(36).substr(2);
 
                     const p1 = await js.getPage(1);
+                    const vpOrig = p1.getViewport({scale:1});
                     const vp = p1.getViewport({scale:0.3});
                     const cvs = document.createElement('canvas');
                     cvs.width = vp.width; cvs.height = vp.height;
@@ -224,12 +225,14 @@
                     app.files.push({ 
                         id: fileId, 
                         name: f.name, 
-                        doc: doc, 
+                        doc: doc,
+                        w: vpOrig.width, h: vpOrig.height,
                         thumb: cvs.toDataURL() 
                     });
 
                     for(let i=0; i<doc.getPageCount(); i++) {
                         const pi = await js.getPage(i+1);
+                        const vpiOrig = pi.getViewport({scale:1});
                         const vpi = pi.getViewport({scale:0.2});
                         const cvsi = document.createElement('canvas');
                         cvsi.width = vpi.width; cvsi.height = vpi.height;
@@ -238,7 +241,8 @@
                         app.pages.push({ 
                             uId: Math.random().toString(36), 
                             fileId: fileId, 
-                            pageIdx: i, 
+                            pageIdx: i,
+                            w: vpiOrig.width, h: vpiOrig.height,
                             thumb: cvsi.toDataURL(), 
                             selected: true 
                         });
@@ -365,11 +369,36 @@
                     }
                 }
 
+                let stampsOverlay = '';
+                if(app.mode === 'files') {
+                    const firstPage = app.pages.find(p => p.fileId === item.id && p.pageIdx === 0);
+                    if(firstPage) {
+                        const fileStamps = app.stamps.filter(s => s.pageUid === firstPage.uId);
+                        fileStamps.forEach(s => {
+                             const left = (s.x / item.w) * 100;
+                             const top = (s.y / item.h) * 100;
+                             const width = (s.w / item.w) * 100;
+                             const height = (s.h / item.h) * 100;
+                             stampsOverlay += `<img src="${s.img}" style="position:absolute; left:${left}%; top:${top}%; width:${width}%; height:${height}%; transform:rotate(${s.r||0}deg); pointer-events:none; z-index:5;">`;
+                        });
+                    }
+                } else {
+                    const pageStamps = app.stamps.filter(s => s.pageUid === item.uId);
+                    pageStamps.forEach(s => {
+                         const left = (s.x / item.w) * 100;
+                         const top = (s.y / item.h) * 100;
+                         const width = (s.w / item.w) * 100;
+                         const height = (s.h / item.h) * 100;
+                         stampsOverlay += `<img src="${s.img}" style="position:absolute; left:${left}%; top:${top}%; width:${width}%; height:${height}%; transform:rotate(${s.r||0}deg); pointer-events:none; z-index:5;">`;
+                    });
+                }
+
                 let innerHTML = '';
                 if (app.mode === 'files') {
                     innerHTML = `
                         <div class="relative bg-slate-100 aspect-[1/1.4] rounded-lg overflow-hidden border border-slate-100 mb-2">
                             <img src="${item.thumb}" class="w-full h-full object-contain pointer-events-none">
+                            ${stampsOverlay}
                         </div>
                         <div class="mt-auto px-1">
                             <div class="text-xs font-semibold text-slate-700 truncate" title="${item.name}">${item.name}</div>
@@ -384,6 +413,7 @@
                     innerHTML = `
                         <div class="relative bg-slate-100 aspect-[1/1.4] rounded-lg overflow-hidden border border-slate-100 mb-2">
                             <img src="${item.thumb}" class="w-full h-full object-contain pointer-events-none">
+                            ${stampsOverlay}
                             <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono">
                                 Pag ${item.pageIdx + 1}
                             </div>
