@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestor PDF Pro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/4726/4726010.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="PDF Pro">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4726/4726010.png">
+    
+<style>
+        :root {
+            --primary-color: #0ea5e9;
+            --secondary-color: #0284c7;
+            --danger-color: #ef4444;
+            --text-color: #334155;
+            --border-radius: 0.5rem;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        
+        .draggable { cursor: grab; user-select: none; -webkit-user-drag: element; transition: all 0.2s; position: relative; }
+        .draggable:active { cursor: grabbing; }
+        .draggable.dragging { opacity: 0.5; transform: scale(0.95); cursor: grabbing; }
+        .draggable.over { border: 2px dashed #0ea5e9; transform: scale(1.02); }
+        
+        .sidebar-menu-btn { width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: var(--border-radius); display: flex; align-items: center; gap: 0.75rem; color: #64748b; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; margin-bottom: 0.5rem; }
+        .sidebar-menu-btn:hover { background-color: #e2e8f0; color: #0f172a; }
+        .sidebar-menu-btn.active { background-color: #e0f2fe; color: var(--secondary-color); font-weight: 600; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .stamp-element, .text-element { position: absolute; cursor: move; border: 2px dashed transparent; will-change: transform, opacity; transform: translateZ(0); }
+        .stamp-element:hover, .text-element:hover { border-color: #94a3b8; }
+        .stamp-element.selected, .text-element.selected { border-color: var(--primary-color); z-index: 50; }
+        
+        .stamp-handle, .text-handle { position: absolute; width: 16px; height: 16px; background: var(--primary-color); border: 2px solid white; border-radius: 50%; bottom: -6px; right: -6px; cursor: nwse-resize; display: none; }
+        .stamp-element.selected .stamp-handle, .text-element.selected .text-handle { display: block; }
+        
+        .stamp-rotate, .text-rotate { position: absolute; width: 32px; height: 32px; background: white; color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 50%; top: -30px; left: 50%; transform: translateX(-50%); cursor: grab; display: none; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); touch-action: none; pointer-events: auto; }
+        .stamp-element.selected .stamp-rotate, .text-element.selected .text-rotate { display: flex; }
+
+        .stamp-delete, .text-delete { position: absolute; width: 24px; height: 24px; background: var(--danger-color); color: white; border-radius: 50%; top: -10px; right: -10px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 12px; box-shadow: var(--shadow-sm); }
+        .stamp-element.selected .stamp-delete, .text-element.selected .text-delete { display: flex; }
+
+        .text-content { width: 100%; height: 100%; background: transparent; border: none; outline: none; resize: none; overflow: hidden; font-family: Helvetica, sans-serif; line-height: 1.2; color: #000; padding: 5px; margin: 0; cursor: move; box-sizing: border-box; }
+        .text-element.selected { z-index: 100; }
+        .dnd-poly-drag-image { opacity: 0.8 !important; transform: scale(1.05) !important; box-shadow: var(--shadow-lg) !important; z-index: 9999 !important; }
+
+        .font-select { 
+            outline: none; 
+            cursor: pointer; 
+            box-shadow: var(--shadow-md);
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.2rem center;
+            background-size: 0.8em;
+            padding-right: 1.2rem;
+            z-index: 100;
+        }
+
+        #sidebar { box-shadow: 10px 0 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        #loading-overlay {
+            position: fixed; inset: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(4px);
+            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+        }
+        
+        .progress-bar { width: 300px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 20px; }
+        .progress-fill { height: 100%; background: var(--primary-color); transition: width 0.3s ease; }
+        
+        .error-message { background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 16px; border-radius: var(--border-radius); margin: 10px 0; display: none; }
+        
+        .history-controls { position: fixed; bottom: 100px; right: 30px; display: flex; gap: 8px; z-index: 100; }
+        .history-btn { width: 44px; height: 44px; border-radius: 50%; background: white; border: 1px solid #e2e8f0; box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .history-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .history-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .thumbnail-container { position: relative; background: #f8fafc; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .thumbnail-img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
+        .grid-item { display: flex; flex-direction: column; height: 100%; }
+        .grid-item-info { margin-top: auto; padding-top: 8px; }
+        
+        #workspace-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; padding: 16px; align-content: start; }
+
+        .text-controls-panel {
+            min-width: 320px;
+            background: white !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+            border: 2px solid #cbd5e1 !important;
+            z-index: 2000 !important;
+        }
+
+        .text-controls-panel input[type="color"] { height: 40px; width: 40px; border-radius: 4px; border: 2px solid #cbd5e1; cursor: pointer; }
+        .text-controls-panel input[type="number"] { border: 2px solid #cbd5e1; border-radius: 4px; padding: 0 8px; font-weight: 600; }
+        .text-controls-panel select { border: 2px solid #cbd5e1; border-radius: 4px; background: #f8fafc; }
+
+        @media (max-width: 768px) {
+            .text-controls-panel {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: 64px !important;
+                transform: none !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 12px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                background: white !important;
+                border-bottom: 2px solid var(--primary-color) !important;
+            }
+
+            .history-controls { bottom: 20px; right: 20px; flex-direction: column; }
+            #workspace-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding: 12px; }
+            
+            .text-controls-panel .w-px { display: none; }
+        }
+
+        @media (min-width: 1024px) { #workspace-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }
+        @media (min-width: 1400px) { #workspace-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+    </style>
+</head>
+<body class="h-screen flex flex-col text-slate-800 overflow-hidden">
+
+    <div id="loading-overlay">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+        <div id="loading-text" class="mt-4 text-slate-600 font-medium">Cargando...</div>
+        <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <div id="error-container" class="error-message hidden"></div>
+
+    <header class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-40 shadow-sm">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg" aria-label="Menú">
+                <i class="ph-bold ph-list text-2xl"></i>
+            </button>
+            <div class="bg-brand-600 text-white p-2 rounded-lg"><i class="ph-bold ph-files text-xl"></i></div>
+            <h1 class="font-bold text-xl tracking-tight text-slate-800">Gestor PDF</h1>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="finalizePDF()" id="btn-final" disabled class="bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95">
+                <i class="ph-bold ph-download-simple"></i> Finalizar y exportar
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 relative overflow-hidden flex">
+        
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col p-5 shrink-0 z-[500] overflow-y-auto transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
+            
+            <div class="flex items-center justify-between mb-4 md:hidden">
+                <span class="text-sm font-bold text-slate-500 px-2">Menú</span>
+                <button onclick="toggleMobileMenu()" class="text-slate-500 hover:bg-slate-100 p-2 rounded-lg transition" aria-label="Cerrar menú">
+                    <i class="ph-bold ph-x text-xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-6">
+                <button onclick="document.getElementById('input-org').click()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2 shadow-md transition" aria-label="Añadir PDFs">
+                    <i class="ph-bold ph-plus"></i> Añadir PDFs
+                </button>
+            </div>
+
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 uppercase mb-3 px-2">Modos</p>
+                <button onclick="setMode('files')" id="menu-files" class="sidebar-menu-btn active" aria-label="Ver archivos">
+                    <i class="ph-duotone ph-folder-open text-xl"></i> Archivos
+                </button>
+                <button onclick="setMode('pages')" id="menu-pages" class="sidebar-menu-btn" aria-label="Organizar páginas">
+                    <i class="ph-duotone ph-stack text-xl"></i> Organizar Páginas
+                </button>
+                <button onclick="setMode('extract')" id="menu-extract" class="sidebar-menu-btn" aria-label="Extraer páginas">
+                    <i class="ph-duotone ph-scissors text-xl"></i> Extraer Páginas
+                </button>
+                <div class="h-px bg-slate-100 my-2"></div>
+                <button onclick="setMode('stamp')" id="menu-stamp" class="sidebar-menu-btn" aria-label="Añadir sello">
+                    <i class="ph-duotone ph-stamp text-xl"></i> Añadir Sello
+                </button>
+                <div id="stamp-submenu" class="hidden pl-4 space-y-2 mt-2 border-l-2 border-brand-100 ml-4">
+                    <button onclick="document.getElementById('input-stamp').click()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1" aria-label="Cargar imagen">
+                        <i class="ph-bold ph-image"></i> Cargar Imagen
+                    </button>
+                    <button onclick="openSignatureModal()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1" aria-label="Firma manual">
+                        <i class="ph-bold ph-pen-nib"></i> Firma manual
+                    </button>
+                    <button onclick="copyStampToAll()" class="text-sm text-slate-600 hover:text-brand-600 flex items-center gap-2 w-full text-left py-1" aria-label="Copiar en todas las páginas">
+                        <i class="ph-bold ph-copy"></i> Copiar en todas
+                    </button>
+                    <div class="text-[10px] text-slate-400 mt-2 italic">
+                        Usa Ctrl+C / Ctrl+V para copiar
+                    </div>
+                </div>
+
+                <button onclick="setMode('text')" id="menu-text" class="sidebar-menu-btn" aria-label="Añadir cuadro de texto">
+                    <i class="ph-duotone ph-text-t text-xl"></i> Añadir cuadro de texto
+                </button>
+                <div id="text-submenu" class="hidden pl-4 space-y-4 mt-2 border-l-2 border-brand-100 ml-4">
+    <button onclick="addTextToVisiblePage()" class="text-sm text-brand-600 font-bold flex items-center gap-2 w-full text-left py-1">
+        <i class="ph-bold ph-plus"></i> Nuevo Texto
+    </button>
+    
+    <div id="active-text-controls" class="space-y-3 pr-2">
+        <div class="space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Fuente</span>
+            <select id="editor-font" class="w-full bg-slate-50 border border-slate-200 text-xs rounded p-1 shadow-sm outline-none focus:border-brand-500" onchange="updateSelectedText('font', this.value)">
+                <option value="Helvetica">Sans Serif</option>
+                <option value="Helvetica-Bold">Sans Bold</option>
+                <option value="Times-Roman">Serif</option>
+                <option value="Courier">Monospace</option>
+            </select>
+        </div>
+
+        <div class="flex gap-2">
+            <div class="flex-1 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Tamaño</span>
+                <input id="editor-size" type="number" value="24" min="8" max="150" class="w-full bg-slate-50 border border-slate-200 text-xs rounded p-1 outline-none" onchange="updateSelectedText('size', this.value)">
+            </div>
+            <div class="flex-1 space-y-1">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Color</span>
+                <input id="editor-color" type="color" class="w-full h-7 border border-slate-200 rounded p-0 overflow-hidden cursor-pointer" onchange="updateSelectedText('color', this.value)">
+            </div>
+        </div>
+
+        <div class="space-y-1">
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Alineación</span>
+            <div class="flex bg-slate-50 border border-slate-200 rounded p-1 gap-1">
+                <button onclick="updateSelectedText('align', 'left')" class="flex-1 text-slate-500 hover:text-brand-600"><i class="ph-bold ph-text-align-left"></i></button>
+                <button onclick="updateSelectedText('align', 'center')" class="flex-1 text-slate-500 hover:text-brand-600"><i class="ph-bold ph-text-align-center"></i></button>
+                <button onclick="updateSelectedText('align', 'right')" class="flex-1 text-slate-500 hover:text-brand-600"><i class="ph-bold ph-text-align-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-slate-100">
+                <button onclick="resetAll()" class="w-full text-red-500 hover:bg-red-50 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2" aria-label="Limpiar todo">
+                    <i class="ph-bold ph-trash"></i> Limpiar Todo
+                </button>
+            </div>
+        </aside>
+
+        <div class="flex-1 relative bg-slate-50/50 overflow-hidden flex flex-col">
+            
+            <div class="h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0">
+                <h2 id="workspace-title" class="font-semibold text-slate-700">Vista de Archivos</h2>
+                <div id="workspace-info" class="text-sm text-slate-500">0 documentos cargados</div>
+            </div>
+
+            <div id="workspace-grid" class="flex-1 overflow-y-auto hide-scrollbar">
+            </div>
+
+            <div id="workspace-stamp" class="hidden flex-1 overflow-y-auto p-4 md:p-8 bg-slate-400 pb-32">
+            </div>
+
+            <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-10 transition-colors duration-300">
+                <div class="bg-white p-8 rounded-full shadow-md mb-6 border-2 border-dashed border-slate-200" id="drop-icon-container">
+                    <i class="ph-duotone ph-cloud-arrow-up text-5xl text-brand-500 opacity-80"></i>
+                </div>
+                <p class="text-xl font-bold text-slate-700">Comienza con tus PDFs</p>
+                <p class="text-sm mb-8">Arrastra tus archivos aquí o utiliza el botón</p>
+    
+                <button onclick="document.getElementById('input-org').click()" class="flex items-center gap-3 bg-brand-600 hover:bg-brand-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-brand-500/30 transform active:scale-95 transition-all" aria-label="Seleccionar documentos">
+                    <i class="ph-bold ph-plus-circle text-xl"></i> Seleccionar documentos
+                </button>
+            </div>
+
+        </div>
+
+        <input type="file" id="input-org" class="hidden" multiple accept="application/pdf">
+        <input type="file" id="input-stamp" class="hidden" accept="image/*">
+        
+        <div id="signature-modal" class="fixed inset-0 bg-black/50 z-[200] hidden flex items-center justify-center backdrop-blur-sm opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="bg-white rounded-2xl shadow-2xl p-4 w-full max-w-md mx-4 transform scale-95 transition-transform duration-200" id="sig-panel">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-title" class="font-bold text-lg text-slate-700">Dibujar Firma</h3>
+                    <button onclick="closeSignatureModal()" class="text-slate-400 hover:text-slate-600" aria-label="Cerrar modal"><i class="ph-bold ph-x text-xl"></i></button>
+                </div>
+        
+                <div class="border-2 border-slate-100 rounded-xl bg-slate-50 relative touch-none overflow-hidden h-48 cursor-crosshair" id="sig-area">
+                    <canvas id="sig-canvas" class="w-full h-full"></canvas>
+                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center text-slate-200 text-sm">
+                        Dibuja aquí
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4 mt-4">
+                    <div class="flex items-center justify-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-500 uppercase">Color del trazo:</span>
+                        <input type="color" id="sig-color-picker" value="#000000" onchange="changeSigColor(this.value)" class="w-12 h-8 rounded cursor-pointer bg-transparent">
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="clearSignature()" class="flex-1 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-medium">Borrar</button>
+                        <button onclick="saveSignature()" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-bold shadow-lg shadow-brand-500/20">Usar Firma</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="history-controls">
+        <button id="undo-btn" onclick="undoAction()" disabled class="history-btn" aria-label="Deshacer">
+            <i class="ph-bold ph-arrow-counter-clockwise"></i>
+        </button>
+        <button id="redo-btn" onclick="redoAction()" disabled class="history-btn" aria-label="Rehacer">
+            <i class="ph-bold ph-arrow-clockwise"></i>
+        </button>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm font-medium opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-3 transform translate-y-2">
+        <i class="ph-fill ph-check-circle text-green-400 text-lg"></i> <span id="toast-txt">Mensaje</span>
+    </div>
+
+    <script>
+        MobileDragDrop.polyfill({
+            dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
+            holdToDrag: 300,
+            dragImageCenterOnTouch: true,
+            iterationInterval: 50 
+        });
+
+        document.addEventListener('dragenter', (e) => {
+            if(e.target.classList && e.target.classList.contains('draggable')) {
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('touchmove', function() {}, {passive: false});
+
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
+        var pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdfDocuments = new Map();
+        let history = [];
+        let historyIndex = -1;
+        let isProcessingHistory = false;
+
+        function updateHistoryButtons() {
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+            if (redoBtn) redoBtn.disabled = historyIndex >= history.length - 1;
+        }
+
+        function saveHistory() {
+            if (isProcessingHistory) return;
+            
+            const state = {
+                files: app.files.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    w: f.w,
+                    h: f.h,
+                    thumb: f.thumb,
+                    pageCount: f.pageCount
+                })),
+                pages: app.pages.map(p => ({
+                    uId: p.uId,
+                    fileId: p.fileId,
+                    pageIdx: p.pageIdx,
+                    w: p.w,
+                    h: p.h,
+                    thumb: p.thumb,
+                    selected: p.selected,
+                    rotation: p.rotation || 0
+                })),
+                stamps: JSON.parse(JSON.stringify(app.stamps)),
+                texts: JSON.parse(JSON.stringify(app.texts)),
+                mode: app.mode
+            };
+            
+            history = history.slice(0, historyIndex + 1);
+            history.push(state);
+            historyIndex++;
+            
+            if (history.length > 20) {
+                history.shift();
+                historyIndex--;
+            }
+            
+            updateHistoryButtons();
+        }
+
+        function undoAction() {
+            if (historyIndex > 0) {
+                isProcessingHistory = true;
+                historyIndex--;
+                restoreFromHistory(history[historyIndex]);
+                isProcessingHistory = false;
+                showToast('Deshacer');
+            }
+        }
+
+        function redoAction() {
+            if (historyIndex < history.length - 1) {
+                isProcessingHistory = true;
+                historyIndex++;
+                restoreFromHistory(history[historyIndex]);
+                isProcessingHistory = false;
+                showToast('Rehacer');
+            }
+        }
+
+        function restoreFromHistory(state) {
+            app.files = state.files;
+            app.pages = state.pages;
+            app.stamps = state.stamps;
+            app.texts = state.texts;
+            app.mode = state.mode;
+            
+            document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`menu-${app.mode}`).classList.add('active');
+            
+            const grid = document.getElementById('workspace-grid');
+            const stampView = document.getElementById('workspace-stamp');
+            const stampSubmenu = document.getElementById('stamp-submenu');
+            const textSubmenu = document.getElementById('text-submenu');
+            const info = document.getElementById('workspace-info');
+            const empty = document.getElementById('empty-state');
+
+            if (app.files.length === 0) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                stampView.classList.add('hidden');
+                stampSubmenu.classList.add('hidden');
+                textSubmenu.classList.add('hidden');
+            } else {
+                empty.classList.add('hidden');
+            }
+
+            const titles = { 
+                files: 'Archivos Completos', 
+                pages: 'Organizar Páginas', 
+                extract: 'Extraer / Borrar',
+                stamp: 'Editor de Sellos',
+                text: 'Editor de Texto'
+            };
+            document.getElementById('workspace-title').innerText = titles[app.mode];
+
+            stampSubmenu.classList.add('hidden');
+            textSubmenu.classList.add('hidden');
+
+            if (app.mode === 'stamp' || app.mode === 'text') {
+                grid.classList.add('hidden');
+                stampView.classList.remove('hidden');
+                
+                if(app.mode === 'stamp') {
+                    stampSubmenu.classList.remove('hidden');
+                    info.innerText = 'Arrastra, rota y ajusta el sello';
+                } else {
+                    textSubmenu.classList.remove('hidden');
+                    info.innerText = 'Añade anotaciones de texto';
+                }
+                renderStampView();
+            } else {
+                grid.classList.remove('hidden');
+                stampView.classList.add('hidden');
+                if (app.mode === 'files') info.innerText = `${app.files.length} archivos | ${app.pages.length} páginas`;
+                else info.innerText = `${app.pages.length} páginas`;
+                renderGrid();
+            }
+            
+            document.getElementById('btn-final').disabled = app.files.length === 0;
+            updateHistoryButtons();
+        }
+
+        function safeOperation(operation, errorMessage) {
+            try {
+                return operation();
+            } catch (error) {
+                console.error(errorMessage, error);
+                showError(`${errorMessage}: ${error.message || 'Error desconocido'}`);
+                throw error;
+            }
+        }
+
+        function debounce(func, wait, immediate = false) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    timeout = null;
+                    if (!immediate) func.apply(this, args);
+                };
+                const callNow = immediate && !timeout;
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+                if (callNow) func.apply(this, args);
+            };
+        }
+
+        function showLoading(show, text = 'Cargando...') {
+            const overlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            if (overlay) {
+                overlay.style.display = show ? 'flex' : 'none';
+                if (loadingText) loadingText.textContent = text;
+            }
+        }
+
+        function updateProgress(percent) {
+            const progressFill = document.getElementById('progress-fill');
+            if (progressFill) {
+                progressFill.style.width = `${percent}%`;
+            }
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            if (errorContainer) {
+                errorContainer.textContent = message;
+                errorContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    errorContainer.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        let app = {
+            mode: 'files',
+            files: [],
+            pages: [],
+            stamps: [],
+            texts: [],
+            lastStampImg: null,
+            clipboard: null,
+            textClipboard: null
+        };
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+function setMode(mode) {
+    if (app.mode === mode && app.files.length > 0) return;
+    
+    app.mode = mode;
+    
+    document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.getElementById(`menu-${mode}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (window.innerWidth < 768 && mode !== 'stamp' && mode !== 'text') {
+        document.getElementById('sidebar').classList.add('-translate-x-full');
+    }
+
+    const grid = document.getElementById('workspace-grid');
+    const stampView = document.getElementById('workspace-stamp');
+    const stampSubmenu = document.getElementById('stamp-submenu');
+    const textSubmenu = document.getElementById('text-submenu');
+    const info = document.getElementById('workspace-info');
+    const empty = document.getElementById('empty-state');
+
+    if (app.files.length === 0) {
+        empty.classList.remove('hidden');
+        grid.classList.add('hidden');
+        stampView.classList.add('hidden');
+        stampSubmenu.classList.add('hidden');
+        textSubmenu.classList.add('hidden');
+        return;
+    } else {
+        empty.classList.add('hidden');
+    }
+
+    const titles = { 
+        files: 'Archivos Completos', 
+        pages: 'Organizar Páginas', 
+        extract: 'Extraer / Borrar',
+        stamp: 'Editor de Sellos',
+        text: 'Editor de Texto'
+    };
+    document.getElementById('workspace-title').innerText = titles[mode];
+
+    stampSubmenu.classList.add('hidden');
+    textSubmenu.classList.add('hidden');
+
+    if (mode === 'stamp' || mode === 'text') {
+        grid.classList.add('hidden'); 
+        grid.style.display = 'none'; 
+        
+        stampView.classList.remove('hidden');
+        stampView.style.display = 'block';
+        
+        if(mode === 'stamp') {
+            stampSubmenu.classList.remove('hidden');
+            info.innerText = 'Arrastra, rota y ajusta el sello';
+        } else {
+            textSubmenu.classList.remove('hidden');
+            info.innerText = 'Añade anotaciones de texto';
+        }
+        renderStampView();
+    } else {
+        stampView.classList.add('hidden');
+        stampView.style.display = 'none';
+        
+        grid.classList.remove('hidden');
+        grid.style.display = 'grid';
+        
+        if (mode === 'files') info.innerText = `${app.files.length} archivos | ${app.pages.length} páginas`;
+        else info.innerText = `${app.pages.length} páginas`;
+        renderGrid();
+    }
+    
+    if (!isProcessingHistory) {
+        saveHistory();
+    }
+}
+
+        async function handleFileSelect(e) {
+            if(!e.target.files || e.target.files.length === 0) return;
+            
+            showLoading(true, 'Procesando documentos...');
+            const files = Array.from(e.target.files);
+            const totalFiles = files.length;
+            
+            try {
+                for(let i = 0; i < files.length; i++) {
+                    const f = files[i];
+                    updateProgress((i / totalFiles) * 100);
+                    
+                    await safeOperation(async () => {
+                        const buff = await f.arrayBuffer();
+                        const doc = await PDFDocument.load(buff);
+                        const fileId = Math.random().toString(36).substr(2);
+                        
+                        pdfDocuments.set(fileId, doc);
+                        
+                        const js = await pdfjsLib.getDocument(buff).promise;
+                        const p1 = await js.getPage(1);
+                        const vpOrig = p1.getViewport({scale:1});
+                        
+                        const thumbScale = window.innerWidth < 768 ? 0.15 : 0.2;
+                        const vp = p1.getViewport({scale:thumbScale});
+                        const cvs = document.createElement('canvas');
+                        cvs.width = vp.width;
+                        cvs.height = vp.height;
+                        await p1.render({canvasContext:cvs.getContext('2d'), viewport:vp}).promise;
+
+                        app.files.push({ 
+                            id: fileId, 
+                            name: f.name, 
+                            w: vpOrig.width,
+                            h: vpOrig.height,
+                            thumb: cvs.toDataURL(),
+                            pageCount: doc.getPageCount()
+                        });
+
+                        const newPages = [];
+                        for(let j = 0; j < doc.getPageCount(); j++) {
+                            const pi = await js.getPage(j + 1);
+                            const vpiOrig = pi.getViewport({scale:1});
+                            const vpi = pi.getViewport({scale:thumbScale});
+                            const cvsi = document.createElement('canvas');
+                            cvsi.width = vpi.width;
+                            cvsi.height = vpi.height;
+                            await pi.render({canvasContext:cvsi.getContext('2d'), viewport:vpi}).promise;
+                            
+                            newPages.push({ 
+                                uId: Math.random().toString(36), 
+                                fileId: fileId, 
+                                pageIdx: j,
+                                w: vpiOrig.width,
+                                h: vpiOrig.height,
+                                thumb: cvsi.toDataURL(), 
+                                selected: true,
+                                rotation: 0
+                            });
+                        }
+                        
+                        app.pages.push(...newPages);
+                    }, `Error al cargar ${f.name}`);
+                }
+                
+                updateProgress(100);
+                e.target.value = '';
+                document.getElementById('empty-state').classList.add('hidden');
+                document.getElementById('workspace-stamp').classList.add('hidden');
+                document.getElementById('stamp-submenu').classList.add('hidden');
+                document.getElementById('text-submenu').classList.add('hidden');
+                
+                const grid = document.getElementById('workspace-grid');
+                grid.classList.remove('hidden');
+                document.getElementById('btn-final').disabled = false;
+                
+                app.mode = 'files';
+                document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('menu-files').classList.add('active');
+                document.getElementById('workspace-title').innerText = 'Archivos Completos';
+                document.getElementById('workspace-info').innerText = `${app.files.length} archivos | ${app.pages.length} páginas`;
+
+                setTimeout(() => {
+                    renderGrid();
+                    showToast('Documentos añadidos correctamente');
+                    showLoading(false);
+                    saveHistory();
+                }, 100);
+            } catch (error) {
+                showError('Error al procesar archivos: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        document.getElementById('input-org').addEventListener('change', handleFileSelect);
+        
+        document.getElementById('input-stamp').addEventListener('change', (e) => {
+            const f = e.target.files[0];
+            if(f) {
+                const r = new FileReader();
+                r.onload = ev => {
+                    app.lastStampImg = ev.target.result;
+                    addStampToVisiblePage();
+                    if (window.innerWidth < 768) {
+                        document.getElementById('sidebar').classList.add('-translate-x-full');
+                    }
+                };
+                r.readAsDataURL(f);
+            }
+            e.target.value = '';
+        });
+
+        const dropZone = document.getElementById('empty-state');
+        const workspaceMain = document.querySelector('main');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            workspaceMain.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            workspaceMain.addEventListener(eventName, () => {
+                if(app.files.length === 0) {
+                    dropZone.classList.add('bg-brand-50');
+                    document.getElementById('drop-icon-container').classList.add('scale-110', 'border-brand-500');
+                }
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            workspaceMain.addEventListener(eventName, () => {
+                dropZone.classList.remove('bg-brand-50');
+                document.getElementById('drop-icon-container').classList.remove('scale-110', 'border-brand-500');
+            }, false);
+        });
+
+        workspaceMain.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                handleFileSelect({ target: { files: files, value: '' } });
+            }
+        }, false);
+
+        document.addEventListener('keydown', (e) => {
+            if(app.mode !== 'stamp' && app.mode !== 'text') return;
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                const selStamp = document.querySelector('.stamp-element.selected');
+                if(selStamp) {
+                    const s = app.stamps.find(x => x.id === selStamp.id);
+                    if(s) { app.clipboard = { ...s, type: 'stamp' }; showToast('Sello copiado'); }
+                }
+                const selText = document.querySelector('.text-element.selected');
+                if(selText) {
+                    const t = app.texts.find(x => x.id === selText.id);
+                    if(t) { app.clipboard = { ...t, type: 'text' }; showToast('Texto copiado'); }
+                }
+            }
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                if(app.clipboard) {
+                    const activeWrapper = getVisiblePageWrapper();
+                    if(activeWrapper) {
+                        const uid = activeWrapper.dataset.uid;
+                        const pageWidth = parseFloat(activeWrapper.dataset.w || 800);
+                        const pageHeight = parseFloat(activeWrapper.dataset.h || 1000);
+
+                        const newItem = {
+                            ...app.clipboard,
+                            id: Date.now().toString(),
+                            pageUid: uid,
+                            x: (pageWidth - app.clipboard.w) / 2,
+                            y: (pageHeight - app.clipboard.h) / 2
+                        };
+                        
+                        if(app.clipboard.type === 'stamp') {
+                            app.stamps.push(newItem);
+                            const layer = document.getElementById(`stamp-layer-${uid}`);
+                            renderStampElement(newItem, layer);
+                            showToast('Sello pegado');
+                        } else if(app.clipboard.type === 'text') {
+                            app.texts.push(newItem);
+                            const layer = document.getElementById(`stamp-layer-${uid}`);
+                            renderTextElement(newItem, layer);
+                            showToast('Texto pegado');
+                        }
+                        saveHistory();
+                    }
+                }
+            }
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                undoAction();
+                e.preventDefault();
+            }
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'Z' && e.shiftKey) {
+                redoAction();
+                e.preventDefault();
+            }
+            
+            if((e.ctrlKey || e.metaKey) && e.key === 'y') {
+                redoAction();
+                e.preventDefault();
+            }
+        });
+
+        function getVisiblePageWrapper() {
+            const container = document.getElementById('workspace-stamp');
+            const wrappers = Array.from(container.children);
+            if (wrappers.length === 0) return null;
+
+            const containerRect = container.getBoundingClientRect();
+            let bestWrap = wrappers[0];
+            let maxOverlap = 0;
+
+            wrappers.forEach(w => {
+                const r = w.getBoundingClientRect();
+                const overlap = Math.min(r.bottom, containerRect.bottom) - Math.max(r.top, containerRect.top);
+                if (overlap > maxOverlap) {
+                    maxOverlap = overlap;
+                    bestWrap = w;
+                }
+            });
+            return bestWrap;
+        }
+
+        const optimizedRender = debounce(renderGrid, 100);
+        window.addEventListener('resize', optimizedRender);
+
+        function renderGrid() {
+            const grid = document.getElementById('workspace-grid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            let itemsToShow = app.mode === 'files' ? app.files : app.pages;
+            
+            itemsToShow.forEach((item, index) => {
+                const el = createGridItem(item, index);
+                grid.appendChild(el);
+            });
+        }
+
+        function createGridItem(item, index) {
+            const el = document.createElement('div');
+            el.className = `draggable bg-white rounded-xl shadow-sm border border-slate-200 group hover:shadow-md transition-all grid-item`;
+            
+            if (app.mode === 'pages' || app.mode === 'files') {
+                el.draggable = true;
+                el.addEventListener('dragstart', e => { 
+                    e.dataTransfer.setData('text/plain', index); 
+                    el.classList.add('dragging'); 
+                });
+                el.addEventListener('dragend', () => el.classList.remove('dragging'));
+                el.addEventListener('dragover', e => { 
+                    e.preventDefault(); 
+                    el.classList.add('over'); 
+                });
+                el.addEventListener('dragleave', () => el.classList.remove('over'));
+                el.addEventListener('drop', e => handleDrop(e, index));
+            }
+
+            if (app.mode === 'extract') {
+                el.onclick = () => toggleSelection(index);
+                if (item.selected) {
+                    el.classList.add('ring-2', 'ring-brand-500', 'bg-brand-50');
+                } else {
+                    el.classList.add('opacity-50', 'grayscale');
+                }
+            }
+
+            let stampsOverlay = '';
+            const pageUid = app.mode === 'files' 
+                ? app.pages.find(p => p.fileId === item.id && p.pageIdx === 0)?.uId 
+                : item.uId;
+            
+            if(pageUid) {
+                const pageStamps = app.stamps.filter(s => s.pageUid === pageUid);
+                pageStamps.forEach(s => {
+                    const left = (s.x / item.w) * 100;
+                    const top = (s.y / item.h) * 100;
+                    const width = (s.w / item.w) * 100;
+                    const height = (s.h / item.h) * 100;
+                    stampsOverlay += `<img src="${s.img}" style="position:absolute; left:${left}%; top:${top}%; width:${width}%; height:${height}%; transform:rotate(${s.r||0}deg); pointer-events:none; z-index:5; object-fit:contain;">`;
+                });
+
+                const pageTexts = app.texts.filter(t => t.pageUid === pageUid);
+                pageTexts.forEach(t => {
+                    const left = (t.x / item.w) * 100;
+                    const top = (t.y / item.h) * 100;
+                    const fontSize = Math.max(8, (t.fontSize / item.w) * 100);
+                    stampsOverlay += `<div style="position:absolute; left:${left}%; top:${top}%; font-size:${fontSize}%; transform:rotate(${t.r||0}deg); pointer-events:none; z-index:6; color:${t.color || '#000000'}; white-space:nowrap; line-height:1;">${t.text}</div>`;
+                });
+            }
+
+            const aspect = item.w / item.h;
+            const isLandscape = aspect > 1;
+            const thumbHeight = window.innerWidth < 768 ? 140 : 160;
+            const containerHeight = isLandscape ? thumbHeight : thumbHeight * (1/aspect);
+            
+            const containerStyle = `thumbnail-container h-[${containerHeight}px]`;
+
+            let innerHTML = '';
+            const rotationStyle = item.rotation ? `transform: rotate(${item.rotation}deg); transition: transform 0.3s;` : '';
+
+            if (app.mode === 'files') {
+                innerHTML = `
+                    <div class="${containerStyle}">
+                        <img src="${item.thumb}" class="thumbnail-img">
+                        <div class="absolute inset-0">${stampsOverlay}</div>
+                    </div>
+                    <div class="grid-item-info px-2 pb-2">
+                        <div class="text-xs font-semibold text-slate-700 truncate" title="${item.name}">${item.name}</div>
+                        <div class="text-[10px] text-slate-400">${item.pageCount} páginas</div>
+                    </div>
+                    <button onclick="deleteFile('${item.id}')" class="absolute top-1 right-1 bg-white text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50" aria-label="Eliminar archivo">
+                        <i class="ph-bold ph-trash"></i>
+                    </button>
+                `;
+            } else {
+                const fileName = app.files.find(f => f.id === item.fileId)?.name || '???';
+                const pageNumberLabel = index + 1;
+
+                innerHTML = `
+                    <div class="${containerStyle}">
+                        <img src="${item.thumb}" style="${rotationStyle}" class="thumbnail-img">
+                        <div class="absolute inset-0 pointer-events-none">${stampsOverlay}</div>
+                        <div class="absolute bottom-0 right-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded-tl-md font-mono z-10">
+                            Pag ${pageNumberLabel}
+                        </div>
+                        ${app.mode === 'extract' && item.selected ? 
+                            `<div class="absolute inset-0 bg-brand-500/10 flex items-center justify-center z-20">
+                                <div class="bg-brand-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+                                    <i class="ph-bold ph-check text-xl"></i>
+                                </div>
+                            </div>` : ''}
+                    </div>
+                    <div class="grid-item-info px-2 pb-2">
+                        <div class="text-[10px] text-slate-400 truncate">${fileName}</div>
+                    </div>
+                    ${(app.mode === 'pages' || app.mode === 'extract') ? 
+                        `
+                        <button onclick="rotatePage(event, ${index})" class="absolute -top-1 -left-1 bg-white text-brand-600 w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-brand-50 scale-90 z-30 ring-1 ring-slate-200" aria-label="Rotar página">
+                            <i class="ph-bold ph-arrow-clockwise"></i>
+                        </button>
+                        <button onclick="deletePage(event, ${index})" class="absolute -top-1 -right-1 bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-600 scale-90 z-30" aria-label="Eliminar página">
+                            <i class="ph-bold ph-x"></i>
+                        </button>
+                        ` : ''}
+                `;
+            }
+            el.innerHTML = innerHTML;
+            return el;
+        }
+        
+        window.rotatePage = (e, index) => {
+            if(e) e.stopPropagation();
+            app.pages[index].rotation = (app.pages[index].rotation || 0) + 90;
+            if (app.pages[index].rotation >= 360) app.pages[index].rotation = 0;
+            
+            renderGrid();
+            saveHistory();
+        }
+
+        async function renderStampView() {
+            const container = document.getElementById('workspace-stamp');
+            container.innerHTML = '';
+
+            const visiblePages = app.mode === 'extract' ? app.pages.filter(p => p.selected) : app.pages;
+            
+            for (let i = 0; i < visiblePages.length; i++) {
+                const pItem = visiblePages[i];
+
+                const file = app.files.find(f => f.id === pItem.fileId);
+                if (!file) continue;
+                
+                const doc = pdfDocuments.get(file.id);
+                if (!doc) continue;
+                
+                const js = await pdfjsLib.getDocument(await doc.save()).promise;
+                const page = await js.getPage(pItem.pageIdx + 1);
+                
+                const rotation = pItem.rotation || 0;
+                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
+
+                const wrap = document.createElement('div');
+                wrap.className = 'relative bg-white shadow-2xl mb-8 max-w-full mx-auto';
+                wrap.style.width = viewport.width + 'px';
+                wrap.style.height = 'auto';
+                wrap.style.aspectRatio = `${viewport.width} / ${viewport.height}`;
+                
+                wrap.dataset.uid = pItem.uId;
+                wrap.dataset.w = viewport.width;
+                wrap.dataset.h = viewport.height;
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
+                canvas.style.display = 'block';
+
+                wrap.appendChild(canvas);
+                
+                await page.render({ 
+                    canvasContext: canvas.getContext('2d'), 
+                    viewport: viewport 
+                }).promise;
+
+                const layer = document.createElement('div');
+                layer.className = 'absolute inset-0';
+                layer.id = `stamp-layer-${pItem.uId}`;
+                layer.style.width = '100%';
+                layer.style.height = '100%';
+                
+                wrap.appendChild(layer);
+                container.appendChild(wrap);
+
+                const existingStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
+                existingStamps.forEach(s => renderStampElement(s, layer));
+                
+                const existingTexts = app.texts.filter(t => t.pageUid === pItem.uId);
+                existingTexts.forEach(t => renderTextElement(t, layer));
+            }
+        }
+
+        function addStampToVisiblePage() {
+            if(!app.lastStampImg) return;
+            const visibleWrapper = getVisiblePageWrapper();
+            if(!visibleWrapper) return showToast('No se detectó ninguna página visible');
+            
+            const uid = visibleWrapper.dataset.uid;
+            const pageWidth = parseFloat(visibleWrapper.dataset.w || 800);
+            const pageHeight = parseFloat(visibleWrapper.dataset.h || 1000);
+            
+            const stamp = {
+                id: Date.now().toString(),
+                pageUid: uid,
+                img: app.lastStampImg,
+                x: (pageWidth - 150) / 2,
+                y: (pageHeight - 150) / 2,
+                w: 150,
+                h: 150,
+                r: 0
+            };
+            
+            app.stamps.push(stamp);
+            
+            const layer = document.getElementById(`stamp-layer-${uid}`);
+            renderStampElement(stamp, layer);
+            showToast('Sello añadido');
+            saveHistory();
+        }
+
+        function addTextToVisiblePage() {
+            const visibleWrapper = getVisiblePageWrapper();
+            if(!visibleWrapper) return showToast('No se detectó ninguna página visible');
+            
+            const uid = visibleWrapper.dataset.uid;
+            const pageWidth = parseFloat(visibleWrapper.dataset.w || 800);
+            const pageHeight = parseFloat(visibleWrapper.dataset.h || 1000);
+            
+            const textItem = {
+                id: Date.now().toString(),
+                pageUid: uid,
+                text: 'Texto editable',
+                x: (pageWidth - 200) / 2,
+                y: (pageHeight - 50) / 2,
+                w: 200,
+                h: 40,
+                r: 0,
+                fontSize: 24,
+                fontFamily: 'Helvetica',
+                color: '#000000',
+                backgroundColor: 'transparent',
+                padding: 5,
+                lineHeight: 1.2,
+                textAlign: 'left',
+                border: { width: 0, color: 'transparent', style: 'solid' }
+            };
+            
+            app.texts.push(textItem);
+            
+            const layer = document.getElementById(`stamp-layer-${uid}`);
+            renderTextElement(textItem, layer);
+            showToast('Texto añadido');
+            saveHistory();
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function renderStampElement(stamp, layer) {
+            const el = document.createElement('div');
+            el.className = 'stamp-element';
+            el.id = stamp.id;
+            el.style.left = stamp.x + 'px';
+            el.style.top = stamp.y + 'px';
+            el.style.width = stamp.w + 'px';
+            el.style.height = stamp.h + 'px';
+            if(stamp.r) el.style.transform = `rotate(${stamp.r}deg)`;
+            
+            el.innerHTML = `
+                <img src="${stamp.img}" class="w-full h-full object-contain pointer-events-none">
+                <div class="stamp-rotate"><i class="ph-bold ph-arrows-clockwise"></i></div>
+                <div class="stamp-handle"></div>
+                <div class="stamp-delete"><i class="ph-bold ph-x"></i></div>
+            `;
+            layer.appendChild(el);
+            setupElementInteraction(el, stamp, 'stamp');
+        }
+
+function renderTextElement(textItem, layer) {
+    const el = document.createElement('div');
+    el.className = 'text-element group';
+    el.id = textItem.id;
+    el.style.left = textItem.x + 'px';
+    el.style.top = textItem.y + 'px';
+    el.style.width = textItem.w + 'px';
+    el.style.height = textItem.h + 'px';
+    if(textItem.r) el.style.transform = `rotate(${textItem.r}deg)`;
+    
+    el.innerHTML = `
+        <textarea class="text-content" 
+                  style="font-size:${textItem.fontSize}px; 
+                         font-family:${textItem.fontFamily || 'Helvetica'}; 
+                         color:${textItem.color || '#000000'};
+                         text-align:${textItem.textAlign || 'left'};
+                         line-height:1.2;
+                         padding:5px;">${textItem.text}</textarea>
+        <div class="text-rotate"><i class="ph-bold ph-arrows-clockwise"></i></div>
+        <div class="text-handle"></div>
+        <div class="text-delete"><i class="ph-bold ph-x"></i></div>
+    `;
+    layer.appendChild(el);
+    
+    const ta = el.querySelector('textarea');
+    ta.addEventListener('input', (e) => {
+        textItem.text = e.target.value;
+        saveHistory();
+    });
+
+    el.addEventListener('mousedown', () => syncSidebarControls(textItem));
+    el.addEventListener('touchstart', () => syncSidebarControls(textItem));
+
+    setupElementInteraction(el, textItem, 'text');
+}
+
+function syncSidebarControls(textItem) {
+    document.getElementById('editor-font').value = textItem.fontFamily || 'Helvetica';
+    document.getElementById('editor-size').value = Math.round(textItem.fontSize);
+    document.getElementById('editor-color').value = textItem.color || '#000000';
+}
+
+function updateSelectedText(type, value) {
+    const selectedEl = document.querySelector('.text-element.selected');
+    if (!selectedEl) return;
+    
+    const id = selectedEl.id;
+    const textItem = app.texts.find(t => t.id === id);
+    if (!textItem) return;
+
+    const textarea = selectedEl.querySelector('textarea');
+
+    if (type === 'font') {
+        textItem.fontFamily = value;
+        textarea.style.fontFamily = value;
+        textarea.style.fontWeight = value.includes('Bold') ? 'bold' : 'normal';
+    } else if (type === 'size') {
+        textItem.fontSize = parseFloat(value);
+        textarea.style.fontSize = value + 'px';
+    } else if (type === 'color') {
+        textItem.color = value;
+        textarea.style.color = value;
+    } else if (type === 'align') {
+        textItem.textAlign = value;
+        textarea.style.textAlign = value;
+    }
+    saveHistory();
+}
+
+        function setupElementInteraction(el, item, type) {
+            let startX, startY, startW, startH, startLeft, startTop, startAngle;
+            let centerX, centerY;
+            let initialX, initialY, initialW, initialH, initialFontSize;
+            const prefix = type === 'stamp' ? 'stamp' : 'text';
+
+            function getCoords(e) {
+                if(e.touches && e.touches.length > 0) {
+                    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                }
+                return { x: e.clientX, y: e.clientY };
+            }
+
+            const startEvents = ['mousedown', 'touchstart'];
+            
+            startEvents.forEach(evt => {
+                el.addEventListener(evt, (e) => {
+                    if(e.type === 'touchstart' && !e.target.closest('textarea')) {
+                        if(e.target.closest(`.${prefix}-rotate`) || e.target.classList.contains(`${prefix}-handle`)) {
+                            e.preventDefault();
+                        }
+                    }
+
+                    const coords = getCoords(e);
+                    const wasSelected = el.classList.contains('selected');
+
+                    if(e.target.closest(`.${prefix}-delete`)) {
+                        if(type === 'stamp') {
+                            app.stamps = app.stamps.filter(s => s.id !== item.id);
+                        } else {
+                            app.texts = app.texts.filter(t => t.id !== item.id);
+                        }
+                        el.remove();
+                        saveHistory();
+                        return;
+                    }
+                    
+                    document.querySelectorAll('.stamp-element, .text-element').forEach(s => s.classList.remove('selected'));
+                    el.classList.add('selected');
+
+                    initialX = coords.x;
+                    initialY = coords.y;
+
+                    if(e.target.closest(`.${prefix}-rotate`)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rect = el.getBoundingClientRect();
+                        centerX = rect.left + rect.width / 2;
+                        centerY = rect.top + rect.height / 2;
+                        startAngle = Math.atan2(coords.y - centerY, coords.x - centerX);
+                        
+                        addListeners(doRotate, stopAction);
+
+                    } else if(e.target.classList.contains(`${prefix}-handle`)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        initialW = item.w;
+                        initialH = item.h;
+                        initialFontSize = item.fontSize || 24;
+                        addListeners(doResize, stopAction);
+
+                    } else if (e.target.tagName === 'TEXTAREA') {
+                        if(!wasSelected) {
+                            startLeft = item.x;
+                            startTop = item.y;
+                            addListeners(doDrag, stopAction);
+                        }
+                        return;
+                    } else {
+                        if(e.cancelable) e.preventDefault();
+                        startLeft = item.x;
+                        startTop = item.y;
+                        addListeners(doDrag, stopAction);
+                    }
+                }, { passive: false });
+            });
+
+            function addListeners(moveFn, endFn) {
+                document.addEventListener('mousemove', moveFn);
+                document.addEventListener('mouseup', endFn);
+                document.addEventListener('touchmove', moveFn, { passive: false });
+                document.addEventListener('touchend', endFn);
+            }
+
+            function removeListeners(moveFn, endFn) {
+                document.removeEventListener('mousemove', moveFn);
+                document.removeEventListener('mouseup', endFn);
+                document.removeEventListener('touchmove', moveFn);
+                document.removeEventListener('touchend', endFn);
+            }
+
+            function doDrag(e) {
+                if(e.type === 'touchmove') e.preventDefault();
+                const coords = getCoords(e);
+                const dx = coords.x - initialX;
+                const dy = coords.y - initialY;
+                
+                item.x = startLeft + dx;
+                item.y = startTop + dy;
+                el.style.left = item.x + 'px';
+                el.style.top = item.y + 'px';
+            }
+
+            function doResize(e) {
+                if(e.type === 'touchmove') e.preventDefault();
+                const coords = getCoords(e);
+                const dx = coords.x - initialX;
+                const newW = Math.max(20, initialW + dx);
+                let newH = item.h;
+                
+                if(type === 'stamp') {
+                    const ratio = initialH / initialW;
+                    newH = newW * ratio;
+                } else {
+                    const dy = coords.y - initialY;
+                    newH = Math.max(20, initialH + dy);
+                    const scaleFactor = newH / initialH;
+                    item.fontSize = Math.max(8, initialFontSize * scaleFactor);
+                    if(item.fontSize) el.querySelector('textarea').style.fontSize = item.fontSize + 'px';
+                }
+
+                item.w = newW;
+                item.h = newH;
+                el.style.width = item.w + 'px';
+                el.style.height = item.h + 'px';
+            }
+
+            function doRotate(e) {
+                if(e.type === 'touchmove') e.preventDefault();
+                const coords = getCoords(e);
+                const currentAngle = Math.atan2(coords.y - centerY, coords.x - centerX);
+                const deg = (currentAngle - startAngle) * (180 / Math.PI);
+                item.r = (item.r || 0) + deg;
+                startAngle = currentAngle;
+                el.style.transform = `rotate(${item.r}deg)`;
+            }
+
+            function stopAction(e) {
+                removeListeners(doDrag, stopAction);
+                removeListeners(doResize, stopAction);
+                removeListeners(doRotate, stopAction);
+                saveHistory();
+            }
+        }
+
+        window.copyStampToAll = () => copyItemToAll('stamp');
+
+        function copyItemToAll(type) {
+            const selector = type === 'stamp' ? '.stamp-element.selected' : '.text-element.selected';
+            const selectedEl = document.querySelector(selector);
+            if(!selectedEl) return showToast(`Selecciona un ${type === 'stamp' ? 'sello' : 'texto'} primero`);
+            
+            const id = selectedEl.id;
+            const sourceItem = type === 'stamp' 
+                ? app.stamps.find(s => s.id === id) 
+                : app.texts.find(t => t.id === id);
+                
+            if(!sourceItem) return;
+
+            app.pages.forEach(p => {
+                if(p.uId === sourceItem.pageUid) return;
+                
+                const wrap = document.querySelector(`[data-uid="${p.uId}"]`);
+                let targetX = sourceItem.x;
+                let targetY = sourceItem.y;
+
+                if(wrap) {
+                    const pw = parseFloat(wrap.dataset.w);
+                    const ph = parseFloat(wrap.dataset.h);
+                    targetX = Math.min(targetX, pw - sourceItem.w);
+                    targetY = Math.min(targetY, ph - sourceItem.h);
+                    targetX = Math.max(0, targetX);
+                    targetY = Math.max(0, targetY);
+                }
+
+                const newItem = { 
+                    ...sourceItem, 
+                    id: Date.now() + Math.random().toString(), 
+                    pageUid: p.uId,
+                    x: targetX,
+                    y: targetY
+                };
+                
+                if(type === 'stamp') app.stamps.push(newItem);
+                else app.texts.push(newItem);
+                
+                const layer = document.getElementById(`stamp-layer-${p.uId}`);
+                if(layer) {
+                    if(type === 'stamp') renderStampElement(newItem, layer);
+                    else renderTextElement(newItem, layer);
+                }
+            });
+            
+            showToast('Copiado a todas las páginas');
+            saveHistory();
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function handleDrop(e, targetIndex) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const srcIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            if (isNaN(srcIndex) || srcIndex === targetIndex) return;
+            
+            if (app.mode === 'files') {
+                const files = [...app.files];
+                const [movedFile] = files.splice(srcIndex, 1);
+                files.splice(targetIndex, 0, movedFile);
+                
+                let newPagesOrder = [];
+                files.forEach(file => {
+                    const filePages = app.pages.filter(p => p.fileId === file.id);
+                    newPagesOrder = newPagesOrder.concat(filePages);
+                });
+                
+                app.files = files;
+                app.pages = newPagesOrder;
+            } else if (app.mode === 'pages') {
+                const pages = [...app.pages];
+                const [movedItem] = pages.splice(srcIndex, 1);
+                pages.splice(targetIndex, 0, movedItem);
+                
+                app.pages = pages;
+            }
+            
+            renderGrid();
+            showToast('Orden actualizado');
+            saveHistory();
+            
+            const allItems = document.querySelectorAll('.draggable');
+            allItems.forEach(item => item.classList.remove('over'));
+        }
+
+        function toggleSelection(index) {
+            app.pages[index].selected = !app.pages[index].selected;
+            
+            renderGrid();
+            saveHistory();
+        }
+
+        window.deleteFile = (id) => {
+            pdfDocuments.delete(id);
+            app.files = app.files.filter(f => f.id !== id);
+            app.pages = app.pages.filter(p => p.fileId !== id);
+            app.stamps = app.stamps.filter(stamp => {
+                const page = app.pages.find(p => p.uId === stamp.pageUid);
+                return page && page.fileId !== id;
+            });
+            app.texts = app.texts.filter(text => {
+                const page = app.pages.find(p => p.uId === text.pageUid);
+                return page && page.fileId !== id;
+            });
+            
+            renderGrid();
+            showToast('Archivo eliminado');
+            saveHistory();
+        }
+
+        window.deletePage = (e, index) => {
+            if(e) e.stopPropagation();
+            const pageToDelete = app.pages[index];
+            
+            app.pages = app.pages.filter((p, i) => i !== index);
+            app.stamps = app.stamps.filter(stamp => stamp.pageUid !== pageToDelete.uId);
+            app.texts = app.texts.filter(text => text.pageUid !== pageToDelete.uId);
+            
+            renderGrid();
+            saveHistory();
+        }
+
+        window.resetAll = () => {
+            if(confirm('¿Borrar todo y empezar de cero?')) {
+                pdfDocuments.clear();
+                app.files = [];
+                app.pages = [];
+                app.stamps = [];
+                app.texts = [];
+                app.lastStampImg = null;
+                app.clipboard = null;
+                app.textClipboard = null;
+                history = [];
+                historyIndex = -1;
+                
+                document.getElementById('input-org').value = '';
+                document.getElementById('input-stamp').value = '';
+                document.getElementById('btn-final').disabled = true;
+                
+                document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('menu-files').classList.add('active');
+                
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('workspace-grid').classList.add('hidden');
+                document.getElementById('workspace-stamp').classList.add('hidden');
+                document.getElementById('workspace-info').innerText = '0 documentos cargados';
+                document.getElementById('workspace-title').innerText = 'Vista de Archivos';
+                app.mode = 'files';
+                
+                showToast('Todo borrado');
+                updateHistoryButtons();
+            }
+        }
+
+        window.finalizePDF = async () => {
+            if (app.pages.length === 0) return showToast('No hay páginas para procesar');
+            
+            const btn = document.getElementById('btn-final');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Generando...`;
+            btn.disabled = true;
+            showLoading(true, 'Generando PDF...');
+
+            const hexToRgb = (hex) => {
+                const r = parseInt(hex.slice(1, 3), 16) / 255;
+                const g = parseInt(hex.slice(3, 5), 16) / 255;
+                const b = parseInt(hex.slice(5, 7), 16) / 255;
+                return rgb(r, g, b);
+            };
+
+            try {
+                await safeOperation(async () => {
+                    const newDoc = await PDFDocument.create();
+                    const pagesToProcess = app.mode === 'extract' ? app.pages.filter(p => p.selected) : app.pages;
+                    const embeddedImages = {};
+                    const embeddedFonts = {};
+
+                    for (let i = 0; i < pagesToProcess.length; i++) {
+                        updateProgress((i / pagesToProcess.length) * 100);
+                        
+                        const pItem = pagesToProcess[i];
+                        const sourceFile = app.files.find(f => f.id === pItem.fileId);
+                        if (!sourceFile) continue;
+
+                        const doc = pdfDocuments.get(sourceFile.id);
+                        if (!doc) continue;
+
+                        const [copiedPage] = await newDoc.copyPages(doc, [pItem.pageIdx]);
+                        const currentRotation = copiedPage.getRotation().angle;
+                        copiedPage.setRotation(degrees(currentRotation + (pItem.rotation || 0)));
+                        const { width, height } = copiedPage.getSize();
+
+                        const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
+                        for(const s of pageStamps) {
+                            let img = embeddedImages[s.img];
+                            if(!img) {
+                                const imgBytes = await fetch(s.img).then(res => res.arrayBuffer());
+                                img = s.img.startsWith('data:image/png') ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
+                                embeddedImages[s.img] = img;
+                            }
+                            const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                            const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
+                            const scaleX = canvas ? width / canvas.width : 1;
+                            const scaleY = canvas ? height / canvas.height : 1;
+
+                            copiedPage.drawImage(img, {
+                                x: s.x * scaleX,
+                                y: height - ((s.y + s.h) * scaleY),
+                                width: s.w * scaleX,
+                                height: s.h * scaleY,
+                                rotate: degrees(-(s.r || 0))
+                            });
+                        }
+
+                        const pageTexts = app.texts.filter(t => t.pageUid === pItem.uId);
+                        for(const t of pageTexts) {
+                            const fName = t.fontFamily || 'Helvetica';
+                            if (!embeddedFonts[fName]) {
+                                embeddedFonts[fName] = await newDoc.embedFont(StandardFonts[fName]);
+                            }
+                            
+                            const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                            const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
+                            const scaleX = canvas ? width / canvas.width : 1;
+                            const scaleY = canvas ? height / canvas.height : 1;
+                            const pdfFontSize = t.fontSize * scaleX;
+
+                            copiedPage.drawText(t.text, {
+                                x: t.x * scaleX,
+                                y: height - ((t.y + (t.fontSize * 0.8)) * scaleY),
+                                size: pdfFontSize,
+                                font: embeddedFonts[fName],
+                                color: t.color ? hexToRgb(t.color) : rgb(0, 0, 0),
+                                rotate: degrees(-(t.r || 0))
+                            });
+                        }
+                        newDoc.addPage(copiedPage);
+                    }
+
+                    const pdfBytes = await newDoc.save();
+                    download(pdfBytes, 'documento_final.pdf');
+                    showToast('¡PDF Generado con éxito!');
+                }, 'Error al generar el PDF');
+            } catch (err) {
+                console.error(err);
+                showToast('Error: ' + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showLoading(false);
+            }
+        };
+
+        function download(data, filename) {
+            const blob = new Blob([data], {type: 'application/pdf'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showToast(msg, icon = true) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-txt').innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-2');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-2'), 3000);
+        }
+        
+
+        let sigCanvas, sigCtx, isDrawing = false;
+
+        function openSignatureModal() {
+            const modal = document.getElementById('signature-modal');
+            const panel = document.getElementById('sig-panel');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                panel.classList.remove('scale-95');
+                panel.classList.add('scale-100');
+                initCanvas();
+            }, 10);
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function closeSignatureModal() {
+            const modal = document.getElementById('signature-modal');
+            const panel = document.getElementById('sig-panel');
+            
+            modal.classList.add('opacity-0');
+            panel.classList.remove('scale-100');
+            panel.classList.add('scale-95');
+            
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function initCanvas() {
+            const area = document.getElementById('sig-area');
+            sigCanvas = document.getElementById('sig-canvas');
+            const colorPicker = document.getElementById('sig-color-picker');
+            
+            const rect = area.getBoundingClientRect();
+            sigCanvas.width = rect.width;
+            sigCanvas.height = rect.height;
+            
+            sigCtx = sigCanvas.getContext('2d');
+            sigCtx.lineWidth = 3;
+            sigCtx.lineCap = 'round';
+            sigCtx.strokeStyle = colorPicker.value;
+            
+            ['mousedown', 'touchstart'].forEach(ev => 
+                sigCanvas.addEventListener(ev, startDraw, {passive: false}));
+            ['mousemove', 'touchmove'].forEach(ev => 
+                sigCanvas.addEventListener(ev, drawing, {passive: false}));
+            ['mouseup', 'touchend', 'mouseleave'].forEach(ev => 
+                sigCanvas.addEventListener(ev, stopDraw));
+        }
+
+        function getSigCoords(e) {
+            const rect = sigCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startDraw(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const {x, y} = getSigCoords(e);
+            sigCtx.beginPath();
+            sigCtx.moveTo(x, y);
+        }
+
+        function drawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const {x, y} = getSigCoords(e);
+            sigCtx.lineTo(x, y);
+            sigCtx.stroke();
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+            sigCtx.closePath();
+        }
+
+        window.clearSignature = () => {
+            sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        }
+
+        window.saveSignature = () => {
+            const dataUrl = sigCanvas.toDataURL('image/png');
+            const blank = document.createElement('canvas');
+            blank.width = sigCanvas.width;
+            blank.height = sigCanvas.height;
+            
+            if (dataUrl === blank.toDataURL()) {
+                showToast('Dibuja algo primero');
+                return;
+            }
+
+            app.lastStampImg = dataUrl;
+            addStampToVisiblePage();
+            closeSignatureModal();
+        }
+
+        window.changeSigColor = (color) => {
+            if(sigCtx) sigCtx.strokeStyle = color;
+            showToast('Color actualizado');
+        }
+        
+        window.changeFont = (id, fontName) => {
+            const textItem = app.texts.find(t => t.id === id);
+            if(textItem) {
+                textItem.fontFamily = fontName;
+                const el = document.getElementById(id);
+                if(el) {
+                    const textarea = el.querySelector('textarea');
+                    textarea.style.fontFamily = fontName;
+                    textarea.style.fontWeight = fontName.includes('Bold') ? 'bold' : 'normal';
+                    textarea.style.fontStyle = fontName.includes('Oblique') || fontName.includes('Italic') ? 'italic' : 'normal';
+                }
+                saveHistory();
+            }
+        }
+        
+        window.changeTextColor = (id, color) => {
+            const textItem = app.texts.find(t => t.id === id);
+            if(textItem) {
+                textItem.color = color;
+                const el = document.getElementById(id);
+                if(el) el.querySelector('textarea').style.color = color;
+                saveHistory();
+            }
+        }
+
+        window.changeFontSizeManual = (id, newSize) => {
+            const textItem = app.texts.find(t => t.id === id);
+            if(textItem) {
+                const size = parseFloat(newSize);
+                if(size >= 8 && size <= 200) {
+                    textItem.fontSize = size;
+                    const el = document.getElementById(id);
+                    if(el) {
+                        const textarea = el.querySelector('textarea');
+                        textarea.style.fontSize = size + 'px';
+                    }
+                    saveHistory();
+                }
+            }
+        }
+        
+        window.changeTextAlign = (id, align) => {
+            const textItem = app.texts.find(t => t.id === id);
+            if(textItem) {
+                textItem.textAlign = align;
+                const el = document.getElementById(id);
+                if(el) el.querySelector('textarea').style.textAlign = align;
+                saveHistory();
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const CACHE_VERSION = 'v2';
+                const CACHE_NAME = `pdf-editor-${CACHE_VERSION}`;
+                const urlsToCache = [
+                    window.location.href,
+                    'https://cdn.tailwindcss.com',
+                    'https://unpkg.com/@phosphor-icons/web',
+                    'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+                ];
+
+                const swCode = `
+                    self.addEventListener('install', event => {
+                        event.waitUntil(
+                            caches.open('${CACHE_NAME}')
+                                .then(cache => cache.addAll(${JSON.stringify(urlsToCache)}))
+                                .then(() => self.skipWaiting())
+                        );
+                    });
+
+                    self.addEventListener('fetch', event => {
+                        if (event.request.url.includes('pdfjs')) {
+                            event.respondWith(
+                                caches.match(event.request)
+                                    .then(response => response || fetch(event.request))
+                            );
+                        } else {
+                            event.respondWith(
+                                fetch(event.request)
+                                    .then(response => {
+                                        const clone = response.clone();
+                                        caches.open('${CACHE_NAME}')
+                                            .then(cache => cache.put(event.request, clone));
+                                        return response;
+                                    })
+                                    .catch(() => caches.match(event.request))
+                            );
+                        }
+                    });
+                `;
+                
+                const blob = new Blob([swCode], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl);
+            });
+        }
+
+        function improveAccessibility() {
+            document.querySelectorAll('button').forEach(btn => {
+                if (!btn.hasAttribute('aria-label')) {
+                    const text = btn.textContent || btn.querySelector('i')?.className || '';
+                    if (text.trim()) {
+                        btn.setAttribute('aria-label', text.trim());
+                    }
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeSignatureModal();
+                }
+                if (e.key === 'Tab' && document.querySelector('[role="dialog"]')) {
+                    trapFocus(e);
+                }
+            });
+        }
+
+        function trapFocus(e) {
+            const modal = document.querySelector('[role="dialog"]');
+            if (!modal) return;
+            
+            const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const firstFocusable = focusable[0];
+            const lastFocusable = focusable[focusable.length - 1];
+            
+            if (e.shiftKey && document.activeElement === firstFocusable) {
+                lastFocusable.focus();
+                e.preventDefault();
+            } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+                firstFocusable.focus();
+                e.preventDefault();
+            }
+        }
+
+        setMode('files');
+        improveAccessibility();
+        updateHistoryButtons();
+    </script>
+</body>
+</html>
