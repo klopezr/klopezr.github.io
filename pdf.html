@@ -768,9 +768,12 @@ function renderTextElement(textItem, layer) {
     el.innerHTML = `
         <div class="absolute -top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white border-2 border-slate-300 p-2 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] hidden group-[.selected]:flex z-[200] min-w-[210px]" 
              onmousedown="event.stopPropagation()" 
+             ontouchstart="event.stopPropagation()"
              onclick="event.stopPropagation()">
             <select class="flex-1 bg-slate-50 border border-slate-300 text-[11px] font-bold rounded px-2 py-1 outline-none focus:border-brand-500 cursor-pointer h-10" 
-                    onchange="changeFont('${textItem.id}', this.value)">
+                    onchange="changeFont('${textItem.id}', this.value)"
+                    onmousedown="event.stopPropagation()"
+                    ontouchstart="event.stopPropagation()">
                 <option value="Helvetica" ${textItem.fontFamily === 'Helvetica' ? 'selected' : ''}>Sans</option>
                 <option value="Helvetica-Bold" ${textItem.fontFamily === 'Helvetica-Bold' ? 'selected' : ''}>Sans B</option>
                 <option value="Times-Roman" ${textItem.fontFamily === 'Times-Roman' ? 'selected' : ''}>Serif</option>
@@ -782,7 +785,9 @@ function renderTextElement(textItem, layer) {
             <input type="color" 
                    value="${textItem.color || '#000000'}" 
                    class="w-10 h-10 rounded border border-slate-300 bg-white cursor-pointer shrink-0 p-0 overflow-hidden"
-                   onchange="changeTextColor('${textItem.id}', this.value)">
+                   onchange="changeTextColor('${textItem.id}', this.value)"
+                   onmousedown="event.stopPropagation()"
+                   ontouchstart="event.stopPropagation()">
         </div>
         <textarea class="text-content" 
                   style="font-size:${textItem.fontSize}px; 
