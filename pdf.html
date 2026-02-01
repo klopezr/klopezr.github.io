@@ -1503,37 +1503,43 @@ function updateSelectedText(type, value) {
             saveHistory();
         }
 
-        window.resetAll = () => {
-            if(confirm('¿Borrar todo y empezar de cero?')) {
-                pdfDocuments.clear();
-                app.files = [];
-                app.pages = [];
-                app.stamps = [];
-                app.texts = [];
-                app.lastStampImg = null;
-                app.clipboard = null;
-                app.textClipboard = null;
-                history = [];
-                historyIndex = -1;
-                
-                document.getElementById('input-org').value = '';
-                document.getElementById('input-stamp').value = '';
-                document.getElementById('btn-final').disabled = true;
-                
-                document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('menu-files').classList.add('active');
-                
-                document.getElementById('empty-state').classList.remove('hidden');
-                document.getElementById('workspace-grid').classList.add('hidden');
-                document.getElementById('workspace-stamp').classList.add('hidden');
-                document.getElementById('workspace-info').innerText = '0 documentos cargados';
-                document.getElementById('workspace-title').innerText = 'Vista de Archivos';
-                app.mode = 'files';
-                
-                showToast('Todo borrado');
-                updateHistoryButtons();
-            }
-        }
+window.resetAll = () => {
+    if(confirm('¿Borrar todo y empezar de cero?')) {
+        pdfDocuments.clear();
+        app.files = [];
+        app.pages = [];
+        app.stamps = [];
+        app.texts = [];
+        app.lastStampImg = null;
+        app.clipboard = null;
+        app.textClipboard = null;
+        history = [];
+        historyIndex = -1;
+        
+        document.getElementById('input-org').value = '';
+        document.getElementById('input-stamp').value = '';
+        document.getElementById('btn-final').disabled = true;
+        
+        document.getElementById('editor-font').value = 'Helvetica';
+        document.getElementById('editor-size').value = '24';
+        document.getElementById('editor-color').value = '#000000';
+        
+        document.querySelectorAll('.sidebar-menu-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('menu-files').classList.add('active');
+        
+        document.getElementById('empty-state').classList.remove('hidden');
+        document.getElementById('workspace-grid').classList.add('hidden');
+        document.getElementById('workspace-stamp').classList.add('hidden');
+        document.getElementById('workspace-stamp').innerHTML = '';
+        document.getElementById('workspace-grid').innerHTML = '';
+        document.getElementById('workspace-info').innerText = '0 documentos cargados';
+        document.getElementById('workspace-title').innerText = 'Vista de Archivos';
+        app.mode = 'files';
+        
+        showToast('Todo borrado');
+        updateHistoryButtons();
+    }
+}
 
         window.finalizePDF = async () => {
             if (app.pages.length === 0) return showToast('No hay páginas para procesar');
