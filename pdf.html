@@ -1596,52 +1596,51 @@ window.finalizePDF = async () => {
                 copiedPage.setRotation(degrees(currentRotation + (pItem.rotation || 0)));
                 const { width, height } = copiedPage.getSize();
 
-                const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
-                for(const s of pageStamps) {
-                    let img = embeddedImages[s.img];
-                    if(!img) {
-                        const imgBytes = await fetch(s.img).then(res => res.arrayBuffer());
-                        img = s.img.startsWith('data:image/png') ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
-                        embeddedImages[s.img] = img;
+                const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
+                
+                if (canvas) {
+                    const scaleX = width / canvas.width;
+                    const scaleY = height / canvas.height;
+
+                    const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
+                    for(const s of pageStamps) {
+                        let img = embeddedImages[s.img];
+                        if(!img) {
+                            const imgBytes = await fetch(s.img).then(res => res.arrayBuffer());
+                            img = s.img.startsWith('data:image/png') ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
+                            embeddedImages[s.img] = img;
+                        }
+
+                        copiedPage.drawImage(img, {
+                            x: s.x * scaleX,
+                            y: height - ((s.y + s.h) * scaleY),
+                            width: s.w * scaleX,
+                            height: s.h * scaleY,
+                            rotate: degrees(-(s.r || 0))
+                        });
                     }
-                    const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
-                    const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
-                    const scaleX = canvas ? width / canvas.width : 1;
-                    const scaleY = canvas ? height / canvas.height : 1;
 
-                    copiedPage.drawImage(img, {
-                        x: s.x * scaleX,
-                        y: height - ((s.y + s.h) * scaleY),
-                        width: s.w * scaleX,
-                        height: s.h * scaleY,
-                        rotate: degrees(-(s.r || 0))
-                    });
-                }
+                    const pageTexts = app.texts.filter(t => t.pageUid === pItem.uId);
+                    for(const t of pageTexts) {
+                        const fName = t.fontFamily || 'Helvetica';
+                        if (!embeddedFonts[fName]) {
+                            const fontKey = fName.replace(/\s+/g, '');
+                            const fontToEmbed = StandardFonts[fontKey] || StandardFonts.Helvetica;
+                            embeddedFonts[fName] = await newDoc.embedFont(fontToEmbed);
+                        }
+                        
+                        const pdfFontSize = t.fontSize * scaleX;
 
-                const pageTexts = app.texts.filter(t => t.pageUid === pItem.uId);
-                for(const t of pageTexts) {
-                    const fName = t.fontFamily || 'Helvetica';
-                    
-                    if (!embeddedFonts[fName]) {
-                        const fontKey = fName.replace(/\s+/g, '');
-                        const fontToEmbed = StandardFonts[fontKey] || StandardFonts.Helvetica;
-                        embeddedFonts[fName] = await newDoc.embedFont(fontToEmbed);
+                        copiedPage.drawText(t.text, {
+                            x: t.x * scaleX,
+                            y: height - ((t.y + (t.fontSize * 0.8)) * scaleY),
+                            size: pdfFontSize,
+                            font: embeddedFonts[fName],
+                            color: t.color ? hexToRgb(t.color) : rgb(0, 0, 0),
+                            rotate: degrees(-(t.r || 0))
+                        });
                     }
-                    
-                    const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
-                    const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
-                    const scaleX = canvas ? width / canvas.width : 1;
-                    const scaleY = canvas ? height / canvas.height : 1;
-                    const pdfFontSize = t.fontSize * scaleX;
-
-                    copiedPage.drawText(t.text, {
-                        x: t.x * scaleX,
-                        y: height - ((t.y + (t.fontSize * 0.8)) * scaleY),
-                        size: pdfFontSize,
-                        font: embeddedFonts[fName],
-                        color: t.color ? hexToRgb(t.color) : rgb(0, 0, 0),
-                        rotate: degrees(-(t.r || 0))
-                    });
                 }
                 newDoc.addPage(copiedPage);
             }
