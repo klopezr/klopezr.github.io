@@ -226,10 +226,24 @@
         <div class="space-y-1">
             <span class="text-[10px] font-bold text-slate-400 uppercase">Fuente</span>
             <select id="editor-font" class="w-full bg-slate-50 border border-slate-200 text-xs rounded p-1 shadow-sm outline-none focus:border-brand-500" onchange="updateSelectedText('font', this.value)">
-                <option value="Helvetica">Sans Serif</option>
-                <option value="Helvetica-Bold">Sans Bold</option>
-                <option value="Times-Roman">Serif</option>
-                <option value="Courier">Monospace</option>
+                <optgroup label="Sans Serif">
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Helvetica-Bold">Helvetica Bold</option>
+                    <option value="Helvetica-Oblique">Helvetica Oblique</option>
+                    <option value="Helvetica-BoldOblique">Helvetica Bold Oblique</option>
+                </optgroup>
+                <optgroup label="Serif">
+                    <option value="Times-Roman">Times Roman</option>
+                    <option value="Times-Bold">Times Bold</option>
+                    <option value="Times-Italic">Times Italic</option>
+                    <option value="Times-BoldItalic">Times Bold Italic</option>
+                </optgroup>
+                <optgroup label="Monospace">
+                    <option value="Courier">Courier</option>
+                    <option value="Courier-Bold">Courier Bold</option>
+                    <option value="Courier-Oblique">Courier Oblique</option>
+                    <option value="Courier-BoldOblique">Courier Bold Oblique</option>
+                </optgroup>
             </select>
         </div>
 
@@ -1214,8 +1228,11 @@ function updateSelectedText(type, value) {
 
     if (type === 'font') {
         textItem.fontFamily = value;
-        textarea.style.fontFamily = value;
+        // Ajuste para CSS del navegador
+        let cssFont = value.split('-')[0];
+        textarea.style.fontFamily = cssFont;
         textarea.style.fontWeight = value.includes('Bold') ? 'bold' : 'normal';
+        textarea.style.fontStyle = (value.includes('Oblique') || value.includes('Italic')) ? 'italic' : 'normal';
     } else if (type === 'size') {
         textItem.fontSize = parseFloat(value);
         textarea.style.fontSize = value + 'px';
@@ -1541,104 +1558,107 @@ window.resetAll = () => {
     }
 }
 
-        window.finalizePDF = async () => {
-            if (app.pages.length === 0) return showToast('No hay páginas para procesar');
-            
-            const btn = document.getElementById('btn-final');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Generando...`;
-            btn.disabled = true;
-            showLoading(true, 'Generando PDF...');
+window.finalizePDF = async () => {
+    if (app.pages.length === 0) return showToast('No hay páginas para procesar');
+    
+    const btn = document.getElementById('btn-final');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin"></i> Generando...`;
+    btn.disabled = true;
+    showLoading(true, 'Generando PDF...');
 
-            const hexToRgb = (hex) => {
-                const r = parseInt(hex.slice(1, 3), 16) / 255;
-                const g = parseInt(hex.slice(3, 5), 16) / 255;
-                const b = parseInt(hex.slice(5, 7), 16) / 255;
-                return rgb(r, g, b);
-            };
+    const hexToRgb = (hex) => {
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        return rgb(r, g, b);
+    };
 
-            try {
-                await safeOperation(async () => {
-                    const newDoc = await PDFDocument.create();
-                    const pagesToProcess = app.mode === 'extract' ? app.pages.filter(p => p.selected) : app.pages;
-                    const embeddedImages = {};
-                    const embeddedFonts = {};
+    try {
+        await safeOperation(async () => {
+            const newDoc = await PDFDocument.create();
+            const pagesToProcess = app.mode === 'extract' ? app.pages.filter(p => p.selected) : app.pages;
+            const embeddedImages = {};
+            const embeddedFonts = {};
 
-                    for (let i = 0; i < pagesToProcess.length; i++) {
-                        updateProgress((i / pagesToProcess.length) * 100);
-                        
-                        const pItem = pagesToProcess[i];
-                        const sourceFile = app.files.find(f => f.id === pItem.fileId);
-                        if (!sourceFile) continue;
+            for (let i = 0; i < pagesToProcess.length; i++) {
+                updateProgress((i / pagesToProcess.length) * 100);
+                
+                const pItem = pagesToProcess[i];
+                const sourceFile = app.files.find(f => f.id === pItem.fileId);
+                if (!sourceFile) continue;
 
-                        const doc = pdfDocuments.get(sourceFile.id);
-                        if (!doc) continue;
+                const doc = pdfDocuments.get(sourceFile.id);
+                if (!doc) continue;
 
-                        const [copiedPage] = await newDoc.copyPages(doc, [pItem.pageIdx]);
-                        const currentRotation = copiedPage.getRotation().angle;
-                        copiedPage.setRotation(degrees(currentRotation + (pItem.rotation || 0)));
-                        const { width, height } = copiedPage.getSize();
+                const [copiedPage] = await newDoc.copyPages(doc, [pItem.pageIdx]);
+                const currentRotation = copiedPage.getRotation().angle;
+                copiedPage.setRotation(degrees(currentRotation + (pItem.rotation || 0)));
+                const { width, height } = copiedPage.getSize();
 
-                        const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
-                        for(const s of pageStamps) {
-                            let img = embeddedImages[s.img];
-                            if(!img) {
-                                const imgBytes = await fetch(s.img).then(res => res.arrayBuffer());
-                                img = s.img.startsWith('data:image/png') ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
-                                embeddedImages[s.img] = img;
-                            }
-                            const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
-                            const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
-                            const scaleX = canvas ? width / canvas.width : 1;
-                            const scaleY = canvas ? height / canvas.height : 1;
-
-                            copiedPage.drawImage(img, {
-                                x: s.x * scaleX,
-                                y: height - ((s.y + s.h) * scaleY),
-                                width: s.w * scaleX,
-                                height: s.h * scaleY,
-                                rotate: degrees(-(s.r || 0))
-                            });
-                        }
-
-                        const pageTexts = app.texts.filter(t => t.pageUid === pItem.uId);
-                        for(const t of pageTexts) {
-                            const fName = t.fontFamily || 'Helvetica';
-                            if (!embeddedFonts[fName]) {
-                                embeddedFonts[fName] = await newDoc.embedFont(StandardFonts[fName]);
-                            }
-                            
-                            const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
-                            const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
-                            const scaleX = canvas ? width / canvas.width : 1;
-                            const scaleY = canvas ? height / canvas.height : 1;
-                            const pdfFontSize = t.fontSize * scaleX;
-
-                            copiedPage.drawText(t.text, {
-                                x: t.x * scaleX,
-                                y: height - ((t.y + (t.fontSize * 0.8)) * scaleY),
-                                size: pdfFontSize,
-                                font: embeddedFonts[fName],
-                                color: t.color ? hexToRgb(t.color) : rgb(0, 0, 0),
-                                rotate: degrees(-(t.r || 0))
-                            });
-                        }
-                        newDoc.addPage(copiedPage);
+                const pageStamps = app.stamps.filter(s => s.pageUid === pItem.uId);
+                for(const s of pageStamps) {
+                    let img = embeddedImages[s.img];
+                    if(!img) {
+                        const imgBytes = await fetch(s.img).then(res => res.arrayBuffer());
+                        img = s.img.startsWith('data:image/png') ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
+                        embeddedImages[s.img] = img;
                     }
+                    const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                    const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
+                    const scaleX = canvas ? width / canvas.width : 1;
+                    const scaleY = canvas ? height / canvas.height : 1;
 
-                    const pdfBytes = await newDoc.save();
-                    download(pdfBytes, 'documento_final.pdf');
-                    showToast('¡PDF Generado con éxito!');
-                }, 'Error al generar el PDF');
-            } catch (err) {
-                console.error(err);
-                showToast('Error: ' + err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showLoading(false);
+                    copiedPage.drawImage(img, {
+                        x: s.x * scaleX,
+                        y: height - ((s.y + s.h) * scaleY),
+                        width: s.w * scaleX,
+                        height: s.h * scaleY,
+                        rotate: degrees(-(s.r || 0))
+                    });
+                }
+
+                const pageTexts = app.texts.filter(t => t.pageUid === pItem.uId);
+                for(const t of pageTexts) {
+                    const fName = t.fontFamily || 'Helvetica';
+                    
+                    if (!embeddedFonts[fName]) {
+                        const fontKey = fName.replace(/\s+/g, '');
+                        const fontToEmbed = StandardFonts[fontKey] || StandardFonts.Helvetica;
+                        embeddedFonts[fName] = await newDoc.embedFont(fontToEmbed);
+                    }
+                    
+                    const layer = document.getElementById(`stamp-layer-${pItem.uId}`);
+                    const canvas = layer ? layer.parentElement.querySelector('canvas') : null;
+                    const scaleX = canvas ? width / canvas.width : 1;
+                    const scaleY = canvas ? height / canvas.height : 1;
+                    const pdfFontSize = t.fontSize * scaleX;
+
+                    copiedPage.drawText(t.text, {
+                        x: t.x * scaleX,
+                        y: height - ((t.y + (t.fontSize * 0.8)) * scaleY),
+                        size: pdfFontSize,
+                        font: embeddedFonts[fName],
+                        color: t.color ? hexToRgb(t.color) : rgb(0, 0, 0),
+                        rotate: degrees(-(t.r || 0))
+                    });
+                }
+                newDoc.addPage(copiedPage);
             }
-        };
+
+            const pdfBytes = await newDoc.save();
+            download(pdfBytes, 'documento_final.pdf');
+            showToast('¡PDF Generado con éxito!');
+        }, 'Error al generar el PDF');
+    } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showLoading(false);
+    }
+};
 
         function download(data, filename) {
             const blob = new Blob([data], {type: 'application/pdf'});
