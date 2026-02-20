@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Plazos LCSP - Calendario y Sobres</title>
+    <title>Simulador Plazos LCSP - Ajustes Inline y Festivos</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -11,17 +11,17 @@
         .timeline-container::before { content: ''; position: absolute; top: 0; left: 19px; height: 100%; width: 2px; background: #e2e8f0; z-index: 0; }
         @media (min-width: 768px) { .timeline-container::before { left: 50%; transform: translateX(-50%); } }
         input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        input[type="range"] { accent-color: #3b82f6; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day-header { text-align: center; font-size: 0.75rem; font-weight: 700; color: #64748b; padding: 0.5rem 0; text-transform: uppercase; }
         .cal-cell { aspect-ratio: 1; border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; font-weight: 500; color: #334155; border: 1px solid transparent; }
         .cal-cell:hover { border-color: #cbd5e1; transform: scale(1.05); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .cal-cell.empty { background: transparent; cursor: default; border: none; box-shadow: none; transform: none; }
-        .cal-indicator { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 80%; height: 4px; border-radius: 2px; }
         .cal-indicator-multi { display: flex; gap: 2px; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 80%; justify-content: center; }
         .indicator-dot { height: 4px; flex: 1; border-radius: 2px; }
-        .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; text-align: center; padding: 6px 10px; border-radius: 6px; z-index: 50; width: max-content; max-width: 250px; font-size: 0.75rem; font-weight: 400; line-height: 1.4; opacity: 0; transition: opacity 0.2s; margin-bottom: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; text-align: center; padding: 6px 10px; border-radius: 6px; z-index: 50; width: max-content; max-width: 250px; font-size: 0.75rem; font-weight: 400; line-height: 1.4; opacity: 0; transition: opacity 0.2s; margin-bottom: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); pointer-events: none; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
         .cal-cell:hover .tooltip { visibility: visible; opacity: 1; }
     </style>
@@ -29,18 +29,17 @@
 <body class="text-slate-800 antialiased min-h-screen pb-20">
     <div class="max-w-6xl mx-auto px-4 pt-10">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP y Calendario</h1>
-            <p class="text-slate-600 max-w-2xl mx-auto">Calculadora de plazos con selección de sobres y calendario mensual visual</p>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP Dinámico</h1>
+            <p class="text-slate-600 max-w-2xl mx-auto">Configura plazos potestativos en cada trámite procesal en tiempo real</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-            <form id="lcspForm" class="space-y-8">
-                
+            <form id="lcspForm" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Procedimiento</label>
-                        <select id="procManual" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none">
+                        <select id="procManual" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                             <option value="AUTO">Automático (Según valor)</option>
                             <option value="ABIERTO_SARA">Abierto (SARA)</option>
                             <option value="ABIERTO_NO_SARA">Abierto (No SARA)</option>
@@ -51,78 +50,65 @@
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de Contrato</label>
-                        <select id="tipoContrato" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none">
+                        <select id="tipoContrato" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                             <option value="">Seleccione...</option>
                             <option value="obras">Obras</option>
                             <option value="servicios">Servicios</option>
                             <option value="suministros">Suministros</option>
+                            <option value="concesion_obras">Concesión de Obras</option>
+                            <option value="concesion_servicios">Concesión de Servicios</option>
+                            <option value="mixto">Contrato Mixto</option>
                         </select>
                     </div>
-                    <div id="valorContainer">
+                    <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Valor Estimado (€)</label>
-                        <input type="number" id="valorEstimado" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none" placeholder="Opcional si elige proc. manual">
+                        <input type="number" id="valorEstimado" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start border-t border-slate-100 pt-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Fecha Publicación Anuncio</label>
-                        <input type="date" id="fechaAnuncio" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none">
+                        <input type="date" id="fechaAnuncio" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Configuración de Sobres</label>
-                        <select id="numSobres" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none">
+                        <select id="numSobres" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                             <option value="3">3 Sobres (Admin, Juicios, Fórmulas)</option>
                             <option value="2">2 Sobres (Juicios, Fórmulas)</option>
-                            <option value="1">1 Sobre Único (Solo automáticos)</option>
+                            <option value="1">1 Sobre Único</option>
                         </select>
-                        <p class="text-xs text-slate-500 mt-2">Determina el número de actos de apertura y mesas de contratación.</p>
                     </div>
                 </div>
 
                 <div class="border-t border-slate-100 pt-6">
-                    <label class="flex items-center space-x-3 cursor-pointer group mb-4">
+                    <label class="flex items-center space-x-3 cursor-pointer group mb-2">
                         <input type="checkbox" id="bajaAnormal" class="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-bold text-slate-800">Incluir trámite de Baja Temeraria / Valores Anormales (Art. 149)</span>
+                        <span class="text-sm font-bold text-slate-800">Trámite de Baja Temeraria (Art. 149 LCSP)</span>
                     </label>
-                    
-                    <div id="bajaOptions" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 bg-red-50 p-4 rounded-xl border border-red-100">
-                        <div>
-                            <label class="block text-xs font-bold text-red-800 mb-1">Días para identificar (Hábiles)</label>
-                            <input type="number" id="diasIdent" value="2" min="1" class="w-full px-3 py-2 rounded-lg border border-red-200 focus:ring-2 focus:ring-red-500 bg-white outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-red-800 mb-1">Días Audiencia (Art. 149.4)</label>
-                            <input type="number" id="diasAud" value="5" min="5" class="w-full px-3 py-2 rounded-lg border border-red-200 focus:ring-2 focus:ring-red-500 bg-white outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-red-800 mb-1">Días Informe (Art. 149.6)</label>
-                            <input type="number" id="diasInf" value="5" min="1" class="w-full px-3 py-2 rounded-lg border border-red-200 focus:ring-2 focus:ring-red-500 bg-white outline-none">
-                        </div>
-                    </div>
                 </div>
 
                 <button type="submit" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors text-lg">
-                    Generar Plazos y Calendario
+                    Generar Línea Base
                 </button>
             </form>
         </div>
 
         <div id="resultsContainer" class="hidden space-y-8">
             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
-                <span class="inline-block px-3 py-1 rounded-full bg-indigo-200 text-indigo-900 font-bold text-xs uppercase tracking-widest mb-3">Resumen de Parámetros</span>
-                <h2 id="procName" class="text-2xl font-black text-indigo-950 mb-1"></h2>
+                <span id="tagSara" class="hidden inline-block px-3 py-1 rounded-full bg-indigo-200 text-indigo-900 font-bold text-xs uppercase tracking-widest mb-3">Sujeto a Regulación Armonizada</span>
+                <h2 id="procName" class="text-3xl font-black text-indigo-950 mb-1"></h2>
                 <p id="procDetail" class="text-indigo-800 text-sm font-medium"></p>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
-                <h3 class="text-xl font-bold text-slate-900 mb-10 text-center uppercase tracking-wide border-b pb-4">Desglose de Trámites y Artículos</h3>
+                <h3 class="text-xl font-bold text-slate-900 mb-10 text-center uppercase tracking-wide border-b pb-4">Secuencia de Trámites y Ajustes</h3>
                 <div class="relative timeline-container" id="timelineList"></div>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-4">
-                    <h3 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Calendario de Días</h3>
+                    <h3 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Calendario Dinámico</h3>
                     <div class="flex flex-wrap gap-3">
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-blue-500"></div><span class="text-xs font-bold text-slate-600">Presentación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-purple-500"></div><span class="text-xs font-bold text-slate-600">Mesas/Eval</span></div>
@@ -131,327 +117,279 @@
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-xs font-bold text-slate-600">Formalización</span></div>
                     </div>
                 </div>
-                
                 <div id="calendarsContainer" class="space-y-10"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('lcspForm');
-        const procManual = document.getElementById('procManual');
-        const numSobres = document.getElementById('numSobres');
-        const bajaAnormal = document.getElementById('bajaAnormal');
-        const bajaOptions = document.getElementById('bajaOptions');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const timelineList = document.getElementById('timelineList');
-        const calendarsContainer = document.getElementById('calendarsContainer');
-
-        bajaAnormal.addEventListener('change', (e) => {
-            bajaOptions.classList.toggle('hidden', !e.target.checked);
-        });
-
-        procManual.addEventListener('change', (e) => {
-            if (e.target.value === 'SUPERSIMPLIFICADO') {
-                numSobres.value = '1';
-                numSobres.disabled = true;
-            } else {
-                numSobres.disabled = false;
-            }
-        });
-
         const thresholds = {
-            obras: { menor: 40000, supersimplificado: 80000, simplificado: 2000000, sara: 5538000 },
-            servicios: { menor: 15000, supersimplificado: 60000, simplificado: 143000, sara: 143000 },
-            suministros: { menor: 15000, supersimplificado: 60000, simplificado: 143000, sara: 143000 }
+            obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5538000, pres: 26 },
+            servicios: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
+            suministros: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
+            concesion_obras: { menor: 40000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
+            concesion_servicios: { menor: 15000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
+            mixto: { menor: 15000, supersimp: 60000, simp: 143000, sara: 5538000, pres: 15 }
         };
 
-        const themeColors = {
-            'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500'
-        };
-        const ringColors = {
-            'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200'
-        };
-        const textColors = {
-            'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700'
-        };
+        const themeColors = { 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500' };
+        const ringColors = { 'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200' };
+        const textColors = { 'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700' };
 
-        function addDays(date, days) {
-            const d = new Date(date);
-            d.setDate(d.getDate() + days);
-            return d;
+        let currentSkeleton = [];
+        let globalT0 = new Date();
+
+        document.getElementById('fechaAnuncio').valueAsDate = new Date();
+        document.getElementById('procManual').addEventListener('change', (e) => {
+            if (e.target.value === 'SUPERSIMPLIFICADO') {
+                document.getElementById('numSobres').value = '1';
+                document.getElementById('numSobres').disabled = true;
+            } else {
+                document.getElementById('numSobres').disabled = false;
+            }
+        });
+
+        function getViernesSanto(year) {
+            const a = year % 19, b = Math.floor(year / 100), c = year % 100;
+            const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+            const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+            const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+            const m = Math.floor((a + 11 * h + 22 * l) / 451);
+            const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+            const day = ((h + l - 7 * m + 114) % 31) + 1;
+            const vs = new Date(year, month, day);
+            vs.setDate(vs.getDate() - 2);
+            return vs;
         }
 
+        function isHoliday(date) {
+            const d = date.getDate(), m = date.getMonth(), y = date.getFullYear();
+            if (m === 0 && d === 1) return true;
+            if (m === 0 && d === 6) return true;
+            if (m === 4 && d === 1) return true;
+            if (m === 7 && d === 15) return true;
+            if (m === 9 && d === 12) return true;
+            if (m === 10 && d === 1) return true;
+            if (m === 11 && d === 6) return true;
+            if (m === 11 && d === 8) return true;
+            if (m === 11 && d === 25) return true;
+            const vs = getViernesSanto(y);
+            if (m === vs.getMonth() && d === vs.getDate()) return true;
+            return false;
+        }
+
+        function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
         function addHabiles(date, numHabiles) {
-            const d = new Date(date);
-            let added = 0;
-            while (added < numHabiles) {
-                d.setDate(d.getDate() + 1);
-                if (d.getDay() !== 0 && d.getDay() !== 6) added++;
+            const d = new Date(date); let added = 0;
+            while (added < numHabiles) { 
+                d.setDate(d.getDate() + 1); 
+                if (d.getDay() !== 0 && d.getDay() !== 6 && !isHoliday(d)) added++; 
             }
             return d;
         }
+        function formatDate(date) { return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
+        function getMonthName(m, y) { return new Date(y, m, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); }
 
-        function formatDate(date) {
-            return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo) {
+            let s = [];
+            if (proc === 'MENOR') {
+                s.push({ id: 'menor', name: 'Adjudicación Directa', color: 'emerald', art: 'Art. 118', getDesc: () => 'Aprobación de gasto y factura.', staticDur: 0, isHabiles: false });
+                return s;
+            }
+
+            if (proc === 'SUPERSIMPLIFICADO') {
+                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: () => 'Plazo fijado de 10 días hábiles.', staticDur: 10, isHabiles: true });
+                s.push({ id: 'm1', name: 'Mesa: Apertura y Evaluación', color: 'purple', art: 'Art. 159.6.d', getDesc: (v) => `Propuesta en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 5, val: 3, label: 'Días hasta Mesa', txt: 'Máximo legal 5 días hábiles.' }, isHabiles: true });
+            } else {
+                let pDays = sara ? 35 : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
+                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: sara ? 'Art. 156.2' : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3'), getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
+
+                if (nSobres === 3) {
+                    s.push({ id: 'm1', name: 'Mesa 1: Administrativa y Juicios', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 1', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
+                    s.push({ id: 'ev', name: 'Evaluación Técnica (Sobre B)', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles.`, slider: { id: 'sl_ev', min: 1, max: 30, val: 7, label: 'Días de Evaluación', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
+                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas (Sobre C)', color: 'purple', art: 'Art. 157.4', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Plazo tras recibir informe.' }, isHabiles: true });
+                } else if (nSobres === 2) {
+                    s.push({ id: 'm1', name: 'Mesa 1: Juicios de Valor', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 1', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
+                    s.push({ id: 'ev', name: 'Evaluación Técnica', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles.`, slider: { id: 'sl_ev', min: 1, max: 30, val: 7, label: 'Días de Evaluación', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
+                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas', color: 'purple', art: 'Art. 157.4 / 159.4.f', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Plazo tras recibir informe.' }, isHabiles: true });
+                } else {
+                    s.push({ id: 'm1', name: 'Mesa Única: Fórmulas', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura pública en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa', txt: 'Plazo sujeto a necesidades del órgano.' }, isHabiles: true });
+                }
+            }
+
+            if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
+                s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa.' }, isHabiles: true });
+                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles.' }, isHabiles: true });
+                s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'red', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico especializado.' }, isHabiles: true });
+            }
+
+            let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
+            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'amber', art: 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
+            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'amber', art: 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
+            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles.`, slider: { id: 'sl_adj', min: 1, max: 5, val: 5, label: 'Plazo Adjudicación', txt: 'Máx. 5 días hábiles.' }, isHabiles: true });
+
+            if (proc === 'SUPERSIMPLIFICADO') {
+                s.push({ id: 'form', name: 'Formalización Inmediata', color: 'emerald', art: 'Art. 159.6.f', getDesc: () => 'Firma sin espera previa.', staticDur: 5, isHabiles: true });
+            } else {
+                let espera = sara ? 15 : 15;
+                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: sara ? 'Art. 153.3' : 'Art. 153.2', getDesc: () => sara ? '15 días hábiles (Recurso Especial).' : 'Firma máx. 15 días hábiles.', staticDur: espera, isHabiles: true });
+            }
+
+            return s;
         }
 
-        function getMonthName(month, year) {
-            return new Date(year, month, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-        }
-
-        function generateTimelineHTML(events) {
-            let html = '';
-            events.forEach((ev, i) => {
+        function renderTimelineBase() {
+            let htmlList = '';
+            currentSkeleton.forEach((ev, i) => {
                 const alignLeft = i % 2 === 0;
-                const cBg = themeColors[ev.color];
-                const cRing = ringColors[ev.color];
-                const cText = textColors[ev.color];
+                const cBg = themeColors[ev.color]; const cRing = ringColors[ev.color]; const cText = textColors[ev.color];
+                
+                let sliderHtml = '';
+                if (ev.slider) {
+                    sliderHtml = `
+                    <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wide">${ev.slider.label}</label>
+                            <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded" id="val-${ev.id}">${ev.slider.val} días</span>
+                        </div>
+                        <input type="range" id="${ev.slider.id}" data-evid="${ev.id}" min="${ev.slider.min}" max="${ev.slider.max}" value="${ev.slider.val}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer lcsp-slider">
+                        <p class="text-[10px] text-slate-500 mt-2 font-medium">${ev.slider.txt}</p>
+                    </div>`;
+                }
 
-                html += `
+                htmlList += `
                     <div class="relative w-full mb-8 flex justify-center md:justify-${alignLeft ? 'start' : 'end'} items-center group">
                         <div class="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-4 h-4 rounded-full ${cBg} ring-4 ${cRing} z-10 transition-transform group-hover:scale-125"></div>
                         <div class="absolute md:hidden left-0 top-6 w-4 h-4 rounded-full ${cBg} ring-4 ${cRing} z-10 ml-4.5 transition-transform group-hover:scale-125"></div>
                         <div class="w-full md:w-[45%] pl-12 md:pl-0 ${alignLeft ? 'md:pr-10' : 'md:pl-10'}">
                             <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <h4 class="text-base font-bold text-slate-800 mb-2">${ev.name}</h4>
-                                <div class="inline-block px-2 py-1 bg-slate-50 rounded text-xs font-bold text-slate-600 mb-2 border border-slate-200">
-                                    ${ev.start.getTime() === ev.end.getTime() ? formatDate(ev.start) : formatDate(ev.start) + ' a ' + formatDate(ev.end)}
-                                </div>
-                                <div class="text-[11px] font-bold uppercase tracking-wider ${cText} mb-1">${ev.article}</div>
-                                <p class="text-slate-500 text-xs leading-relaxed">${ev.desc}</p>
+                                <div class="inline-block px-2 py-1 bg-slate-50 rounded text-xs font-bold text-slate-600 mb-2 border border-slate-200" id="date-${ev.id}"></div>
+                                <div class="text-[11px] font-bold uppercase tracking-wider ${cText} mb-1">${ev.art}</div>
+                                <p class="text-slate-500 text-xs leading-relaxed" id="desc-${ev.id}"></p>
+                                ${sliderHtml}
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-            return html;
+            document.getElementById('timelineList').innerHTML = htmlList;
+
+            document.querySelectorAll('.lcsp-slider').forEach(sl => {
+                sl.addEventListener('input', (e) => {
+                    const evid = e.target.dataset.evid;
+                    document.getElementById(`val-${evid}`).textContent = `${e.target.value} días`;
+                    recalculateDates();
+                });
+            });
         }
 
-        function generateCalendarsHTML(events) {
-            if (events.length === 0) return '';
-            
-            let minDate = new Date(Math.min(...events.map(e => e.start.getTime())));
-            let maxDate = new Date(Math.max(...events.map(e => e.end.getTime())));
-            
-            let currentMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+        function recalculateDates() {
+            let curr = new Date(globalT0);
+            let calEvents = [];
+
+            currentSkeleton.forEach(ev => {
+                let dur = ev.slider ? parseInt(document.getElementById(ev.slider.id).value) : ev.staticDur;
+                
+                document.getElementById(`desc-${ev.id}`).textContent = ev.getDesc(dur);
+
+                let start = new Date(curr);
+                let end = new Date(start);
+                
+                if (dur > 0) {
+                    if (ev.isHabiles) end = addHabiles(start, dur);
+                    else end = addDays(start, dur);
+                }
+
+                curr = new Date(end);
+
+                document.getElementById(`date-${ev.id}`).textContent = start.getTime() === end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
+                
+                calEvents.push({ name: ev.name, start: start, end: end, color: ev.color });
+            });
+
+            renderCalendars(calEvents);
+        }
+
+        function renderCalendars(evs) {
+            if (evs.length === 0) return;
+            let minDate = new Date(Math.min(...evs.map(e => e.start.getTime())));
+            let maxDate = new Date(Math.max(...evs.map(e => e.end.getTime())));
+            let currMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
             let endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+            let calHtml = '';
             
-            let html = '';
-            
-            while (currentMonth <= endMonth) {
-                let y = currentMonth.getFullYear();
-                let m = currentMonth.getMonth();
+            while (currMonth <= endMonth) {
+                let y = currMonth.getFullYear(); let m = currMonth.getMonth();
                 let daysInMonth = new Date(y, m + 1, 0).getDate();
-                let firstDayIndex = new Date(y, m, 1).getDay();
-                firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
-
-                html += `
-                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                        <div class="bg-slate-50 border-b border-slate-200 px-4 py-3">
-                            <h4 class="text-sm font-bold text-slate-700 uppercase tracking-widest text-center">${getMonthName(m, y)}</h4>
-                        </div>
-                        <div class="p-4">
-                            <div class="cal-grid mb-2">
-                                <div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">X</div>
-                                <div class="cal-day-header">J</div><div class="cal-day-header">V</div><div class="cal-day-header text-red-400">S</div><div class="cal-day-header text-red-400">D</div>
-                            </div>
-                            <div class="cal-grid">
-                `;
-
-                for (let i = 0; i < firstDayIndex; i++) html += `<div class="cal-cell empty"></div>`;
-
+                let fDay = new Date(y, m, 1).getDay(); fDay = fDay === 0 ? 6 : fDay - 1;
+                
+                calHtml += `<div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm"><div class="bg-slate-50 border-b border-slate-200 px-4 py-3"><h4 class="text-sm font-bold text-slate-700 uppercase tracking-widest text-center">${getMonthName(m, y)}</h4></div><div class="p-4"><div class="cal-grid mb-2"><div class="cal-day-header">L</div><div class="cal-day-header">M</div><div class="cal-day-header">X</div><div class="cal-day-header">J</div><div class="cal-day-header">V</div><div class="cal-day-header text-red-400">S</div><div class="cal-day-header text-red-400">D</div></div><div class="cal-grid">`;
+                for (let i = 0; i < fDay; i++) calHtml += `<div class="cal-cell empty"></div>`;
+                
                 for (let d = 1; d <= daysInMonth; d++) {
-                    let cellDate = new Date(y, m, d);
-                    let cellDateStart = cellDate.getTime();
-                    let cellDateEnd = cellDateStart + 86399999; 
+                    let cellObj = new Date(y, m, d);
+                    let cellTs = cellObj.getTime();
+                    let dEvs = evs.filter(ev => cellTs >= ev.start.getTime() && cellTs <= ev.end.getTime());
+                    let isWeekendOrHoliday = cellObj.getDay() === 0 || cellObj.getDay() === 6 || isHoliday(cellObj);
+                    let bgC = isWeekendOrHoliday ? "bg-slate-50/50" : "bg-white"; 
+                    let tC = isWeekendOrHoliday ? "text-slate-400" : "text-slate-700";
+                    let inds = ''; let tt = `<strong>${formatDate(cellObj)}</strong>`;
                     
-                    let dayEvents = events.filter(ev => {
-                        let evStart = ev.start.getTime();
-                        let evEnd = ev.end.getTime() + 86399999;
-                        return cellDateStart <= evEnd && cellDateEnd >= evStart;
-                    });
-
-                    let isWeekend = cellDate.getDay() === 0 || cellDate.getDay() === 6;
-                    let textClass = isWeekend ? "text-slate-400" : "text-slate-700";
-                    let bgClass = isWeekend ? "bg-slate-50/50" : "bg-white";
-
-                    let indicators = '';
-                    let tooltipContent = `<strong>${formatDate(cellDate)}</strong>`;
-
-                    if (dayEvents.length > 0) {
-                        bgClass = "bg-slate-50";
-                        if (dayEvents.length === 1) {
-                            indicators = `<div class="cal-indicator ${themeColors[dayEvents[0].color]}"></div>`;
-                        } else {
-                            indicators = `<div class="cal-indicator-multi">`;
-                            dayEvents.forEach(ev => {
-                                indicators += `<div class="indicator-dot ${themeColors[ev.color]}"></div>`;
-                            });
-                            indicators += `</div>`;
-                        }
-                        dayEvents.forEach(ev => {
-                            tooltipContent += `<br/>• ${ev.name}`;
-                        });
-                    } else {
-                        tooltipContent += `<br/>Sin trámites`;
+                    if (isHoliday(cellObj)) {
+                        tt += `<br/><span class="text-red-300">Festivo Nacional</span>`;
                     }
 
-                    html += `
-                        <div class="cal-cell ${bgClass} ${textClass}">
-                            <span>${d}</span>
-                            ${indicators}
-                            <div class="tooltip">${tooltipContent}</div>
-                        </div>
-                    `;
+                    if (dEvs.length > 0) {
+                        bgC = "bg-slate-50 font-bold border-slate-200"; tC = "text-slate-900";
+                        inds = dEvs.length === 1 ? `<div class="cal-indicator-multi"><div class="indicator-dot ${themeColors[dEvs[0].color]}"></div></div>` : `<div class="cal-indicator-multi">${dEvs.map(ev => `<div class="indicator-dot ${themeColors[ev.color]}"></div>`).join('')}</div>`;
+                        dEvs.forEach(ev => tt += `<br/>• ${ev.name}`);
+                    }
+                    calHtml += `<div class="cal-cell ${bgC} ${tC}"><span>${d}</span>${inds}<div class="tooltip">${tt}</div></div>`;
                 }
-                
-                html += `</div></div></div>`;
-                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                calHtml += `</div></div></div>`;
+                currMonth.setMonth(currMonth.getMonth() + 1);
             }
-            return html;
+            document.getElementById('calendarsContainer').innerHTML = calHtml;
         }
 
-        form.addEventListener('submit', function(e) {
+        document.getElementById('lcspForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const pMan = procManual.value;
+            const pMan = document.getElementById('procManual').value;
             const tipo = document.getElementById('tipoContrato').value;
-            let valInput = document.getElementById('valorEstimado').value;
-            const valor = valInput ? parseFloat(valInput) : 0;
-            const t0 = new Date(document.getElementById('fechaAnuncio').value);
-            t0.setHours(0,0,0,0);
-            
-            const nSobres = parseInt(numSobres.value);
-            const hasBaja = bajaAnormal.checked;
-            const dIdent = parseInt(document.getElementById('diasIdent').value) || 2;
-            const dAud = parseInt(document.getElementById('diasAud').value) || 5;
-            const dInf = parseInt(document.getElementById('diasInf').value) || 5;
+            const valor = parseFloat(document.getElementById('valorEstimado').value) || 0;
+            const t0Str = document.getElementById('fechaAnuncio').value;
+            const nSobres = parseInt(document.getElementById('numSobres').value);
+            const hasBaja = document.getElementById('bajaAnormal').checked;
 
-            if (!tipo || isNaN(t0.getTime())) return;
+            if (!tipo || !t0Str) return;
+
+            globalT0 = new Date(t0Str);
+            globalT0.setHours(0,0,0,0);
 
             let proc = pMan;
-            let sara = false;
+            const tInfo = thresholds[tipo];
             
             if (pMan === 'AUTO') {
-                const t = thresholds[tipo];
-                if (valor < t.menor) proc = 'MENOR';
-                else if (valor < t.supersimplificado) proc = 'SUPERSIMPLIFICADO';
-                else if (valor < t.simplificado) proc = 'SIMPLIFICADO';
-                else {
-                    proc = valor >= t.sara ? 'ABIERTO_SARA' : 'ABIERTO_NO_SARA';
-                }
+                if (valor < tInfo.menor) proc = 'MENOR';
+                else if (tInfo.supersimp > 0 && valor < tInfo.supersimp) proc = 'SUPERSIMPLIFICADO';
+                else if (tInfo.simp > 0 && valor < tInfo.simp) proc = 'SIMPLIFICADO';
+                else proc = valor >= tInfo.sara ? 'ABIERTO_SARA' : 'ABIERTO_NO_SARA';
             }
-            
-            sara = (proc === 'ABIERTO_SARA') || (pMan === 'AUTO' && valor >= thresholds[tipo].sara);
 
+            const sara = (proc === 'ABIERTO_SARA') || (pMan === 'AUTO' && valor >= tInfo.sara);
+
+            document.getElementById('tagSara').style.display = sara ? 'inline-block' : 'none';
             document.getElementById('procName').textContent = proc.replace(/_/g, ' ');
-            document.getElementById('procDetail').textContent = pMan === 'AUTO' ? 
-                `Automático: Contrato de ${tipo} por ${valor.toLocaleString('es-ES')} €` : 
-                `Manual: Contrato de ${tipo} con ${nSobres} sobre/s configurado/s`;
+            document.getElementById('procDetail').textContent = pMan === 'AUTO' ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} €` : `Modo Manual Activo`;
 
-            let evs = [];
-            const pushE = (name, d1, d2, col, art, desc) => { evs.push({name, start: new Date(d1), end: new Date(d2), color: col, article: art, desc}); return new Date(d2); };
-
-            if (proc === 'MENOR') {
-                pushE('Adjudicación Directa', t0, t0, 'emerald', 'Art. 118', 'Contrato menor sin proceso de licitación público.');
-            } else {
-                let curr = new Date(t0);
-                
-                if (proc.includes('ABIERTO')) {
-                    let pDays = sara ? 35 : (tipo === 'obras' ? 26 : 15);
-                    let endP = addDays(curr, pDays);
-                    pushE('Presentación de Proposiciones', curr, endP, 'blue', sara ? 'Art. 156.2' : (tipo === 'obras' ? 'Art. 156.3.a' : 'Art. 156.3.b'), `Plazo de ${pDays} días naturales.`);
-                    curr = endP;
-                } else if (proc === 'SIMPLIFICADO') {
-                    let pDays = tipo === 'obras' ? 20 : 15;
-                    let endP = addDays(curr, pDays);
-                    pushE('Presentación de Proposiciones', curr, endP, 'blue', 'Art. 159.3', `Plazo de ${pDays} días naturales.`);
-                    curr = endP;
-                } else if (proc === 'SUPERSIMPLIFICADO') {
-                    let endP = addHabiles(curr, 10);
-                    pushE('Presentación de Proposiciones', curr, endP, 'blue', 'Art. 159.6.b', 'Plazo de 10 días hábiles.');
-                    curr = endP;
-                }
-
-                if (proc === 'SUPERSIMPLIFICADO') {
-                    let m = addHabiles(curr, 5);
-                    pushE('Mesa: Apertura y Evaluación Única', curr, m, 'purple', 'Art. 159.6.d', 'Apertura de sobre único y calificación.');
-                    curr = m;
-                } else {
-                    if (nSobres === 3) {
-                        let m1 = addHabiles(curr, 3);
-                        pushE('Mesa 1: Doc. Administrativa (Sobre A)', curr, m1, 'purple', 'Art. 141 / Art. 157.1', 'Apertura privada y plazo de subsanación.');
-                        curr = addHabiles(m1, 3);
-                        
-                        let m2 = addHabiles(curr, 3);
-                        pushE('Mesa 2: Juicios de Valor (Sobre B)', curr, m2, 'purple', 'Art. 157.3', 'Apertura pública criterios dependientes de valor.');
-                        curr = m2;
-                        
-                        let ev = addHabiles(curr, 7);
-                        pushE('Evaluación Técnica', curr, ev, 'purple', 'Art. 157.4', 'Emisión de informe técnico.');
-                        curr = ev;
-                        
-                        let m3 = addHabiles(curr, 3);
-                        pushE('Mesa 3: Fórmulas (Sobre C)', curr, m3, 'purple', 'Art. 157.4', 'Apertura pública económica y propuesta.');
-                        curr = m3;
-                    } else if (nSobres === 2) {
-                        let m1 = addHabiles(curr, 3);
-                        pushE('Mesa 1: Juicios de Valor (Sobre 1)', curr, m1, 'purple', 'Art. 157.3 / Art. 159.4.d', 'Apertura de criterios evaluables mediante valor.');
-                        curr = m1;
-                        
-                        let ev = addHabiles(curr, 7);
-                        pushE('Evaluación Técnica', curr, ev, 'purple', 'Art. 157.4', 'Informe técnico de los criterios.');
-                        curr = ev;
-                        
-                        let m2 = addHabiles(curr, 3);
-                        pushE('Mesa 2: Fórmulas (Sobre 2)', curr, m2, 'purple', 'Art. 157.4 / Art. 159.4.f', 'Apertura económica y propuesta de adjudicación.');
-                        curr = m2;
-                    } else if (nSobres === 1) {
-                        let m1 = addHabiles(curr, 3);
-                        pushE('Mesa Única: Fórmulas (Sobre Único)', curr, m1, 'purple', 'Art. 157.4 / Art. 159', 'Apertura pública de criterios automáticos y propuesta.');
-                        curr = m1;
-                    }
-                }
-
-                if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
-                    let b1 = addHabiles(curr, dIdent);
-                    pushE('Identificación Baja Temeraria', curr, b1, 'red', 'Art. 149.4', `La mesa requiere justificación (${dIdent} días hábiles sim.).`);
-                    curr = b1;
-                    
-                    let b2 = addHabiles(curr, dAud);
-                    pushE('Audiencia al Licitador', curr, b2, 'red', 'Art. 149.4', `Plazo del licitador para justificar (${dAud} días hábiles).`);
-                    curr = b2;
-                    
-                    let b3 = addHabiles(curr, dInf);
-                    pushE('Informe Técnico y Mesa', curr, b3, 'red', 'Art. 149.6', `Emisión de informe y aceptación/rechazo (${dInf} días hábiles).`);
-                    curr = b3;
-                }
-
-                let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
-                let r = addHabiles(curr, pReq);
-                pushE('Requerimiento Documentación', curr, r, 'amber', 'Art. 150.2', `Plazo de ${pReq} días hábiles para certificaciones y garantía.`);
-                curr = r;
-
-                let adj = addHabiles(curr, 5);
-                pushE('Resolución Adjudicación', curr, adj, 'amber', 'Art. 150.3', 'Aproximadamente 5 días hábiles siguientes al requerimiento.');
-                curr = adj;
-
-                if (proc === 'SUPERSIMPLIFICADO') {
-                    let f = addHabiles(curr, 5);
-                    pushE('Formalización Inmediata', curr, f, 'emerald', 'Art. 159.6.f', 'No sujeta a recurso especial, firma sin periodo de espera.');
-                } else {
-                    let espera = sara ? 15 : 15;
-                    let f = addHabiles(curr, espera);
-                    pushE('Periodo Espera y Formalización', curr, f, 'emerald', sara ? 'Art. 153.3' : 'Art. 153.2', sara ? '15 días hábiles de espera por recurso especial.' : 'Firma no más tarde de 15 días hábiles.');
-                }
-            }
-
-            timelineList.innerHTML = generateTimelineHTML(evs);
-            calendarsContainer.innerHTML = generateCalendarsHTML(evs);
+            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo);
             
-            resultsContainer.classList.remove('hidden');
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            renderTimelineBase();
+            recalculateDates();
+            
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     </script>
 </body>
