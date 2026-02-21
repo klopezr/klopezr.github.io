@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Plazos LCSP - Precisión Legal + Festivos + Mixto</title>
+    <title>Simulador Plazos LCSP - Completo (Ord/Urg/Emerg)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -16,7 +16,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-day-header { text-align: center; font-size: 0.75rem; font-weight: 700; color: #64748b; padding: 0.5rem 0; text-transform: uppercase; }
-        .cal-cell { aspect-ratio: 1; border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; font-weight: 500; color: #334155; border: 1px solid transparent; }
+        .cal-cell { aspect-ratio: 1; border-radius: 0.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; font-weight: 500; color: #334155; border: 1px solid transparent; background: white; }
         .cal-cell:hover { border-color: #cbd5e1; transform: scale(1.05); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .cal-cell.empty { background: transparent; cursor: default; border: none; box-shadow: none; transform: none; }
         .cal-indicator-multi { display: flex; gap: 2px; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 80%; justify-content: center; }
@@ -25,13 +25,16 @@
         .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; text-align: center; padding: 6px 10px; border-radius: 6px; z-index: 50; width: max-content; max-width: 250px; font-size: 0.75rem; font-weight: 400; line-height: 1.4; opacity: 0; transition: opacity 0.2s; margin-bottom: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); pointer-events: none; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
         .cal-cell:hover .tooltip { visibility: visible; opacity: 1; }
+        .emergency-badge { background: #7f1d1d; color: #fecaca; }
+        .urgent-badge { background: #854d0e; color: #fef9c3; }
+        .ordinary-badge { background: #14532d; color: #dcfce7; }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-20">
     <div class="max-w-6xl mx-auto px-4 pt-10">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP Preciso</h1>
-            <p class="text-slate-600 max-w-2xl mx-auto">Plazos ajustados a la Ley 9/2017 con indicación de artículos, límites legales y efecto de festivos</p>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP + Urgencia/Emergencia</h1>
+            <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley 9/2017: ordinario, urgente (art. 119) y emergencia (art. 120)</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative overflow-hidden">
@@ -80,6 +83,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-t border-slate-100 pt-6">
                     <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de tramitación</label>
+                        <select id="tipoTramitacion" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                            <option value="ordinaria" selected>Ordinaria</option>
+                            <option value="urgente">Urgente (art. 119 LCSP)</option>
+                            <option value="emergencia">Emergencia (art. 120 LCSP)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Fecha Publicación Anuncio</label>
                         <input type="date" id="fechaAnuncio" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                     </div>
@@ -91,6 +102,9 @@
                             <option value="1">1 Sobre Único</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de Entidad</label>
                         <select id="tipoEntidad" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
@@ -98,13 +112,12 @@
                             <option value="AGE">Administración General del Estado</option>
                         </select>
                     </div>
-                </div>
-
-                <div class="border-t border-slate-100 pt-6">
-                    <label class="flex items-center space-x-3 cursor-pointer group mb-2">
-                        <input type="checkbox" id="bajaAnormal" class="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-bold text-slate-800">Trámite de Baja Temeraria (Art. 149 LCSP)</span>
-                    </label>
+                    <div class="md:col-span-2 flex items-end">
+                        <label class="flex items-center space-x-3 cursor-pointer group">
+                            <input type="checkbox" id="bajaAnormal" class="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
+                            <span class="text-sm font-bold text-slate-800">Trámite de Baja Temeraria (Art. 149 LCSP)</span>
+                        </label>
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors text-lg">
@@ -115,9 +128,17 @@
 
         <div id="resultsContainer" class="hidden space-y-8">
             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
-                <span id="tagSara" class="hidden inline-block px-3 py-1 rounded-full bg-indigo-200 text-indigo-900 font-bold text-xs uppercase tracking-widest mb-3">Sujeto a Regulación Armonizada</span>
+                <div class="flex flex-wrap gap-2 justify-center mb-3">
+                    <span id="tagSara" class="hidden inline-block px-3 py-1 rounded-full bg-indigo-200 text-indigo-900 font-bold text-xs uppercase tracking-widest">Sujeto a Regulación Armonizada</span>
+                    <span id="tramitacionBadge" class="inline-block px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest"></span>
+                </div>
                 <h2 id="procName" class="text-3xl font-black text-indigo-950 mb-1"></h2>
                 <p id="procDetail" class="text-indigo-800 text-sm font-medium"></p>
+            </div>
+
+            <div id="urgentInfo" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 fade-in">
+                <p class="font-bold mb-1">⚡ Tramitación urgente (art. 119 LCSP)</p>
+                <p>Los plazos de presentación de proposiciones y de adjudicación se reducen a la mitad, excepto el plazo de formalización (15 días hábiles en SARA no se reduce) y los plazos de los procedimientos simplificados. Los plazos de los sliders son orientativos, respetando los máximos legales.</p>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
@@ -125,7 +146,7 @@
                 <div class="relative timeline-container" id="timelineList"></div>
                 <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
                     <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
-                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos nacionales (marcados con un punto rojo en el calendario). Si un festivo cae dentro del plazo, el cómputo se alarga automáticamente un día por cada festivo o fin de semana.</p>
+                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos nacionales. En el calendario, estos días aparecen sin color de fondo (blanco) para que puedas contar visualmente los días hábiles coloreados. Los festivos tienen un punto rojo. Al pasar el cursor se detalla el tipo de cómputo.</p>
                 </div>
             </div>
 
@@ -221,8 +242,16 @@
         function formatDate(date) { return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
         function getMonthName(m, y) { return new Date(y, m, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); }
 
-        function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad) {
+        function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion) {
             let s = [];
+            
+            if (tramitacion === 'emergencia') {
+                s.push({ id: 'emergencia', name: 'ACUERDO DE EMERGENCIA', color: 'red', art: 'Art. 120 LCSP', getDesc: () => 'Régimen excepcional. Se actúa de inmediato. Plazo máximo inicio ejecución: 1 mes.', staticDur: 0, isHabiles: false });
+                s.push({ id: 'ejecucion', name: 'Inicio ejecución (máx. 1 mes)', color: 'amber', art: 'Art. 120.1.c', getDesc: () => 'La ejecución debe iniciarse en el plazo máximo de 1 mes desde el acuerdo.', staticDur: 30, isHabiles: false });
+                s.push({ id: 'regularizacion', name: 'Regularización posterior', color: 'emerald', art: 'Art. 120.1.d', getDesc: () => 'Finalizada la emergencia, se aplican reglas de cumplimiento, recepción y liquidación.', staticDur: 0, isHabiles: false });
+                return s;
+            }
+
             if (proc === 'MENOR') {
                 s.push({ id: 'menor', name: 'Adjudicación Directa', color: 'emerald', art: 'Art. 118', getDesc: () => 'Contrato menor: Aprobación de gasto y factura. Plazo no regulado.', staticDur: 0, isHabiles: false });
                 return s;
@@ -232,22 +261,42 @@
                 s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: () => 'Plazo fijado de 10 días hábiles (mínimo legal).', staticDur: 10, isHabiles: true });
                 s.push({ id: 'm1', name: 'Mesa: Apertura y Evaluación', color: 'purple', art: 'Art. 159.6.d', getDesc: (v) => `Propuesta en ${v} días hábiles. Límite legal: máximo 5 días (art. 159.6.d).`, slider: { id: 'sl_m1', min: 1, max: 5, val: 3, label: 'Días hasta Mesa', txt: 'Máximo legal 5 días hábiles. Mínimo: 1 día (orientativo).' }, isHabiles: true });
                 s.push({ id: 'form', name: 'Formalización Inmediata', color: 'emerald', art: 'Art. 159.6.g', getDesc: () => 'Firma de aceptación de la resolución de adjudicación. Sin plazo adicional.', staticDur: 0, isHabiles: true });
-            } else {
-                let pDays = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
-                let artPresent = sara ? (tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2') : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3');
-                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: artPresent, getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
+                return s;
+            }
 
-                if (nSobres === 3) {
-                    s.push({ id: 'm1', name: 'Mesa 1: Administrativa y Juicios', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 1', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo (no hay máximo legal).' }, isHabiles: true });
-                    s.push({ id: 'ev', name: 'Evaluación Técnica (Sobre B)', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 30, val: proc === 'SIMPLIFICADO' ? 3 : 7, label: 'Días de Evaluación', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
-                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas (Sobre C)', color: 'purple', art: 'Art. 157.4', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
-                } else if (nSobres === 2) {
-                    s.push({ id: 'm1', name: 'Mesa 1: Juicios de Valor', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 1', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
-                    s.push({ id: 'ev', name: 'Evaluación Técnica', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 30, val: proc === 'SIMPLIFICADO' ? 3 : 7, label: 'Días de Evaluación', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
-                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas', color: 'purple', art: 'Art. 157.4 / 159.4.f', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
+            let pDays = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
+            
+            if (tramitacion === 'urgente') {
+                if (sara && (tipo === 'concesion_obras' || tipo === 'concesion_servicios')) {
+                } else if (proc === 'SIMPLIFICADO') {
+                } else if (sara && (proc === 'ABIERTO_SARA' || proc === 'ABIERTO_NO_SARA')) {
+                    if (tipo.includes('concesion')) {
+                    } else {
+                        pDays = Math.ceil(pDays / 2);
+                    }
                 } else {
-                    s.push({ id: 'm1', name: 'Mesa Única: Fórmulas', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura pública en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
+                    pDays = Math.ceil(pDays / 2);
                 }
+            }
+
+            let artPresent = sara ? (tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2') : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3');
+            if (tramitacion === 'urgente') artPresent += ' + art.119 (urgencia)';
+            
+            s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: artPresent, getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
+
+            let maxMesa = (proc === 'SIMPLIFICADO' && tramitacion !== 'urgente') ? 7 : 20;
+            let defMesa = 3;
+            
+            if (nSobres === 3) {
+                s.push({ id: 'm1', name: 'Mesa 1: Administrativa y Juicios', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: maxMesa, val: defMesa, label: 'Días hasta Mesa 1', txt: (proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo (no hay máximo legal).') }, isHabiles: true });
+                s.push({ id: 'ev', name: 'Evaluación Técnica (Sobre B)', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: (proc === 'SIMPLIFICADO' && tramitacion !== 'urgente') ? 7 : 30, val: (proc === 'SIMPLIFICADO') ? 3 : 7, label: 'Días de Evaluación', txt: (proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.') }, isHabiles: true });
+                s.push({ id: 'm2', name: 'Mesa 2: Fórmulas (Sobre C)', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157.4', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: maxMesa, val: defMesa, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
+            } else if (nSobres === 2) {
+                s.push({ id: 'm1', name: 'Mesa 1: Juicios de Valor', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: maxMesa, val: defMesa, label: 'Días hasta Mesa 1', txt: (proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.') }, isHabiles: true });
+                s.push({ id: 'ev', name: 'Evaluación Técnica', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: (proc === 'SIMPLIFICADO' && tramitacion !== 'urgente') ? 7 : 30, val: (proc === 'SIMPLIFICADO') ? 3 : 7, label: 'Días de Evaluación', txt: (proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.') }, isHabiles: true });
+                s.push({ id: 'm2', name: 'Mesa 2: Fórmulas', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157.4 / 159.4.f', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: maxMesa, val: defMesa, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
+            } else {
+                s.push({ id: 'm1', name: 'Mesa Única: Fórmulas', color: 'purple', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 157 / 159', getDesc: (v) => `Apertura pública en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: maxMesa, val: defMesa, label: 'Días hasta Mesa', txt: (proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.') }, isHabiles: true });
             }
 
             if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
@@ -257,13 +306,18 @@
             }
 
             let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
-            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'amber', art: 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
-            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'amber', art: 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
-            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: 5 días (art. 150.3).`, slider: { id: 'sl_adj', min: 1, max: 5, val: 5, label: 'Plazo Adjudicación', txt: 'Máx. 5 días hábiles. Mínimo 1 día.' }, isHabiles: true });
+            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
+            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
+            
+            let adjMax = (tramitacion === 'urgente' && sara) ? 3 : 5;
+            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider: { id: 'sl_adj', min: 1, max: adjMax, val: adjMax, label: 'Plazo Adjudicación', txt: `Máx. ${adjMax} días hábiles. Mínimo 1 día.` }, isHabiles: true });
 
             if (proc !== 'SUPERSIMPLIFICADO') {
-                let espera = sara ? 15 : 15;
-                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: sara ? 'Art. 153.3' : 'Art. 153.2', getDesc: () => sara ? '15 días hábiles (plazo para recurso especial).' : 'Firma máx. 15 días hábiles.', staticDur: espera, isHabiles: true });
+                let espera = (sara && tramitacion !== 'urgente') ? 15 : 15;
+                if (tramitacion === 'urgente' && sara) espera = 15;
+                else if (tramitacion === 'urgente') espera = 8;
+                
+                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + (sara ? 'Art. 153.3' : 'Art. 153.2'), getDesc: () => sara ? (tramitacion === 'urgente' ? '15 días hábiles (no se reduce, art.119.2.b.1º)' : '15 días hábiles (plazo recurso especial)') : `Firma máx. ${espera} días hábiles.`, staticDur: espera, isHabiles: true });
             }
 
             return s;
@@ -335,7 +389,7 @@
 
                 document.getElementById(`date-${ev.id}`).textContent = start.getTime() === end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
                 
-                calEvents.push({ name: ev.name, start: start, end: end, color: ev.color });
+                calEvents.push({ name: ev.name, start: start, end: end, color: ev.color, isHabiles: ev.isHabiles });
             });
 
             renderCalendars(calEvents);
@@ -361,23 +415,42 @@
                     let cellObj = new Date(y, m, d);
                     let cellTs = cellObj.getTime();
                     let dEvs = evs.filter(ev => cellTs >= ev.start.getTime() && cellTs <= ev.end.getTime());
+                    let isWeekend = cellObj.getDay() === 0 || cellObj.getDay() === 6;
                     let isFestivo = isHoliday(cellObj);
-                    let isWeekendOrHoliday = cellObj.getDay() === 0 || cellObj.getDay() === 6 || isFestivo;
-                    let bgC = isWeekendOrHoliday ? "bg-slate-50/50" : "bg-white"; 
-                    let tC = isWeekendOrHoliday ? "text-slate-400" : "text-slate-700";
-                    let inds = ''; let tt = `<strong>${formatDate(cellObj)}</strong>`;
                     
-                    if (isFestivo) {
-                        tt += `<br/><span class="text-red-300">Festivo Nacional</span>`;
+                    let inhabil = false;
+                    for (let ev of dEvs) {
+                        if (ev.isHabiles && (isWeekend || isFestivo)) {
+                            inhabil = true;
+                            break;
+                        }
                     }
-
+                    
+                    let bgColor = 'bg-white';
+                    if (dEvs.length > 0 && !inhabil) {
+                        bgColor = 'bg-slate-50 font-bold border-slate-200';
+                    }
+                    
+                    let inds = ''; 
+                    let tt = `<strong>${formatDate(cellObj)}</strong>`;
+                    
+                    if (isFestivo) tt += `<br/><span class="text-red-300">Festivo nacional</span>`;
+                    else if (isWeekend) tt += `<br/><span class="text-amber-300">Fin de semana</span>`;
+                    
                     if (dEvs.length > 0) {
-                        bgC = "bg-slate-50 font-bold border-slate-200"; tC = "text-slate-900";
-                        inds = dEvs.length === 1 ? `<div class="cal-indicator-multi"><div class="indicator-dot ${themeColors[dEvs[0].color]}"></div></div>` : `<div class="cal-indicator-multi">${dEvs.map(ev => `<div class="indicator-dot ${themeColors[ev.color]}"></div>`).join('')}</div>`;
-                        dEvs.forEach(ev => tt += `<br/>• ${ev.name}`);
+                        let visibleEvs = dEvs.filter(ev => !(ev.isHabiles && (isWeekend || isFestivo)));
+                        if (visibleEvs.length > 0) {
+                            inds = visibleEvs.length === 1 ? `<div class="cal-indicator-multi"><div class="indicator-dot ${themeColors[visibleEvs[0].color]}"></div></div>` : `<div class="cal-indicator-multi">${visibleEvs.map(ev => `<div class="indicator-dot ${themeColors[ev.color]}"></div>`).join('')}</div>`;
+                        }
+                        dEvs.forEach(ev => tt += `<br/>• ${ev.name} (${ev.isHabiles ? 'hábiles' : 'naturales'})`);
                     }
+                    
+                    if (inhabil) {
+                        tt += `<br/><span class="text-slate-400">Día inhábil para plazos hábiles</span>`;
+                    }
+                    
                     let holidayMarker = isFestivo ? '<div class="holiday-marker"></div>' : '';
-                    calHtml += `<div class="cal-cell ${bgC} ${tC}"><span>${d}</span>${inds}${holidayMarker}<div class="tooltip">${tt}</div></div>`;
+                    calHtml += `<div class="cal-cell ${bgColor}"><span>${d}</span>${inds}${holidayMarker}<div class="tooltip">${tt}</div></div>`;
                 }
                 calHtml += `</div></div></div>`;
                 currMonth.setMonth(currMonth.getMonth() + 1);
@@ -395,10 +468,10 @@
             const nSobres = parseInt(document.getElementById('numSobres').value);
             const hasBaja = document.getElementById('bajaAnormal').checked;
             const entidad = document.getElementById('tipoEntidad').value;
+            const tramitacion = document.getElementById('tipoTramitacion').value;
 
             if (!tipo || !t0Str) return;
 
-            // Si es mixto, usar el tipo principal seleccionado
             if (tipo === 'mixto') {
                 tipo = document.getElementById('mixtoPrincipal').value;
             }
@@ -423,10 +496,27 @@
             const sara = (proc === 'ABIERTO_SARA') || (pMan === 'AUTO' && valor >= tInfo.sara);
 
             document.getElementById('tagSara').style.display = sara ? 'inline-block' : 'none';
+            
+            let badge = document.getElementById('tramitacionBadge');
+            badge.className = 'inline-block px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest';
+            if (tramitacion === 'urgente') {
+                badge.textContent = 'Tramitación URGENTE (art. 119)';
+                badge.classList.add('urgent-badge');
+                document.getElementById('urgentInfo').classList.remove('hidden');
+            } else if (tramitacion === 'emergencia') {
+                badge.textContent = 'Régimen de EMERGENCIA (art. 120)';
+                badge.classList.add('emergency-badge');
+                document.getElementById('urgentInfo').classList.add('hidden');
+            } else {
+                badge.textContent = 'Tramitación ORDINARIA';
+                badge.classList.add('ordinary-badge');
+                document.getElementById('urgentInfo').classList.add('hidden');
+            }
+
             document.getElementById('procName').textContent = proc.replace(/_/g, ' ');
             document.getElementById('procDetail').textContent = pMan === 'AUTO' ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} € | Entidad: ${entidad}` : `Modo Manual Activo | Entidad: ${entidad}`;
 
-            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad);
+            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion);
             
             renderTimelineBase();
             recalculateDates();
@@ -437,4 +527,3 @@
     </script>
 </body>
 </html>
-
