@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Plazos LCSP - Completo (Ord/Urg/Emerg)</title>
+    <title>Simulador Plazos LCSP </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -33,8 +33,8 @@
 <body class="text-slate-800 antialiased min-h-screen pb-20">
     <div class="max-w-6xl mx-auto px-4 pt-10">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP + Urgencia/Emergencia</h1>
-            <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley 9/2017: ordinario, urgente (art. 119) y emergencia (art. 120)</p>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador</h1>
+            <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley 9/2017 LCSP</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative overflow-hidden">
@@ -104,12 +104,37 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de Entidad</label>
                         <select id="tipoEntidad" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                             <option value="OTRAS" selected>Otras entidades (CCAA, EELL, etc.)</option>
                             <option value="AGE">Administración General del Estado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Comunidad Autónoma</label>
+                        <select id="ccaa" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                            <option value="ALL">Nacional (solo festivos nacionales)</option>
+                            <option value="ES-AN">Andalucía</option>
+                            <option value="ES-AR">Aragón</option>
+                            <option value="ES-AS">Asturias</option>
+                            <option value="ES-CN">Canarias</option>
+                            <option value="ES-CB">Cantabria</option>
+                            <option value="ES-CL">Castilla y León</option>
+                            <option value="ES-CM">Castilla-La Mancha</option>
+                            <option value="ES-CT">Cataluña</option>
+                            <option value="ES-CE">Ceuta</option>
+                            <option value="ES-EX">Extremadura</option>
+                            <option value="ES-GA">Galicia</option>
+                            <option value="ES-IB">Islas Baleares</option>
+                            <option value="ES-RI">La Rioja</option>
+                            <option value="ES-MD">Madrid</option>
+                            <option value="ES-ML">Melilla</option>
+                            <option value="ES-MC">Murcia</option>
+                            <option value="ES-NC">Navarra</option>
+                            <option value="ES-PV">País Vasco</option>
+                            <option value="ES-VC">Valenciana</option>
                         </select>
                     </div>
                     <div class="md:col-span-2 flex items-end">
@@ -146,7 +171,7 @@
                 <div class="relative timeline-container" id="timelineList"></div>
                 <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
                     <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
-                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos nacionales. En el calendario, estos días aparecen sin color de fondo (blanco) para que puedas contar visualmente los días hábiles coloreados. Los festivos tienen un punto rojo. Al pasar el cursor se detalla el tipo de cómputo.</p>
+                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos (nacionales y autonómicos según selección). En el calendario, estos días aparecen sin color de fondo (blanco) para que puedas contar visualmente los días hábiles coloreados. Los festivos tienen un punto rojo. Al pasar el cursor se detalla el tipo de cómputo y el nombre del festivo.</p>
                 </div>
             </div>
 
@@ -154,6 +179,7 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-4">
                     <h3 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Calendario Dinámico</h3>
                     <div class="flex flex-wrap gap-3">
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-xs font-bold text-slate-600">Publicación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-blue-500"></div><span class="text-xs font-bold text-slate-600">Presentación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-purple-500"></div><span class="text-xs font-bold text-slate-600">Mesas/Eval</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><span class="text-xs font-bold text-slate-600">Bajas</span></div>
@@ -176,12 +202,13 @@
             mixto: { menor: 15000, supersimp: 60000, simp: 140000, sara: 5404000, pres: 15 }
         };
 
-        const themeColors = { 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500' };
-        const ringColors = { 'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200' };
-        const textColors = { 'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700' };
+        const themeColors = { 'gray': 'bg-slate-400', 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500' };
+        const ringColors = { 'gray': 'ring-slate-200', 'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200' };
+        const textColors = { 'gray': 'text-slate-700', 'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700' };
 
         let currentSkeleton = [];
         let globalT0 = new Date();
+        let holidayMap = new Map();
 
         document.getElementById('fechaAnuncio').valueAsDate = new Date();
         document.getElementById('procManual').addEventListener('change', (e) => {
@@ -214,20 +241,48 @@
             return vs;
         }
 
-        function isHoliday(date) {
+        function getHolidayInfo(date) {
             const d = date.getDate(), m = date.getMonth(), y = date.getFullYear();
-            if (m === 0 && d === 1) return true;
-            if (m === 0 && d === 6) return true;
-            if (m === 4 && d === 1) return true;
-            if (m === 7 && d === 15) return true;
-            if (m === 9 && d === 12) return true;
-            if (m === 10 && d === 1) return true;
-            if (m === 11 && d === 6) return true;
-            if (m === 11 && d === 8) return true;
-            if (m === 11 && d === 25) return true;
+            if (m === 0 && d === 1) return { name: 'Año Nuevo', type: 'Nacional' };
+            if (m === 0 && d === 6) return { name: 'Epifanía del Señor', type: 'Nacional' };
+            if (m === 4 && d === 1) return { name: 'Fiesta del Trabajo', type: 'Nacional' };
+            if (m === 7 && d === 15) return { name: 'Asunción de la Virgen', type: 'Nacional' };
+            if (m === 9 && d === 12) return { name: 'Fiesta Nacional de España', type: 'Nacional' };
+            if (m === 10 && d === 1) return { name: 'Todos los Santos', type: 'Nacional' };
+            if (m === 11 && d === 6) return { name: 'Día de la Constitución Española', type: 'Nacional' };
+            if (m === 11 && d === 8) return { name: 'Inmaculada Concepción', type: 'Nacional' };
+            if (m === 11 && d === 25) return { name: 'Natividad del Señor', type: 'Nacional' };
             const vs = getViernesSanto(y);
-            if (m === vs.getMonth() && d === vs.getDate()) return true;
-            return false;
+            if (m === vs.getMonth() && d === vs.getDate()) return { name: 'Viernes Santo', type: 'Nacional' };
+            const dateStr = date.toDateString();
+            if (holidayMap.has(dateStr)) return holidayMap.get(dateStr);
+            return null;
+        }
+
+        async function loadHolidaysForYear(year, region) {
+            let holidays = [];
+            try {
+                const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ES`);
+                if (!response.ok) throw new Error('Error fetching holidays');
+                let data = await response.json();
+                data.forEach(h => {
+                    if (region === 'ALL') {
+                        if (h.global === true) {
+                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Nacional' });
+                        }
+                    } else {
+                        if (h.global === true) {
+                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Nacional' });
+                        }
+                        if (h.counties && h.counties.includes(region)) {
+                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Autonómico' });
+                        }
+                    }
+                });
+            } catch (error) {
+                console.warn('Error cargando festivos, usando solo nacionales fijos', error);
+            }
+            return holidays;
         }
 
         function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
@@ -235,7 +290,7 @@
             const d = new Date(date); let added = 0;
             while (added < numHabiles) { 
                 d.setDate(d.getDate() + 1); 
-                if (d.getDay() !== 0 && d.getDay() !== 6 && !isHoliday(d)) added++; 
+                if (d.getDay() !== 0 && d.getDay() !== 6 && !getHolidayInfo(d)) added++; 
             }
             return d;
         }
@@ -245,6 +300,15 @@
         function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion) {
             let s = [];
             
+            s.push({ id: 'pub', name: 'Publicación del anuncio', color: 'gray', art: 'Art. 135 LCSP', getDesc: () => {
+                let pubInfo = 'Publicación en perfil de contratante';
+                if (sara) pubInfo += ' y en DOUE';
+                if (proc === 'ABIERTO_SARA' || proc === 'ABIERTO_NO_SARA' || proc === 'SIMPLIFICADO') {
+                    if (entidad === 'AGE') pubInfo += ' y en BOE';
+                }
+                return pubInfo;
+            }, staticDur: 0, isHabiles: false });
+
             if (tramitacion === 'emergencia') {
                 s.push({ id: 'emergencia', name: 'ACUERDO DE EMERGENCIA', color: 'red', art: 'Art. 120 LCSP', getDesc: () => 'Régimen excepcional. Se actúa de inmediato. Plazo máximo inicio ejecución: 1 mes.', staticDur: 0, isHabiles: false });
                 s.push({ id: 'ejecucion', name: 'Inicio ejecución (máx. 1 mes)', color: 'amber', art: 'Art. 120.1.c', getDesc: () => 'La ejecución debe iniciarse en el plazo máximo de 1 mes desde el acuerdo.', staticDur: 30, isHabiles: false });
@@ -368,11 +432,11 @@
             });
         }
 
-        function recalculateDates() {
+        async function recalculateDates() {
             let curr = new Date(globalT0);
             let calEvents = [];
 
-            currentSkeleton.forEach(ev => {
+            for (const ev of currentSkeleton) {
                 let dur = ev.slider ? parseInt(document.getElementById(ev.slider.id).value) : ev.staticDur;
                 
                 document.getElementById(`desc-${ev.id}`).textContent = ev.getDesc(dur);
@@ -390,7 +454,7 @@
                 document.getElementById(`date-${ev.id}`).textContent = start.getTime() === end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
                 
                 calEvents.push({ name: ev.name, start: start, end: end, color: ev.color, isHabiles: ev.isHabiles });
-            });
+            }
 
             renderCalendars(calEvents);
         }
@@ -416,7 +480,8 @@
                     let cellTs = cellObj.getTime();
                     let dEvs = evs.filter(ev => cellTs >= ev.start.getTime() && cellTs <= ev.end.getTime());
                     let isWeekend = cellObj.getDay() === 0 || cellObj.getDay() === 6;
-                    let isFestivo = isHoliday(cellObj);
+                    let holidayInfo = getHolidayInfo(cellObj);
+                    let isFestivo = holidayInfo !== null;
                     
                     let inhabil = false;
                     for (let ev of dEvs) {
@@ -434,7 +499,7 @@
                     let inds = ''; 
                     let tt = `<strong>${formatDate(cellObj)}</strong>`;
                     
-                    if (isFestivo) tt += `<br/><span class="text-red-300">Festivo nacional</span>`;
+                    if (isFestivo) tt += `<br/><span class="text-red-300">Festivo: ${holidayInfo.name} (${holidayInfo.type})</span>`;
                     else if (isWeekend) tt += `<br/><span class="text-amber-300">Fin de semana</span>`;
                     
                     if (dEvs.length > 0) {
@@ -458,7 +523,7 @@
             document.getElementById('calendarsContainer').innerHTML = calHtml;
         }
 
-        document.getElementById('lcspForm').addEventListener('submit', function(e) {
+        document.getElementById('lcspForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const pMan = document.getElementById('procManual').value;
@@ -469,6 +534,7 @@
             const hasBaja = document.getElementById('bajaAnormal').checked;
             const entidad = document.getElementById('tipoEntidad').value;
             const tramitacion = document.getElementById('tipoTramitacion').value;
+            const ccaa = document.getElementById('ccaa').value;
 
             if (!tipo || !t0Str) return;
 
@@ -495,6 +561,23 @@
 
             const sara = (proc === 'ABIERTO_SARA') || (pMan === 'AUTO' && valor >= tInfo.sara);
 
+            globalT0.setHours(0,0,0,0);
+            let skeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion);
+            let maxEnd = new Date(globalT0);
+            for (let ev of skeleton) {
+                if (ev.staticDur) {
+                    if (ev.isHabiles) maxEnd = addHabiles(maxEnd, ev.staticDur);
+                    else maxEnd = addDays(maxEnd, ev.staticDur);
+                }
+            }
+            let startYear = globalT0.getFullYear();
+            let endYear = maxEnd.getFullYear();
+            holidayMap.clear();
+            for (let y = startYear; y <= endYear; y++) {
+                const h = await loadHolidaysForYear(y, ccaa);
+                h.forEach(item => holidayMap.set(item.date, { name: item.name, type: item.type }));
+            }
+
             document.getElementById('tagSara').style.display = sara ? 'inline-block' : 'none';
             
             let badge = document.getElementById('tramitacionBadge');
@@ -516,10 +599,10 @@
             document.getElementById('procName').textContent = proc.replace(/_/g, ' ');
             document.getElementById('procDetail').textContent = pMan === 'AUTO' ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} € | Entidad: ${entidad}` : `Modo Manual Activo | Entidad: ${entidad}`;
 
-            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion);
+            currentSkeleton = skeleton;
             
             renderTimelineBase();
-            recalculateDates();
+            await recalculateDates();
             
             document.getElementById('resultsContainer').classList.remove('hidden');
             document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
