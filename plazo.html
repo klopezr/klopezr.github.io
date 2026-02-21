@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Plazos LCSP - Ajustes Inline y Festivos</title>
+    <title>Simulador Plazos LCSP - Precisión Legal + Festivos + Mixto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -21,6 +21,7 @@
         .cal-cell.empty { background: transparent; cursor: default; border: none; box-shadow: none; transform: none; }
         .cal-indicator-multi { display: flex; gap: 2px; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 80%; justify-content: center; }
         .indicator-dot { height: 4px; flex: 1; border-radius: 2px; }
+        .holiday-marker { position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 0 1px white; }
         .tooltip { visibility: hidden; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; text-align: center; padding: 6px 10px; border-radius: 6px; z-index: 50; width: max-content; max-width: 250px; font-size: 0.75rem; font-weight: 400; line-height: 1.4; opacity: 0; transition: opacity 0.2s; margin-bottom: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); pointer-events: none; }
         .tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
         .cal-cell:hover .tooltip { visibility: visible; opacity: 1; }
@@ -29,8 +30,8 @@
 <body class="text-slate-800 antialiased min-h-screen pb-20">
     <div class="max-w-6xl mx-auto px-4 pt-10">
         <div class="text-center mb-10">
-            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP Dinámico</h1>
-            <p class="text-slate-600 max-w-2xl mx-auto">Configura plazos potestativos en cada trámite procesal en tiempo real</p>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador LCSP Preciso</h1>
+            <p class="text-slate-600 max-w-2xl mx-auto">Plazos ajustados a la Ley 9/2017 con indicación de artículos, límites legales y efecto de festivos</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative overflow-hidden">
@@ -66,7 +67,18 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start border-t border-slate-100 pt-6">
+                <div id="mixtoPrincipalContainer" class="hidden">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Prestación principal del contrato mixto (art. 18 LCSP)</label>
+                    <select id="mixtoPrincipal" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                        <option value="obras">Obras</option>
+                        <option value="servicios">Servicios</option>
+                        <option value="suministros">Suministros</option>
+                        <option value="concesion_obras">Concesión de Obras</option>
+                        <option value="concesion_servicios">Concesión de Servicios</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start border-t border-slate-100 pt-6">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">Fecha Publicación Anuncio</label>
                         <input type="date" id="fechaAnuncio" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
@@ -77,6 +89,13 @@
                             <option value="3">3 Sobres (Admin, Juicios, Fórmulas)</option>
                             <option value="2">2 Sobres (Juicios, Fórmulas)</option>
                             <option value="1">1 Sobre Único</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de Entidad</label>
+                        <select id="tipoEntidad" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                            <option value="OTRAS" selected>Otras entidades (CCAA, EELL, etc.)</option>
+                            <option value="AGE">Administración General del Estado</option>
                         </select>
                     </div>
                 </div>
@@ -104,6 +123,10 @@
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
                 <h3 class="text-xl font-bold text-slate-900 mb-10 text-center uppercase tracking-wide border-b pb-4">Secuencia de Trámites y Ajustes</h3>
                 <div class="relative timeline-container" id="timelineList"></div>
+                <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
+                    <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
+                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos nacionales (marcados con un punto rojo en el calendario). Si un festivo cae dentro del plazo, el cómputo se alarga automáticamente un día por cada festivo o fin de semana.</p>
+                </div>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
@@ -124,12 +147,12 @@
 
     <script>
         const thresholds = {
-            obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5538000, pres: 26 },
-            servicios: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
-            suministros: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
-            concesion_obras: { menor: 40000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
-            concesion_servicios: { menor: 15000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
-            mixto: { menor: 15000, supersimp: 60000, simp: 143000, sara: 5538000, pres: 15 }
+            obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5404000, pres: 26 },
+            servicios: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
+            suministros: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
+            concesion_obras: { menor: 40000, supersimp: 0, simp: 0, sara: 5404000, pres: 26 },
+            concesion_servicios: { menor: 15000, supersimp: 0, simp: 0, sara: 5404000, pres: 26 },
+            mixto: { menor: 15000, supersimp: 60000, simp: 140000, sara: 5404000, pres: 15 }
         };
 
         const themeColors = { 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500' };
@@ -146,6 +169,14 @@
                 document.getElementById('numSobres').disabled = true;
             } else {
                 document.getElementById('numSobres').disabled = false;
+            }
+        });
+
+        document.getElementById('tipoContrato').addEventListener('change', (e) => {
+            if (e.target.value === 'mixto') {
+                document.getElementById('mixtoPrincipalContainer').classList.remove('hidden');
+            } else {
+                document.getElementById('mixtoPrincipalContainer').classList.add('hidden');
             }
         });
 
@@ -190,49 +221,49 @@
         function formatDate(date) { return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
         function getMonthName(m, y) { return new Date(y, m, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); }
 
-        function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo) {
+        function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad) {
             let s = [];
             if (proc === 'MENOR') {
-                s.push({ id: 'menor', name: 'Adjudicación Directa', color: 'emerald', art: 'Art. 118', getDesc: () => 'Aprobación de gasto y factura.', staticDur: 0, isHabiles: false });
+                s.push({ id: 'menor', name: 'Adjudicación Directa', color: 'emerald', art: 'Art. 118', getDesc: () => 'Contrato menor: Aprobación de gasto y factura. Plazo no regulado.', staticDur: 0, isHabiles: false });
                 return s;
             }
 
             if (proc === 'SUPERSIMPLIFICADO') {
-                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: () => 'Plazo fijado de 10 días hábiles.', staticDur: 10, isHabiles: true });
-                s.push({ id: 'm1', name: 'Mesa: Apertura y Evaluación', color: 'purple', art: 'Art. 159.6.d', getDesc: (v) => `Propuesta en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 5, val: 3, label: 'Días hasta Mesa', txt: 'Máximo legal 5 días hábiles.' }, isHabiles: true });
+                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: () => 'Plazo fijado de 10 días hábiles (mínimo legal).', staticDur: 10, isHabiles: true });
+                s.push({ id: 'm1', name: 'Mesa: Apertura y Evaluación', color: 'purple', art: 'Art. 159.6.d', getDesc: (v) => `Propuesta en ${v} días hábiles. Límite legal: máximo 5 días (art. 159.6.d).`, slider: { id: 'sl_m1', min: 1, max: 5, val: 3, label: 'Días hasta Mesa', txt: 'Máximo legal 5 días hábiles. Mínimo: 1 día (orientativo).' }, isHabiles: true });
+                s.push({ id: 'form', name: 'Formalización Inmediata', color: 'emerald', art: 'Art. 159.6.g', getDesc: () => 'Firma de aceptación de la resolución de adjudicación. Sin plazo adicional.', staticDur: 0, isHabiles: true });
             } else {
-                let pDays = sara ? 35 : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
-                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: sara ? 'Art. 156.2' : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3'), getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
+                let pDays = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
+                let artPresent = sara ? (tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2') : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3');
+                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: artPresent, getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
 
                 if (nSobres === 3) {
-                    s.push({ id: 'm1', name: 'Mesa 1: Administrativa y Juicios', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 1', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
-                    s.push({ id: 'ev', name: 'Evaluación Técnica (Sobre B)', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles.`, slider: { id: 'sl_ev', min: 1, max: 30, val: 7, label: 'Días de Evaluación', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
-                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas (Sobre C)', color: 'purple', art: 'Art. 157.4', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Plazo tras recibir informe.' }, isHabiles: true });
+                    s.push({ id: 'm1', name: 'Mesa 1: Administrativa y Juicios', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 1', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo (no hay máximo legal).' }, isHabiles: true });
+                    s.push({ id: 'ev', name: 'Evaluación Técnica (Sobre B)', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 30, val: proc === 'SIMPLIFICADO' ? 3 : 7, label: 'Días de Evaluación', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
+                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas (Sobre C)', color: 'purple', art: 'Art. 157.4', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
                 } else if (nSobres === 2) {
-                    s.push({ id: 'm1', name: 'Mesa 1: Juicios de Valor', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 1', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
-                    s.push({ id: 'ev', name: 'Evaluación Técnica', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles.`, slider: { id: 'sl_ev', min: 1, max: 30, val: 7, label: 'Días de Evaluación', txt: 'Máx. 7 días hábiles en Simplificado.' }, isHabiles: true });
-                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas', color: 'purple', art: 'Art. 157.4 / 159.4.f', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Plazo tras recibir informe.' }, isHabiles: true });
+                    s.push({ id: 'm1', name: 'Mesa 1: Juicios de Valor', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura en ${v} días hábiles. En simplificado máximo 7 días (art. 159.4.e).`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 1', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
+                    s.push({ id: 'ev', name: 'Evaluación Técnica', color: 'purple', art: 'Art. 157.4 / 159.4.e', getDesc: (v) => `Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider: { id: 'sl_ev', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 30, val: proc === 'SIMPLIFICADO' ? 3 : 7, label: 'Días de Evaluación', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
+                    s.push({ id: 'm2', name: 'Mesa 2: Fórmulas', color: 'purple', art: 'Art. 157.4 / 159.4.f', getDesc: (v) => `Apertura económica en ${v} días hábiles.`, slider: { id: 'sl_m2', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa 2', txt: 'Tras recibir informe. Sin máximo legal.' }, isHabiles: true });
                 } else {
-                    s.push({ id: 'm1', name: 'Mesa Única: Fórmulas', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura pública en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: 20, val: 3, label: 'Días hasta Mesa', txt: 'Plazo sujeto a necesidades del órgano.' }, isHabiles: true });
+                    s.push({ id: 'm1', name: 'Mesa Única: Fórmulas', color: 'purple', art: 'Art. 157 / 159', getDesc: (v) => `Apertura pública en ${v} días hábiles.`, slider: { id: 'sl_m1', min: 1, max: proc === 'SIMPLIFICADO' ? 7 : 20, val: 3, label: 'Días hasta Mesa', txt: proc === 'SIMPLIFICADO' ? 'Máx. 7 días hábiles. Mínimo 1 día.' : 'Plazo orientativo.' }, isHabiles: true });
                 }
             }
 
             if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
-                s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa.' }, isHabiles: true });
-                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles.' }, isHabiles: true });
-                s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'red', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico especializado.' }, isHabiles: true });
+                s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa. Sin plazo legal fijo.' }, isHabiles: true });
+                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles. Máximo orientativo 15.' }, isHabiles: true });
+                s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'red', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico. Sin plazo legal.' }, isHabiles: true });
             }
 
             let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
             s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'amber', art: 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
             s.push({ id: 'req2', name: 'Aporte Documentación', color: 'amber', art: 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
-            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles.`, slider: { id: 'sl_adj', min: 1, max: 5, val: 5, label: 'Plazo Adjudicación', txt: 'Máx. 5 días hábiles.' }, isHabiles: true });
+            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: 5 días (art. 150.3).`, slider: { id: 'sl_adj', min: 1, max: 5, val: 5, label: 'Plazo Adjudicación', txt: 'Máx. 5 días hábiles. Mínimo 1 día.' }, isHabiles: true });
 
-            if (proc === 'SUPERSIMPLIFICADO') {
-                s.push({ id: 'form', name: 'Formalización Inmediata', color: 'emerald', art: 'Art. 159.6.f', getDesc: () => 'Firma sin espera previa.', staticDur: 5, isHabiles: true });
-            } else {
+            if (proc !== 'SUPERSIMPLIFICADO') {
                 let espera = sara ? 15 : 15;
-                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: sara ? 'Art. 153.3' : 'Art. 153.2', getDesc: () => sara ? '15 días hábiles (Recurso Especial).' : 'Firma máx. 15 días hábiles.', staticDur: espera, isHabiles: true });
+                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: sara ? 'Art. 153.3' : 'Art. 153.2', getDesc: () => sara ? '15 días hábiles (plazo para recurso especial).' : 'Firma máx. 15 días hábiles.', staticDur: espera, isHabiles: true });
             }
 
             return s;
@@ -330,12 +361,13 @@
                     let cellObj = new Date(y, m, d);
                     let cellTs = cellObj.getTime();
                     let dEvs = evs.filter(ev => cellTs >= ev.start.getTime() && cellTs <= ev.end.getTime());
-                    let isWeekendOrHoliday = cellObj.getDay() === 0 || cellObj.getDay() === 6 || isHoliday(cellObj);
+                    let isFestivo = isHoliday(cellObj);
+                    let isWeekendOrHoliday = cellObj.getDay() === 0 || cellObj.getDay() === 6 || isFestivo;
                     let bgC = isWeekendOrHoliday ? "bg-slate-50/50" : "bg-white"; 
                     let tC = isWeekendOrHoliday ? "text-slate-400" : "text-slate-700";
                     let inds = ''; let tt = `<strong>${formatDate(cellObj)}</strong>`;
                     
-                    if (isHoliday(cellObj)) {
+                    if (isFestivo) {
                         tt += `<br/><span class="text-red-300">Festivo Nacional</span>`;
                     }
 
@@ -344,7 +376,8 @@
                         inds = dEvs.length === 1 ? `<div class="cal-indicator-multi"><div class="indicator-dot ${themeColors[dEvs[0].color]}"></div></div>` : `<div class="cal-indicator-multi">${dEvs.map(ev => `<div class="indicator-dot ${themeColors[ev.color]}"></div>`).join('')}</div>`;
                         dEvs.forEach(ev => tt += `<br/>• ${ev.name}`);
                     }
-                    calHtml += `<div class="cal-cell ${bgC} ${tC}"><span>${d}</span>${inds}<div class="tooltip">${tt}</div></div>`;
+                    let holidayMarker = isFestivo ? '<div class="holiday-marker"></div>' : '';
+                    calHtml += `<div class="cal-cell ${bgC} ${tC}"><span>${d}</span>${inds}${holidayMarker}<div class="tooltip">${tt}</div></div>`;
                 }
                 calHtml += `</div></div></div>`;
                 currMonth.setMonth(currMonth.getMonth() + 1);
@@ -356,20 +389,30 @@
             e.preventDefault();
             
             const pMan = document.getElementById('procManual').value;
-            const tipo = document.getElementById('tipoContrato').value;
+            let tipo = document.getElementById('tipoContrato').value;
             const valor = parseFloat(document.getElementById('valorEstimado').value) || 0;
             const t0Str = document.getElementById('fechaAnuncio').value;
             const nSobres = parseInt(document.getElementById('numSobres').value);
             const hasBaja = document.getElementById('bajaAnormal').checked;
+            const entidad = document.getElementById('tipoEntidad').value;
 
             if (!tipo || !t0Str) return;
+
+            // Si es mixto, usar el tipo principal seleccionado
+            if (tipo === 'mixto') {
+                tipo = document.getElementById('mixtoPrincipal').value;
+            }
 
             globalT0 = new Date(t0Str);
             globalT0.setHours(0,0,0,0);
 
+            let tInfo = JSON.parse(JSON.stringify(thresholds[tipo]));
+            if (entidad === 'OTRAS' && (tipo === 'servicios' || tipo === 'suministros')) {
+                tInfo.sara = 216000;
+                tInfo.simp = 216000;
+            }
+
             let proc = pMan;
-            const tInfo = thresholds[tipo];
-            
             if (pMan === 'AUTO') {
                 if (valor < tInfo.menor) proc = 'MENOR';
                 else if (tInfo.supersimp > 0 && valor < tInfo.supersimp) proc = 'SUPERSIMPLIFICADO';
@@ -381,9 +424,9 @@
 
             document.getElementById('tagSara').style.display = sara ? 'inline-block' : 'none';
             document.getElementById('procName').textContent = proc.replace(/_/g, ' ');
-            document.getElementById('procDetail').textContent = pMan === 'AUTO' ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} €` : `Modo Manual Activo`;
+            document.getElementById('procDetail').textContent = pMan === 'AUTO' ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} € | Entidad: ${entidad}` : `Modo Manual Activo | Entidad: ${entidad}`;
 
-            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo);
+            currentSkeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad);
             
             renderTimelineBase();
             recalculateDates();
