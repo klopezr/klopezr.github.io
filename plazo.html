@@ -72,7 +72,7 @@
                 </div>
 
                 <div id="mixtoPrincipalContainer" class="hidden">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Prestación principal del contrato mixto (art. 18 LCSP)</label>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Prestación principal del contrato mixto (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a18" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">art. 18 LCSP</a>)</label>
                     <select id="mixtoPrincipal" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                         <option value="obras">Obras</option>
                         <option value="servicios">Servicios</option>
@@ -141,7 +141,7 @@
                     <div class="md:col-span-2 flex justify-center items-center pt-2">
                         <label class="flex items-center space-x-3 cursor-pointer group">
                             <input type="checkbox" id="bajaAnormal" class="w-6 h-6 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                            <span class="text-sm font-bold text-slate-800">Añadir audiencia por Baja Temeraria/Anormal (Art. 149 LCSP y 85 RLCSP)</span>
+                            <span class="text-sm font-bold text-slate-800">Añadir audiencia por Baja Temeraria/Anormal (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-61" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">Art. 149 LCSP</a> y <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2001-19995#a85" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">85 RLCSP</a>)</span>
                         </label>
                     </div>
                 </div>
@@ -161,7 +161,7 @@
                 <div id="summaryContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm"></div>
             </div>
 
-            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
+            <div id="bannerTitulares" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
                 <div class="flex flex-wrap gap-2 justify-center mb-3">
                     <span id="tagSara" class="hidden inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-200 text-indigo-900 font-bold text-xs uppercase tracking-widest">Sujeto a Regulación Armonizada</span>
                     <span id="tramitacionBadge" class="inline-flex items-center justify-center px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest"></span>
@@ -171,7 +171,7 @@
             </div>
 
             <div id="urgentInfo" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 fade-in">
-                <p class="font-bold mb-1">⚡ Tramitación urgente (art. 119 LCSP)</p>
+                <p class="font-bold mb-1">⚡ Tramitación urgente (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline text-amber-900 hover:text-amber-700" onclick="event.stopPropagation()">art. 119 LCSP</a>)</p>
                 <p>Los plazos de presentación de proposiciones y de adjudicación se reducen a la mitad, excepto el plazo de formalización (15 días hábiles en SARA no se reduce) y los plazos de los procedimientos simplificados. Los plazos de los sliders son orientativos, respetando los máximos legales.</p>
             </div>
 
@@ -211,6 +211,34 @@
     <div id="globalTooltip" class="custom-tooltip"></div>
 
     <script>
+        const lcspAnchors = {
+            "18": "a18",
+            "118": "a1-10",
+            "119": "a1-30",
+            "120": "a1-32",
+            "135": "a1-47",
+            "149": "a1-61",
+            "150": "a1-62",
+            "153": "a1-65",
+            "156": "a1-68",
+            "157": "a1-69",
+            "159": "a1-70"
+        };
+
+        function linkifyArtBadge(text) {
+            return text.replace(/(\d+)((?:\.[a-zA-Z0-9\u00BA]+)*)/g, function(match, p1) {
+                let anchor = lcspAnchors[p1] || `a${p1}`;
+                return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="underline hover:opacity-75 transition-opacity cursor-pointer" title="Ver en el BOE" onclick="event.stopPropagation()">${match}</a>`;
+            });
+        }
+
+        function linkifyDescText(text) {
+            return text.replace(/(?:art\.|artículo)\s*(\d+)((?:\.[a-zA-Z0-9\u00BA]+)*)/gi, function(match, p1, p2) {
+                let anchor = lcspAnchors[p1] || `a${p1}`;
+                return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="text-blue-600 hover:underline font-semibold cursor-pointer" title="Ver en el BOE" onclick="event.stopPropagation()">${match}</a>`;
+            });
+        }
+
         const thresholds = {
             obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5404000, pres: 26 },
             servicios: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
@@ -441,7 +469,7 @@
                             <div class="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                                 <h4 class="text-base font-bold text-slate-800 mb-2">${ev.name}</h4>
                                 <div class="inline-block px-2 py-1 bg-slate-50 rounded text-xs font-bold text-slate-600 mb-2 border border-slate-200" id="date-${ev.id}"></div>
-                                <div class="text-[11px] font-bold uppercase tracking-wider ${cText} mb-1">${ev.art}</div>
+                                <div class="text-[11px] font-bold uppercase tracking-wider ${cText} mb-1 relative z-10">${linkifyArtBadge(ev.art)}</div>
                                 <p class="text-slate-500 text-xs leading-relaxed" id="desc-${ev.id}"></p>
                                 ${sliderHtml}
                             </div>
@@ -466,7 +494,7 @@
             for (const ev of currentSkeleton) {
                 let dur = ev.slider ? parseInt(document.getElementById(ev.slider.id).value) : ev.staticDur;
                 
-                document.getElementById(`desc-${ev.id}`).textContent = ev.getDesc(dur);
+                document.getElementById(`desc-${ev.id}`).innerHTML = linkifyDescText(ev.getDesc(dur));
 
                 let start = new Date(curr);
                 let end = new Date(start);
@@ -669,11 +697,11 @@
             let badge = document.getElementById('tramitacionBadge');
             badge.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest';
             if (tramitacion === 'urgente') {
-                badge.textContent = 'Tramitación URGENTE (art. 119)';
+                badge.innerHTML = 'Tramitación URGENTE (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline hover:text-opacity-80 transition-opacity" onclick="event.stopPropagation()">art. 119</a>)';
                 badge.classList.add('urgent-badge');
                 document.getElementById('urgentInfo').classList.remove('hidden');
             } else if (tramitacion === 'emergencia') {
-                badge.textContent = 'Régimen de EMERGENCIA (art. 120)';
+                badge.innerHTML = 'Régimen de EMERGENCIA (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-32" target="_blank" class="underline hover:text-opacity-80 transition-opacity" onclick="event.stopPropagation()">art. 120</a>)';
                 badge.classList.add('emergency-badge');
                 document.getElementById('urgentInfo').classList.add('hidden');
             } else {
@@ -683,8 +711,8 @@
             }
 
             document.getElementById('procName').textContent = proc.replace(/_/g, ' ');
-            document.getElementById('procDetail').textContent = isAuto ? `${tipo.replace('_', ' ').toUpperCase()} | Valor: ${valor.toLocaleString('es-ES')} € | Entidad: ${entidad}` : `Modo Manual Activo | Entidad: ${entidad}`;
-
+            document.getElementById('procDetail').textContent = `${tipo.replace('_', ' ').toUpperCase()} | Entidad: ${entidad}`;
+			
             updateSummary(proc, tipo, valor, entidad, tramitacion, ccaa, sara, nSobres, hasBaja, globalT0, isAuto);
 
             currentSkeleton = skeleton;
@@ -707,6 +735,7 @@
             document.getElementById('globalTooltip').style.display = 'none';
             btnContainer.style.display = 'none';
             disclaimerText.style.display = 'none';
+			document.getElementById('bannerTitulares').style.display = 'none';
 
             const originalStyle = element.getAttribute('style') || '';
             const originalClasses = element.className;
@@ -754,6 +783,7 @@
                 fadeElements.forEach(el => el.classList.add('fade-in'));
                 btnContainer.style.display = 'flex';
                 disclaimerText.style.display = 'block';
+				document.getElementById('bannerTitulares').style.display = 'block';
             }
         });
     </script>
