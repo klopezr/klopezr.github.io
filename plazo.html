@@ -180,7 +180,7 @@
                 <div class="relative timeline-container" id="timelineList"></div>
                 <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
                     <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
-                    <p>Los plazos indicados como "días hábiles" excluyen sábados, domingos y festivos (nacionales y autonómicos según selección). En el calendario, estos días aparecen sin color de fondo (blanco) para que puedas contar visualmente los días hábiles coloreados. Los festivos tienen un punto rojo. Al pasar el cursor se detalla el tipo de cómputo y el nombre del festivo.</p>
+                    <p>Días Hábiles: Excluyen sábados, domingos y festivos. En el calendario aparecen sin color de fondo (blanco) para facilitar el conteo visual. Los días festivos están marcado con un punto rojo.</p>
                 </div>
             </div>
 
@@ -191,7 +191,8 @@
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-slate-400"></div><span class="text-xs font-bold text-slate-600">Publicación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-blue-500"></div><span class="text-xs font-bold text-slate-600">Presentación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-purple-500"></div><span class="text-xs font-bold text-slate-600">Mesas/Eval</span></div>
-                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><span class="text-xs font-bold text-slate-600">Bajas</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-pink-500"></div><span class="text-xs font-bold text-slate-600">Bajas</span></div>
+                        <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-teal-500"></div><span class="text-xs font-bold text-slate-600">Requerimiento</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-amber-500"></div><span class="text-xs font-bold text-slate-600">Adjudicación</span></div>
                         <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-emerald-500"></div><span class="text-xs font-bold text-slate-600">Formalización</span></div>
                     </div>
@@ -248,9 +249,9 @@
             mixto: { menor: 15000, supersimp: 60000, simp: 140000, sara: 5404000, pres: 15 }
         };
 
-        const themeColors = { 'gray': 'bg-slate-400', 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500' };
-        const ringColors = { 'gray': 'ring-slate-200', 'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200' };
-        const textColors = { 'gray': 'text-slate-700', 'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700' };
+        const themeColors = { 'gray': 'bg-slate-400', 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500', 'pink': 'bg-pink-500', 'teal': 'bg-teal-500' };
+        const ringColors = { 'gray': 'ring-slate-200', 'blue': 'ring-blue-200', 'purple': 'ring-purple-200', 'red': 'ring-red-200', 'amber': 'ring-amber-200', 'emerald': 'ring-emerald-200', 'pink': 'ring-pink-200', 'teal': 'ring-teal-200' };
+        const textColors = { 'gray': 'text-slate-700', 'blue': 'text-blue-700', 'purple': 'text-purple-700', 'red': 'text-red-700', 'amber': 'text-amber-700', 'emerald': 'text-emerald-700', 'pink': 'text-pink-700', 'teal': 'text-teal-700' };
 
         let currentSkeleton = [];
         let globalT0 = new Date();
@@ -419,14 +420,14 @@
             }
 
             if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
-                s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa. Sin plazo legal fijo.' }, isHabiles: true });
-                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'red', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles. Máximo orientativo 15.' }, isHabiles: true });
-                s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'red', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico. Sin plazo legal.' }, isHabiles: true });
+                s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'pink', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa. Sin plazo legal fijo.' }, isHabiles: true });
+                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'pink', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles. Máximo orientativo 15.' }, isHabiles: true });
+                s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'pink', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico. Sin plazo legal.' }, isHabiles: true });
             }
 
             let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
-            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
-            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
+            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'teal', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
+            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'teal', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
             
             let adjMax = (tramitacion === 'urgente' && sara) ? 3 : 5;
             s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider: { id: 'sl_adj', min: 1, max: adjMax, val: adjMax, label: 'Plazo Adjudicación', txt: `Máx. ${adjMax} días hábiles. Mínimo 1 día.` }, isHabiles: true });
@@ -504,7 +505,11 @@
                     else end = addDays(start, dur);
                 }
 
-                curr = new Date(end);
+                if (dur > 0) {
+					curr = addHabiles(end, 1);
+				} else {
+					curr = new Date(end);
+				}
 
                 document.getElementById(`date-${ev.id}`).textContent = start.getTime() === end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
                 
