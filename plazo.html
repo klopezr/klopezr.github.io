@@ -35,7 +35,7 @@
     <div class="max-w-6xl mx-auto px-4 pt-10">
         <div class="text-center mb-10">
             <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador de plazos LCSP</h1>
-            <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley de Contratos del Sector Público 9/2017</p>
+            <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley de Contratos del Sector Público 9/2017 · Umbrales SARA vigentes desde 01/01/2024 (Orden HFP/1352/2023)</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 relative overflow-hidden">
@@ -172,7 +172,7 @@
 
             <div id="urgentInfo" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 fade-in">
                 <p class="font-bold mb-1">⚡ Tramitación urgente (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline text-amber-900 hover:text-amber-700" onclick="event.stopPropagation()">art. 119 LCSP</a>)</p>
-                <p>Los plazos de presentación de proposiciones y de adjudicación se reducen a la mitad, excepto el plazo de formalización (15 días hábiles en SARA no se reduce) y los plazos de los procedimientos simplificados. Los plazos de los sliders son orientativos, respetando los máximos legales.</p>
+                <p>Los plazos de adjudicación y formalización se reducen a la mitad. Para SARA abierto, la presentación se puede reducir hasta un mínimo de 15 días naturales (art. 119.2.b.1º). Los plazos de los procedimientos simplificados y los de concesiones no se reducen en presentación.</p>
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
@@ -180,7 +180,7 @@
                 <div class="relative timeline-container" id="timelineList"></div>
                 <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
                     <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
-                    <p>Días Hábiles: Excluyen sábados, domingos y festivos. En el calendario aparecen sin color de fondo (blanco) para facilitar el conteo visual. Los días festivos están marcado con un punto rojo.</p>
+                    <p>Días Hábiles: Excluyen sábados, domingos y festivos. En el calendario aparecen sin color de fondo (blanco) para facilitar el conteo visual. Los días festivos están marcados con un punto rojo.</p>
                 </div>
             </div>
 
@@ -205,7 +205,7 @@
                     📄 Exportar a PDF (plazos estimados)
                 </button>
             </div>
-            <p id="disclaimerText" class="text-xs text-center text-slate-500 mt-2">* Los plazos mostrados son estimaciones orientativas basadas en la LCSP y la configuración seleccionada.</p>
+            <p id="disclaimerText" class="text-xs text-center text-slate-500 mt-2">* Los plazos mostrados son estimaciones orientativas basadas en la LCSP y la configuración seleccionada. Umbrales SARA actualizados según Orden HFP/1352/2023 (vigentes desde 01/01/2024).</p>
         </div>
     </div>
 
@@ -241,12 +241,12 @@
         }
 
         const thresholds = {
-            obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5404000, pres: 26 },
-            servicios: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
-            suministros: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
-            concesion_obras: { menor: 40000, supersimp: 0, simp: 0, sara: 5404000, pres: 26 },
-            concesion_servicios: { menor: 15000, supersimp: 0, simp: 0, sara: 5404000, pres: 26 },
-            mixto: { menor: 15000, supersimp: 60000, simp: 140000, sara: 5404000, pres: 15 }
+            obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5538000, pres: 26 },
+            servicios: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
+            suministros: { menor: 15000, supersimp: 60000, simp: 143000, sara: 143000, pres: 15 },
+            concesion_obras: { menor: 40000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
+            concesion_servicios: { menor: 15000, supersimp: 0, simp: 0, sara: 5538000, pres: 26 },
+            mixto: { menor: 15000, supersimp: 60000, simp: 143000, sara: 5538000, pres: 15 }
         };
 
         const themeColors = { 'gray': 'bg-slate-400', 'blue': 'bg-blue-500', 'purple': 'bg-purple-500', 'red': 'bg-red-500', 'amber': 'bg-amber-500', 'emerald': 'bg-emerald-500', 'pink': 'bg-pink-500', 'teal': 'bg-teal-500' };
@@ -262,13 +262,11 @@
         document.getElementById('procManual').addEventListener('change', (e) => {
             const isAuto = e.target.value === 'AUTO';
             const valContainer = document.getElementById('valorContainer');
-            
             if (isAuto) {
                 valContainer.classList.remove('hidden');
             } else {
                 valContainer.classList.add('hidden');
             }
-
             if (e.target.value === 'SUPERSIMPLIFICADO') {
                 document.getElementById('numSobres').value = '1';
                 document.getElementById('numSobres').disabled = true;
@@ -299,6 +297,8 @@
         }
 
         function getHolidayInfo(date) {
+            const dateStr = date.toDateString();
+            if (holidayMap.has(dateStr)) return holidayMap.get(dateStr);
             const d = date.getDate(), m = date.getMonth(), y = date.getFullYear();
             if (m === 0 && d === 1) return { name: 'Año Nuevo', type: 'Nacional' };
             if (m === 0 && d === 6) return { name: 'Epifanía del Señor', type: 'Nacional' };
@@ -311,8 +311,6 @@
             if (m === 11 && d === 25) return { name: 'Natividad del Señor', type: 'Nacional' };
             const vs = getViernesSanto(y);
             if (m === vs.getMonth() && d === vs.getDate()) return { name: 'Viernes Santo', type: 'Nacional' };
-            const dateStr = date.toDateString();
-            if (holidayMap.has(dateStr)) return holidayMap.get(dateStr);
             return null;
         }
 
@@ -325,31 +323,33 @@
                 data.forEach(h => {
                     if (region === 'ALL') {
                         if (h.global === true) {
-                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Nacional' });
+                            holidays.push({ date: new Date(h.date + 'T00:00:00').toDateString(), name: h.localName, type: 'Nacional' });
                         }
                     } else {
                         if (h.global === true) {
-                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Nacional' });
+                            holidays.push({ date: new Date(h.date + 'T00:00:00').toDateString(), name: h.localName, type: 'Nacional' });
                         }
                         if (h.counties && h.counties.includes(region)) {
-                            holidays.push({ date: new Date(h.date).toDateString(), name: h.localName, type: 'Autonómico' });
+                            holidays.push({ date: new Date(h.date + 'T00:00:00').toDateString(), name: h.localName, type: 'Autonómico' });
                         }
                     }
                 });
-            } catch (error) {
-            }
+            } catch (error) {}
             return holidays;
         }
 
         function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
+
         function addHabiles(date, numHabiles) {
-            const d = new Date(date); let added = 0;
-            while (added < numHabiles) { 
-                d.setDate(d.getDate() + 1); 
-                if (d.getDay() !== 0 && d.getDay() !== 6 && !getHolidayInfo(d)) added++; 
+            const d = new Date(date); let added = 0; let guard = 0;
+            while (added < numHabiles && guard < 1000) {
+                d.setDate(d.getDate() + 1);
+                guard++;
+                if (d.getDay() !== 0 && d.getDay() !== 6 && !getHolidayInfo(d)) added++;
             }
             return d;
         }
+
         function formatDate(date) { return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
         function getMonthName(m, y) { return new Date(y, m, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); }
 
@@ -363,7 +363,7 @@
                     if (entidad === 'AGE') pubInfo += ' y en BOE';
                 }
                 return pubInfo;
-            }, staticDur: 0, isHabiles: false });
+            }, staticDur: 0, isHabiles: false, nextDay: true });
 
             if (tramitacion === 'emergencia') {
                 s.push({ id: 'emergencia', name: 'ACUERDO DE EMERGENCIA', color: 'red', art: 'Art. 120 LCSP', getDesc: () => 'Régimen excepcional. Se actúa de inmediato. Plazo máximo inicio ejecución: 1 mes.', staticDur: 0, isHabiles: false });
@@ -378,31 +378,69 @@
             }
 
             if (proc === 'SUPERSIMPLIFICADO') {
-                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: () => 'Plazo fijado de 10 días hábiles (mínimo legal).', staticDur: 10, isHabiles: true });
+                s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: 'Art. 159.6.b', getDesc: (v) => `Plazo de presentación: ${v} días hábiles. Mínimo legal 10 días hábiles (art. 159.6.a).`, slider: { id: 'sl_pres', min: 10, max: 20, val: 10, label: 'Plazo Presentación', txt: 'Mínimo legal 10 días hábiles (art. 159.6.a). Para compras corrientes de bienes disponibles: 5 días.' }, isHabiles: true });
                 s.push({ id: 'm1', name: 'Mesa: Apertura y Evaluación', color: 'purple', art: 'Art. 159.6.d', getDesc: (v) => `Propuesta en ${v} días hábiles. Límite legal: máximo 5 días (art. 159.6.d).`, slider: { id: 'sl_m1', min: 1, max: 5, val: 3, label: 'Días hasta Mesa', txt: 'Máximo legal 5 días hábiles. Mínimo: 1 día (orientativo).' }, isHabiles: true });
                 s.push({ id: 'form', name: 'Formalización Inmediata', color: 'emerald', art: 'Art. 159.6.g', getDesc: () => 'Firma de aceptación de la resolución de adjudicación. Sin plazo adicional.', staticDur: 0, isHabiles: true });
                 return s;
             }
 
-            let pDays = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
-            
+            let pDaysBase = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc === 'SIMPLIFICADO' ? (tipo === 'obras' ? 20 : 15) : tInfo.pres);
+            let pDays = pDaysBase;
+            let pSliderTxt = '';
+
             if (tramitacion === 'urgente') {
-                if (sara && (tipo === 'concesion_obras' || tipo === 'concesion_servicios')) {
-                } else if (proc === 'SIMPLIFICADO') {
-                } else if (sara && (proc === 'ABIERTO_SARA' || proc === 'ABIERTO_NO_SARA')) {
-                    if (tipo.includes('concesion')) {
+                if (tipo.includes('concesion')) {
+                    pSliderTxt = 'Las concesiones no admiten reducción por urgencia en el plazo de presentación (art. 156.2).';
+                } else if (proc !== 'SIMPLIFICADO') {
+                    if (sara) {
+                        pDays = 15;
+                        pSliderTxt = 'Urgente SARA: mínimo legal 15 días naturales (art. 119.2.b.1º LCSP).';
                     } else {
-                        pDays = Math.ceil(pDays / 2);
+                        pDays = Math.ceil(pDaysBase / 2);
+                        if (pDaysBase === 26) {
+                            pSliderTxt = `Urgente No-SARA obras: ${pDays} días. La reducción por urgencia sobre el mínimo de 26 días (art. 156.4) es aplicable por art. 119.2, aunque doctrinalmente debatida.`;
+                        } else {
+                            pSliderTxt = `Urgente No-SARA: ${pDays} días naturales (mitad del mínimo de ${pDaysBase} días, art. 119.2 LCSP).`;
+                        }
                     }
-                } else {
-                    pDays = Math.ceil(pDays / 2);
                 }
             }
 
-            let artPresent = sara ? (tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2') : (proc === 'SIMPLIFICADO' ? 'Art. 159.3' : 'Art. 156.3');
-            if (tramitacion === 'urgente') artPresent += ' + art.119 (urgencia)';
-            
-            s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: artPresent, getDesc: () => `Plazo fijado de ${pDays} días naturales.`, staticDur: pDays, isHabiles: false });
+            if (!pSliderTxt) {
+                if (sara) {
+                    pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 156.2). Se puede reducir 5 días si se aceptan ofertas electrónicas.`;
+                } else if (proc === 'SIMPLIFICADO') {
+                    pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 159.3).`;
+                } else if (pDays === 26) {
+                    pSliderTxt = `Mínimo legal 26 días naturales para obras y concesiones (art. 156.4 LCSP).`;
+                } else {
+                    pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 156.3 LCSP).`;
+                }
+            }
+
+            const pDaysFinal = pDays;
+            let pMax;
+            if (sara) {
+                pMax = (tramitacion === 'urgente' && !tipo.includes('concesion')) ? 35 : 52;
+            } else if (proc === 'SIMPLIFICADO') {
+                pMax = tipo === 'obras' ? 40 : 30;
+            } else {
+                pMax = Math.max(pDays * 2, pDays + 15);
+            }
+
+            let artPresent;
+            if (sara) {
+                artPresent = tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2';
+            } else if (proc === 'SIMPLIFICADO') {
+                artPresent = 'Art. 159.3';
+            } else if (tipo === 'obras' || tipo.includes('concesion')) {
+                artPresent = 'Art. 156.4';
+            } else {
+                artPresent = 'Art. 156.3';
+            }
+            if (tramitacion === 'urgente') artPresent += ' + art.119';
+
+            s.push({ id: 'pres', name: 'Presentación Proposiciones', color: 'blue', art: artPresent, getDesc: (v) => `Plazo de presentación: ${v} días naturales. Mínimo legal: ${pDaysFinal} días.`, slider: { id: 'sl_pres', min: pDaysFinal, max: pMax, val: pDaysFinal, label: 'Plazo Presentación', txt: pSliderTxt }, isHabiles: false });
 
             let maxMesa = (proc === 'SIMPLIFICADO' && tramitacion !== 'urgente') ? 7 : 20;
             let defMesa = 3;
@@ -421,23 +459,24 @@
 
             if (hasBaja && proc !== 'SUPERSIMPLIFICADO') {
                 s.push({ id: 'b1', name: 'Identificación Baja Temeraria', color: 'pink', art: 'Art. 149.4', getDesc: (v) => `Requerimiento en ${v} días hábiles.`, slider: { id: 'sl_b1', min: 1, max: 5, val: 1, label: 'Días de Identificación', txt: 'Detección por la Mesa. Sin plazo legal fijo.' }, isHabiles: true });
-                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'pink', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles. Máximo orientativo 15.' }, isHabiles: true });
+                s.push({ id: 'b2', name: 'Audiencia al Licitador', color: 'pink', art: 'Art. 149.4', getDesc: (v) => `Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider: { id: 'sl_b2', min: 5, max: 15, val: 5, label: 'Plazo Audiencia', txt: 'Mínimo legal 5 días hábiles (art. 149.4). Máximo orientativo 15.' }, isHabiles: true });
                 s.push({ id: 'b3', name: 'Informe Técnico Baja', color: 'pink', art: 'Art. 149.6', getDesc: (v) => `Informe en ${v} días hábiles.`, slider: { id: 'sl_b3', min: 1, max: 20, val: 5, label: 'Días de Informe', txt: 'Asesoramiento técnico. Sin plazo legal.' }, isHabiles: true });
             }
 
-            let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : 10;
-            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'teal', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
-            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'teal', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2', getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
-            
-            let adjMax = (tramitacion === 'urgente' && sara) ? 3 : 5;
-            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.3', getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider: { id: 'sl_adj', min: 1, max: adjMax, val: adjMax, label: 'Plazo Adjudicación', txt: `Máx. ${adjMax} días hábiles. Mínimo 1 día.` }, isHabiles: true });
+            let pReq = proc === 'SUPERSIMPLIFICADO' ? 5 : (proc === 'SIMPLIFICADO' ? 7 : 10);
+            let artReq = proc === 'SIMPLIFICADO' ? 'Art. 159.4.e' : ((tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.2');
+            s.push({ id: 'req1', name: 'Requerimiento Doc.', color: 'teal', art: artReq, getDesc: () => 'Aviso al licitador propuesto.', staticDur: 1, isHabiles: true });
+            s.push({ id: 'req2', name: 'Aporte Documentación', color: 'teal', art: artReq, getDesc: () => `Licitador aporta en ${pReq} días hábiles.`, staticDur: pReq, isHabiles: true });
+
+            let adjMax = tramitacion === 'urgente' ? 3 : 5;
+            let artAdj = proc === 'SIMPLIFICADO' ? 'Art. 159.4.f' : ((tramitacion === 'urgente' ? 'Art. 119 + ' : '') + 'Art. 150.3');
+            s.push({ id: 'adj', name: 'Resolución Adjudicación', color: 'amber', art: artAdj, getDesc: (v) => `Adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider: { id: 'sl_adj', min: 1, max: adjMax, val: adjMax, label: 'Plazo Adjudicación', txt: `Máx. ${adjMax} días hábiles${tramitacion === 'urgente' ? ' (reducido a la mitad por urgencia, art. 119.2)' : ''}. Mínimo 1 día.` }, isHabiles: true });
 
             if (proc !== 'SUPERSIMPLIFICADO') {
-                let espera = (sara && tramitacion !== 'urgente') ? 15 : 15;
-                if (tramitacion === 'urgente' && sara) espera = 15;
-                else if (tramitacion === 'urgente') espera = 8;
-                
-                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + (sara ? 'Art. 153.3' : 'Art. 153.2'), getDesc: () => sara ? (tramitacion === 'urgente' ? '15 días hábiles (no se reduce, art.119.2.b.1º)' : '15 días hábiles (plazo recurso especial)') : `Firma máx. ${espera} días hábiles.`, staticDur: espera, isHabiles: true });
+                let espera = 15;
+                if (tramitacion === 'urgente' && !sara) espera = 8;
+
+                s.push({ id: 'form', name: 'Formalización', color: 'emerald', art: (tramitacion === 'urgente' ? 'Art. 119 + ' : '') + (sara ? 'Art. 153.3' : 'Art. 153.2'), getDesc: () => sara ? (tramitacion === 'urgente' ? '15 días hábiles (periodo suspensivo no reducible, art. 119.2.b.1º)' : '15 días hábiles mínimo (periodo suspensivo recurso especial)') : `Máx. ${espera} días hábiles desde notificación adjudicación.`, staticDur: espera, isHabiles: true });
             }
 
             return s;
@@ -506,10 +545,12 @@
                 }
 
                 if (dur > 0) {
-					curr = addHabiles(end, 1);
-				} else {
-					curr = new Date(end);
-				}
+                    curr = addHabiles(end, 1);
+                } else if (ev.nextDay) {
+                    curr = addDays(end, 1);
+                } else {
+                    curr = new Date(end);
+                }
 
                 document.getElementById(`date-${ev.id}`).textContent = start.getTime() === end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
                 
@@ -661,13 +702,13 @@
                 tipo = document.getElementById('mixtoPrincipal').value;
             }
 
-            globalT0 = new Date(t0Str);
-            globalT0.setHours(0,0,0,0);
+            globalT0 = new Date(t0Str + 'T00:00:00');
+            globalT0.setHours(0, 0, 0, 0);
 
             let tInfo = JSON.parse(JSON.stringify(thresholds[tipo]));
             if (entidad === 'OTRAS' && (tipo === 'servicios' || tipo === 'suministros')) {
-                tInfo.sara = 216000;
-                tInfo.simp = 216000;
+                tInfo.sara = 221000;
+                tInfo.simp = 221000;
             }
 
             let proc = pMan;
@@ -680,7 +721,6 @@
 
             const sara = (proc === 'ABIERTO_SARA') || (isAuto && valor >= tInfo.sara);
 
-            globalT0.setHours(0,0,0,0);
             let skeleton = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion);
             let maxEnd = new Date(globalT0);
             for (let ev of skeleton) {
@@ -740,7 +780,7 @@
             document.getElementById('globalTooltip').style.display = 'none';
             btnContainer.style.display = 'none';
             disclaimerText.style.display = 'none';
-			document.getElementById('bannerTitulares').style.display = 'none';
+            document.getElementById('bannerTitulares').style.display = 'none';
 
             const originalStyle = element.getAttribute('style') || '';
             const originalClasses = element.className;
@@ -788,7 +828,7 @@
                 fadeElements.forEach(el => el.classList.add('fade-in'));
                 btnContainer.style.display = 'flex';
                 disclaimerText.style.display = 'block';
-				document.getElementById('bannerTitulares').style.display = 'block';
+                document.getElementById('bannerTitulares').style.display = 'block';
             }
         });
     </script>
