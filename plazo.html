@@ -33,10 +33,14 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         .modal-box { background: white; border-radius: 1rem; max-width: 56rem; width: 100%; max-height: 90vh; overflow-y: auto; }
-        #bg-cyan-500 { background-color: #06b6d4; }
         .bg-cyan-500 { background-color: #06b6d4; }
         .ring-cyan-200 { --tw-ring-color: #a5f3fc; }
         .text-cyan-700 { color: #0e7490; }
+        .dur-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.75rem 0.5rem; min-height: 90px; }
+        .dur-value { font-size: 2rem; font-weight: 900; line-height: 1; }
+        .dur-label { font-size: 0.7rem; color: #94a3b8; margin-top: 0.4rem; text-align: center; }
+        .calculating { opacity: 0.5; pointer-events: none; transition: opacity 0.2s; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-20">
@@ -53,7 +57,7 @@
             <p class="text-xs text-slate-500 mb-3">Texto orientativo. Edítalo antes de usar.</p>
             <textarea id="oficioText" class="w-full h-96 text-xs font-mono border border-slate-200 rounded-xl p-4 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
             <div class="flex gap-3 mt-4">
-                <button onclick="navigator.clipboard.writeText(document.getElementById('oficioText').value).then(()=>showToast('Copiado al portapapeles ✓'))" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm transition-colors">Copiar texto</button>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('oficioText').value).then(()=>showToast('Copiado ✓'))" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-sm transition-colors">Copiar texto</button>
                 <button onclick="document.getElementById('oficioModal').classList.add('hidden')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors">Cerrar</button>
             </div>
         </div>
@@ -68,7 +72,7 @@
         </div>
         <div class="p-6">
             <div id="comparativaFormSection">
-                <p class="text-sm text-slate-600 mb-4">Introduce la segunda configuración a comparar. Los campos no indicados heredan los valores de la simulación actual.</p>
+                <p class="text-sm text-slate-600 mb-4">Segunda configuración. Los campos en blanco heredan los valores de la simulación A.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Publicación</label>
@@ -123,13 +127,15 @@
 
 <div class="max-w-6xl mx-auto px-4 pt-10">
     <div class="text-center mb-10">
-        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">Simulador de plazos LCSP</h1>
-        <p class="text-slate-600 max-w-2xl mx-auto">Plazos según Ley de Contratos del Sector Público 9/2017 · Umbrales SARA vigentes desde 01/01/2024 (Orden HFP/1352/2023)</p>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
+            <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="hover:text-blue-700 transition-colors" title="Ver Ley 9/2017 en el BOE">Simulador de plazos LCSP</a>
+        </h1>
+        <p class="text-slate-600 max-w-2xl mx-auto">Plazos según <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="text-blue-600 hover:underline">Ley 9/2017 de Contratos del Sector Público</a> · Umbrales SARA vigentes desde 01/01/2024 (<a href="https://www.boe.es/boe/dias/2023/12/18/pdfs/BOE-A-2023-25942.pdf" target="_blank" class="text-blue-600 hover:underline">Orden HFP/1352/2023</a>)</p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-4 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-        <form id="lcspForm" class="space-y-6">
+        <div class="space-y-6" id="lcspForm">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Procedimiento</label>
@@ -144,7 +150,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Tipo de Contrato</label>
-                    <select id="tipoContrato" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                    <select id="tipoContrato" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                         <option value="">Seleccione...</option>
                         <option value="obras">Obras</option>
                         <option value="servicios">Servicios</option>
@@ -161,7 +167,7 @@
             </div>
 
             <div id="mixtoPrincipalContainer" class="hidden">
-                <label class="block text-sm font-bold text-slate-700 mb-2">Prestación principal del contrato mixto (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a18" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">art. 18 LCSP</a>)</label>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Prestación principal del contrato mixto (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a18" target="_blank" class="text-blue-600 hover:underline">art. 18 LCSP</a>)</label>
                 <select id="mixtoPrincipal" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                     <option value="obras">Obras</option>
                     <option value="servicios">Servicios</option>
@@ -182,7 +188,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Fecha Publicación Anuncio</label>
-                    <input type="date" id="fechaAnuncio" required class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                    <input type="date" id="fechaAnuncio" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Configuración de Sobres</label>
@@ -232,34 +238,30 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
                 <label class="flex items-center space-x-3 cursor-pointer">
                     <input type="checkbox" id="bajaAnormal" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                    <span class="text-sm font-bold text-slate-800">Baja Temeraria/Anormal (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-61" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">Art. 149</a>)</span>
+                    <span class="text-sm font-bold text-slate-800">Baja Temeraria/Anormal (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-61" target="_blank" class="text-blue-600 hover:underline">Art. 149</a>)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
                     <input type="checkbox" id="subsanacionCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                    <span class="text-sm font-bold text-slate-800">Incluir subsanación documental (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-53" target="_blank" class="text-blue-600 hover:underline" onclick="event.stopPropagation()">Art. 141.2</a>)</span>
+                    <span class="text-sm font-bold text-slate-800">Subsanación documental (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-53" target="_blank" class="text-blue-600 hover:underline">Art. 141.2</a>)</span>
                 </label>
             </div>
 
             <div class="border-t border-slate-100 pt-4">
-                <button type="button" id="toggleOpciones" class="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors mb-0">
+                <button type="button" id="toggleOpciones" class="flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 transition-colors">
                     <span id="opcionesArrow">▶</span> Opciones SARA (AIP y ofertas electrónicas)
                 </button>
                 <div id="opcionesPanel" class="hidden mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 border border-blue-100 rounded-xl p-4">
                     <label class="flex items-start space-x-3 cursor-pointer">
                         <input type="checkbox" id="aipCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5">
-                        <span class="text-sm text-slate-700"><span class="font-bold">AIP publicado</span> — Anuncio de información previa publicado con la antelación exigida. Reduce el mínimo de presentación SARA a 15 días naturales (arts. 134 y 156.2.c).</span>
+                        <span class="text-sm text-slate-700"><span class="font-bold">AIP publicado</span> — Reduce el mínimo de presentación SARA a 15 días naturales (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-47" target="_blank" class="text-blue-600 hover:underline">arts. 134</a> y <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-68" target="_blank" class="text-blue-600 hover:underline">156.2.c</a>).</span>
                     </label>
                     <label class="flex items-start space-x-3 cursor-pointer">
                         <input type="checkbox" id="ofertasElecCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5">
-                        <span class="text-sm text-slate-700"><span class="font-bold">Ofertas electrónicas SARA</span> — Licitación íntegramente electrónica. Reduce el plazo de presentación en 5 días naturales (art. 156.2). No aplica a concesiones.</span>
+                        <span class="text-sm text-slate-700"><span class="font-bold">Ofertas electrónicas SARA</span> — Reduce el plazo de presentación en 5 días naturales (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-68" target="_blank" class="text-blue-600 hover:underline">art. 156.2</a>). No aplica a concesiones.</span>
                     </label>
                 </div>
             </div>
-
-            <button type="submit" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors text-lg">
-                Generar Línea Base
-            </button>
-        </form>
+        </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
@@ -267,7 +269,7 @@
             <span id="festivosArrow">▶</span> 📅 Festivos locales / municipales
         </button>
         <div id="festivosPanel" class="hidden mt-4">
-            <p class="text-xs text-slate-500 mb-3">La API solo alcanza nivel autonómico. Añade aquí festivos locales de tu municipio para un cómputo exacto.</p>
+            <p class="text-xs text-slate-500 mb-3">La API solo alcanza nivel autonómico. Añade aquí festivos locales de tu municipio para un cómputo exacto de días hábiles.</p>
             <div class="flex flex-wrap gap-2 mb-3">
                 <input type="text" id="localHolidayName" placeholder="Nombre del festivo" class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                 <input type="date" id="localHolidayDate" class="px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
@@ -295,11 +297,23 @@
 
         <div id="duracionResumen" class="hidden bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-2xl p-5 fade-in">
             <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-3">Duración estimada del procedimiento</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="text-center"><div id="durDiasNat" class="text-3xl font-black text-blue-400">—</div><div class="text-xs text-slate-400 mt-1">Días naturales</div></div>
-                <div class="text-center"><div id="durSemanas" class="text-3xl font-black text-indigo-400">—</div><div class="text-xs text-slate-400 mt-1">Semanas aprox.</div></div>
-                <div class="text-center"><div id="durFechaFin" class="text-2xl font-black text-emerald-400">—</div><div class="text-xs text-slate-400 mt-1">Fecha estimada fin</div></div>
-                <div class="text-center"><div id="durFestivos" class="text-3xl font-black text-amber-400">—</div><div class="text-xs text-slate-400 mt-1">Festivos en el período</div></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div class="dur-card">
+                    <div id="durDiasNat" class="dur-value text-blue-400">—</div>
+                    <div class="dur-label">Días naturales</div>
+                </div>
+                <div class="dur-card">
+                    <div id="durSemanas" class="dur-value text-indigo-400">—</div>
+                    <div class="dur-label">Semanas aprox.</div>
+                </div>
+                <div class="dur-card">
+                    <div id="durFechaFin" class="dur-value text-emerald-400" style="font-size:1.15rem">—</div>
+                    <div class="dur-label">Fecha estimada fin</div>
+                </div>
+                <div class="dur-card">
+                    <div id="durFestivos" class="dur-value text-amber-400">—</div>
+                    <div class="dur-label">Festivos en el período</div>
+                </div>
             </div>
         </div>
 
@@ -318,7 +332,7 @@
         </div>
 
         <div id="urgentInfo" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 fade-in">
-            <p class="font-bold mb-1">⚡ Tramitación urgente (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline text-amber-900" onclick="event.stopPropagation()">art. 119 LCSP</a>)</p>
+            <p class="font-bold mb-1">⚡ Tramitación urgente (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline text-amber-900">art. 119 LCSP</a>)</p>
             <p>Los plazos de adjudicación y formalización se reducen a la mitad. Para SARA abierto, la presentación se puede reducir hasta un mínimo de 15 días naturales (art. 119.2.b.1º). Los plazos de los procedimientos simplificados y los de concesiones no se reducen en presentación.</p>
         </div>
 
@@ -327,7 +341,7 @@
             <div class="relative timeline-container" id="timelineList"></div>
             <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-200 text-sm text-blue-800">
                 <p class="font-bold mb-1">📅 Nota sobre días hábiles:</p>
-                <p>Los días hábiles excluyen sábados, domingos y festivos. Los festivos están marcados con un punto rojo en el calendario. Los festivos locales añadidos manualmente también se excluyen.</p>
+                <p>Los días hábiles excluyen sábados, domingos y festivos. Los festivos están marcados con un punto rojo en el calendario. Los festivos locales añadidos manualmente también se excluyen. Los sliders en gris claro permiten ajustar los plazos ampliables dentro del margen legal.</p>
             </div>
         </div>
 
@@ -348,33 +362,33 @@
             <div id="calendarsContainer" class="space-y-10 md:grid md:grid-cols-2 md:gap-6 md:space-y-0 xl:grid-cols-3"></div>
         </div>
 
-        <div id="exportBtnContainer" class="flex flex-wrap justify-center gap-3 pb-4 fade-in">
+        <div id="exportBtnContainer" class="flex flex-wrap justify-center gap-3 pb-4 fade-in no-print">
             <button id="exportPdfBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">📄 Exportar PDF</button>
             <button onclick="exportCSV()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">📊 Exportar CSV/Excel</button>
             <button onclick="mostrarOficio()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">📝 Generar oficio</button>
             <button onclick="compartirURL()" class="bg-slate-700 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">🔗 Compartir URL</button>
             <button onclick="document.getElementById('comparativaModal').classList.remove('hidden')" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">⚖️ Comparar configuraciones</button>
         </div>
-        <p id="disclaimerText" class="text-xs text-center text-slate-500 mt-2">* Los plazos mostrados son estimaciones orientativas basadas en la LCSP y la configuración seleccionada. Umbrales SARA actualizados según Orden HFP/1352/2023 (vigentes desde 01/01/2024).</p>
+        <p id="disclaimerText" class="text-xs text-center text-slate-500 mt-2">* Plazos orientativos calculados a partir de la configuración seleccionada. Umbrales SARA según Orden HFP/1352/2023 (vigentes desde 01/01/2024). Verificar siempre con el órgano de contratación competente.</p>
     </div>
 </div>
 
 <div id="globalTooltip" class="custom-tooltip"></div>
 
 <script>
-    const lcspAnchors = { "18":"a18","118":"a1-10","119":"a1-30","120":"a1-32","135":"a1-47","138":"a1-50","141":"a1-53","149":"a1-61","150":"a1-62","153":"a1-65","156":"a1-68","157":"a1-69","159":"a1-70" };
+    const lcspAnchors = { "18":"a18","99":"a99","118":"a1-10","119":"a1-30","120":"a1-32","134":"a1-47","135":"a1-47","138":"a1-50","141":"a1-53","149":"a1-61","150":"a1-62","153":"a1-65","156":"a1-68","157":"a1-69","159":"a1-70" };
 
     function linkifyArtBadge(text) {
         return text.replace(/(\d+)((?:\.[a-zA-Z0-9\u00BA]+)*)/g, function(match, p1) {
             const anchor = lcspAnchors[p1] || `a${p1}`;
-            return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="underline hover:opacity-75 transition-opacity cursor-pointer" title="Ver en el BOE" onclick="event.stopPropagation()">${match}</a>`;
+            return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="underline hover:opacity-75 transition-opacity cursor-pointer" title="Ver en el BOE">${match}</a>`;
         });
     }
 
     function linkifyDescText(text) {
         return text.replace(/(?:art\.|artículo)\s*(\d+)((?:\.[a-zA-Z0-9\u00BA]+)*)/gi, function(match, p1) {
             const anchor = lcspAnchors[p1] || `a${p1}`;
-            return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="text-blue-600 hover:underline font-semibold cursor-pointer" title="Ver en el BOE" onclick="event.stopPropagation()">${match}</a>`;
+            return `<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#${anchor}" target="_blank" class="text-blue-600 hover:underline font-semibold cursor-pointer" title="Ver en el BOE">${match}</a>`;
         });
     }
 
@@ -397,8 +411,17 @@
     let customHolidays = [];
     let globalEvents = [];
     let globalConfig = {};
+    let calcDebounce = null;
 
     document.getElementById('fechaAnuncio').valueAsDate = new Date();
+
+    const watchedIds = ['procManual','tipoContrato','valorEstimado','tipoTramitacion','fechaAnuncio','numSobres','tipoEntidad','ccaa','bajaAnormal','subsanacionCheck','aipCheck','ofertasElecCheck','mixtoPrincipal'];
+    watchedIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const ev = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+        el.addEventListener(ev, () => { clearTimeout(calcDebounce); calcDebounce = setTimeout(triggerCalc, 350); });
+    });
 
     document.getElementById('toggleOpciones').addEventListener('click', () => {
         const p = document.getElementById('opcionesPanel');
@@ -447,6 +470,7 @@
         renderCustomHolidayList();
         document.getElementById('localHolidayName').value = '';
         document.getElementById('localHolidayDate').value = '';
+        if (globalConfig.proc) { clearTimeout(calcDebounce); calcDebounce = setTimeout(triggerCalc, 100); }
     }
 
     function removeCustomHoliday(idx) {
@@ -454,6 +478,7 @@
         holidayMap.delete(h.key);
         customHolidays.splice(idx, 1);
         renderCustomHolidayList();
+        if (globalConfig.proc) { clearTimeout(calcDebounce); calcDebounce = setTimeout(triggerCalc, 100); }
     }
 
     function renderCustomHolidayList() {
@@ -505,7 +530,7 @@
             const cached = localStorage.getItem(cacheKey);
             if (cached) {
                 const { ts, data } = JSON.parse(cached);
-                if (Date.now() - ts < 7 * 24 * 60 * 60 * 1000) {
+                if (Date.now() - ts < 7*24*60*60*1000) {
                     data.forEach(item => holidayMap.set(item.date, { name: item.name, type: item.type }));
                     customHolidays.forEach(h => holidayMap.set(h.key, { name: h.name, type: 'Local' }));
                     return;
@@ -518,7 +543,7 @@
             if (!response.ok) throw new Error('fetch fail');
             const data = await response.json();
             data.forEach(h => {
-                if (region === 'ALL') {
+                if (region==='ALL') {
                     if (h.global) holidays.push({ date: new Date(h.date+'T00:00:00').toDateString(), name: h.localName, type: 'Nacional' });
                 } else {
                     if (h.global) holidays.push({ date: new Date(h.date+'T00:00:00').toDateString(), name: h.localName, type: 'Nacional' });
@@ -547,17 +572,17 @@
 
     function checkCoherencia(proc, tipo, tramitacion, nSobres) {
         const warnings = [];
-        if (proc === 'MENOR' && tramitacion !== 'ordinaria') warnings.push('El contrato menor no admite tramitación urgente ni de emergencia. La reducción de plazos no aplica.');
-        if ((tipo.includes('concesion')) && (proc === 'SIMPLIFICADO' || proc === 'SUPERSIMPLIFICADO')) warnings.push('Las concesiones de obras o servicios no tienen procedimiento simplificado ni supersimplificado. Se recomienda usar Abierto SARA o No SARA.');
-        if (nSobres > 1 && proc === 'SUPERSIMPLIFICADO') warnings.push('El procedimiento supersimplificado solo admite 1 sobre único (art. 159.6.c). La configuración de sobres se ignorará.');
-        if (nSobres === 3 && proc === 'SIMPLIFICADO') warnings.push('El simplificado normalmente opera con 2 sobres como máximo, ya que la documentación administrativa se gestiona vía ROLECE (art. 159.4.a). Verifica si realmente necesitas sobre A administrativo.');
-        if (proc === 'MENOR' && nSobres > 1) warnings.push('El contrato menor no utiliza sobres ni mesas de contratación.');
+        if (proc==='MENOR' && tramitacion!=='ordinaria') warnings.push('El contrato menor no admite tramitación urgente ni de emergencia.');
+        if (tipo.includes('concesion') && (proc==='SIMPLIFICADO'||proc==='SUPERSIMPLIFICADO')) warnings.push('Las concesiones de obras o servicios no tienen procedimiento simplificado ni supersimplificado. Se recomienda Abierto SARA o No SARA.');
+        if (nSobres>1 && proc==='SUPERSIMPLIFICADO') warnings.push('El supersimplificado solo admite 1 sobre único (art. 159.6.c). La configuración de sobres se ignorará.');
+        if (nSobres===3 && proc==='SIMPLIFICADO') warnings.push('El simplificado normalmente opera con 2 sobres como máximo, ya que la documentación administrativa se gestiona vía ROLECE (art. 159.4.a).');
+        if (proc==='MENOR' && nSobres>1) warnings.push('El contrato menor no utiliza sobres ni mesas de contratación.');
         return warnings;
     }
 
     function checkClasificacion(tipo, valor) {
-        if (tipo === 'obras' && valor >= 500000) {
-            return valor >= 2000000
+        if (tipo==='obras' && valor>=500000) {
+            return valor>=2000000
                 ? 'Obras ≥ 2.000.000 €: la clasificación del contratista es obligatoria. Determina los grupos y subgrupos requeridos según el PCAP y el RD 773/2015.'
                 : 'Obras ≥ 500.000 €: puede requerirse clasificación del contratista (Grupo C u otros). Verifica los grupos y subgrupos aplicables en el RD 773/2015.';
         }
@@ -602,21 +627,23 @@
         }, staticDur:0, isHabiles:false, nextDay:true });
 
         if (tramitacion === 'emergencia') {
-            s.push({ id:'emergencia', name:'ACUERDO DE EMERGENCIA', color:'red', art:'Art. 120 LCSP', getDesc:()=>'Régimen excepcional. Se actúa de inmediato. Plazo máximo inicio ejecución: 1 mes.', staticDur:0, isHabiles:false });
-            s.push({ id:'ejecucion', name:'Inicio ejecución (máx. 1 mes)', color:'amber', art:'Art. 120.1.c', getDesc:()=>'La ejecución debe iniciarse en el plazo máximo de 1 mes desde el acuerdo.', staticDur:30, isHabiles:false });
-            s.push({ id:'regularizacion', name:'Regularización posterior', color:'emerald', art:'Art. 120.1.d', getDesc:()=>'Finalizada la emergencia, se aplican reglas de cumplimiento, recepción y liquidación.', staticDur:0, isHabiles:false });
+            s.push({ id:'emergencia', name:'ACUERDO DE EMERGENCIA', color:'red', art:'Art. 120 LCSP', getDesc:()=>'Régimen excepcional de emergencia. Se actúa de forma inmediata. Plazo máximo de inicio de ejecución: 1 mes desde el acuerdo (art. 120.1.c).', staticDur:0, isHabiles:false });
+            s.push({ id:'ejecucion', name:'Inicio ejecución (máx. 1 mes)', color:'amber', art:'Art. 120.1.c', getDesc:()=>'La ejecución debe iniciarse en el plazo máximo de 1 mes desde el acuerdo de emergencia.', staticDur:30, isHabiles:false });
+            s.push({ id:'regularizacion', name:'Regularización posterior', color:'emerald', art:'Art. 120.1.d', getDesc:()=>'Finalizada la emergencia, se aplican reglas de cumplimiento, recepción y liquidación ordinarias.', staticDur:0, isHabiles:false });
             return s;
         }
 
         if (proc === 'MENOR') {
-            s.push({ id:'menor', name:'Adjudicación Directa', color:'emerald', art:'Art. 118', getDesc:()=>'Contrato menor: Aprobación de gasto y factura. Plazo no regulado.', staticDur:0, isHabiles:false });
+            s.push({ id:'inv', name:'Solicitud de presupuestos', color:'blue', art:'Art. 118 LCSP', getDesc:(v)=>`El órgano solicita presupuestos a proveedores. Plazo de respuesta: ${v} días (orientativo). La LCSP no fija ningún mínimo legal para la invitación ni para la respuesta (art. 118). Por transparencia se recomienda solicitar al menos 3 presupuestos comparativos.`, slider:{ id:'sl_inv', min:3, max:30, val:10, label:'Días respuesta presupuesto', txt:'No hay plazo legal mínimo ni máximo (art. 118 LCSP). Valor orientativo a discreción del órgano.' }, isHabiles:false });
+            s.push({ id:'menor_adj', name:'Aprobación gasto y adjudicación directa', color:'amber', art:'Art. 118.1', getDesc:()=>'El órgano de contratación aprueba el gasto y adjudica directamente. No hay anuncio de licitación ni mesa de contratación. Se exige informe de necesidad (art. 118.1) y verificar que el contratista no supera los límites anuales acumulados (art. 118.3).', staticDur:0, isHabiles:false });
+            s.push({ id:'menor_form', name:'Formalización y ejecución', color:'emerald', art:'Art. 118.1 / Art. 63.4', getDesc:()=>'Incorporación de la factura al expediente. Si el importe supera 5.000 €, publicación en el perfil del contratante (art. 63.4). No se requiere garantía definitiva.', staticDur:0, isHabiles:false });
             return s;
         }
 
         if (proc === 'SUPERSIMPLIFICADO') {
-            s.push({ id:'pres', name:'Presentación Proposiciones', color:'blue', art:'Art. 159.6.b', getDesc:(v)=>`Plazo de presentación: ${v} días hábiles. Mínimo legal 10 días hábiles (art. 159.6.a).`, slider:{ id:'sl_pres', min:10, max:20, val:10, label:'Plazo Presentación', txt:'Mínimo legal 10 días hábiles (art. 159.6.a). Para compras corrientes de bienes disponibles: 5 días.' }, isHabiles:true });
-            s.push({ id:'m1', name:'Mesa: Apertura y Evaluación', color:'purple', art:'Art. 159.6.d', getDesc:(v)=>`Propuesta en ${v} días hábiles. Límite legal: máximo 5 días (art. 159.6.d).`, slider:{ id:'sl_m1', min:1, max:5, val:3, label:'Días hasta Mesa', txt:'Máximo legal 5 días hábiles. Mínimo: 1 día (orientativo).' }, isHabiles:true });
-            s.push({ id:'form', name:'Formalización Inmediata', color:'emerald', art:'Art. 159.6.g', getDesc:()=>'Firma de aceptación de la resolución de adjudicación. Sin plazo adicional.', staticDur:0, isHabiles:true });
+            s.push({ id:'pres', name:'Presentación Proposiciones', color:'blue', art:'Art. 159.6.a', getDesc:(v)=>`Plazo de presentación: ${v} días hábiles. Mínimo legal 10 días hábiles (art. 159.6.a).`, slider:{ id:'sl_pres', min:10, max:20, val:10, label:'Plazo Presentación', txt:'Mínimo legal 10 días hábiles (art. 159.6.a). Para compras corrientes de bienes disponibles en el mercado: 5 días hábiles.' }, isHabiles:true });
+            s.push({ id:'m1', name:'Apertura y Evaluación', color:'purple', art:'Art. 159.6.d', getDesc:(v)=>`Valoración automática o por unidad técnica en ${v} días hábiles. Límite legal: máximo 5 días (art. 159.6.d). No se exige constitución de mesa de contratación (art. 326.1 LCSP).`, slider:{ id:'sl_m1', min:1, max:5, val:3, label:'Días hasta Evaluación', txt:'Máximo legal 5 días hábiles (art. 159.6.d). Mesa potestativa (art. 326.1).' }, isHabiles:true });
+            s.push({ id:'form', name:'Formalización Inmediata', color:'emerald', art:'Art. 159.6.g', getDesc:()=>'Firma de aceptación de la resolución de adjudicación por el adjudicatario. Sin plazo adicional de espera. No se requiere garantía definitiva.', staticDur:0, isHabiles:true });
             return s;
         }
 
@@ -630,38 +657,37 @@
             } else if (proc !== 'SIMPLIFICADO') {
                 if (sara) {
                     pDays = 15;
-                    if (ofertasElec) pDays = Math.max(10, pDays - 5);
+                    if (ofertasElec) pDays = Math.max(10, pDays-5);
                     pSliderTxt = `Urgente SARA: mínimo legal ${pDays} días naturales (art. 119.2.b.1º LCSP).`;
                 } else {
-                    pDays = Math.ceil(pDaysBase / 2);
-                    pSliderTxt = pDaysBase === 26
+                    pDays = Math.ceil(pDaysBase/2);
+                    pSliderTxt = pDaysBase===26
                         ? `Urgente No-SARA obras: ${pDays} días. Reducción debatible (art. 156.4 fija base 26 días).`
                         : `Urgente No-SARA: ${pDays} días naturales (mitad del mínimo de ${pDaysBase} días, art. 119.2 LCSP).`;
                 }
             }
-        } else if (sara && !tipo.includes('concesion') && proc !== 'SIMPLIFICADO') {
+        } else if (sara && !tipo.includes('concesion') && proc!=='SIMPLIFICADO') {
             if (aip) {
                 pDays = 15;
-                if (ofertasElec) pDays = 15;
                 pSliderTxt = 'AIP publicado: reduce el mínimo de presentación a 15 días naturales (arts. 134 y 156.2.c LCSP).';
             } else if (ofertasElec) {
-                pDays = Math.max(15, pDaysBase - 5);
+                pDays = Math.max(15, pDaysBase-5);
                 pSliderTxt = `Ofertas electrónicas: reduce el mínimo en 5 días → ${pDays} días naturales (art. 156.2 LCSP).`;
             }
         } else if (sara && tipo.includes('concesion') && ofertasElec) {
-            pDays = Math.max(25, pDaysBase - 5);
+            pDays = Math.max(25, pDaysBase-5);
             pSliderTxt = `Ofertas electrónicas concesión: reduce en 5 días → ${pDays} días naturales.`;
         }
 
         if (!pSliderTxt) {
-            if (sara) pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 156.2). Se puede reducir 5 días con ofertas electrónicas (art. 156.2 LCSP).`;
-            else if (proc === 'SIMPLIFICADO') pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 159.3).`;
-            else if (pDays === 26) pSliderTxt = 'Mínimo legal 26 días naturales para obras y concesiones (art. 156.4 LCSP).';
+            if (sara) pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 156.2). Reducible -5 días con ofertas electrónicas. Con AIP publicado puede reducirse a 15 días.`;
+            else if (proc==='SIMPLIFICADO') pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 159.3). No reducible por tramitación ordinaria.`;
+            else if (pDays===26) pSliderTxt = 'Mínimo legal 26 días naturales para obras y concesiones (art. 156.4 LCSP).';
             else pSliderTxt = `Mínimo legal ${pDays} días naturales (art. 156.3 LCSP).`;
         }
 
         const pDaysFinal = pDays;
-        const pMax = sara ? (tramitacion==='urgente' && !tipo.includes('concesion') ? 35 : 52) : (proc==='SIMPLIFICADO' ? (tipo==='obras' ? 40 : 30) : Math.max(pDays*2, pDays+15));
+        const pMax = sara ? (tramitacion==='urgente'&&!tipo.includes('concesion') ? 35 : 52) : (proc==='SIMPLIFICADO' ? (tipo==='obras'?40:30) : Math.max(pDays*2, pDays+15));
 
         let artPresent;
         if (sara) artPresent = tipo.includes('concesion') ? 'Art. 156.2 (concesiones)' : 'Art. 156.2';
@@ -670,52 +696,51 @@
         else artPresent = 'Art. 156.3';
         if (tramitacion==='urgente') artPresent += ' + art.119';
 
-        const respInfoDays = (tramitacion==='urgente' && sara) ? 4 : 6;
+        const respInfoDays = (tramitacion==='urgente'&&sara) ? 4 : 6;
 
         s.push({ id:'pres', name:'Presentación Proposiciones', color:'blue', art:artPresent,
             getDesc:(v) => `Plazo de presentación: ${v} días naturales. Mínimo legal: ${pDaysFinal} días.<br><span class="text-slate-400 text-[10px]">Art. 138.3 — Solicitar info adicional: al menos 12 días antes del fin · Respuesta del órgano: al menos ${respInfoDays} días antes del fin.</span>`,
             slider:{ id:'sl_pres', min:pDaysFinal, max:pMax, val:pDaysFinal, label:'Plazo Presentación', txt:pSliderTxt }, isHabiles:false, trackInfo138:true, respInfoDays });
 
-        const hayJuiciosValor = nSobres > 1;
-        const maxMesaJuicios = (proc==='SIMPLIFICADO' && tramitacion!=='urgente') ? 7 : 20;
+        const maxMesaJuicios = (proc==='SIMPLIFICADO'&&tramitacion!=='urgente') ? 7 : 20;
         const maxMesaUnica = 20;
         const defMesa = 3;
 
         if (nSobres === 3) {
-            s.push({ id:'m1', name:'Mesa 1: Administrativa y Juicios', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157 / 159', getDesc:(v)=>`Apertura en ${v} días hábiles. En simplificado máximo 7 días para juicios de valor (art. 159.4.e).`, slider:{ id:'sl_m1', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 1', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (criterios juicio de valor, art. 159.4.e). Mínimo 1 día.':'Plazo orientativo (no hay máximo legal).') }, isHabiles:true });
-            s.push({ id:'ev', name:'Evaluación Técnica (Sobre B)', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.e', getDesc:(v)=>`Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_ev', min:1, max:(proc==='SIMPLIFICADO'&&tramitacion!=='urgente')?7:30, val:(proc==='SIMPLIFICADO')?3:7, label:'Días de Evaluación', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (art. 159.4.e). Mínimo 1 día.':'Plazo orientativo.') }, isHabiles:true });
-            s.push({ id:'m2', name:'Mesa 2: Fórmulas (Sobre C)', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4', getDesc:(v)=>`Apertura económica en ${v} días hábiles.`, slider:{ id:'sl_m2', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 2', txt:'Tras recibir informe técnico. Sin máximo legal específico.' }, isHabiles:true });
+            s.push({ id:'m1', name:'Mesa 1: Administrativa y Juicios', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157 / 159', getDesc:(v)=>`Apertura sobre A (administrativa) y sobre B (juicios de valor) en ${v} días hábiles. Límite en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_m1', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 1', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles para criterios de juicio de valor (art. 159.4.e).':'Plazo orientativo (no hay máximo legal).') }, isHabiles:true });
+            s.push({ id:'ev', name:'Evaluación Técnica (Sobre B)', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.e', getDesc:(v)=>`Informe técnico de los servicios del órgano en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_ev', min:1, max:(proc==='SIMPLIFICADO'&&tramitacion!=='urgente')?7:30, val:(proc==='SIMPLIFICADO')?3:7, label:'Días de Evaluación Técnica', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (art. 159.4.e).':'Plazo orientativo. Sin máximo legal para el abierto ordinario.') }, isHabiles:true });
+            s.push({ id:'m2', name:'Mesa 2: Fórmulas (Sobre C)', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4', getDesc:(v)=>`Apertura económica (sobre C) en ${v} días hábiles. Se recibe el informe técnico previo.`, slider:{ id:'sl_m2', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 2', txt:'Tras recibir informe técnico (sobre B). Sin máximo legal específico.' }, isHabiles:true });
         } else if (nSobres === 2) {
-            s.push({ id:'m1', name:'Mesa 1: Juicios de Valor', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157 / 159', getDesc:(v)=>`Apertura en ${v} días hábiles. En simplificado máximo 7 días para juicios de valor (art. 159.4.e).`, slider:{ id:'sl_m1', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 1', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (criterios juicio de valor, art. 159.4.e). Mínimo 1 día.':'Plazo orientativo.') }, isHabiles:true });
-            s.push({ id:'ev', name:'Evaluación Técnica', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.e', getDesc:(v)=>`Informe técnico en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_ev', min:1, max:(proc==='SIMPLIFICADO'&&tramitacion!=='urgente')?7:30, val:(proc==='SIMPLIFICADO')?3:7, label:'Días de Evaluación', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (art. 159.4.e). Mínimo 1 día.':'Plazo orientativo.') }, isHabiles:true });
-            s.push({ id:'m2', name:'Mesa 2: Fórmulas', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.f', getDesc:(v)=>`Apertura económica en ${v} días hábiles.`, slider:{ id:'sl_m2', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 2', txt:'Tras recibir informe técnico. Sin máximo legal específico.' }, isHabiles:true });
+            s.push({ id:'m1', name:'Mesa 1: Juicios de Valor', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157 / 159', getDesc:(v)=>`Apertura sobre A (juicios de valor) en ${v} días hábiles. Límite en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_m1', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 1', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles para criterios de juicio de valor (art. 159.4.e).':'Plazo orientativo.') }, isHabiles:true });
+            s.push({ id:'ev', name:'Evaluación Técnica', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.e', getDesc:(v)=>`Informe técnico de los servicios del órgano en ${v} días hábiles. Límite legal en simplificado: 7 días (art. 159.4.e).`, slider:{ id:'sl_ev', min:1, max:(proc==='SIMPLIFICADO'&&tramitacion!=='urgente')?7:30, val:(proc==='SIMPLIFICADO')?3:7, label:'Días de Evaluación Técnica', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días hábiles (art. 159.4.e).':'Plazo orientativo.') }, isHabiles:true });
+            s.push({ id:'m2', name:'Mesa 2: Fórmulas (Sobre B)', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.4 / 159.4.f', getDesc:(v)=>`Apertura económica (sobre B) en ${v} días hábiles tras recibir el informe técnico.`, slider:{ id:'sl_m2', min:1, max:maxMesaJuicios, val:defMesa, label:'Días hasta Mesa 2', txt:'Tras recibir informe técnico. Sin máximo legal específico.' }, isHabiles:true });
         } else {
-            s.push({ id:'m1', name:'Mesa Única: Solo Fórmulas', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.3', getDesc:(v)=>`Apertura y evaluación en ${v} días hábiles. Solo criterios por fórmulas, sin evaluación técnica separada.`, slider:{ id:'sl_m1', min:1, max:maxMesaUnica, val:defMesa, label:'Días hasta Mesa', txt:'Sobre único: no aplica el límite de 7 días del art. 159.4.e (no hay juicios de valor). Límite orientativo: máx. 20 días naturales para apertura (art. 157.3).' }, isHabiles:true });
+            s.push({ id:'m1', name:'Mesa Única: Solo Fórmulas', color:'purple', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 157.3', getDesc:(v)=>`Apertura y evaluación automática en ${v} días hábiles. Sobre único con solo criterios por fórmulas; no hay evaluación técnica separada.`, slider:{ id:'sl_m1', min:1, max:maxMesaUnica, val:defMesa, label:'Días hasta Mesa', txt:'Sobre único: sin criterios de juicio de valor, no aplica el límite de 7 días del art. 159.4.e. Límite orientativo: máx. 20 días naturales para apertura (art. 157.3).' }, isHabiles:true });
         }
 
         if (hasSubsanacion) {
-            s.push({ id:'subsanacion', name:'Subsanación documental', color:'orange', art:'Art. 141.2', getDesc:()=>'Plazo para subsanar defectos formales en la documentación: 3 días naturales (art. 141.2 LCSP).', staticDur:3, isHabiles:false });
+            s.push({ id:'subsanacion', name:'Subsanación documental', color:'orange', art:'Art. 141.2', getDesc:()=>'Plazo para subsanar defectos formales en documentación administrativa: 3 días naturales (art. 141.2 LCSP). Si el último día es inhábil, se prorroga al siguiente hábil (D.A. 12ª LCSP).', staticDur:3, isHabiles:false });
         }
 
         if (hasBaja) {
-            s.push({ id:'b1', name:'Identificación Baja Temeraria', color:'pink', art:'Art. 149.4', getDesc:(v)=>`Requerimiento en ${v} días hábiles.`, slider:{ id:'sl_b1', min:1, max:5, val:1, label:'Días de Identificación', txt:'Detección por la Mesa. Sin plazo legal fijo.' }, isHabiles:true });
-            s.push({ id:'b2', name:'Audiencia al Licitador', color:'pink', art:'Art. 149.4', getDesc:(v)=>`Justificación en ${v} días hábiles. Mínimo legal: 5 días.`, slider:{ id:'sl_b2', min:5, max:15, val:5, label:'Plazo Audiencia', txt:'Mínimo legal 5 días hábiles (art. 149.4). Máximo orientativo 15.' }, isHabiles:true });
-            s.push({ id:'b3', name:'Informe Técnico Baja', color:'pink', art:'Art. 149.6', getDesc:(v)=>`Informe en ${v} días hábiles.`, slider:{ id:'sl_b3', min:1, max:20, val:5, label:'Días de Informe', txt:'Asesoramiento técnico. Sin plazo legal.' }, isHabiles:true });
+            s.push({ id:'b1', name:'Identificación Baja Temeraria', color:'pink', art:'Art. 149.4', getDesc:(v)=>`Identificación por la Mesa y requerimiento al licitador en ${v} días hábiles.`, slider:{ id:'sl_b1', min:1, max:5, val:1, label:'Días de Identificación', txt:'Detección por la Mesa de Contratación. La LCSP no fija plazo legal máximo para este trámite.' }, isHabiles:true });
+            s.push({ id:'b2', name:'Audiencia al Licitador', color:'pink', art:'Art. 149.4', getDesc:(v)=>`El licitador justifica su oferta en ${v} días hábiles. Mínimo legal: 5 días hábiles (art. 149.4).`, slider:{ id:'sl_b2', min:5, max:15, val:5, label:'Plazo Audiencia', txt:'Mínimo legal 5 días hábiles (art. 149.4 LCSP). Máximo orientativo: 15 días.' }, isHabiles:true });
+            s.push({ id:'b3', name:'Informe Técnico Baja', color:'pink', art:'Art. 149.6', getDesc:(v)=>`Asesoramiento técnico en ${v} días hábiles. La LCSP no fija plazo legal para este informe.`, slider:{ id:'sl_b3', min:1, max:20, val:5, label:'Días de Informe', txt:'Sin plazo legal establecido. Plazo orientativo a discreción del órgano.' }, isHabiles:true });
         }
 
         const pReq = proc==='SUPERSIMPLIFICADO' ? 5 : (proc==='SIMPLIFICADO' ? 7 : 10);
         const artReq = proc==='SIMPLIFICADO' ? 'Art. 159.4.e' : ((tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 150.2');
-        s.push({ id:'req1', name:'Requerimiento Doc.', color:'teal', art:artReq, getDesc:()=>'Aviso al licitador propuesto.', staticDur:1, isHabiles:true });
-        s.push({ id:'req2', name:'Aporte Documentación', color:'teal', art:artReq, getDesc:()=>`Licitador aporta en ${pReq} días hábiles.`, staticDur:pReq, isHabiles:true });
+        s.push({ id:'req1', name:'Requerimiento Documentación', color:'teal', art:artReq, getDesc:()=>'Aviso al licitador que presentó la mejor oferta para que aporte la documentación precontractual.', staticDur:1, isHabiles:true });
+        s.push({ id:'req2', name:'Aporte Documentación', color:'teal', art:artReq, getDesc:()=>`El licitador aporta garantía definitiva y documentación justificativa en ${pReq} días hábiles.`, staticDur:pReq, isHabiles:true });
 
         const adjMax = tramitacion==='urgente' ? 3 : 5;
         const artAdj = proc==='SIMPLIFICADO' ? 'Art. 159.4.f' : ((tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 150.3');
-        s.push({ id:'adj', name:'Resolución Adjudicación', color:'amber', art:artAdj, getDesc:(v)=>`Adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider:{ id:'sl_adj', min:1, max:adjMax, val:adjMax, label:'Plazo Adjudicación', txt:`Máx. ${adjMax} días hábiles${tramitacion==='urgente'?' (reducido a la mitad por urgencia, art. 119.2)':''}. Mínimo 1 día.` }, isHabiles:true });
+        s.push({ id:'adj', name:'Resolución Adjudicación', color:'amber', art:artAdj, getDesc:(v)=>`Resolución de adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días.`, slider:{ id:'sl_adj', min:1, max:adjMax, val:adjMax, label:'Plazo Adjudicación', txt:`Máx. ${adjMax} días hábiles${tramitacion==='urgente'?' (reducido a la mitad por urgencia, art. 119.2)':''}. Mínimo 1 día.` }, isHabiles:true });
 
         if (proc !== 'SUPERSIMPLIFICADO') {
             let espera = 15;
             if (tramitacion==='urgente' && !sara) espera = 8;
-            s.push({ id:'form', name:'Formalización', color:'emerald', art:(tramitacion==='urgente'?'Art. 119 + ':'')+(sara?'Art. 153.3':'Art. 153.2'), getDesc:()=>sara?(tramitacion==='urgente'?'15 días hábiles (periodo suspensivo no reducible, art. 119.2.b.1º)':`15 días hábiles mínimo (periodo suspensivo recurso especial)`):`Máx. ${espera} días hábiles desde notificación adjudicación.`, staticDur:espera, isHabiles:true });
+            s.push({ id:'form', name:'Formalización', color:'emerald', art:(tramitacion==='urgente'?'Art. 119 + ':'')+(sara?'Art. 153.3':'Art. 153.2'), getDesc:()=>sara?(tramitacion==='urgente'?'15 días hábiles (periodo suspensivo no reducible, art. 119.2.b.1º)':`15 días hábiles mínimo (periodo suspensivo para recurso especial en materia de contratación)`):`Máx. ${espera} días hábiles desde notificación de adjudicación.`, staticDur:espera, isHabiles:true });
         }
 
         return s;
@@ -724,7 +749,7 @@
     function renderTimelineBase() {
         let htmlList = '';
         currentSkeleton.forEach((ev, i) => {
-            const alignLeft = i % 2 === 0;
+            const alignLeft = i%2===0;
             const cBg = themeColors[ev.color]; const cRing = ringColors[ev.color]; const cText = textColors[ev.color];
             let sliderHtml = '';
             if (ev.slider) {
@@ -764,8 +789,6 @@
     async function recalculateDates() {
         let curr = new Date(globalT0);
         let calEvents = [];
-        const sara = globalConfig.sara;
-        const tramitacion = globalConfig.tramitacion;
 
         for (const ev of currentSkeleton) {
             let dur = ev.slider ? parseInt(document.getElementById(ev.slider.id).value) : ev.staticDur;
@@ -780,8 +803,8 @@
             if (ev.trackInfo138 && dur > 0) {
                 const solicDeadline = addDays(end, -12);
                 const respDeadline = addDays(end, -(ev.respInfoDays || 6));
-                calEvents.push({ name:'Límite solicitud info. adicional (art. 138.3)', start:solicDeadline, end:solicDeadline, color:'cyan', isHabiles:false });
-                calEvents.push({ name:`Límite respuesta info. adicional (art. 138.3)`, start:respDeadline, end:respDeadline, color:'cyan', isHabiles:false });
+                calEvents.push({ name:'Límite solicitud info. adicional (art. 138.3)', start:solicDeadline, end:solicDeadline, color:'cyan', isHabiles:false, art:'Art. 138.3' });
+                calEvents.push({ name:`Límite respuesta info. adicional (art. 138.3)`, start:respDeadline, end:respDeadline, color:'cyan', isHabiles:false, art:'Art. 138.3' });
             }
 
             if (dur > 0) curr = addHabiles(end, 1);
@@ -800,16 +823,14 @@
     function actualizarBanners() {
         const evs = globalEvents;
         if (!evs.length) return;
-
         const dur = calcularDuracion(evs);
         if (dur) {
             document.getElementById('durDiasNat').textContent = dur.totalDias;
             document.getElementById('durSemanas').textContent = dur.semanas;
-            document.getElementById('durFechaFin').textContent = formatDate(dur.end).replace(' de ', ' ');
+            document.getElementById('durFechaFin').textContent = formatDate(dur.end);
             document.getElementById('durFestivos').textContent = dur.festivos;
             document.getElementById('duracionResumen').classList.remove('hidden');
         }
-
         const festWarnings = detectarFestivosCriticos(evs);
         const festEl = document.getElementById('festivosCriticosWarning');
         if (festWarnings.length) {
@@ -837,10 +858,9 @@
                 let cellObj = new Date(y,m,d); let cellTs = cellObj.getTime();
                 let dEvs = evs.filter(ev => cellTs>=ev.start.getTime() && cellTs<=ev.end.getTime());
                 let isWeekend = cellObj.getDay()===0||cellObj.getDay()===6;
-                let holidayInfo = getHolidayInfo(cellObj);
-                let isFestivo = holidayInfo !== null;
-                let inhabil = dEvs.some(ev => ev.isHabiles && (isWeekend||isFestivo));
-                let bgColor = (dEvs.length>0 && !inhabil) ? 'bg-slate-50 font-bold border-slate-200' : 'bg-white';
+                let holidayInfo = getHolidayInfo(cellObj); let isFestivo = holidayInfo!==null;
+                let inhabil = dEvs.some(ev => ev.isHabiles&&(isWeekend||isFestivo));
+                let bgColor = (dEvs.length>0&&!inhabil) ? 'bg-slate-50 font-bold border-slate-200' : 'bg-white';
                 let inds = '', tt = `<strong>${formatDate(cellObj)}</strong>`;
                 if (isFestivo) tt += `<br/><span class="text-red-300">Festivo: ${holidayInfo.name} (${holidayInfo.type})</span>`;
                 else if (isWeekend) tt += `<br/><span class="text-amber-300">Fin de semana</span>`;
@@ -867,12 +887,12 @@
                 tooltip.style.display = 'block';
                 tooltip.innerHTML = ttContent;
                 const rect = cell.getBoundingClientRect();
-                let left = rect.left + rect.width/2;
-                let top = rect.top - 8;
+                let left = rect.left+rect.width/2;
+                let top = rect.top-8;
                 const tr = tooltip.getBoundingClientRect();
-                if (left + tr.width/2 > window.innerWidth) left = window.innerWidth - tr.width/2 - 10;
-                if (left - tr.width/2 < 0) left = tr.width/2 + 10;
-                if (top - tr.height < 0) top = rect.bottom + 8 + tr.height;
+                if (left+tr.width/2>window.innerWidth) left = window.innerWidth-tr.width/2-10;
+                if (left-tr.width/2<0) left = tr.width/2+10;
+                if (top-tr.height<0) top = rect.bottom+8+tr.height;
                 tooltip.style.left = left+'px';
                 tooltip.style.top = top+'px';
             });
@@ -880,18 +900,29 @@
         });
     }
 
+    function toISO88591Bytes(str) {
+        const bytes = new Uint8Array(str.length);
+        for (let i=0; i<str.length; i++) {
+            const c = str.charCodeAt(i);
+            bytes[i] = c > 255 ? 63 : c;
+        }
+        return bytes;
+    }
+
     function exportCSV() {
         if (!globalEvents.length) return showToast('Genera primero una simulación');
-        const BOM = '\uFEFF';
-        const lines = ['Trámite;Fecha inicio;Fecha fin;Días;Tipo días;Artículo'];
+        const lines = ['Tramite;Fecha inicio;Fecha fin;Dias;Tipo dias;Articulo'];
         globalEvents.forEach(ev => {
             const dias = ev.end.getTime()!==ev.start.getTime() ? Math.round((ev.end-ev.start)/86400000) : 0;
-            lines.push(`"${ev.name}";"${formatDate(ev.start)}";"${formatDate(ev.end)}";"${dias}";"${ev.isHabiles?'Hábiles':'Naturales'}";"${ev.art||''}"`);
+            const nombre = ev.name.replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i').replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E').replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O').replace(/[ÚÙÜÛ]/g,'U').replace(/ñ/g,'n').replace(/Ñ/g,'N');
+            lines.push(`"${nombre}";"${formatDate(ev.start)}";"${formatDate(ev.end)}";"${dias}";"${ev.isHabiles?'Habiles':'Naturales'}";"${ev.art||''}"`);
         });
-        const blob = new Blob([BOM+lines.join('\n')], { type:'text/csv;charset=utf-8;' });
+        const csvStr = lines.join('\r\n');
+        const bytes = toISO88591Bytes(csvStr);
+        const blob = new Blob([bytes], { type:'text/csv;charset=iso-8859-1;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = `simulacion_lcsp_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+        a.href=url; a.download=`simulacion_lcsp_${new Date().toISOString().split('T')[0]}.csv`; a.click();
         URL.revokeObjectURL(url);
         showToast('CSV descargado ✓');
     }
@@ -899,33 +930,33 @@
     function mostrarOficio() {
         if (!globalEvents.length) return showToast('Genera primero una simulación');
         const cfg = globalConfig;
-        const pub = globalEvents.find(e=>e.name.includes('Publicación'));
-        const pres = globalEvents.find(e=>e.name.includes('Presentación'));
-        const adj = globalEvents.find(e=>e.name.includes('Adjudicación'));
-        const form = globalEvents.find(e=>e.name.includes('Formalización'));
+        const pub = globalEvents.find(e=>e.name.includes('Publicaci'));
+        const pres = globalEvents.find(e=>e.name.includes('Presentaci'));
+        const adj = globalEvents.find(e=>e.name.includes('Adjudicaci'));
+        const form = globalEvents.find(e=>e.name.includes('Formalizaci'));
         const hoy = new Date().toLocaleDateString('es-ES');
-        let txt = `SIMULACIÓN DE PLAZOS — LEY 9/2017, DE CONTRATOS DEL SECTOR PÚBLICO\n`;
+        let txt = `SIMULACION DE PLAZOS -- LEY 9/2017, DE CONTRATOS DEL SECTOR PUBLICO\n`;
         txt += `Generado el: ${hoy}\n`;
         txt += `${'─'.repeat(60)}\n\n`;
         txt += `DATOS DEL CONTRATO\n`;
         txt += `  Tipo de contrato    : ${cfg.tipo?.toUpperCase().replace('_',' ')}\n`;
         txt += `  Procedimiento       : ${cfg.proc?.replace(/_/g,' ')}\n`;
-        txt += `  Tramitación         : ${cfg.tramitacion?.toUpperCase()}\n`;
-        txt += `  Tipo de entidad     : ${cfg.entidad==='AGE'?'Administración General del Estado':'Otras entidades (CCAA/EELL)'}\n`;
-        if (cfg.valor) txt += `  Valor estimado      : ${parseFloat(cfg.valor).toLocaleString('es-ES')} €\n`;
-        txt += `  SARA                : ${cfg.sara?'Sí':'No'}\n\n`;
+        txt += `  Tramitacion         : ${cfg.tramitacion?.toUpperCase()}\n`;
+        txt += `  Tipo de entidad     : ${cfg.entidad==='AGE'?'Administracion General del Estado':'Otras entidades (CCAA/EELL)'}\n`;
+        if (cfg.valor) txt += `  Valor estimado      : ${parseFloat(cfg.valor).toLocaleString('es-ES')} EUR\n`;
+        txt += `  SARA                : ${cfg.sara?'Si':'No'}\n\n`;
         txt += `PLAZOS ESTIMADOS\n`;
-        if (pub) txt += `  Publicación del anuncio         : ${formatDate(pub.start)}\n`;
-        if (pres) txt += `  Fin plazo presentación          : ${formatDate(pres.end)}\n`;
-        if (adj) txt += `  Fecha estimada adjudicación     : ${formatDate(adj.end)}\n`;
-        if (form) txt += `  Fecha estimada formalización    : ${formatDate(form.end)}\n\n`;
-        txt += `TODOS LOS TRÁMITES\n`;
+        if (pub) txt += `  Publicacion del anuncio         : ${formatDate(pub.start)}\n`;
+        if (pres) txt += `  Fin plazo presentacion          : ${formatDate(pres.end)}\n`;
+        if (adj) txt += `  Fecha estimada adjudicacion     : ${formatDate(adj.end)}\n`;
+        if (form) txt += `  Fecha estimada formalizacion    : ${formatDate(form.end)}\n\n`;
+        txt += `TODOS LOS TRAMITES\n`;
         globalEvents.forEach(ev => {
-            const fecha = ev.start.getTime()===ev.end.getTime() ? formatDate(ev.start) : `${formatDate(ev.start)} – ${formatDate(ev.end)}`;
-            txt += `  · ${ev.name.padEnd(35,' ')} ${fecha} (${ev.art||'—'})\n`;
+            const fecha = ev.start.getTime()===ev.end.getTime() ? formatDate(ev.start) : `${formatDate(ev.start)} - ${formatDate(ev.end)}`;
+            txt += `  · ${ev.name.padEnd(38,' ')} ${fecha}\n`;
         });
         txt += `\n${'─'.repeat(60)}\n`;
-        txt += `NOTA LEGAL: Los plazos indicados son orientativos y han sido calculados\nautomáticamente a partir de la configuración introducida. Su validez está\ncondicionada a la verificación por el órgano de contratación competente.\n`;
+        txt += `NOTA LEGAL: Plazos orientativos calculados automaticamente.\nVerificar siempre con el organo de contratacion competente.\n`;
         document.getElementById('oficioText').value = txt;
         document.getElementById('oficioModal').classList.remove('hidden');
     }
@@ -934,23 +965,22 @@
         const cfg = globalConfig;
         if (!cfg.proc) return showToast('Genera primero una simulación');
         const params = new URLSearchParams({
-            proc: cfg.proc, tipo: cfg.tipo, valor: cfg.valor||'', fecha: cfg.fecha,
-            sobres: cfg.nSobres, entidad: cfg.entidad, tramitacion: cfg.tramitacion, ccaa: cfg.ccaa,
-            baja: cfg.hasBaja?'1':'0', aip: cfg.aip?'1':'0', elec: cfg.ofertasElec?'1':'0', subsanacion: cfg.hasSubsanacion?'1':'0'
+            proc:cfg.proc, tipo:cfg.tipo, valor:cfg.valor||'', fecha:cfg.fecha,
+            sobres:cfg.nSobres, entidad:cfg.entidad, tramitacion:cfg.tramitacion, ccaa:cfg.ccaa,
+            baja:cfg.hasBaja?'1':'0', aip:cfg.aip?'1':'0', elec:cfg.ofertasElec?'1':'0', subsanacion:cfg.hasSubsanacion?'1':'0'
         });
-        history.replaceState({}, '', '?' + params.toString());
-        navigator.clipboard.writeText(window.location.href).then(() => showToast('URL copiada al portapapeles ✓')).catch(() => showToast('URL actualizada en la barra ✓'));
+        history.replaceState({}, '', '?'+params.toString());
+        navigator.clipboard.writeText(window.location.href).then(()=>showToast('URL copiada ✓')).catch(()=>showToast('URL actualizada en la barra ✓'));
     }
 
     function cargarDesdeURL() {
         const p = new URLSearchParams(window.location.search);
         if (!p.get('proc')) return;
-        const proc = p.get('proc');
         const tipo = p.get('tipo');
         const fecha = p.get('fecha');
-        if (!tipo || !fecha) return;
+        if (!tipo||!fecha) return;
         const procEl = document.getElementById('procManual');
-        procEl.value = proc;
+        procEl.value = p.get('proc');
         procEl.dispatchEvent(new Event('change'));
         const tipoEl = document.getElementById('tipoContrato');
         tipoEl.value = tipo;
@@ -965,20 +995,21 @@
         if (p.get('aip')==='1') document.getElementById('aipCheck').checked = true;
         if (p.get('elec')==='1') document.getElementById('ofertasElecCheck').checked = true;
         if (p.get('subsanacion')==='1') document.getElementById('subsanacionCheck').checked = true;
+        clearTimeout(calcDebounce);
+        calcDebounce = setTimeout(triggerCalc, 400);
     }
 
-    function computeEventsFromSkeleton(skeleton, t0, sara, tramitacion) {
+    function computeEventsFromSkeleton(skeleton, t0) {
         let curr = new Date(t0);
         let events = [];
         for (const ev of skeleton) {
-            const dur = ev.slider ? ev.slider.val : (ev.staticDur || 0);
-            let start = new Date(curr);
-            let end = new Date(start);
-            if (dur > 0) {
+            const dur = ev.slider ? ev.slider.val : (ev.staticDur||0);
+            let start = new Date(curr); let end = new Date(start);
+            if (dur>0) {
                 if (ev.isHabiles) end = addHabiles(start, dur);
                 else end = addDays(start, dur);
             }
-            if (dur > 0) curr = addHabiles(end, 1);
+            if (dur>0) curr = addHabiles(end, 1);
             else if (ev.nextDay) curr = addDays(end, 1);
             else curr = new Date(end);
             events.push({ name:ev.name, start, end, dur, isHabiles:ev.isHabiles, color:ev.color, art:ev.art||'' });
@@ -995,77 +1026,66 @@
         const cmpSobresRaw = document.getElementById('cmp_sobres').value;
         const cmpAip = document.getElementById('cmp_aip').checked;
         const cmpElec = document.getElementById('cmp_elec').checked;
-
         let cmpTInfo = JSON.parse(JSON.stringify(thresholds[cfg.tipo]));
-        if (cfg.entidad==='OTRAS' && (cfg.tipo==='servicios'||cfg.tipo==='suministros')) { cmpTInfo.sara=221000; cmpTInfo.simp=221000; }
-
+        if (cfg.entidad==='OTRAS'&&(cfg.tipo==='servicios'||cfg.tipo==='suministros')) { cmpTInfo.sara=221000; cmpTInfo.simp=221000; }
         let cmpProc = cmpProcRaw || cfg.proc;
         const cmpSara = (cmpProc==='ABIERTO_SARA');
         const cmpNSobres = cmpSobresRaw ? parseInt(cmpSobresRaw) : cfg.nSobres;
-        const cmpT0 = new Date(cmpFecha + 'T00:00:00');
+        const cmpT0 = new Date(cmpFecha+'T00:00:00');
         cmpT0.setHours(0,0,0,0);
-
         const skelB = buildSkeleton(cmpProc, cfg.tipo, cmpSara, cmpNSobres, cfg.hasBaja, cmpTInfo, cfg.entidad, cmpTramitacion, cmpAip, cmpElec, cfg.hasSubsanacion);
-        const eventsB = computeEventsFromSkeleton(skelB, cmpT0, cmpSara, cmpTramitacion);
+        const eventsB = computeEventsFromSkeleton(skelB, cmpT0);
         const eventsA = globalEvents;
-
         const maxLen = Math.max(eventsA.length, eventsB.length);
         let rows = '';
         for (let i=0; i<maxLen; i++) {
-            const a = eventsA[i];
-            const b = eventsB[i];
+            const a = eventsA[i]; const b = eventsB[i];
             let diffHtml = '—';
-            if (a && b && a.end && b.end) {
-                const diffDays = Math.round((b.end - a.end) / 86400000);
-                if (diffDays !== 0) diffHtml = `<span class="${diffDays>0?'text-red-600':'text-emerald-600'} font-bold">${diffDays>0?'+':''}${diffDays}d</span>`;
+            if (a&&b&&a.end&&b.end) {
+                const diffDays = Math.round((b.end-a.end)/86400000);
+                if (diffDays!==0) diffHtml = `<span class="${diffDays>0?'text-red-600':'text-emerald-600'} font-bold">${diffDays>0?'+':''}${diffDays}d</span>`;
                 else diffHtml = '<span class="text-slate-400">=</span>';
             }
             rows += `<tr class="${i%2===0?'bg-slate-50':'bg-white'}">
                 <td class="px-3 py-2 text-xs font-medium text-slate-700">${a?.name||b?.name||'—'}</td>
-                <td class="px-3 py-2 text-xs text-center text-slate-600">${a ? (a.start.getTime()===a.end.getTime() ? formatDate(a.start) : `${formatDate(a.start)}<br>${formatDate(a.end)}`) : '—'}</td>
-                <td class="px-3 py-2 text-xs text-center text-slate-600">${b ? (b.start.getTime()===b.end.getTime() ? formatDate(b.start) : `${formatDate(b.start)}<br>${b?.end?formatDate(b.end):''}`) : '—'}</td>
+                <td class="px-3 py-2 text-xs text-center text-slate-600">${a?(a.start.getTime()===a.end.getTime()?formatDate(a.start):`${formatDate(a.start)}<br>${formatDate(a.end)}`):'—'}</td>
+                <td class="px-3 py-2 text-xs text-center text-slate-600">${b?(b.start.getTime()===b.end.getTime()?formatDate(b.start):`${formatDate(b.start)}<br>${formatDate(b.end)}`):'—'}</td>
                 <td class="px-3 py-2 text-xs text-center">${diffHtml}</td>
             </tr>`;
         }
-
-        const durA = calcularDuracion(eventsA);
-        const durB = calcularDuracion(eventsB);
-
+        const durA = calcularDuracion(eventsA); const durB = calcularDuracion(eventsB);
         document.getElementById('comparativaContent').innerHTML = `
             <div class="flex gap-4 mb-4 text-sm">
                 <div class="flex-1 bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
                     <div class="font-bold text-blue-800">Simulación A</div>
-                    <div class="text-blue-600">${cfg.proc.replace(/_/g,' ')} · ${cfg.tramitacion}</div>
+                    <div class="text-blue-600 text-xs">${cfg.proc.replace(/_/g,' ')} · ${cfg.tramitacion}</div>
                     <div class="text-lg font-black text-blue-800 mt-1">${durA?.totalDias||'—'} días</div>
                 </div>
                 <div class="flex-1 bg-violet-50 border border-violet-200 rounded-xl p-3 text-center">
                     <div class="font-bold text-violet-800">Simulación B</div>
-                    <div class="text-violet-600">${cmpProc.replace(/_/g,' ')} · ${cmpTramitacion}</div>
+                    <div class="text-violet-600 text-xs">${cmpProc.replace(/_/g,' ')} · ${cmpTramitacion}</div>
                     <div class="text-lg font-black text-violet-800 mt-1">${durB?.totalDias||'—'} días</div>
                 </div>
             </div>
             <div class="overflow-x-auto rounded-xl border border-slate-200">
                 <table class="w-full border-collapse">
-                    <thead class="bg-slate-800 text-white">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-xs font-bold">Trámite</th>
-                            <th class="px-3 py-2 text-center text-xs font-bold">Sim. A</th>
-                            <th class="px-3 py-2 text-center text-xs font-bold">Sim. B</th>
-                            <th class="px-3 py-2 text-center text-xs font-bold">Dif.</th>
-                        </tr>
-                    </thead>
+                    <thead class="bg-slate-800 text-white"><tr>
+                        <th class="px-3 py-2 text-left text-xs font-bold">Trámite</th>
+                        <th class="px-3 py-2 text-center text-xs font-bold">Sim. A</th>
+                        <th class="px-3 py-2 text-center text-xs font-bold">Sim. B</th>
+                        <th class="px-3 py-2 text-center text-xs font-bold">Dif.</th>
+                    </tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             </div>`;
-
         document.getElementById('comparativaFormSection').classList.add('hidden');
         document.getElementById('comparativaTabla').classList.remove('hidden');
     }
 
     function updateSummary(proc, tipo, valor, entidad, tramitacion, ccaa, sara, nSobres, hasBaja, fecha, isAuto, aip, ofertasElec, hasSubsanacion) {
         const ccaaText = document.querySelector('#ccaa option:checked').textContent;
-        const tramitacionText = tramitacion==='urgente' ? 'Urgente (art. 119)' : (tramitacion==='emergencia' ? 'Emergencia (art. 120)' : 'Ordinaria');
-        const valorStr = valor > 0 ? valor.toLocaleString('es-ES')+' €' : '0 €';
+        const tramitacionText = tramitacion==='urgente'?'Urgente (art. 119)':(tramitacion==='emergencia'?'Emergencia (art. 120)':'Ordinaria');
+        const valorStr = valor>0 ? valor.toLocaleString('es-ES')+' €' : '—';
         let extras = '';
         if (aip) extras += '<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg"><span class="font-semibold text-blue-800">AIP:</span> <span class="font-bold text-blue-900">Sí (mín. 15 días)</span></div>';
         if (ofertasElec) extras += '<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg"><span class="font-semibold text-blue-800">Oferta electrónica:</span> <span class="font-bold text-blue-900">Sí (-5 días SARA)</span></div>';
@@ -1083,8 +1103,7 @@
             ${extras}`;
     }
 
-    document.getElementById('lcspForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    async function triggerCalc() {
         const pMan = document.getElementById('procManual').value;
         const isAuto = pMan === 'AUTO';
         let tipo = document.getElementById('tipoContrato').value;
@@ -1100,41 +1119,41 @@
         const hasSubsanacion = document.getElementById('subsanacionCheck').checked;
 
         if (!tipo || !t0Str) return;
-        if (tipo === 'mixto') tipo = document.getElementById('mixtoPrincipal').value;
+        if (tipo==='mixto') tipo = document.getElementById('mixtoPrincipal').value || 'servicios';
+
+        const resultsEl = document.getElementById('resultsContainer');
+        resultsEl.classList.add('calculating');
 
         const warnings = checkCoherencia(pMan==='AUTO'?'AUTO':pMan, tipo, tramitacion, nSobres);
         const warnEl = document.getElementById('coherenceWarnings');
         if (warnings.length) {
-            warnEl.innerHTML = `<div class="bg-yellow-50 border border-yellow-300 rounded-xl p-4 text-sm text-yellow-900">
-                <p class="font-bold mb-2">⚠️ Avisos de coherencia</p>
-                ${warnings.map(w=>`<p class="mb-1">· ${w}</p>`).join('')}
-            </div>`;
+            warnEl.innerHTML = `<div class="bg-yellow-50 border border-yellow-300 rounded-xl p-4 text-sm text-yellow-900"><p class="font-bold mb-2">⚠️ Avisos de coherencia</p>${warnings.map(w=>`<p class="mb-1">· ${w}</p>`).join('')}</div>`;
             warnEl.classList.remove('hidden');
         } else {
             warnEl.classList.add('hidden');
         }
 
-        globalT0 = new Date(t0Str + 'T00:00:00');
+        globalT0 = new Date(t0Str+'T00:00:00');
         globalT0.setHours(0,0,0,0);
 
         let tInfo = JSON.parse(JSON.stringify(thresholds[tipo]));
-        if (entidad==='OTRAS' && (tipo==='servicios'||tipo==='suministros')) { tInfo.sara=221000; tInfo.simp=221000; }
+        if (entidad==='OTRAS'&&(tipo==='servicios'||tipo==='suministros')) { tInfo.sara=221000; tInfo.simp=221000; }
 
         let proc = pMan;
         if (isAuto) {
-            if (valor < tInfo.menor) proc = 'MENOR';
-            else if (tInfo.supersimp>0 && valor<tInfo.supersimp) proc = 'SUPERSIMPLIFICADO';
-            else if (tInfo.simp>0 && valor<tInfo.simp) proc = 'SIMPLIFICADO';
-            else proc = valor>=tInfo.sara ? 'ABIERTO_SARA' : 'ABIERTO_NO_SARA';
+            if (valor<tInfo.menor) proc='MENOR';
+            else if (tInfo.supersimp>0&&valor<tInfo.supersimp) proc='SUPERSIMPLIFICADO';
+            else if (tInfo.simp>0&&valor<tInfo.simp) proc='SIMPLIFICADO';
+            else proc=valor>=tInfo.sara?'ABIERTO_SARA':'ABIERTO_NO_SARA';
         }
-        const sara = (proc==='ABIERTO_SARA') || (isAuto && valor>=tInfo.sara);
+        const sara = (proc==='ABIERTO_SARA')||(isAuto&&valor>=tInfo.sara);
 
         globalConfig = { proc, tipo, valor, fecha:t0Str, nSobres, entidad, tramitacion, ccaa, hasBaja, sara, aip, ofertasElec, hasSubsanacion, isAuto };
 
         let maxEnd = new Date(globalT0);
         const tempSkel = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion);
         for (let ev of tempSkel) {
-            if (ev.staticDur) { if (ev.isHabiles) maxEnd = addHabiles(maxEnd, ev.staticDur); else maxEnd = addDays(maxEnd, ev.staticDur); }
+            if (ev.staticDur) { if (ev.isHabiles) maxEnd=addHabiles(maxEnd,ev.staticDur); else maxEnd=addDays(maxEnd,ev.staticDur); }
         }
         holidayMap.clear();
         for (let y=globalT0.getFullYear(); y<=maxEnd.getFullYear(); y++) {
@@ -1142,22 +1161,18 @@
         }
 
         const clasWarn = checkClasificacion(tipo, valor);
-        if (clasWarn) {
-            document.getElementById('clasificacionText').textContent = clasWarn;
-            document.getElementById('clasificacionWarning').classList.remove('hidden');
-        } else {
-            document.getElementById('clasificacionWarning').classList.add('hidden');
-        }
+        if (clasWarn) { document.getElementById('clasificacionText').textContent=clasWarn; document.getElementById('clasificacionWarning').classList.remove('hidden'); }
+        else document.getElementById('clasificacionWarning').classList.add('hidden');
 
         document.getElementById('tagSara').style.display = sara ? 'inline-flex' : 'none';
         const badge = document.getElementById('tramitacionBadge');
         badge.className = 'inline-flex items-center justify-center px-3 py-1 rounded-full font-bold text-xs uppercase tracking-widest';
         if (tramitacion==='urgente') {
-            badge.innerHTML = 'Tramitación URGENTE (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline" onclick="event.stopPropagation()">art. 119</a>)';
+            badge.innerHTML = 'Tramitación URGENTE (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-30" target="_blank" class="underline">art. 119</a>)';
             badge.classList.add('urgent-badge');
             document.getElementById('urgentInfo').classList.remove('hidden');
         } else if (tramitacion==='emergencia') {
-            badge.innerHTML = 'Régimen de EMERGENCIA (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-32" target="_blank" class="underline" onclick="event.stopPropagation()">art. 120</a>)';
+            badge.innerHTML = 'Régimen de EMERGENCIA (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-32" target="_blank" class="underline">art. 120</a>)';
             badge.classList.add('emergency-badge');
             document.getElementById('urgentInfo').classList.add('hidden');
         } else {
@@ -1174,9 +1189,14 @@
         renderTimelineBase();
         await recalculateDates();
 
-        document.getElementById('resultsContainer').classList.remove('hidden');
-        document.getElementById('resultsContainer').scrollIntoView({ behavior:'smooth', block:'start' });
-    });
+        resultsEl.classList.remove('hidden');
+        resultsEl.classList.remove('calculating');
+
+        if (!resultsEl.dataset.scrolled) {
+            resultsEl.dataset.scrolled = '1';
+            resultsEl.scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+    }
 
     document.getElementById('exportPdfBtn')?.addEventListener('click', async function() {
         const { jsPDF } = window.jspdf;
@@ -1185,33 +1205,61 @@
         const tipo = document.getElementById('procDetail').textContent.split('|')[0].trim().replace(/\s+/g,'_');
         const btnContainer = document.getElementById('exportBtnContainer');
         const disclaimerText = document.getElementById('disclaimerText');
-        document.getElementById('globalTooltip').style.display = 'none';
+        const tooltip = document.getElementById('globalTooltip');
+        const banner = document.getElementById('bannerTitulares');
+        const coherence = document.getElementById('coherenceWarnings');
+
+        tooltip.style.display = 'none';
         btnContainer.style.display = 'none';
         disclaimerText.style.display = 'none';
-        document.getElementById('bannerTitulares').style.display = 'none';
-        const originalStyle = element.getAttribute('style') || '';
-        const originalClasses = element.className;
-        element.classList.remove('shadow-sm','rounded-2xl','border','border-slate-200','fade-in');
-        const fadeElements = element.querySelectorAll('.fade-in');
-        fadeElements.forEach(el => el.classList.remove('fade-in'));
-        element.style.width = '1024px'; element.style.maxWidth = '1024px'; element.style.padding = '40px 60px';
-        element.style.backgroundColor = '#ffffff'; element.style.margin = '0 auto';
+        banner.style.display = 'none';
+        coherence.style.display = 'none';
+
+        const origStyle = element.getAttribute('style') || '';
+        const origClass = element.className;
+
+        element.classList.remove('shadow-sm','rounded-2xl','border','border-slate-200','fade-in','calculating');
+        element.querySelectorAll('.fade-in').forEach(el => el.classList.remove('fade-in'));
+
+        element.style.cssText = 'width:1100px;max-width:1100px;padding:40px 60px;background-color:#ffffff;margin:0;overflow:visible;box-sizing:border-box;';
+
+        element.querySelectorAll('[class*="shadow"]').forEach(el => {
+            el.style.boxShadow = '0 0 0 1px #e2e8f0';
+            el.style.overflow = 'visible';
+        });
+
         window.scrollTo(0,0);
+        await new Promise(r => setTimeout(r, 300));
+
         try {
-            const canvas = await html2canvas(element, { scale:2, logging:false, useCORS:true, backgroundColor:'#ffffff', windowWidth:1024 });
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const canvas = await html2canvas(element, {
+                scale: 1.8,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                windowWidth: 1100,
+                scrollX: 0,
+                scrollY: 0,
+                allowTaint: true,
+                onclone: (doc) => {
+                    doc.querySelectorAll('.dur-card').forEach(el => { el.style.minHeight='90px'; el.style.display='flex'; el.style.flexDirection='column'; el.style.alignItems='center'; el.style.justifyContent='center'; });
+                    doc.querySelectorAll('.dur-value').forEach(el => { el.style.fontSize='2rem'; el.style.fontWeight='900'; el.style.lineHeight='1'; });
+                }
+            });
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
             const pdfWidth = 210;
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
             const pdf = new jsPDF({ orientation:'p', unit:'mm', format:[pdfWidth, pdfHeight] });
             pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`simulacion_${proc}_${tipo}.pdf`);
         } finally {
-            element.setAttribute('style', originalStyle);
-            element.className = originalClasses;
-            fadeElements.forEach(el => el.classList.add('fade-in'));
+            element.setAttribute('style', origStyle);
+            element.className = origClass;
+            element.querySelectorAll('[style*="box-shadow"]').forEach(el => { el.style.boxShadow=''; el.style.overflow=''; });
             btnContainer.style.display = 'flex';
             disclaimerText.style.display = 'block';
-            document.getElementById('bannerTitulares').style.display = 'block';
+            banner.style.display = 'block';
+            if (coherence.innerHTML) coherence.style.display = 'block';
         }
     });
 
