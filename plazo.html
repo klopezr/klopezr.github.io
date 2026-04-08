@@ -40,12 +40,20 @@
         .dur-value { font-size: 2rem; font-weight: 900; line-height: 1; }
         .dur-label { font-size: 0.7rem; color: #94a3b8; margin-top: 0.4rem; text-align: center; }
         .calculating { opacity: 0.5; pointer-events: none; transition: opacity 0.2s; }
+        .cal-cell.today { box-shadow: inset 0 0 0 2px #3b82f6; color: #1d4ed8; font-weight: 800; }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-20">
 
 <div id="toastEl" class="toast"></div>
+
+<div id="calcSpinner" class="hidden fixed top-4 right-4 z-50 bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-lg text-sm font-medium text-slate-600 flex items-center gap-2 no-print">
+    <svg class="spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+    Cargando festivos…
+</div>
 
 <div id="oficioModal" class="modal-overlay hidden">
     <div class="modal-box">
@@ -130,7 +138,7 @@
         <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
             <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="hover:text-blue-700 transition-colors" title="Ver Ley 9/2017 en el BOE">Simulador de plazos LCSP</a>
         </h1>
-        <p class="text-slate-600 max-w-2xl mx-auto">Plazos según <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="text-blue-600 hover:underline">Ley 9/2017 de Contratos del Sector Público</a> · Umbrales SARA vigentes desde 01/01/2024 (<a href="https://www.boe.es/boe/dias/2023/12/18/pdfs/BOE-A-2023-25942.pdf" target="_blank" class="text-blue-600 hover:underline">Orden HFP/1352/2023</a>)</p>
+        <p class="text-slate-600 max-w-2xl mx-auto">Plazos según <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="text-blue-600 hover:underline">Ley 9/2017 de Contratos del Sector Público</a> · Umbrales SARA vigentes desde 01/01/2024 (<a href="https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25764" target="_blank" class="text-blue-600 hover:underline">Orden HFP/1352/2023</a>)</p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-4 relative overflow-hidden">
@@ -320,6 +328,29 @@
         <div id="festivosCriticosWarning" class="hidden bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-800 fade-in">
             <p class="font-bold mb-1">⚠️ Festivos en períodos críticos</p>
             <div id="festivosCriticosText"></div>
+        </div>
+
+        <div id="fechaInhabilWarning" class="hidden bg-red-50 border border-red-300 rounded-xl p-4 text-sm text-red-800 fade-in">
+            <p class="font-bold mb-1">📅 Fecha de publicación inhábil</p>
+            <p id="fechaInhabilText"></p>
+        </div>
+
+        <div id="hitosResumen" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                Hitos clave del procedimiento
+            </h3>
+            <div id="hitosTabla" class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead><tr class="border-b border-slate-200">
+                        <th class="text-left py-2 pr-4 text-xs font-bold text-slate-500 uppercase tracking-wide">Trámite</th>
+                        <th class="text-center py-2 px-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Inicio</th>
+                        <th class="text-center py-2 px-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Fin / Fecha</th>
+                        <th class="text-center py-2 pl-2 text-xs font-bold text-slate-500 uppercase tracking-wide">Días</th>
+                    </tr></thead>
+                    <tbody id="hitosBody"></tbody>
+                </table>
+            </div>
         </div>
 
         <div id="bannerTitulares" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
@@ -623,6 +654,7 @@
             let info = 'Publicación en perfil de contratante';
             if (sara) info += ' y en DOUE';
             if ((proc==='ABIERTO_SARA'||proc==='ABIERTO_NO_SARA'||proc==='SIMPLIFICADO') && entidad==='AGE') info += ' y en BOE';
+            if (sara) info += '. ⚠️ DOUE: el anuncio debe enviarse al DOUE antes que al perfil. El perfil no puede publicarse hasta transcurridas 48h desde la confirmación de recepción del DOUE (salvo que pasen 48h sin publicación en DOUE).';
             return info;
         }, staticDur:0, isHabiles:false, nextDay:true });
 
@@ -719,7 +751,7 @@
         }
 
         if (hasSubsanacion) {
-            s.push({ id:'subsanacion', name:'Subsanación documental', color:'orange', art:'Art. 141.2', getDesc:()=>'Plazo para subsanar defectos formales en documentación administrativa: 3 días naturales (art. 141.2 LCSP). Si el último día es inhábil, se prorroga al siguiente hábil (D.A. 12ª LCSP).', staticDur:3, isHabiles:false });
+            s.push({ id:'subsanacion', name:'Subsanación documental', color:'orange', art:'Art. 141.2', getDesc:(v)=>`El órgano concede ${v} días naturales para subsanar defectos formales. Máximo legal: 3 días naturales (art. 141.2 LCSP). Si el último día es inhábil, se prorroga al siguiente hábil (D.A. 12ª LCSP).`, slider:{ id:'sl_subsanacion', min:1, max:3, val:3, label:'Días concedidos subsanación', txt:'Máximo legal 3 días naturales (art. 141.2). El órgano puede conceder menos si lo estima suficiente.' }, isHabiles:false });
         }
 
         if (hasBaja) {
@@ -730,8 +762,8 @@
 
         const pReq = proc==='SUPERSIMPLIFICADO' ? 5 : (proc==='SIMPLIFICADO' ? 7 : 10);
         const artReq = proc==='SIMPLIFICADO' ? 'Art. 159.4.e' : ((tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 150.2');
-        s.push({ id:'req1', name:'Requerimiento Documentación', color:'teal', art:artReq, getDesc:()=>'Aviso al licitador que presentó la mejor oferta para que aporte la documentación precontractual.', staticDur:1, isHabiles:true });
-        s.push({ id:'req2', name:'Aporte Documentación', color:'teal', art:artReq, getDesc:()=>`El licitador aporta garantía definitiva y documentación justificativa en ${pReq} días hábiles.`, staticDur:pReq, isHabiles:true });
+        s.push({ id:'req1', name:'Requerimiento Documentación', color:'teal', art:artReq, getDesc:(v)=>`Días hasta envío del requerimiento al licitador propuesto: ${v} día${v>1?'s':''}. La LCSP no fija plazo para este acto interno; en la práctica se tramita el mismo día o en pocos días hábiles.`, slider:{ id:'sl_req1', min:1, max:5, val:1, label:'Días gestión requerimiento', txt:'Sin plazo legal específico. Estimación interna del órgano de contratación.' }, isHabiles:true });
+        s.push({ id:'req2', name:'Aporte Documentación', color:'teal', art:artReq, getDesc:(v)=>`El licitador aporta garantía definitiva y documentación justificativa en ${v} días hábiles. Mínimo legal: ${pReq} días hábiles.`, slider:{ id:'sl_req2', min:pReq, max:pReq+10, val:pReq, label:'Plazo aporte documentación', txt:`Mínimo legal ${pReq} días hábiles (${artReq}). El órgano puede ampliar este plazo por causa justificada.` }, isHabiles:true });
 
         const adjMax = tramitacion==='urgente' ? 3 : 5;
         const artAdj = proc==='SIMPLIFICADO' ? 'Art. 159.4.f' : ((tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 150.3');
@@ -740,7 +772,11 @@
         if (proc !== 'SUPERSIMPLIFICADO') {
             let espera = 15;
             if (tramitacion==='urgente' && !sara) espera = 8;
-            s.push({ id:'form', name:'Formalización', color:'emerald', art:(tramitacion==='urgente'?'Art. 119 + ':'')+(sara?'Art. 153.3':'Art. 153.2'), getDesc:()=>sara?(tramitacion==='urgente'?'15 días hábiles (periodo suspensivo no reducible, art. 119.2.b.1º)':`15 días hábiles mínimo (periodo suspensivo para recurso especial en materia de contratación)`):`Máx. ${espera} días hábiles desde notificación de adjudicación.`, staticDur:espera, isHabiles:true });
+            if (sara) {
+                s.push({ id:'form', name:'Formalización', color:'emerald', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 153.3', getDesc:(v)=>`Período suspensivo mínimo: ${v} días hábiles. No puede formalizarse antes del día ${v} desde la notificación de adjudicación (plazo para interponer recurso especial en materia de contratación, art. 50 LCSP).${tramitacion==='urgente'?' En urgente, el período suspensivo NO se reduce (art. 119.2.b.1º LCSP).':''}`, slider:{ id:'sl_form', min:15, max:30, val:15, label:'Días hasta formalización', txt:'Mínimo legal 15 días hábiles (art. 153.3 LCSP). Período suspensivo obligatorio para recurso especial (art. 50). No reducible por urgencia. Se puede ampliar si el órgano necesita más tiempo.' }, isHabiles:true });
+            } else {
+                s.push({ id:'form', name:'Formalización', color:'emerald', art:(tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 153.2', getDesc:(v)=>`Plazo máximo para formalizar: ${v} días hábiles desde notificación de adjudicación. No hay mínimo legal; puede realizarse desde el día siguiente. Máximo legal: ${espera} días hábiles.`, slider:{ id:'sl_form', min:1, max:espera, val:espera, label:'Días hasta formalización', txt:`Sin mínimo legal. Máximo ${espera} días hábiles desde la notificación de adjudicación (art. 153.2${tramitacion==='urgente'?' + art. 119.2':''} LCSP). Ajusta según la disponibilidad real de las partes.` }, isHabiles:true });
+            }
         }
 
         return s;
@@ -839,10 +875,42 @@
         } else {
             festEl.classList.add('hidden');
         }
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const t0 = new Date(globalT0); t0.setHours(0,0,0,0);
+        const isFechaInhabil = t0.getDay()===0 || t0.getDay()===6 || getHolidayInfo(t0) !== null;
+        const fechaInhabilEl = document.getElementById('fechaInhabilWarning');
+        if (isFechaInhabil) {
+            const tipoInhabil = (t0.getDay()===0||t0.getDay()===6) ? 'fin de semana' : `festivo (${getHolidayInfo(t0).name})`;
+            document.getElementById('fechaInhabilText').textContent = `La fecha de publicación seleccionada (${formatDate(t0)}) es ${tipoInhabil}. Normalmente los anuncios se publican en días hábiles. Verifica si la fecha es correcta.`;
+            fechaInhabilEl.classList.remove('hidden');
+        } else {
+            fechaInhabilEl.classList.add('hidden');
+        }
+
+        const hitosColores = { gray:'#94a3b8', blue:'#3b82f6', purple:'#a855f7', pink:'#ec4899', teal:'#14b8a6', amber:'#f59e0b', emerald:'#10b981', orange:'#f97316', cyan:'#06b6d4', red:'#ef4444' };
+        const hitosDot = (color) => `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${hitosColores[color]||'#94a3b8'};margin-right:6px;flex-shrink:0;vertical-align:middle;"></span>`;
+        let rows = '';
+        evs.forEach((ev, i) => {
+            const isStart = ev.start.getTime()===ev.end.getTime();
+            const dias = isStart ? '—' : (ev.isHabiles ? `${ev.dur} háb.` : `${Math.round((ev.end-ev.start)/86400000)} nat.`);
+            const isPast = ev.end < today;
+            const isActive = ev.start <= today && ev.end >= today;
+            const rowBg = isActive ? 'background:#f0fdf4;font-weight:600;' : (isPast ? 'color:#94a3b8;' : '');
+            rows += `<tr style="border-bottom:1px solid #f1f5f9;${rowBg}">
+                <td style="padding:6px 12px 6px 0;white-space:nowrap;">${hitosDot(ev.color)}${ev.name}</td>
+                <td style="padding:6px 4px;text-align:center;white-space:nowrap;">${isStart ? formatDate(ev.start) : formatDate(ev.start)}</td>
+                <td style="padding:6px 4px;text-align:center;white-space:nowrap;">${isStart ? '—' : formatDate(ev.end)}</td>
+                <td style="padding:6px 0 6px 4px;text-align:center;">${dias}</td>
+            </tr>`;
+        });
+        document.getElementById('hitosBody').innerHTML = rows;
+        document.getElementById('hitosResumen').classList.remove('hidden');
     }
 
     function renderCalendars(evs) {
         if (!evs.length) return;
+        const todayStr = new Date().toDateString();
         let minDate = new Date(Math.min(...evs.map(e=>e.start.getTime())));
         let maxDate = new Date(Math.max(...evs.map(e=>e.end.getTime())));
         let currMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
@@ -861,6 +929,8 @@
                 let holidayInfo = getHolidayInfo(cellObj); let isFestivo = holidayInfo!==null;
                 let inhabil = dEvs.some(ev => ev.isHabiles&&(isWeekend||isFestivo));
                 let bgColor = (dEvs.length>0&&!inhabil) ? 'bg-slate-50 font-bold border-slate-200' : 'bg-white';
+                const isToday = cellObj.toDateString() === todayStr;
+                const todayClass = isToday ? ' today' : '';
                 let inds = '', tt = `<strong>${formatDate(cellObj)}</strong>`;
                 if (isFestivo) tt += `<br/><span class="text-red-300">Festivo: ${holidayInfo.name} (${holidayInfo.type})</span>`;
                 else if (isWeekend) tt += `<br/><span class="text-amber-300">Fin de semana</span>`;
@@ -873,7 +943,7 @@
                 }
                 if (inhabil) tt += `<br/><span class="text-slate-400">Día inhábil para plazos hábiles</span>`;
                 let holidayMarker = isFestivo ? '<div class="holiday-marker"></div>' : '';
-                calHtml += `<div class="cal-cell ${bgColor}" data-tooltip="${tt.replace(/"/g,'&quot;')}"><span>${d}</span>${inds}${holidayMarker}</div>`;
+                calHtml += `<div class="cal-cell ${bgColor}${todayClass}" data-tooltip="${tt.replace(/"/g,'&quot;')}"><span>${d}</span>${inds}${holidayMarker}</div>`;
             }
             calHtml += `</div></div></div>`;
             currMonth.setMonth(currMonth.getMonth()+1);
@@ -1156,9 +1226,11 @@
             if (ev.staticDur) { if (ev.isHabiles) maxEnd=addHabiles(maxEnd,ev.staticDur); else maxEnd=addDays(maxEnd,ev.staticDur); }
         }
         holidayMap.clear();
+        document.getElementById('calcSpinner').classList.remove('hidden');
         for (let y=globalT0.getFullYear(); y<=maxEnd.getFullYear(); y++) {
             await loadHolidaysForYear(y, ccaa);
         }
+        document.getElementById('calcSpinner').classList.add('hidden');
 
         const clasWarn = checkClasificacion(tipo, valor);
         if (clasWarn) { document.getElementById('clasificacionText').textContent=clasWarn; document.getElementById('clasificacionWarning').classList.remove('hidden'); }
@@ -1191,11 +1263,6 @@
 
         resultsEl.classList.remove('hidden');
         resultsEl.classList.remove('calculating');
-
-        if (!resultsEl.dataset.scrolled) {
-            resultsEl.dataset.scrolled = '1';
-            resultsEl.scrollIntoView({ behavior:'smooth', block:'start' });
-        }
     }
 
     document.getElementById('exportPdfBtn')?.addEventListener('click', async function() {
