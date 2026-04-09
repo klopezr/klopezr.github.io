@@ -95,7 +95,7 @@
     <footer class="text-center py-6 px-4"><a href="https://www.publicaauditores.es/" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-red-600 transition-colors">© 2025 Publica Auditores</a><span class="text-sm text-gray-400 mx-2">|</span><a href="https://www.publicaauditores.es/conozcanos/" target="_blank" rel="noopener noreferrer" class="text-sm text-red-600 hover:text-red-700 transition-colors">Conózcanos</a></footer>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZh9hHxnO1Ge2fhrWHdcRgKSvOnOCy6lD5gG2sDBdfmx_nDmm3ytBQLWpZqKCrd76w/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxDqRJHybylighc1bJogvBjS_q-VScO1YIR6Abd2_X-xlnRWrlBfZYX7jbpDUxLpUHr/exec';
         let submissionData = { nif: '', files: {}, observaciones: '', submissionTimestamp: '' };
         let uploadsInProgress = 0;
         let generatedPdfDoc = null; 
@@ -204,17 +204,17 @@
                             }
 
                             fieldDiv.innerHTML = `
-								${adminFileHtml}
-								<p class="text-sm text-gray-600 mb-2">${field.descripcion}</p>
-    
-								<div id="drop-zone-${field.id}" class="drop-zone mt-2">
-									<p class="text-gray-500">Arrastra y suelta los archivos aquí</p>
-									<p class="text-gray-400 text-sm my-2">o</p>
-									<button type="button" onclick="document.getElementById('${field.id}-input').click()" class="btn mt-2 lg:mt-0">+ Seleccionar Archivo(s)</button>
-									<input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')">
-								</div>
-								<div id="${field.id}-list" class="mt-4"></div>
-							`;
+                                ${adminFileHtml}
+                                <p class="text-sm text-gray-600 mb-2">${field.descripcion}</p>
+
+                                <div id="drop-zone-${field.id}" class="drop-zone mt-2 cursor-pointer" onclick="document.getElementById('${field.id}-input').click()">
+                                    <p class="text-gray-500">Arrastra los archivos aquí o <span class="font-semibold text-red-600 hover:underline">haz clic</span> para seleccionar</p>
+                                    <p class="text-xs text-gray-400 mt-1">Puedes seleccionar múltiples archivos</p>
+                                    <input type="file" id="${field.id}-input" multiple class="hidden" onchange="handleFileSelect(event, '${field.id}')">
+                                </div>
+                                <div id="${field.id}-list" class="mt-4"></div>
+                                `;
+
                             questionsContainer.appendChild(fieldDiv);
 							const dropZone = fieldDiv.querySelector(`#drop-zone-${field.id}`);
 
