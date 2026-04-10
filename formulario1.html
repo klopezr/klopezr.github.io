@@ -3,509 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayudas Rurales</title>
+    <title>Formulario de Documentación – Ayudas Rurales</title>
     <link rel="icon" type="image/png" href="PPS.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        :root { --brand: #166534; --brand-dark: #14532d; --brand-light: #dcfce7; }
         html { scroll-behavior: smooth; }
-        body { background-color: #f9fafb; }
-        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 0.5rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; }
-        .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 0.5rem; overflow: hidden; height: 8px; }
-        .progress-bar { background-color: #15803d; height: 100%; width: 0%; transition: width 0.3s ease-in-out; }
-        .btn { background-color: #ffffff; color: #111827; border: 2px solid #1f2937; font-weight: bold; padding: 0.15rem 1rem; border-radius: 0.5rem; transition: all 0.2s ease-in-out; text-align: center; }
-        .btn:hover:not(:disabled) { background-color: #111827; color: #ffffff; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-delete { background: none; border: none; padding: 0.25rem; color: #9ca3af; visibility: hidden; }
-        .btn-delete:hover:not(:disabled) { color: #15803d; }
-        .btn-cancel { background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; }
-        .btn-cancel:hover { background-color: #bbf7d0; }
-        .et-loader { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(255,255,255,0.3); z-index: 999999; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.01s ease; }
-        .et-loader-img { width: 100px; height: auto; }
-        .loader-hidden { opacity: 0; pointer-events: none; }
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        /* ── Barra de progreso unificada ── */
+        .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; overflow: hidden; height: 7px; }
+        .progress-bar            { background-color: var(--brand); height: 100%; width: 0%; transition: width 0.35s ease-in-out; border-radius: 9999px; }
+
+        /* ── Botones ── */
+        .btn { background-color: #fff; color: #111827; border: 2px solid #1f2937; font-weight: 700; padding: 0.5rem 1.25rem; border-radius: 0.5rem; transition: all 0.2s; text-align: center; cursor: pointer; }
+        .btn:hover:not(:disabled) { background-color: #1f2937; color: #fff; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-brand { background-color: var(--brand); color: #fff; border: 2px solid var(--brand); font-weight: 700; padding: 0.5rem 1.25rem; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
+        .btn-brand:hover:not(:disabled) { background-color: var(--brand-dark); border-color: var(--brand-dark); }
+        .btn-brand:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* ── Subida de archivos ── */
+        .file-item   { display: flex; align-items: center; justify-content: space-between; padding: 0.625rem 0.75rem; border-radius: 0.625rem; background-color: #fff; border: 1px solid #e5e7eb; margin-top: 0.5rem; gap: 0.5rem; }
+        .btn-delete  { background: none; border: none; padding: 0.25rem; color: #9ca3af; visibility: hidden; cursor: pointer; flex-shrink: 0; }
+        .btn-delete:hover:not(:disabled) { color: #dc2626; }
+        .btn-cancel  { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 9999px; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
+        .btn-cancel:hover { background-color: #fca5a5; }
+
+        /* ── Drop zone ── */
+        .drop-zone { border: 2px dashed #d1d5db; border-radius: 0.875rem; padding: 1.25rem 1rem; text-align: center; color: #6b7280; transition: background 0.2s, border-color 0.2s; cursor: pointer; }
+        .drop-zone:hover { border-color: var(--brand); background: #f0fdf4; }
+        .drop-zone.drag-over { background: #dcfce7; border-color: var(--brand); }
+
+        /* ── Campos de texto ── */
+        .text-field { width: 100%; padding: 0.6rem 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.625rem; font-size: 0.875rem; transition: border-color 0.2s; resize: vertical; min-height: 90px; font-family: inherit; }
+        .text-field:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(22,101,52,0.1); }
+        .select-field { width: 100%; padding: 0.6rem 2.25rem 0.6rem 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.625rem; font-size: 0.875rem; background-color: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.2rem; transition: border-color 0.2s; font-family: inherit; }
+        .select-field:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(22,101,52,0.1); }
+
+        /* ── Radio pills ── */
+        .radio-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .radio-pill { position: relative; }
+        .radio-pill input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+        .radio-pill label { display: inline-block; padding: 0.45rem 1.1rem; border-radius: 999px; border: 2px solid #d1d5db; cursor: pointer; font-size: 0.875rem; transition: all 0.15s; background: white; user-select: none; }
+        .radio-pill input[type="radio"]:checked + label { background-color: var(--brand); border-color: var(--brand); color: white; font-weight: 600; }
+        .radio-pill label:hover { border-color: var(--brand); background: #f0fdf4; }
+        .radio-pill input[type="radio"]:checked + label:hover { background-color: var(--brand-dark); }
+
+        /* ── Badges ── */
+        .field-tipo-badge { display: inline-block; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.3rem; vertical-align: middle; }
+        .badge-texto     { background: #f3e8ff; color: #7e22ce; }
+        .badge-seleccion { background: #dcfce7; color: #14532d; }
+
+        /* ── Loader ── */
+        .et-loader { position: fixed; inset: 0; background: rgba(255,255,255,0.5); z-index: 999999; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .et-loader-img { width: 90px; height: auto; }
+        .loader-hidden { display: none; }
+
+        /* ── Acordeón ── */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
-        details[open] > summary svg { transform: rotate(180deg); }
-        summary svg { transition: transform 0.2s; }
-        .drop-zone { border: 2px dashed #e5e7eb; border-radius: 0.95rem; padding: 1rem; text-align: center; color: #6b7280; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; }
-        .drop-zone.drag-over { background-color: #EFF6FF; border-color: #2563eb; }
-        .text-field { width: 100%; padding: 0.625rem 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; transition: border-color 0.2s; resize: vertical; min-height: 90px; }
-        .text-field:focus { outline: none; border-color: #15803d; }
-        .select-field { width: 100%; padding: 0.625rem 0.875rem; border: 2px solid #e5e7eb; border-radius: 0.75rem; font-size: 0.875rem; background-color: #fff; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25rem; transition: border-color 0.2s; }
-        .select-field:focus { outline: none; border-color: #15803d; }
-        .radio-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-        .radio-pill input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
-        .radio-pill label { display: inline-block; padding: 0.4rem 1rem; border-radius: 999px; border: 2px solid #e5e7eb; cursor: pointer; font-size: 0.875rem; transition: all 0.15s; background: white; }
-        .radio-pill input[type="radio"]:checked + label { background-color: #15803d; border-color: #15803d; color: white; font-weight: 600; }
-        .radio-pill label:hover { border-color: #15803d; }
-        .field-tipo-badge { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 0.25rem; vertical-align: middle; }
-        .badge-texto { background: #f3e8ff; color: #7e22ce; }
-        .badge-seleccion { background: #ecfdf5; color: #065f46; }
+        details[open] > summary .chevron { transform: rotate(180deg); }
+        .chevron { transition: transform 0.22s; flex-shrink: 0; }
+
+        /* ── Area cards ── */
+        .area-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.875rem; margin-bottom: 1rem; overflow: hidden; }
+        .area-summary { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1rem; cursor: pointer; font-weight: 700; font-size: 1rem; color: #1f2937; gap: 0.5rem; }
+        .area-summary:hover { background: #f0fdf4; }
+        .area-body { padding: 0 1rem 1rem; }
+        .subarea-block { margin-top: 0.75rem; padding-left: 0.875rem; border-left: 3px solid var(--brand-light); }
+        .subarea-title { font-weight: 600; font-size: 0.925rem; color: #374151; margin-bottom: 0.5rem; }
+
+        /* ── Step indicator ── */
+        .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--brand); color: white; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+
+        /* ── Mobile tweaks ── */
+        @media (max-width: 640px) {
+            .file-item { flex-wrap: wrap; }
+            .file-item > div:first-child { width: 100%; }
+            .btn, .btn-brand { padding: 0.625rem 1rem; font-size: 0.875rem; }
+        }
     </style>
 </head>
-<body class="font-sans">
+<body>
 
-    <div id="preloader" class="et-loader loader-hidden"><img class="et-loader-img" src="PPT.png" alt="loader"></div>
+<div id="preloader" class="et-loader loader-hidden">
+    <img class="et-loader-img" src="PPT.png" alt="Cargando...">
+</div>
 
-    <header class="bg-green-700 shadow-md w-full">
-        <div class="container mx-auto max-w-7xl px-4 lg:px-8 flex justify-center items-center relative py-2">
-            <div class="absolute left-4"><img src="PP.png" alt="Logo" class="h-10" onerror="this.style.display='none'"></div>
-            <h1 class="text-lg sm:text-2xl font-bold text-white text-center w-full lg:pl-28 sm:pl-0">Formulario de Auditoría</h1>
+<!-- HEADER -->
+<header style="background-color: var(--brand);" class="shadow-md w-full">
+    <div class="container mx-auto max-w-5xl px-4 py-3 flex items-center justify-between gap-4">
+        <img src="PP.png" alt="Logo Ayudas Rurales" class="h-10 flex-shrink-0" onerror="this.style.display='none'">
+        <div class="text-center flex-grow">
+            <h1 class="text-base sm:text-xl font-bold text-white leading-tight">Portal de Documentación</h1>
+            <p class="text-green-200 text-xs hidden sm:block">Ayudas Rurales · Entrega segura de documentos</p>
         </div>
-    </header>
-
-    <div class="container mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 lg:flex lg:gap-8">
-        <aside class="hidden lg:block lg:w-1/5">
-            <div class="sticky top-8 bg-gray-100 p-6 rounded-lg border">
-                <h3 class="font-bold text-lg text-gray-800">Guía Rápida</h3>
-                <p class="text-sm text-gray-600 mt-2 border-t pt-2">
-                    <strong class="block">Proceso de Carga y Gestión</strong>
-                    El sistema soporta la selección múltiple de archivos por categoría. Es posible abortar una transferencia en curso mediante el botón "Cancelar". Una vez finalizada la carga, cada archivo puede ser eliminado individualmente mediante el icono (X).
-                </p>
-                <p class="text-sm text-gray-600 mt-4 border-t pt-2">
-                    <strong class="block">Integridad y Trazabilidad</strong>
-                    El justificante final en formato PDF incluye la marca de tiempo del envío, documentación enviada y la firma digital única (hash SHA-256) por cada archivo, garantizando la integridad de los datos remitidos.
-                </p>
-            </div>
-        </aside>
-
-        <main class="lg:w-4/5">
-            <div class="lg:hidden mb-6">
-                <button id="toggle-guide-btn" onclick="toggleGuide()" class="w-full font-semibold text-gray-700 bg-gray-200 p-3 rounded-lg flex justify-between items-center">
-                    <div class="flex-grow text-center"><span>Mostrar Guía</span></div>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-                <div id="mobile-guide" class="hidden bg-gray-100 p-4 rounded-b-lg border-x border-b">
-                    <p class="text-sm text-gray-600 mt-2 border-t pt-2">
-                        <strong class="block">Proceso de Carga y Gestión</strong>
-                        El sistema soporta la selección múltiple de archivos por categoría. Es posible abortar una transferencia en curso mediante el botón "Cancelar". Una vez finalizada la carga, cada archivo puede ser eliminado individualmente mediante el icono (X).
-                    </p>
-                    <p class="text-sm text-gray-600 mt-4 border-t pt-2">
-                        <strong class="block">Integridad y Trazabilidad</strong>
-                        El justificante final en formato PDF incluye la marca de tiempo del envío, documentación enviada y la firma digital única (hash SHA-256) por cada archivo.
-                    </p>
-                </div>
-            </div>
-
-            <p class="text-center text-gray-600 mb-8"><strong>Ayudas Rurales</strong> es una firma de servicios profesionales de auditoría que brinda una oferta de servicios basados en la calidad, la experiencia y la continua colaboración con el cliente que, unido a un profundo conocimiento sectorial de nuestra provincia, hace posible generar un valor añadido a las organizaciones a las que prestamos nuestros servicios.</p>
-
-            <div class="bg-white p-8 rounded-2xl shadow-lg border">
-                <div id="form-section">
-                    <div class="mb-6">
-                        <label for="nif" class="block text-sm font-medium text-gray-700 mb-1">NIF/CIF (Obligatorio)</label>
-                        <p class="text-xs text-gray-400 mb-2">Introduzca el NIF/CIF y pulse "Cargar Cuestionario" para continuar.</p>
-                        <div class="flex items-center gap-2">
-                            <input type="text" id="nif" name="nif" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-700 focus:border-green-700" placeholder="Ej: 12345678A" oninput="document.getElementById('load-form-button').disabled = this.value.trim() === ''">
-                            <button id="load-form-button" onclick="loadForm()" class="btn" disabled>Cargar Cuestionario</button>
-                        </div>
-                        <p id="nif-error" class="text-green-700 text-xs mt-1 hidden">El campo NIF es obligatorio.</p>
-                    </div>
-
-                    <div id="dynamic-form-content" class="hidden">
-                        <div id="dynamic-fields-container" class="space-y-4"></div>
-                        <div class="mb-8 mt-8">
-                            <label for="observaciones" class="block text-sm font-medium text-gray-700">Observaciones/comentario (Opcional)</label>
-                            <p class="text-xs text-gray-400 mb-2">Añada cualquier información adicional que considere relevante.</p>
-                            <textarea id="observaciones" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-700 focus:border-green-700"></textarea>
-                        </div>
-                        <div class="border-t pt-6">
-                            <div class="mb-4">
-                                <div class="flex items-start">
-                                    <input type="checkbox" id="privacy-policy" onchange="updateSummaryButtonState()" class="h-4 w-4 text-green-700 border-gray-300 rounded focus:ring-green-700 mt-1">
-                                    <label for="privacy-policy" class="ml-2 block text-sm text-gray-900">He leído y acepto la <a href="https://www.ayudasrurales.es/politica-de-privacidad/" target="_blank" rel="noopener noreferrer" class="font-medium text-green-700 hover:underline">política de privacidad</a>.</label>
-                                </div>
-                            </div>
-                            <button id="summary-button" onclick="showSummary()" class="w-full btn" disabled>Ver Resumen y Enviar</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="summary-section" class="hidden mt-8 pt-8 border-t-2 border-dashed">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Resumen de la Documentación a Enviar</h2>
-                    <div id="summary-content" class="space-y-4"></div>
-                    <div class="flex flex-col sm:flex-row gap-4 mt-8 pt-6">
-                        <button id="final-send-button" onclick="finalizeSubmission()" class="w-full btn flex items-center justify-center"><span id="send-button-text">Confirmar y Enviar</span></button>
-                    </div>
-                    <div id="final-progress-container" class="w-full hidden mt-4">
-                        <p class="text-sm text-center text-gray-600 mb-2">Procesando envío y generando justificante...</p>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5"><div id="final-progress-bar" class="bg-green-700 h-2.5 rounded-full" style="width: 0%; transition: width 1.5s ease-out;"></div></div>
-                    </div>
-                </div>
-
-                <div id="confirmation-section" class="hidden text-center mt-8 pt-8 border-t-2 border-dashed">
-                    <svg class="mx-auto h-16 w-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <h2 class="text-2xl font-bold text-green-600 mt-4">¡Envío Completado!</h2>
-                    <p class="text-gray-500 mt-2">Su solicitud ha sido recibida y el justificante se ha generado correctamente.</p>
-                    <div id="confirmation-log" class="text-left bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mt-6"></div>
-                    <div class="mt-8"><button id="download-receipt-button" onclick="downloadReceipt()" class="w-full btn" disabled>Descargar Justificante (PDF)</button></div>
-                </div>
-            </div>
-        </main>
+        <a href="https://www.ayudasrurales.es" target="_blank" class="hidden sm:flex items-center gap-1 text-green-200 hover:text-white text-xs transition-colors flex-shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            ayudasrurales.es
+        </a>
     </div>
+</header>
 
-    <footer class="text-center py-6 px-4">
-        <a href="https://www.ayudasrurales.es/" target="_blank" rel="noopener noreferrer" class="text-sm text-gray-500 hover:text-green-700 transition-colors">© 2025 Ayudas Rurales</a>
-        <span class="text-sm text-gray-400 mx-2">|</span>
-        <a href="https://www.ayudasrurales.es/conozcanos/" target="_blank" rel="noopener noreferrer" class="text-sm text-green-700 hover:text-green-800 transition-colors">Conózcanos</a>
-    </footer>
+<div class="container mx-auto max-w-5xl px-4 py-6 lg:py-8 lg:flex lg:gap-8">
 
-    <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyG9upys8XvAitPe36CPnPQf5y-hcerAD8K_03QbCD-nFxrGWZIRkGVSiPD8BWdFVur/exec';
-        let submissionData = { nif: '', files: {}, answers: {}, observaciones: '', submissionTimestamp: '' };
-        let uploadsInProgress = 0;
-        let generatedPdfDoc = null;
-        let idToTitleMap = {};
+    <!-- SIDEBAR -->
+    <aside class="hidden lg:block lg:w-64 flex-shrink-0">
+        <div class="sticky top-6 space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Cómo funciona
+                </h3>
+                <ol class="space-y-3 text-sm text-gray-600">
+                    <li class="flex gap-2"><span class="step-badge mt-0.5">1</span><span>Introduzca su <strong>NIF/CIF</strong> y pulse "Cargar solicitud" para ver los documentos pendientes.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5">2</span><span>Para cada apartado, adjunte el archivo solicitado o complete la respuesta indicada.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5">3</span><span>Acepte la política de privacidad, revise el resumen y confirme el envío.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5">4</span><span>Descargue el <strong>justificante PDF</strong> con el registro de lo enviado.</span></li>
+                </ol>
+            </div>
+            <div class="bg-green-50 rounded-xl border border-green-200 p-4 text-xs text-green-800">
+                <p class="font-semibold mb-1">🔒 Envío seguro</p>
+                <p>Cada archivo recibe una firma digital (SHA-256) que garantiza su integridad. El justificante queda registrado con fecha y hora oficiales.</p>
+            </div>
+        </div>
+    </aside>
 
-        function toggleGuide() {
-            const guide = document.getElementById('mobile-guide');
-            const btn = document.getElementById('toggle-guide-btn');
-            const isHidden = guide.classList.toggle('hidden');
-            btn.querySelector('span').textContent = isHidden ? 'Mostrar Guía' : 'Ocultar Guía';
-            btn.querySelector('svg').style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-        }
+    <!-- MAIN -->
+    <main class="flex-grow min-w-0">
 
-        function loadForm() {
-            const nif = document.getElementById('nif').value.trim();
-            if (!nif) { document.getElementById('nif-error').classList.remove('hidden'); return; }
-            document.getElementById('nif-error').classList.add('hidden');
-            const loadButton = document.getElementById('load-form-button');
-            loadButton.textContent = 'Cargando...';
-            loadButton.disabled = true;
-            document.getElementById('preloader').classList.remove('loader-hidden');
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'getFormConfigForNif', nif }) })
-                .then(res => res.json())
-                .then(response => {
-                    if (response.status === 'success') {
-                        if (Object.keys(response.data).length === 0) {
-                            alert("No hay requerimientos pendientes para este NIF o el NIF no está registrado. Por favor, contacte con el administrador.");
-                            loadButton.textContent = 'Cargar Cuestionario';
-                            loadButton.disabled = false;
-                            return;
+        <!-- Guía móvil -->
+        <div class="lg:hidden mb-5">
+            <button id="toggle-guide-btn" onclick="toggleGuide()" class="w-full text-sm font-semibold text-gray-700 bg-white border border-gray-200 p-3 rounded-xl flex justify-between items-center shadow-sm">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span id="guide-label">Ver instrucciones</span>
+                </span>
+                <svg class="chevron w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div id="mobile-guide" class="hidden bg-white border border-t-0 border-gray-200 rounded-b-xl px-4 pb-4 text-sm text-gray-600 shadow-sm">
+                <ol class="space-y-2 mt-3">
+                    <li class="flex gap-2"><span class="step-badge mt-0.5 text-xs">1</span><span>Introduzca su NIF/CIF y cargue su solicitud.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5 text-xs">2</span><span>Adjunte los documentos o complete las respuestas de cada apartado.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5 text-xs">3</span><span>Revise el resumen y confirme el envío.</span></li>
+                    <li class="flex gap-2"><span class="step-badge mt-0.5 text-xs">4</span><span>Descargue el justificante PDF como comprobante.</span></li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Intro -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-5">
+            <p class="text-sm text-gray-600 leading-relaxed">
+                Bienvenido al portal de entrega de documentación de <strong>Ayudas Rurales</strong>.
+                A través de este formulario podrá remitir de forma segura la documentación requerida para tramitar su expediente.
+                Si tiene cualquier duda, contacte con nosotros en
+                <a href="https://www.ayudasrurales.es" target="_blank" class="font-medium hover:underline" style="color:var(--brand)">ayudasrurales.es</a>.
+            </p>
+        </div>
+
+        <!-- FORMULARIO -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 sm:p-7">
+            <div id="form-section">
+
+                <!-- NIF -->
+                <div class="mb-6">
+                    <label for="nif" class="block text-sm font-semibold text-gray-700 mb-1">NIF / CIF del solicitante <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-400 mb-2">Introduzca el NIF o CIF con el que está registrado en el sistema y pulse el botón para cargar su solicitud.</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="nif" name="nif" autocomplete="off" autocapitalize="characters"
+                            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-800 transition-colors"
+                            placeholder="Ej: 12345678A"
+                            oninput="document.getElementById('load-form-button').disabled = this.value.trim() === ''">
+                        <button id="load-form-button" onclick="loadForm()" class="btn-brand sm:whitespace-nowrap" disabled>
+                            Cargar solicitud
+                        </button>
+                    </div>
+                    <p id="nif-error" class="text-red-500 text-xs mt-1 hidden">El campo NIF/CIF es obligatorio.</p>
+                </div>
+
+                <!-- Campos dinámicos -->
+                <div id="dynamic-form-content" class="hidden">
+                    <div class="mb-2 pb-4 border-b border-gray-100">
+                        <p class="text-sm font-semibold text-gray-700">Documentación requerida para su expediente</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Adjunte cada documento en su apartado correspondiente. Los campos marcados como opcionales pueden dejarse en blanco.</p>
+                    </div>
+
+                    <div id="dynamic-fields-container" class="mt-4 space-y-1"></div>
+
+                    <!-- Observaciones -->
+                    <div class="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <label for="observaciones" class="block text-sm font-semibold text-gray-700 mb-1">Comentarios adicionales <span class="text-gray-400 font-normal">(opcional)</span></label>
+                        <p class="text-xs text-gray-400 mb-2">Si necesita aclarar algún aspecto de la documentación enviada o tiene alguna observación para el equipo gestor, indíquela aquí.</p>
+                        <textarea id="observaciones" rows="3"
+                            class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm focus:outline-none focus:border-green-800 transition-colors resize-none font-sans"
+                            placeholder="Ej: El modelo 190 adjunto corresponde al ejercicio 2023 ya que el de 2024 aún no está disponible..."></textarea>
+                    </div>
+
+                    <!-- Privacidad + envío -->
+                    <div class="mt-6 pt-5 border-t border-gray-100 space-y-4">
+                        <label class="flex items-start gap-3 cursor-pointer group">
+                            <input type="checkbox" id="privacy-policy" onchange="updateSummaryButtonState()"
+                                class="h-4 w-4 mt-0.5 rounded border-gray-300 flex-shrink-0 cursor-pointer accent-green-800">
+                            <span class="text-sm text-gray-700">
+                                He leído y acepto la
+                                <a href="https://www.ayudasrurales.es/politica-de-privacidad/" target="_blank" rel="noopener noreferrer"
+                                    class="font-semibold hover:underline" style="color:var(--brand)">política de privacidad</a>
+                                de Ayudas Rurales.
+                            </span>
+                        </label>
+                        <button id="summary-button" onclick="showSummary()" class="btn-brand w-full py-3 text-base" disabled>
+                            Revisar y enviar documentación →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESUMEN -->
+            <div id="summary-section" class="hidden mt-6 pt-6 border-t-2 border-dashed border-gray-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-5 h-5 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                    <h2 class="text-lg font-bold text-gray-800">Resumen de la documentación a enviar</h2>
+                </div>
+                <p class="text-xs text-gray-400 mb-4">Revise que todo es correcto antes de confirmar. Una vez enviado no podrá modificar el envío.</p>
+                <div id="summary-content" class="space-y-3 text-sm"></div>
+                <div class="mt-6 space-y-3">
+                    <button id="final-send-button" onclick="finalizeSubmission()" class="btn-brand w-full py-3 text-base">
+                        Confirmar y enviar documentación
+                    </button>
+                    <div id="final-progress-container" class="hidden">
+                        <p class="text-xs text-center text-gray-500 mb-2">Procesando el envío y generando justificante, por favor espere…</p>
+                        <div class="progress-bar-container">
+                            <div id="final-progress-bar" class="progress-bar" style="width:0%;transition:width 1.5s ease-out;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIRMACIÓN -->
+            <div id="confirmation-section" class="hidden mt-6 pt-6 border-t-2 border-dashed border-gray-200 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+                    <svg class="w-9 h-9 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h2 class="text-xl font-bold text-green-800 mb-2">¡Documentación enviada correctamente!</h2>
+                <p class="text-sm text-gray-500 mb-6">Su documentación ha sido recibida. A continuación puede descargar el justificante como comprobante del envío.</p>
+                <div id="confirmation-log" class="text-left bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-700 mb-6 space-y-1"></div>
+                <button id="download-receipt-button" onclick="downloadReceipt()" class="btn-brand w-full py-3 text-base" disabled>
+                    ⬇ Descargar justificante (PDF)
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- FOOTER -->
+<footer class="text-center py-6 px-4 text-xs text-gray-400 border-t border-gray-200 mt-4">
+    <a href="https://www.ayudasrurales.es/" target="_blank" rel="noopener noreferrer" class="hover:text-green-700 transition-colors">© 2025 Ayudas Rurales</a>
+    <span class="mx-2">·</span>
+    <a href="https://www.ayudasrurales.es/politica-de-privacidad/" target="_blank" rel="noopener noreferrer" class="hover:text-green-700 transition-colors">Política de privacidad</a>
+    <span class="mx-2">·</span>
+    <a href="https://www.ayudasrurales.es/contacto/" target="_blank" rel="noopener noreferrer" class="hover:text-green-700 transition-colors">Contacto</a>
+</footer>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyG9upys8XvAitPe36CPnPQf5y-hcerAD8K_03QbCD-nFxrGWZIRkGVSiPD8BWdFVur/exec';
+    let submissionData = { nif: '', files: {}, answers: {}, observaciones: '', submissionTimestamp: '' };
+    let uploadsInProgress = 0;
+    let generatedPdfDoc = null;
+    let idToTitleMap = {};
+
+    function toggleGuide() {
+        const guide = document.getElementById('mobile-guide');
+        const label = document.getElementById('guide-label');
+        const btn   = document.getElementById('toggle-guide-btn');
+        const isHidden = guide.classList.toggle('hidden');
+        label.textContent = isHidden ? 'Ver instrucciones' : 'Ocultar instrucciones';
+        btn.querySelector('.chevron').style.transform = isHidden ? '' : 'rotate(180deg)';
+    }
+
+    function loadForm() {
+        const nif = document.getElementById('nif').value.trim().toUpperCase();
+        if (!nif) { document.getElementById('nif-error').classList.remove('hidden'); return; }
+        document.getElementById('nif-error').classList.add('hidden');
+        document.getElementById('nif').value = nif;
+        const loadButton = document.getElementById('load-form-button');
+        loadButton.textContent = 'Cargando…';
+        loadButton.disabled = true;
+        document.getElementById('preloader').classList.remove('loader-hidden');
+        fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'getFormConfigForNif', nif }) })
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === 'success') {
+                    if (Object.keys(response.data).length === 0) {
+                        alert('No se encontraron requerimientos pendientes para este NIF/CIF. Si cree que es un error, contacte con Ayudas Rurales.');
+                        loadButton.textContent = 'Cargar solicitud';
+                        loadButton.disabled = false;
+                        return;
+                    }
+                    buildFormFields(response.data);
+                    document.getElementById('dynamic-form-content').classList.remove('hidden');
+                    document.getElementById('nif').disabled = true;
+                    loadButton.style.display = 'none';
+                } else { throw new Error(response.message); }
+            }).catch(err => {
+                alert('Error al conectar con el servidor: ' + err.message);
+                loadButton.textContent = 'Cargar solicitud';
+                loadButton.disabled = false;
+            }).finally(() => { document.getElementById('preloader').classList.add('loader-hidden'); });
+    }
+
+    function buildFormFields(config) {
+        const container = document.getElementById('dynamic-fields-container');
+        container.innerHTML = '';
+        submissionData.files = {};
+        submissionData.answers = {};
+        submissionData.clarifications = {};
+        idToTitleMap = {};
+
+        for (const areaName in config) {
+            const areaCard = document.createElement('details');
+            areaCard.className = 'area-card';
+            areaCard.open = true;
+
+            const areaSummary = document.createElement('summary');
+            areaSummary.className = 'area-summary';
+            areaSummary.innerHTML =
+                '<span class="flex items-center gap-2">' +
+                '<svg class="w-4 h-4 flex-shrink-0" style="color:var(--brand)" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>' +
+                areaName + '</span>' +
+                '<svg class="chevron w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>';
+            areaCard.appendChild(areaSummary);
+
+            const areaBody = document.createElement('div');
+            areaBody.className = 'area-body';
+
+            for (const subareaName in config[areaName]) {
+                const subareaBlock = document.createElement('div');
+                subareaBlock.className = 'subarea-block';
+
+                const subareaTitle = document.createElement('p');
+                subareaTitle.className = 'subarea-title';
+                subareaTitle.textContent = subareaName;
+                subareaBlock.appendChild(subareaTitle);
+
+                const questions = config[areaName][subareaName];
+                if (Array.isArray(questions)) {
+                    questions.forEach(field => {
+                        idToTitleMap[field.id] = { area: areaName, subarea: subareaName, titulo: field.titulo };
+                        const tipo = field.tipo || 'archivo';
+                        const fieldDiv = document.createElement('div');
+                        fieldDiv.className = 'mb-5';
+
+                        // Archivos de ayuda del administrador
+                        let adminFileHtml = '';
+                        if (field.adminFile && Array.isArray(field.adminFile) && field.adminFile.length > 0) {
+                            const links = field.adminFile.map(f =>
+                                '<div class="flex items-center justify-between bg-white p-2.5 rounded-lg mt-2 border">' +
+                                '<span class="text-gray-800 text-sm truncate pr-3">' + f.name + '</span>' +
+                                '<a href="' + f.url + '" target="_blank" class="btn-brand text-xs py-1 px-3 rounded-lg flex-shrink-0" style="text-decoration:none">Descargar</a>' +
+                                '</div>').join('');
+                            adminFileHtml = '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">' +
+                                '<p class="text-xs font-semibold text-blue-700 mb-1">📄 Documento de referencia proporcionado:</p>' + links + '</div>';
                         }
-                        buildFormFields(response.data);
-                        document.getElementById('dynamic-form-content').classList.remove('hidden');
-                        document.getElementById('nif').disabled = true;
-                        loadButton.classList.add('hidden');
-                    } else { throw new Error(response.message); }
-                }).catch(err => {
-                    alert('Error al cargar la configuración: ' + err.message);
-                    loadButton.textContent = 'Cargar Cuestionario';
-                    loadButton.disabled = false;
-                }).finally(() => { document.getElementById('preloader').classList.add('loader-hidden'); });
-        }
 
-        function buildFormFields(config) {
-            const container = document.getElementById('dynamic-fields-container');
-            container.innerHTML = '';
-            submissionData.files = {};
-            submissionData.answers = {};
-            idToTitleMap = {};
+                        // Badge tipo
+                        const tipoBadge = tipo === 'texto'    ? '<span class="field-tipo-badge badge-texto">✏️ Texto</span>'
+                                        : tipo === 'seleccion' ? '<span class="field-tipo-badge badge-seleccion">☑️ Selección</span>'
+                                        : '';
 
-            for (const areaName in config) {
-                const areaDetails = document.createElement('details');
-                areaDetails.className = 'bg-gray-50 rounded-lg p-4';
-                areaDetails.open = true;
-                areaDetails.innerHTML = '<summary class="font-bold text-lg cursor-pointer flex items-center justify-between"><span>' + areaName + '</span><svg class="w-5 h-5 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></summary>';
-                const areaContent = document.createElement('div');
-                areaContent.className = 'mt-2 pt-2 border-t border-gray-200';
+                        // Input según tipo
+                        let inputHtml = '';
+                        if (tipo === 'texto') {
+                            submissionData.answers[field.id] = '';
+                            inputHtml = '<div class="mt-2"><textarea id="answer-' + field.id + '" class="text-field" rows="3" placeholder="Escriba su respuesta aquí…" oninput="handleAnswerInput(\'' + field.id + '\', this.value)"></textarea></div>';
 
-                for (const subareaName in config[areaName]) {
-                    const subareaDetails = document.createElement('details');
-                    subareaDetails.className = 'mt-4 ml-4 pl-4 border-l-2 border-gray-200';
-                    subareaDetails.open = true;
-                    subareaDetails.innerHTML = '<summary class="font-semibold text-md cursor-pointer flex items-center justify-between"><span>' + subareaName + '</span><svg class="w-4 h-4 ml-2 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></summary>';
-                    const questionsContainer = document.createElement('div');
-                    questionsContainer.className = 'mt-2 pl-2';
-
-                    const questions = config[areaName][subareaName];
-                    if (Array.isArray(questions)) {
-                        questions.forEach(field => {
-                            idToTitleMap[field.id] = { area: areaName, subarea: subareaName, titulo: field.titulo };
-                            const tipo = field.tipo || 'archivo';
-                            const fieldDiv = document.createElement('div');
-                            fieldDiv.className = 'mb-6';
-
-                            let adminFileHtml = '';
-                            if (field.adminFile && Array.isArray(field.adminFile) && field.adminFile.length > 0) {
-                                const links = field.adminFile.map(f => '<div class="flex items-center justify-between bg-white p-2 rounded-md mt-2 shadow-sm border"><span class="text-gray-800 font-medium truncate pr-2">' + f.name + '</span><a href="' + f.url + '" target="_blank" class="bg-green-700 text-white font-bold py-1 px-4 rounded hover:bg-green-800 flex-shrink-0 text-sm" style="text-decoration:none">Descargar</a></div>').join('');
-                                adminFileHtml = '<div class="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3"><p class="text-sm font-medium text-blue-800">Documento(s) de ayuda proporcionado(s):</p>' + links + '</div>';
-                            }
-
-                            let inputHtml = '';
-                            if (tipo === 'texto') {
-                                submissionData.answers[field.id] = '';
-                                inputHtml = '<div class="mt-2"><textarea id="answer-' + field.id + '" class="text-field" placeholder="Escriba su respuesta aquí..." oninput="handleAnswerInput(\'' + field.id + '\', this.value)"></textarea></div>';
-                            } else if (tipo === 'seleccion') {
-                                submissionData.answers[field.id] = '';
-                                submissionData.clarifications = submissionData.clarifications || {};
-                                submissionData.clarifications[field.id] = '';
-                                const opciones = field.opciones ? field.opciones.split(',').map(o => o.trim()).filter(Boolean) : [];
-                                const clarHtml = '<div class="mt-3"><label class="block text-xs font-medium text-gray-500 mb-1">Aclaración adicional <span class="font-normal">(opcional)</span></label><textarea id="clar-' + field.id + '" class="text-field" style="min-height:60px;font-size:0.8rem;" placeholder="Si desea añadir algún comentario sobre su respuesta..." oninput="handleClarificationInput(\'' + field.id + '\', this.value)"></textarea></div>';
-                                if (opciones.length <= 4) {
-                                    const radios = opciones.map((op, idx) => '<span class="radio-pill"><input type="radio" name="sel-' + field.id + '" id="radio-' + field.id + '-' + idx + '" value="' + op + '" onchange="handleAnswerInput(\'' + field.id + '\', this.value)"><label for="radio-' + field.id + '-' + idx + '">' + op + '</label></span>').join('');
-                                    inputHtml = '<div class="mt-2"><div class="radio-group">' + radios + '</div>' + clarHtml + '</div>';
-                                } else {
-                                    const options = opciones.map(op => '<option value="' + op + '">' + op + '</option>').join('');
-                                    inputHtml = '<div class="mt-2"><select id="answer-' + field.id + '" class="select-field" onchange="handleAnswerInput(\'' + field.id + '\', this.value)"><option value="">-- Seleccione una opción --</option>' + options + '</select>' + clarHtml + '</div>';
-                                }
+                        } else if (tipo === 'seleccion') {
+                            submissionData.answers[field.id] = '';
+                            submissionData.clarifications[field.id] = '';
+                            const opciones = field.opciones ? field.opciones.split(',').map(o => o.trim()).filter(Boolean) : [];
+                            const clarHtml = '<div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">' +
+                                '<label class="block text-xs font-semibold text-gray-500 mb-1.5">Aclaración adicional <span class="font-normal text-gray-400">(opcional)</span></label>' +
+                                '<textarea id="clar-' + field.id + '" class="text-field" style="min-height:55px;font-size:0.8rem;" ' +
+                                'placeholder="Si desea añadir algún comentario o matización sobre su respuesta…" ' +
+                                'oninput="handleClarificationInput(\'' + field.id + '\', this.value)"></textarea></div>';
+                            if (opciones.length <= 4) {
+                                const radios = opciones.map((op, idx) =>
+                                    '<span class="radio-pill">' +
+                                    '<input type="radio" name="sel-' + field.id + '" id="radio-' + field.id + '-' + idx + '" value="' + op + '" onchange="handleAnswerInput(\'' + field.id + '\', this.value)">' +
+                                    '<label for="radio-' + field.id + '-' + idx + '">' + op + '</label></span>').join('');
+                                inputHtml = '<div class="mt-2"><div class="radio-group">' + radios + '</div>' + clarHtml + '</div>';
                             } else {
-                                submissionData.files[field.id] = [];
-                                inputHtml = '<div id="drop-zone-' + field.id + '" class="drop-zone mt-2 cursor-pointer" onclick="document.getElementById(\'' + field.id + '-input\').click()"><p class="text-gray-500">Arrastra los archivos aquí o <span class="font-semibold text-green-700 hover:underline">haz clic</span> para seleccionar</p><p class="text-xs text-gray-400 mt-1">Puedes seleccionar múltiples archivos</p><input type="file" id="' + field.id + '-input" multiple class="hidden" onchange="handleFileSelect(event, \'' + field.id + '\')"></div><div id="' + field.id + '-list" class="mt-4"></div>';
+                                const options = opciones.map(op => '<option value="' + op + '">' + op + '</option>').join('');
+                                inputHtml = '<div class="mt-2">' +
+                                    '<select id="answer-' + field.id + '" class="select-field" onchange="handleAnswerInput(\'' + field.id + '\', this.value)">' +
+                                    '<option value="">-- Seleccione una opción --</option>' + options + '</select>' + clarHtml + '</div>';
                             }
 
-                            const tipoBadge = tipo === 'texto' ? '<span class="field-tipo-badge badge-texto">✏️ Texto</span>' : tipo === 'seleccion' ? '<span class="field-tipo-badge badge-seleccion">☑️ Selección</span>' : '';
-                            fieldDiv.innerHTML = adminFileHtml + '<p class="text-sm text-gray-600 mb-2">' + field.descripcion + tipoBadge + '</p>' + inputHtml;
-                            questionsContainer.appendChild(fieldDiv);
+                        } else {
+                            // ARCHIVO — lógica de subida intacta
+                            submissionData.files[field.id] = [];
+                            inputHtml =
+                                '<div id="drop-zone-' + field.id + '" class="drop-zone mt-2" onclick="document.getElementById(\'' + field.id + '-input\').click()">' +
+                                '<svg class="mx-auto w-7 h-7 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>' +
+                                '<p class="text-sm text-gray-500">Arrastra los archivos aquí o <span class="font-semibold" style="color:var(--brand)">haz clic para seleccionar</span></p>' +
+                                '<p class="text-xs text-gray-400 mt-1">Puede adjuntar varios archivos a la vez</p>' +
+                                '<input type="file" id="' + field.id + '-input" multiple class="hidden" onchange="handleFileSelect(event, \'' + field.id + '\')"></div>' +
+                                '<div id="' + field.id + '-list" class="mt-3 space-y-1"></div>';
+                        }
 
-                            if (tipo === 'archivo') {
-                                const dropZone = fieldDiv.querySelector('#drop-zone-' + field.id);
-                                if (dropZone) {
-                                    ['dragenter','dragover','dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, false));
-                                    ['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.add('drag-over'), false));
-                                    ['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'), false));
-                                    dropZone.addEventListener('drop', e => { if (e.dataTransfer.files.length) Array.from(e.dataTransfer.files).forEach(f => uploadFileToTemp(f, field.id)); }, false);
-                                }
+                        fieldDiv.innerHTML = adminFileHtml +
+                            '<p class="text-sm text-gray-700">' + field.descripcion + tipoBadge + '</p>' +
+                            inputHtml;
+                        subareaBlock.appendChild(fieldDiv);
+
+                        // Drag & drop listeners solo para tipo archivo
+                        if (tipo === 'archivo') {
+                            const dropZone = fieldDiv.querySelector('#drop-zone-' + field.id);
+                            if (dropZone) {
+                                ['dragenter','dragover','dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, false));
+                                ['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.add('drag-over'), false));
+                                ['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'), false));
+                                dropZone.addEventListener('drop', e => { if (e.dataTransfer.files.length) Array.from(e.dataTransfer.files).forEach(f => uploadFileToTemp(f, field.id)); }, false);
                             }
-                        });
-                    }
-                    subareaDetails.appendChild(questionsContainer);
-                    areaContent.appendChild(subareaDetails);
+                        }
+                    });
                 }
-                areaDetails.appendChild(areaContent);
-                container.appendChild(areaDetails);
+                areaBody.appendChild(subareaBlock);
             }
+            areaCard.appendChild(areaBody);
+            container.appendChild(areaCard);
         }
+    }
 
-        function handleClarificationInput(fieldId, value) {
-            submissionData.clarifications = submissionData.clarifications || {};
-            submissionData.clarifications[fieldId] = value;
-        }
+    function handleClarificationInput(fieldId, value) {
+        submissionData.clarifications = submissionData.clarifications || {};
+        submissionData.clarifications[fieldId] = value;
+    }
 
-        function handleAnswerInput(fieldId, value) {
-            submissionData.answers[fieldId] = value;
-            updateSummaryButtonState();
-        }
+    function handleAnswerInput(fieldId, value) {
+        submissionData.answers[fieldId] = value;
+        updateSummaryButtonState();
+    }
 
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024, dm = decimals < 0 ? 0 : decimals, sizes = ['Bytes','KB','MB','GB','TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024, dm = decimals < 0 ? 0 : decimals, sizes = ['Bytes','KB','MB','GB','TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
 
-        async function calculateFileHash(file) {
-            const buffer = await file.arrayBuffer();
-            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-            return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+    async function calculateFileHash(file) {
+        const buffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
-        function updateSummaryButtonState() {
-            const summaryButton = document.getElementById('summary-button');
-            const hasFiles = Object.values(submissionData.files).some(arr => arr.length > 0);
-            const hasAnswers = Object.values(submissionData.answers).some(v => v && v.toString().trim() !== '');
-            const privacyChecked = document.getElementById('privacy-policy').checked;
-            summaryButton.disabled = uploadsInProgress > 0 || (!hasFiles && !hasAnswers) || !privacyChecked;
-        }
+    function updateSummaryButtonState() {
+        const summaryButton = document.getElementById('summary-button');
+        const hasFiles   = Object.values(submissionData.files).some(arr => arr.length > 0);
+        const hasAnswers = Object.values(submissionData.answers).some(v => v && v.toString().trim() !== '');
+        const privacyChecked = document.getElementById('privacy-policy').checked;
+        summaryButton.disabled = uploadsInProgress > 0 || (!hasFiles && !hasAnswers) || !privacyChecked;
+    }
 
-        function handleFileSelect(event, fieldId) { Array.from(event.target.files).forEach(f => uploadFileToTemp(f, fieldId)); event.target.value = ''; }
+    function handleFileSelect(event, fieldId) { Array.from(event.target.files).forEach(f => uploadFileToTemp(f, fieldId)); event.target.value = ''; }
 
-        async function uploadFileToTemp(file, fieldId) {
-            uploadsInProgress++;
-            updateSummaryButtonState();
-            const domId = 'file-' + Date.now() + '-' + Math.random();
-            const listContainer = document.getElementById(fieldId + '-list');
-            const fileItem = document.createElement('div');
-            fileItem.id = domId;
-            fileItem.className = 'file-item';
-            fileItem.innerHTML = '<div class="flex-grow mr-4 overflow-hidden"><div class="flex justify-between items-baseline"><p class="text-sm font-medium text-gray-800 truncate pr-2">' + file.name + '</p><span class="text-xs text-gray-500 flex-shrink-0">' + formatBytes(file.size) + '</span></div><div class="upload-status-container mt-1"><div class="progress-bar-container"><div class="progress-bar"></div></div><p class="status-text text-xs text-gray-400 mt-1">Preparando...</p></div></div><div class="flex flex-col items-center"><button class="btn-cancel">Cancelar</button><button class="btn-delete"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button></div>';
-            listContainer.appendChild(fileItem);
-            const [usc, pb, db, cb, st] = [fileItem.querySelector('.upload-status-container'), fileItem.querySelector('.progress-bar'), fileItem.querySelector('.btn-delete'), fileItem.querySelector('.btn-cancel'), fileItem.querySelector('.status-text')];
-            const xhr = new XMLHttpRequest();
-            cb.onclick = () => xhr.abort();
-            try {
-                st.textContent = 'Iniciando sesión...';
-                const initResponse = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'initiateUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name, mimeType: file.type || 'application/octet-stream' }) });
-                const initResult = await initResponse.json();
-                if (initResult.status !== 'success' || !initResult.data.uploadUrl) throw new Error(initResult.message || 'No se pudo obtener la URL de subida.');
-                const { uploadUrl } = initResult.data;
-                xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) { const p = (e.loaded / e.total) * 100; pb.style.width = p + '%'; st.textContent = 'Subiendo... ' + Math.round(p) + '%'; } });
-                xhr.addEventListener('loadend', async () => {
-                    try {
-                        st.textContent = 'Confirmando subida...';
-                        const confirmResult = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'confirmUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name }) }).then(r => r.json());
-                        if (confirmResult.status === 'success' && confirmResult.data.fileId) {
-                            const hash = await calculateFileHash(file);
-                            const fileData = { name: file.name, id: confirmResult.data.fileId, hash, domId };
-                            submissionData.files[fieldId].push(fileData);
-                            usc.innerHTML = '<div class="mt-1 text-xs text-green-600">Subido y verificado</div>';
-                            db.style.visibility = 'visible';
-                            db.onclick = () => removeFile(fieldId, fileData);
-                        } else { throw new Error(confirmResult.message || 'El servidor no pudo confirmar el archivo.'); }
-                    } catch (error) { usc.innerHTML = '<p class="text-xs text-green-700 mt-1">Error: ' + error.message + '</p>'; }
-                    finally { uploadsInProgress--; updateSummaryButtonState(); cb.classList.add('hidden'); }
-                });
-                xhr.open('PUT', uploadUrl, true);
-                xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-                xhr.send(file);
-            } catch (error) { usc.innerHTML = '<p class="text-xs text-green-700 mt-1">Error: ' + error.message + '</p>'; cb.classList.add('hidden'); uploadsInProgress--; updateSummaryButtonState(); }
-        }
-
-        function removeFile(fieldId, fileData) {
-            const fileItem = document.getElementById(fileData.domId);
-            if (!fileItem) return;
-            fileItem.style.opacity = '0.5';
-            fileItem.querySelector('.btn-delete').disabled = true;
-            uploadsInProgress++;
-            updateSummaryButtonState();
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'delete_temp', id: fileData.id }) })
-                .then(r => r.json())
-                .then(result => {
-                    if (result.status === 'success') { fileItem.remove(); submissionData.files[fieldId] = submissionData.files[fieldId].filter(f => f.id !== fileData.id); }
-                    else { alert('No se pudo borrar el archivo.'); fileItem.style.opacity = '1'; fileItem.querySelector('.btn-delete').disabled = false; }
-                }).catch(() => { alert('Error de conexión al borrar.'); fileItem.style.opacity = '1'; fileItem.querySelector('.btn-delete').disabled = false; })
-                .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
-        }
-
-        function showSummary() {
-            submissionData.nif = document.getElementById('nif').value.trim();
-            const summarySection = document.getElementById('summary-section');
-            const summaryContent = document.getElementById('summary-content');
-            let html = '<div><h3 class="font-bold text-gray-700">NIF/CIF:</h3><p class="pl-2">' + submissionData.nif + '</p></div>';
-            Object.keys(submissionData.files).forEach(fieldId => {
-                const files = submissionData.files[fieldId];
-                if (files.length > 0) {
-                    const ti = idToTitleMap[fieldId];
-                    html += '<div class="mt-4"><h3 class="font-bold text-gray-700">' + (ti ? ti.area + ' > ' + ti.subarea : fieldId) + ':</h3><ul class="list-disc list-inside pl-2 text-gray-600">' + files.map(f => '<li>' + f.name + '</li>').join('') + '</ul></div>';
-                }
+    async function uploadFileToTemp(file, fieldId) {
+        uploadsInProgress++;
+        updateSummaryButtonState();
+        const domId = 'file-' + Date.now() + '-' + Math.random();
+        const listContainer = document.getElementById(fieldId + '-list');
+        const fileItem = document.createElement('div');
+        fileItem.id = domId;
+        fileItem.className = 'file-item';
+        fileItem.innerHTML =
+            '<div class="flex-grow min-w-0">' +
+              '<div class="flex justify-between items-baseline gap-2">' +
+                '<p class="text-sm font-medium text-gray-800 truncate">' + file.name + '</p>' +
+                '<span class="text-xs text-gray-400 flex-shrink-0">' + formatBytes(file.size) + '</span>' +
+              '</div>' +
+              '<div class="upload-status-container mt-1.5">' +
+                '<div class="progress-bar-container"><div class="progress-bar"></div></div>' +
+                '<p class="status-text text-xs text-gray-400 mt-1">Preparando…</p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="flex flex-col items-center gap-1 flex-shrink-0">' +
+              '<button class="btn-cancel">Cancelar</button>' +
+              '<button class="btn-delete" title="Eliminar archivo"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/></svg></button>' +
+            '</div>';
+        listContainer.appendChild(fileItem);
+        const usc = fileItem.querySelector('.upload-status-container');
+        const pb  = fileItem.querySelector('.progress-bar');
+        const db  = fileItem.querySelector('.btn-delete');
+        const cb  = fileItem.querySelector('.btn-cancel');
+        const st  = fileItem.querySelector('.status-text');
+        const xhr = new XMLHttpRequest();
+        cb.onclick = () => xhr.abort();
+        try {
+            st.textContent = 'Iniciando sesión…';
+            const initResponse = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'initiateUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name, mimeType: file.type || 'application/octet-stream' }) });
+            const initResult = await initResponse.json();
+            if (initResult.status !== 'success' || !initResult.data.uploadUrl) throw new Error(initResult.message || 'No se pudo obtener la URL de subida.');
+            const { uploadUrl } = initResult.data;
+            xhr.upload.addEventListener('progress', e => { if (e.lengthComputable) { const p = (e.loaded / e.total) * 100; pb.style.width = p + '%'; st.textContent = 'Subiendo… ' + Math.round(p) + '%'; } });
+            xhr.addEventListener('loadend', async () => {
+                try {
+                    st.textContent = 'Verificando…';
+                    const confirmResult = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'confirmUpload', nif: document.getElementById('nif').value.trim(), fileName: file.name }) }).then(r => r.json());
+                    if (confirmResult.status === 'success' && confirmResult.data.fileId) {
+                        const hash = await calculateFileHash(file);
+                        const fileData = { name: file.name, id: confirmResult.data.fileId, hash, domId };
+                        submissionData.files[fieldId].push(fileData);
+                        pb.style.width = '100%';
+                        usc.innerHTML = '<p class="text-xs font-semibold mt-1" style="color:var(--brand)">✓ Subido y verificado</p>';
+                        db.style.visibility = 'visible';
+                        db.onclick = () => removeFile(fieldId, fileData);
+                    } else { throw new Error(confirmResult.message || 'El servidor no pudo confirmar el archivo.'); }
+                } catch (error) { usc.innerHTML = '<p class="text-xs text-red-600 mt-1">Error: ' + error.message + '</p>'; }
+                finally { uploadsInProgress--; updateSummaryButtonState(); cb.style.display = 'none'; }
             });
-            Object.keys(submissionData.answers).forEach(fieldId => {
-                const answer = submissionData.answers[fieldId];
-                if (answer && answer.toString().trim()) {
-                    const ti = idToTitleMap[fieldId];
-                    const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
-                    html += '<div class="mt-4"><h3 class="font-bold text-gray-700">' + (ti ? ti.area + ' > ' + ti.subarea : fieldId) + ':</h3><p class="pl-2 text-gray-600 italic bg-purple-50 p-2 rounded">"' + answer + '"</p>' + (clar ? '<p class="pl-2 text-xs text-gray-500 mt-1">Aclaración: ' + clar + '</p>' : '') + '</div>';
-                }
-            });
-            const obs = document.getElementById('observaciones').value.trim();
-            if (obs) html += '<div class="mt-4"><h3 class="font-bold text-gray-700">Observaciones:</h3><p class="pl-2 whitespace-pre-wrap">' + obs + '</p></div>';
-            summaryContent.innerHTML = html;
-            summarySection.classList.remove('hidden');
-            summarySection.scrollIntoView();
-        }
+            xhr.open('PUT', uploadUrl, true);
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            xhr.send(file);
+        } catch (error) { usc.innerHTML = '<p class="text-xs text-red-600 mt-1">Error: ' + error.message + '</p>'; cb.style.display = 'none'; uploadsInProgress--; updateSummaryButtonState(); }
+    }
 
-        function generateReceiptPdf() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            let y = 20;
-            const margin = 15;
-            const maxWidth = doc.internal.pageSize.getWidth() - (margin * 2);
-            doc.setFontSize(18);
-            doc.text("Justificante de Envío", doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-            y += 15;
-            doc.setFontSize(12);
-            doc.text('Fecha y Hora: ' + new Date(submissionData.submissionTimestamp).toLocaleString('es-ES'), margin, y); y += 10;
-            doc.text('NIF/CIF: ' + submissionData.nif, margin, y); y += 10;
-            if (submissionData.observaciones) {
-                doc.setFont(undefined, 'bold'); doc.text('Observaciones:', margin, y); y += 6;
-                doc.setFont(undefined, 'normal');
-                const obsLines = doc.splitTextToSize(submissionData.observaciones, maxWidth);
-                doc.text(obsLines, margin, y); y += obsLines.length * 5 + 4;
+    function removeFile(fieldId, fileData) {
+        const fileItem = document.getElementById(fileData.domId);
+        if (!fileItem) return;
+        fileItem.style.opacity = '0.5';
+        fileItem.querySelector('.btn-delete').disabled = true;
+        uploadsInProgress++;
+        updateSummaryButtonState();
+        fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'delete_temp', id: fileData.id }) })
+            .then(r => r.json())
+            .then(result => {
+                if (result.status === 'success') { fileItem.remove(); submissionData.files[fieldId] = submissionData.files[fieldId].filter(f => f.id !== fileData.id); }
+                else { alert('No se pudo eliminar el archivo.'); fileItem.style.opacity = '1'; fileItem.querySelector('.btn-delete').disabled = false; }
+            }).catch(() => { alert('Error de conexión al eliminar.'); fileItem.style.opacity = '1'; fileItem.querySelector('.btn-delete').disabled = false; })
+            .finally(() => { uploadsInProgress--; updateSummaryButtonState(); });
+    }
+
+    function showSummary() {
+        submissionData.nif = document.getElementById('nif').value.trim();
+        const summarySection  = document.getElementById('summary-section');
+        const summaryContent  = document.getElementById('summary-content');
+        let html = '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3"><p class="text-xs text-gray-500">NIF/CIF</p><p class="font-semibold text-gray-800">' + submissionData.nif + '</p></div>';
+        Object.keys(submissionData.files).forEach(fieldId => {
+            const files = submissionData.files[fieldId];
+            if (files.length > 0) {
+                const ti = idToTitleMap[fieldId];
+                html += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">' + (ti ? ti.area + ' › ' + ti.subarea : fieldId) + '</p><ul class="space-y-0.5">' + files.map(f => '<li class="flex items-center gap-1.5 text-sm text-gray-700"><svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' + f.name + '</li>').join('') + '</ul></div>';
             }
-            y += 5;
-            doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y); y += 10;
-            doc.setFontSize(14); doc.text("Documentos y Respuestas:", margin, y); y += 8;
-            Object.keys(submissionData.files).forEach(fieldId => {
-                const files = submissionData.files[fieldId];
-                if (files.length > 0) {
-                    const ti = idToTitleMap[fieldId];
-                    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text((ti ? ti.area + ' > ' + ti.subarea : fieldId), margin, y); y += 6;
-                    doc.setFont(undefined, 'normal');
-                    files.forEach(file => {
-                        doc.setFontSize(10);
-                        const lines = doc.splitTextToSize('- ' + file.name, maxWidth - 4);
-                        if (y + (lines.length + 1) * 5 > 280) { doc.addPage(); y = 20; }
-                        doc.text(lines, margin + 4, y); y += lines.length * 5;
-                        doc.setFontSize(7); doc.setTextColor(128); doc.text('Hash (SHA-256): ' + file.hash, margin + 4, y); y += 5; doc.setTextColor(0);
-                    }); y += 4;
-                }
-            });
-            Object.keys(submissionData.answers).forEach(fieldId => {
-                const answer = submissionData.answers[fieldId];
-                if (answer && answer.toString().trim()) {
-                    const ti = idToTitleMap[fieldId];
-                    const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
-                    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text((ti ? ti.area + ' > ' + ti.subarea : fieldId), margin, y); y += 6;
-                    doc.setFont(undefined, 'italic'); doc.setFontSize(10);
-                    const ansLines = doc.splitTextToSize('Respuesta: "' + answer + '"', maxWidth - 4);
-                    if (y + ansLines.length * 5 > 280) { doc.addPage(); y = 20; }
-                    doc.text(ansLines, margin + 4, y); y += ansLines.length * 5 + 2;
-                    if (clar) {
-                        doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.setTextColor(80);
-                        const clarLines = doc.splitTextToSize('Aclaración: ' + clar, maxWidth - 4);
-                        if (y + clarLines.length * 5 > 280) { doc.addPage(); y = 20; }
-                        doc.text(clarLines, margin + 4, y); y += clarLines.length * 5; doc.setTextColor(0);
-                    }
-                    y += 4; doc.setFont(undefined, 'normal');
-                }
-            });
-            return doc;
-        }
+        });
+        Object.keys(submissionData.answers).forEach(fieldId => {
+            const answer = submissionData.answers[fieldId];
+            if (answer && answer.toString().trim()) {
+                const ti   = idToTitleMap[fieldId];
+                const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
+                html += '<div class="bg-gray-50 border border-gray-200 rounded-lg p-3"><p class="text-xs text-gray-500 mb-1">' + (ti ? ti.area + ' › ' + ti.subarea : fieldId) + '</p>' +
+                    '<p class="text-sm text-gray-800 italic">"' + answer + '"</p>' +
+                    (clar ? '<p class="text-xs text-gray-500 mt-1 border-t border-gray-200 pt-1">Aclaración: ' + clar + '</p>' : '') + '</div>';
+            }
+        });
+        const obs = document.getElementById('observaciones').value.trim();
+        if (obs) html += '<div class="bg-amber-50 border border-amber-200 rounded-lg p-3"><p class="text-xs text-amber-700 mb-1">Comentarios adicionales</p><p class="text-sm text-gray-700 whitespace-pre-wrap">' + obs + '</p></div>';
+        summaryContent.innerHTML = html;
+        summarySection.classList.remove('hidden');
+        summarySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-        function finalizeSubmission() {
-            const btn = document.getElementById('final-send-button');
-            const progressContainer = document.getElementById('final-progress-container');
-            const progressBar = document.getElementById('final-progress-bar');
-            btn.classList.add('hidden'); progressContainer.classList.remove('hidden'); progressBar.style.width = '20%';
-            submissionData.submissionTimestamp = new Date().toISOString();
-            submissionData.observaciones = document.getElementById('observaciones').value.trim();
-            submissionData.clarifications = submissionData.clarifications || {};
-            const pdfDoc = generateReceiptPdf();
-            generatedPdfDoc = pdfDoc;
-            submissionData.pdfBase64 = pdfDoc.output('datauristring');
-            progressBar.style.width = '50%';
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'finalize', data: submissionData }) })
-                .then(r => r.json())
-                .then(result => {
-                    if (result.status === 'success') {
-                        progressBar.style.width = '100%';
-                        setTimeout(() => {
-                            progressContainer.classList.add('hidden');
-                            showConfirmationLog();
-                            document.getElementById('confirmation-section').classList.remove('hidden');
-                            document.getElementById('download-receipt-button').disabled = false;
-                            document.getElementById('confirmation-section').scrollIntoView();
-                        }, 500);
-                    } else { throw new Error(result.message || "Error en el servidor."); }
-                }).catch(error => {
-                    console.error(error);
-                    alert("Ocurrió un error al procesar el envío: " + error.message);
-                    progressContainer.classList.add('hidden'); btn.classList.remove('hidden');
-                });
+    function generateReceiptPdf() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 20;
+        const margin = 15;
+        const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+        doc.setFontSize(18); doc.setFont(undefined, 'bold');
+        doc.text('Justificante de Entrega de Documentación', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 8;
+        doc.setFontSize(10); doc.setFont(undefined, 'normal'); doc.setTextColor(100);
+        doc.text('Ayudas Rurales · www.ayudasrurales.es', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' }); y += 12; doc.setTextColor(0);
+        doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text('Datos del envío', margin, y); y += 6;
+        doc.setFont(undefined, 'normal'); doc.setFontSize(10);
+        doc.text('Fecha y hora: ' + new Date(submissionData.submissionTimestamp).toLocaleString('es-ES'), margin, y); y += 6;
+        doc.text('NIF/CIF: ' + submissionData.nif, margin, y); y += 6;
+        if (submissionData.observaciones) {
+            doc.setFont(undefined, 'bold'); doc.text('Comentarios adicionales:', margin, y); y += 5;
+            doc.setFont(undefined, 'normal');
+            const obsLines = doc.splitTextToSize(submissionData.observaciones, maxWidth);
+            doc.text(obsLines, margin, y); y += obsLines.length * 5 + 3;
         }
+        y += 3; doc.setDrawColor(180); doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y); y += 8;
+        doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text('Documentación entregada', margin, y); y += 8;
+        Object.keys(submissionData.files).forEach(fieldId => {
+            const files = submissionData.files[fieldId];
+            if (!files.length) return;
+            const ti = idToTitleMap[fieldId];
+            doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+            doc.text((ti ? ti.area + ' › ' + ti.subarea : fieldId), margin, y); y += 5;
+            doc.setFont(undefined, 'normal');
+            files.forEach(file => {
+                const lines = doc.splitTextToSize('• ' + file.name, maxWidth - 4);
+                if (y + lines.length * 5 + 6 > 280) { doc.addPage(); y = 20; }
+                doc.text(lines, margin + 4, y); y += lines.length * 5;
+                doc.setFontSize(7); doc.setTextColor(120);
+                doc.text('SHA-256: ' + file.hash, margin + 4, y); y += 5; doc.setTextColor(0); doc.setFontSize(10);
+            }); y += 3;
+        });
+        Object.keys(submissionData.answers).forEach(fieldId => {
+            const answer = submissionData.answers[fieldId];
+            if (!answer || !answer.toString().trim()) return;
+            const ti   = idToTitleMap[fieldId];
+            const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
+            doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+            doc.text((ti ? ti.area + ' › ' + ti.subarea : fieldId), margin, y); y += 5;
+            doc.setFont(undefined, 'italic'); doc.setFontSize(10);
+            const ansLines = doc.splitTextToSize('Respuesta: "' + answer + '"', maxWidth - 4);
+            if (y + ansLines.length * 5 + 6 > 280) { doc.addPage(); y = 20; }
+            doc.text(ansLines, margin + 4, y); y += ansLines.length * 5 + 2;
+            if (clar) {
+                doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.setTextColor(80);
+                const clarLines = doc.splitTextToSize('Aclaración: ' + clar, maxWidth - 4);
+                doc.text(clarLines, margin + 4, y); y += clarLines.length * 5; doc.setTextColor(0);
+            }
+            y += 3; doc.setFont(undefined, 'normal');
+        });
+        return doc;
+    }
 
-        function showConfirmationLog() {
-            const log = document.getElementById('confirmation-log');
-            let html = '<p><strong>Fecha y Hora:</strong> ' + new Date(submissionData.submissionTimestamp).toLocaleString('es-ES') + '</p><p><strong>NIF/CIF:</strong> ' + submissionData.nif + '</p>';
-            if (submissionData.observaciones) html += '<p class="mt-2"><strong>Observaciones:</strong> ' + submissionData.observaciones + '</p>';
-            Object.keys(submissionData.files).forEach(fieldId => {
-                const files = submissionData.files[fieldId];
-                if (files.length > 0) { const ti = idToTitleMap[fieldId]; html += '<p class="mt-2"><strong>' + (ti ? ti.area + ' > ' + ti.subarea : fieldId) + ':</strong> ' + files.map(f => f.name).join(', ') + '</p>'; }
+    function finalizeSubmission() {
+        const btn = document.getElementById('final-send-button');
+        const progressContainer = document.getElementById('final-progress-container');
+        const progressBar = document.getElementById('final-progress-bar');
+        btn.classList.add('hidden'); progressContainer.classList.remove('hidden'); progressBar.style.width = '20%';
+        submissionData.submissionTimestamp = new Date().toISOString();
+        submissionData.observaciones = document.getElementById('observaciones').value.trim();
+        submissionData.clarifications = submissionData.clarifications || {};
+        const pdfDoc = generateReceiptPdf();
+        generatedPdfDoc = pdfDoc;
+        submissionData.pdfBase64 = pdfDoc.output('datauristring');
+        progressBar.style.width = '50%';
+        fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'finalize', data: submissionData }) })
+            .then(r => r.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    progressBar.style.width = '100%';
+                    setTimeout(() => {
+                        progressContainer.classList.add('hidden');
+                        showConfirmationLog();
+                        document.getElementById('confirmation-section').classList.remove('hidden');
+                        document.getElementById('download-receipt-button').disabled = false;
+                        document.getElementById('confirmation-section').scrollIntoView({ behavior: 'smooth' });
+                    }, 600);
+                } else { throw new Error(result.message || 'Error en el servidor.'); }
+            }).catch(error => {
+                alert('Ocurrió un error al procesar el envío: ' + error.message);
+                progressContainer.classList.add('hidden'); btn.classList.remove('hidden');
             });
-            Object.keys(submissionData.answers).forEach(fieldId => {
-                const answer = submissionData.answers[fieldId];
-                if (answer && answer.toString().trim()) {
-                    const ti = idToTitleMap[fieldId];
-                    const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
-                    html += '<p class="mt-2"><strong>' + (ti ? ti.area + ' > ' + ti.subarea : fieldId) + ':</strong> <em>"' + answer + '"</em>' + (clar ? ' <span class="text-gray-400">— ' + clar + '</span>' : '') + '</p>';
-                }
-            });
-            log.innerHTML = html;
-        }
+    }
 
-        function downloadReceipt() {
-            if (generatedPdfDoc) generatedPdfDoc.save('Justificante-' + submissionData.nif + '-' + submissionData.submissionTimestamp.slice(0, 10) + '.pdf');
-            else alert("El justificante no se ha generado todavía.");
-        }
-    </script>
+    function showConfirmationLog() {
+        const log = document.getElementById('confirmation-log');
+        let html = '<p><strong>Fecha y hora:</strong> ' + new Date(submissionData.submissionTimestamp).toLocaleString('es-ES') + '</p>' +
+                   '<p><strong>NIF/CIF:</strong> ' + submissionData.nif + '</p>';
+        if (submissionData.observaciones) html += '<p class="mt-1"><strong>Comentarios:</strong> ' + submissionData.observaciones + '</p>';
+        Object.keys(submissionData.files).forEach(fieldId => {
+            const files = submissionData.files[fieldId];
+            if (files.length > 0) { const ti = idToTitleMap[fieldId]; html += '<p class="mt-1"><strong>' + (ti ? ti.area + ' › ' + ti.subarea : fieldId) + ':</strong> ' + files.map(f => f.name).join(', ') + '</p>'; }
+        });
+        Object.keys(submissionData.answers).forEach(fieldId => {
+            const answer = submissionData.answers[fieldId];
+            if (answer && answer.toString().trim()) {
+                const ti   = idToTitleMap[fieldId];
+                const clar = submissionData.clarifications && submissionData.clarifications[fieldId] ? submissionData.clarifications[fieldId].trim() : '';
+                html += '<p class="mt-1"><strong>' + (ti ? ti.area + ' › ' + ti.subarea : fieldId) + ':</strong> <em>"' + answer + '"</em>' + (clar ? ' <span class="text-gray-400">— ' + clar + '</span>' : '') + '</p>';
+            }
+        });
+        log.innerHTML = html;
+    }
+
+    function downloadReceipt() {
+        if (generatedPdfDoc) generatedPdfDoc.save('Justificante-' + submissionData.nif + '-' + submissionData.submissionTimestamp.slice(0, 10) + '.pdf');
+        else alert('El justificante no se ha generado todavía.');
+    }
+</script>
 </body>
 </html>
