@@ -208,7 +208,8 @@ select{width:100%;background:var(--inp);border:1px solid var(--brd);color:var(--
 #welcome{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 #welcome.hidden{display:none}
 #welcome-inner{max-width:460px;width:100%;text-align:center}
-.wlc-logo{font-size:2.8rem;margin-bottom:10px}
+.wlc-logo{font-size:2.8rem;margin-bottom:10px;display:flex;align-items:center;justify-content:center}
+#plan-anim{display:block;margin:0 auto 10px}
 .wlc-title{font-size:1.1rem;font-weight:700;color:var(--acc2);font-family:'Space Mono',monospace;margin-bottom:8px;letter-spacing:.08em}
 .wlc-sub{font-size:.84rem;color:var(--t2);margin-bottom:24px;line-height:1.6}
 .wlc-card{border:2px dashed var(--brd);border-radius:10px;padding:24px 18px;margin-bottom:14px;transition:all .2s;cursor:pointer;background:var(--p3);-webkit-tap-highlight-color:transparent}
@@ -267,7 +268,7 @@ body.light #carea{background:repeating-linear-gradient(45deg,#e0e8f0 0,#e0e8f0 1
 <div id="ruler-quick-bar"><button class="btn sm s" onclick="rulerUndo()">↩ Deshacer punto</button><button class="btn sm g" onclick="rulerFinish(false)">✓ Guardar medida</button><button id="btn-ang-lock" class="btn sm s" onclick="toggleAngleLock()" title="Fijar ángulo 0/45/90°" style="margin:0;padding:6px 10px">∠ Ángulo</button></div>
 <div id="sbar"><span id="sbar-nm"></span><button class="sbbtn" id="sbar-rot" onclick="rotateSel()">↻</button><button class="sbbtn" onclick="dupSel()">⧉</button><button class="sbbtn" style="color:var(--acc2)" onclick="mobileEdit()">✎</button><button class="sbbtn d" onclick="delSel()">✕</button><button class="sbbtn ok" onclick="deselect()">✓</button></div>
 <div id="lp-ring"></div><div id="toast"></div><div id="furn-tooltip"></div><div id="minimap"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div></div>
-<div id="welcome"><div id="welcome-inner"><div class="wlc-logo">🏠</div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
+<div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="130" height="100"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
 <div id="main"><aside id="panel"><div id="phdl"></div>
 <div class="acc" data-c="calib"><div class="acc-hdr open uncal" id="acc-hdr-calib" onclick="toggleAcc('calib')"><span class="acc-icon">📐</span><span class="acc-title">Calibración</span><span class="wb" id="calib-wb">⚠ Sin calibrar</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-calib"><div class="acc-inner"><p class="hint">Haz clic en 2 puntos del plano cuya distancia conozcas exactamente.</p><label>Distancia real (metros)</label><input type="number" id="cdist" value="2.30" step="0.01" min="0.1"><button class="btn" style="background:var(--cc);color:#1a0e00;margin-top:7px" id="bcalib" onclick="startCalib()">⊕ Activar calibración</button><div id="cst">— Pulsa para calibrar —</div></div></div></div>
 <div class="acc" data-c="ruler"><div class="acc-hdr" id="acc-hdr-ruler" onclick="toggleAcc('ruler')"><span class="acc-icon">📏</span><span class="acc-title">Metro / Área</span><span class="acc-badge" id="meas-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-ruler"><div class="acc-inner"><div class="tabs" style="margin-bottom:6px"><div class="tab on" id="rtab-medir" onclick="setRulerTab('medir')">📏 Medidas</div><div class="tab" id="rtab-area" onclick="setRulerTab('area')">⬡ Áreas</div></div><p class="hint" id="ruler-hint">Añade puntos para medir distancias entre ellos.</p><div class="g2"><button class="btn" id="btn-ruler" onclick="toggleRuler()" style="margin-top:0;background:var(--cr)">📏 Activar</button><button class="btn s" onclick="clearAllMeasures()" style="margin-top:0">🗑 Borrar todo</button></div><div id="meas-vis-bar"><button id="btn-vis-all" class="btn sm s" onclick="toggleAllMeasVis()" style="margin-top:0;width:100%">&#128065; Mostrar / Ocultar todas</button></div><button id="btn-freeprobe" onclick="toggleFreeProbe()" style="margin-top:5px;width:100%;background:var(--p2);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:6px 8px;font-size:.76rem;font-family:'Outfit',sans-serif;cursor:pointer;">🎯 Sonda libre</button><div id="fp-hint" style="display:none;font-size:.65rem;color:#a78bfa;margin-top:3px;font-family:'Space Mono',monospace">Toca o haz clic para colocar · arrastra para mover</div><label style="margin-top:7px">Etiqueta (opcional)</label><input type="text" id="ruler-label" placeholder="ej: salón, cocina..."><div id="area-color-row" style="display:none;flex-direction:column;gap:5px;margin-top:5px"><div style="display:flex;align-items:center;gap:6px"><label style="font-size:.72rem;color:var(--t2);min-width:52px">Color:</label><input type="color" id="ruler-area-color" value="#7ec8e3" style="width:26px;height:22px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px"></div><div style="display:flex;align-items:center;gap:6px"><label for="ruler-area-opa" style="font-size:.72rem;color:var(--t2);min-width:52px">Opacidad:</label><input type="range" id="ruler-area-opa" min="0.05" max="1" step="0.05" value="0.6" style="flex:1;height:3px;cursor:pointer"></div></div><div id="ruler-active-box"><div id="ruler-pts-info">Sin puntos</div><div class="g3" style="margin-bottom:5px"><button class="btn sm s" onclick="rulerUndo()">↩ Deshacer</button><button class="btn sm g" id="btn-save-meas" onclick="rulerFinishAuto()" style="margin-top:0">✓ Guardar</button><button class="btn sm d" onclick="rulerCancel()" style="margin-top:0">✕</button></div><button class="btn sm" id="btn-close-poly" style="background:rgba(126,200,227,.12);border:1px solid var(--area);color:var(--area);display:none;width:100%;margin-top:0" onclick="rulerFinish(true)">⬡ Cerrar → Área</button></div><input type="text" id="meas-search" placeholder="🔍 Buscar etiqueta..." oninput="filterMeasList(this.value)" style="margin-top:4px;margin-bottom:5px;display:none"><div id="ruler-list" style="margin-top:7px"></div><div style="border-top:1px dashed var(--brd);padding-top:7px;margin-top:6px"><p class="glbl" style="color:var(--cc);margin-bottom:3px">📍 Cota de referencia</p><p class="hint" id="refpt-hint" style="margin-bottom:4px">Sin cota fijada en este plano</p><div class="g2"><button class="btn sm s" id="btn-refpt" onclick="startRefPt()" style="margin-top:0">⊕ Fijar cota</button><button class="btn sm s" onclick="clearRefPt()" style="margin-top:0">✕ Limpiar</button></div></div><button class="btn sm s" onclick="exportMeasText()" style="margin-top:7px;width:100%">📋 Copiar resumen</button></div></div></div>
@@ -278,7 +279,7 @@ body.light #carea{background:repeating-linear-gradient(45deg,#e0e8f0 0,#e0e8f0 1
 <div class="acc" data-c="io"><div class="acc-hdr" id="acc-hdr-io" onclick="toggleAcc('io')"><span class="acc-icon">💾</span><span class="acc-title">Exportar / Importar datos</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-io"><div class="acc-inner"><div class="io-card"><div class="io-card-title" style="color:var(--ci)">📤 Exportar JSON</div><div class="io-card-hint">Guarda muebles, medidas y calibraciones.</div><button class="btn io-btn exp" onclick="exportJSON()">⬇ Descargar JSON</button></div><div class="io-card"><div class="io-card-title" style="color:var(--area)">📥 Importar JSON</div><div class="io-card-hint">Restaura desde un archivo JSON guardado.</div><button class="btn io-btn imp" onclick="document.getElementById('fi-import').click()">⬆ Cargar JSON</button><input type="file" id="fi-import" accept=".json" onchange="importJSON(this)"></div></div></div></div>
 <div class="acc" data-c="floor"><div class="acc-hdr" id="acc-hdr-floor" onclick="toggleAcc('floor')"><span class="acc-icon">🗺️</span><span class="acc-title">Gestión de plantas</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-floor"><div class="acc-inner"><p class="hint">Renombra, elimina o cambia la imagen de cada planta.</p><div id="floor-manage-list"></div><div class="add-floor-form" id="add-floor-form" style="display:none"><label>Nombre de la nueva planta</label><input type="text" id="new-floor-name" placeholder="ej: Planta Segunda" style="margin-bottom:6px"><div class="g2"><button class="btn io-btn img-btn sm" onclick="document.getElementById('fi-new-img').click()" style="min-height:36px">🖼 Imagen</button><button class="btn io-btn pdf-btn sm" onclick="document.getElementById('fi-new-pdf').click()" style="min-height:36px">📄 PDF</button></div><input type="file" id="fi-new-img" accept="image/*" onchange="newFloorFromFile(this,'img')"><input type="file" id="fi-new-pdf" accept="application/pdf" onchange="newFloorFromFile(this,'pdf')"><div id="new-floor-status" style="font-family:'Space Mono',monospace;font-size:.6rem;margin-top:5px;color:var(--cf)"></div><button class="btn sm s" onclick="closeAddFloor()" style="margin-top:6px;width:100%">Cancelar</button></div><button class="btn sm" onclick="openAddFloor()" id="btn-open-add-floor" style="background:rgba(236,72,153,.15);border:1px solid rgba(236,72,153,.4);color:var(--cf);margin-top:5px;width:100%">+ Añadir nueva planta</button></div></div></div><div style="height:10px"></div></aside><div id="carea"><div id="pwrap"><img id="pimg" src="" alt="Plano" draggable="false"><canvas id="ov"></canvas></div></div></div>
 <div id="mobnav"><button class="mnb" id="mn-calib" data-section="calib" onclick="mobToggle('calib')"><span class="ic">📐</span>Calibrar</button><button class="mnb" id="mn-ruler" data-section="ruler" onclick="mobToggle('ruler')"><span class="ic">📏</span>Metro</button><button class="mnb" id="mn-add" data-section="add" onclick="mobToggle('add')"><span class="ic">➕</span>Añadir</button><button class="mnb" id="mn-list" data-section="list" onclick="mobToggle('list')"><span class="ic">🛋</span>Lista</button><button class="mnb" id="mn-zoom" data-section="zoom" onclick="mobToggle('zoom')"><span class="ic">🔍</span>Vista</button><button class="mnb" id="mn-pdf" data-section="pdf" onclick="mobToggle('pdf')"><span class="ic">📄</span>PDF</button><button class="mnb" id="mn-io" data-section="io" onclick="mobToggle('io')"><span class="ic">💾</span>Datos</button><button class="mnb" id="mn-edit" data-section="edit" onclick="mobileEdit()"><span class="ic">✎</span>Editar</button><button class="mnb" id="mn-floor" data-section="floor" onclick="mobToggle('floor')"><span class="ic">🗺️</span>Plantas</button></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const _TRASH_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;const _EYE_OPEN=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;const _EYE_CLOSED=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;const _EYE_BTN=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;const _EYE_BTN_OFF=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.38"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
@@ -429,6 +430,130 @@ function renameFloor(fi,name){FLOORS[fi].name=name;renderFloorTabs();saveLS();}
 function replaceFloorImg(fi,input){const file=input.files[0];if(!file)return;if(file.type.startsWith('image/')){const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>applyFloorImgTo(fi,e.target.result,img.width,img.height);img.src=e.target.result;};r.readAsDataURL(file);}else{if(!window.pdfjsLib)return;const r=new FileReader();r.onload=e=>{pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise.then(pdf=>{pdf.getPage(1).then(page=>{const targetWidth=2000;const vp=page.getViewport({scale:1});const scale=targetWidth/vp.width;const scaledVp=page.getViewport({scale});const oc=document.createElement('canvas');oc.width=scaledVp.width;oc.height=scaledVp.height;page.render({canvasContext:oc.getContext('2d'),viewport:scaledVp}).promise.then(()=>applyFloorImgTo(fi,oc.toDataURL('image/jpeg',.92),oc.width,oc.height));});});};r.readAsArrayBuffer(file);}input.value='';}
 function applyFloorImgTo(fi,img,w,h){FLOORS[fi].img=img;FLOORS[fi].embedded=false;FLOORS[fi].cal=false;FLOORS[fi].px=null;FLOORS[fi].imgWidth=w;FLOORS[fi].imgHeight=h;saveLS();renderFloorTabs();renderFloorManage();if(fi===curFloor)loadFloor(curFloor);showToast('🖼 Planta actualizada — recalibra');}
 updRP();updLP();updCP();setZoom(1);updateCursor();setRulerTab('medir');document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undoGlobal();return;}if(e.key==='Escape'&&multiSel.length>0){clearMultiSel();return;}if(e.key==='Shift'&&mode==='ruler')shiftHeld=true;});document.addEventListener('keyup',e=>{if(e.key==='Shift'){shiftHeld=false;}});carea.addEventListener('scroll',()=>{if(showMinimap)renderMinimap();},{passive:true});
+
+function startPlanAnim(){
+  const cv=document.getElementById('plan-anim');
+  if(!cv)return;
+  const cx=cv.getContext('2d');
+  const W=130,H=100;
+  // House skeleton: rooms defined as polylines (normalized 0-1)
+  // Base floorplan: entrance hall, living room, kitchen, bedroom
+  // Points are [x,y] in 0-1 space
+  const rooms=[
+    // outer walls
+    {pts:[[.08,.12],[.92,.12],[.92,.88],[.08,.88],[.08,.12]],delay:0},
+    // inner wall: hall/living divider (vertical)
+    {pts:[[.38,.12],[.38,.55]],delay:.15},
+    // inner wall: kitchen/living (horizontal)
+    {pts:[[.38,.55],[.92,.55]],delay:.25},
+    // inner wall: bedroom divider
+    {pts:[[.38,.55],[.38,.88]],delay:.3},
+    // hall to living door gap indicator
+    {pts:[[.38,.3],[.52,.3]],delay:.38},
+    // living to kitchen door
+    {pts:[[.65,.55],[.65,.68]],delay:.44},
+    // bedroom door
+    {pts:[[.38,.72],[.22,.72]],delay:.5},
+    // window living (short tick)
+    {pts:[[.92,.22],[.92,.38]],delay:.55},
+    // window kitchen
+    {pts:[[.92,.62],[.92,.76]],delay:.6},
+    // window bedroom
+    {pts:[[.08,.62],[.08,.76]],delay:.65},
+    // entrance door arc hint
+    {pts:[[.08,.32],[.08,.48]],delay:.7},
+  ];
+
+  // Animation state per segment
+  const segs=[];
+  rooms.forEach(r=>{
+    for(let i=0;i<r.pts.length-1;i++){
+      const p0=r.pts[i], p1=r.pts[i+1];
+      segs.push({
+        x0:p0[0]*W, y0:p0[1]*H,
+        x1:p1[0]*W, y1:p1[1]*H,
+        delay:r.delay,
+        t:0, // 0=not started, grows to 1
+        opa:0,
+      });
+    }
+  });
+
+  // Second phase: "open" animation — segments slide outward from center
+  // Each seg gets a drift direction after fully drawn
+  const CX=W/2, CY=H/2;
+  segs.forEach(s=>{
+    const mx=(s.x0+s.x1)/2, my=(s.y0+s.y1)/2;
+    const dx=mx-CX, dy=my-CY;
+    const mag=Math.hypot(dx,dy)||1;
+    s.drift={ x:dx/mag*6, y:dy/mag*6 }; // max drift px
+  });
+
+  const DRAW_DUR=2.2;   // seconds to draw all lines
+  const HOLD_DUR=0.8;   // hold fully drawn
+  const DRIFT_DUR=1.0;  // drift out + fade
+  const FADE_DUR=0.5;   // fade back in / restart
+  const CYCLE=DRAW_DUR+HOLD_DUR+DRIFT_DUR+FADE_DUR;
+
+  let start=null;
+
+  function draw(ts){
+    if(!start)start=ts;
+    const elapsed=(ts-start)/1000;
+    const phase=elapsed%CYCLE;
+    cx.clearRect(0,0,W,H);
+
+    segs.forEach(s=>{
+      let lineT=0, globalOpa=1;
+
+      if(phase<DRAW_DUR){
+        // Drawing phase: each seg starts at its delay offset
+        const segStart=s.delay*DRAW_DUR;
+        const segDur=DRAW_DUR*(1-s.delay)+.001;
+        lineT=Math.max(0,Math.min(1,(phase-segStart)/segDur*.7+.3));
+        lineT=lineT<0?0:lineT;
+        globalOpa=1;
+      } else if(phase<DRAW_DUR+HOLD_DUR){
+        lineT=1; globalOpa=1;
+      } else if(phase<DRAW_DUR+HOLD_DUR+DRIFT_DUR){
+        const dp=(phase-DRAW_DUR-HOLD_DUR)/DRIFT_DUR;
+        lineT=1; globalOpa=1-dp;
+      } else {
+        lineT=0; globalOpa=0;
+      }
+
+      if(lineT<=0||globalOpa<=0)return;
+
+      // Drift offset
+      let driftP=0;
+      if(phase>DRAW_DUR+HOLD_DUR){
+        driftP=(phase-DRAW_DUR-HOLD_DUR)/DRIFT_DUR;
+      }
+      const ox=s.drift.x*driftP, oy=s.drift.y*driftP;
+
+      const ix=s.x0+(s.x1-s.x0)*lineT;
+      const iy=s.y0+(s.y1-s.y0)*lineT;
+
+      cx.save();
+      cx.globalAlpha=globalOpa*0.88;
+      cx.strokeStyle='#c8e6ff';
+      cx.lineWidth=1.6;
+      cx.lineCap='round';
+      cx.shadowColor='rgba(150,210,255,1)';
+      cx.shadowBlur=8;
+      cx.beginPath();
+      cx.moveTo(s.x0+ox, s.y0+oy);
+      cx.lineTo(ix+ox, iy+oy);
+      cx.stroke();
+      cx.restore();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+}
+window.addEventListener('load',startPlanAnim);
 </script>
 </body>
 </html>
