@@ -268,7 +268,7 @@ body.light #carea{background:repeating-linear-gradient(45deg,#e0e8f0 0,#e0e8f0 1
 <div id="ruler-quick-bar"><button class="btn sm s" onclick="rulerUndo()">↩ Deshacer punto</button><button class="btn sm g" onclick="rulerFinish(false)">✓ Guardar medida</button><button id="btn-ang-lock" class="btn sm s" onclick="toggleAngleLock()" title="Fijar ángulo 0/45/90°" style="margin:0;padding:6px 10px">∠ Ángulo</button></div>
 <div id="sbar"><span id="sbar-nm"></span><button class="sbbtn" id="sbar-rot" onclick="rotateSel()">↻</button><button class="sbbtn" onclick="dupSel()">⧉</button><button class="sbbtn" style="color:var(--acc2)" onclick="mobileEdit()">✎</button><button class="sbbtn d" onclick="delSel()">✕</button><button class="sbbtn ok" onclick="deselect()">✓</button></div>
 <div id="lp-ring"></div><div id="toast"></div><div id="furn-tooltip"></div><div id="minimap"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div></div>
-<div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="130" height="100"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
+<div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="160" height="130"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
 <div id="main"><aside id="panel"><div id="phdl"></div>
 <div class="acc" data-c="calib"><div class="acc-hdr open uncal" id="acc-hdr-calib" onclick="toggleAcc('calib')"><span class="acc-icon">📐</span><span class="acc-title">Calibración</span><span class="wb" id="calib-wb">⚠ Sin calibrar</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-calib"><div class="acc-inner"><p class="hint">Haz clic en 2 puntos del plano cuya distancia conozcas exactamente.</p><label>Distancia real (metros)</label><input type="number" id="cdist" value="2.30" step="0.01" min="0.1"><button class="btn" style="background:var(--cc);color:#1a0e00;margin-top:7px" id="bcalib" onclick="startCalib()">⊕ Activar calibración</button><div id="cst">— Pulsa para calibrar —</div></div></div></div>
 <div class="acc" data-c="ruler"><div class="acc-hdr" id="acc-hdr-ruler" onclick="toggleAcc('ruler')"><span class="acc-icon">📏</span><span class="acc-title">Metro / Área</span><span class="acc-badge" id="meas-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-ruler"><div class="acc-inner"><div class="tabs" style="margin-bottom:6px"><div class="tab on" id="rtab-medir" onclick="setRulerTab('medir')">📏 Medidas</div><div class="tab" id="rtab-area" onclick="setRulerTab('area')">⬡ Áreas</div></div><p class="hint" id="ruler-hint">Añade puntos para medir distancias entre ellos.</p><div class="g2"><button class="btn" id="btn-ruler" onclick="toggleRuler()" style="margin-top:0;background:var(--cr)">📏 Activar</button><button class="btn s" onclick="clearAllMeasures()" style="margin-top:0">🗑 Borrar todo</button></div><div id="meas-vis-bar"><button id="btn-vis-all" class="btn sm s" onclick="toggleAllMeasVis()" style="margin-top:0;width:100%">&#128065; Mostrar / Ocultar todas</button></div><button id="btn-freeprobe" onclick="toggleFreeProbe()" style="margin-top:5px;width:100%;background:var(--p2);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:6px 8px;font-size:.76rem;font-family:'Outfit',sans-serif;cursor:pointer;">🎯 Sonda libre</button><div id="fp-hint" style="display:none;font-size:.65rem;color:#a78bfa;margin-top:3px;font-family:'Space Mono',monospace">Toca o haz clic para colocar · arrastra para mover</div><label style="margin-top:7px">Etiqueta (opcional)</label><input type="text" id="ruler-label" placeholder="ej: salón, cocina..."><div id="area-color-row" style="display:none;flex-direction:column;gap:5px;margin-top:5px"><div style="display:flex;align-items:center;gap:6px"><label style="font-size:.72rem;color:var(--t2);min-width:52px">Color:</label><input type="color" id="ruler-area-color" value="#7ec8e3" style="width:26px;height:22px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px"></div><div style="display:flex;align-items:center;gap:6px"><label for="ruler-area-opa" style="font-size:.72rem;color:var(--t2);min-width:52px">Opacidad:</label><input type="range" id="ruler-area-opa" min="0.05" max="1" step="0.05" value="0.6" style="flex:1;height:3px;cursor:pointer"></div></div><div id="ruler-active-box"><div id="ruler-pts-info">Sin puntos</div><div class="g3" style="margin-bottom:5px"><button class="btn sm s" onclick="rulerUndo()">↩ Deshacer</button><button class="btn sm g" id="btn-save-meas" onclick="rulerFinishAuto()" style="margin-top:0">✓ Guardar</button><button class="btn sm d" onclick="rulerCancel()" style="margin-top:0">✕</button></div><button class="btn sm" id="btn-close-poly" style="background:rgba(126,200,227,.12);border:1px solid var(--area);color:var(--area);display:none;width:100%;margin-top:0" onclick="rulerFinish(true)">⬡ Cerrar → Área</button></div><input type="text" id="meas-search" placeholder="🔍 Buscar etiqueta..." oninput="filterMeasList(this.value)" style="margin-top:4px;margin-bottom:5px;display:none"><div id="ruler-list" style="margin-top:7px"></div><div style="border-top:1px dashed var(--brd);padding-top:7px;margin-top:6px"><p class="glbl" style="color:var(--cc);margin-bottom:3px">📍 Cota de referencia</p><p class="hint" id="refpt-hint" style="margin-bottom:4px">Sin cota fijada en este plano</p><div class="g2"><button class="btn sm s" id="btn-refpt" onclick="startRefPt()" style="margin-top:0">⊕ Fijar cota</button><button class="btn sm s" onclick="clearRefPt()" style="margin-top:0">✕ Limpiar</button></div></div><button class="btn sm s" onclick="exportMeasText()" style="margin-top:7px;width:100%">📋 Copiar resumen</button></div></div></div>
@@ -435,125 +435,290 @@ function startPlanAnim(){
   const cv=document.getElementById('plan-anim');
   if(!cv)return;
   const cx=cv.getContext('2d');
-  const W=130,H=100;
-  // House skeleton: rooms defined as polylines (normalized 0-1)
-  // Base floorplan: entrance hall, living room, kitchen, bedroom
-  // Points are [x,y] in 0-1 space
-  const rooms=[
-    // outer walls
-    {pts:[[.08,.12],[.92,.12],[.92,.88],[.08,.88],[.08,.12]],delay:0},
-    // inner wall: hall/living divider (vertical)
-    {pts:[[.38,.12],[.38,.55]],delay:.15},
-    // inner wall: kitchen/living (horizontal)
-    {pts:[[.38,.55],[.92,.55]],delay:.25},
-    // inner wall: bedroom divider
-    {pts:[[.38,.55],[.38,.88]],delay:.3},
-    // hall to living door gap indicator
-    {pts:[[.38,.3],[.52,.3]],delay:.38},
-    // living to kitchen door
-    {pts:[[.65,.55],[.65,.68]],delay:.44},
-    // bedroom door
-    {pts:[[.38,.72],[.22,.72]],delay:.5},
-    // window living (short tick)
-    {pts:[[.92,.22],[.92,.38]],delay:.55},
-    // window kitchen
-    {pts:[[.92,.62],[.92,.76]],delay:.6},
-    // window bedroom
-    {pts:[[.08,.62],[.08,.76]],delay:.65},
-    // entrance door arc hint
-    {pts:[[.08,.32],[.08,.48]],delay:.7},
+  const W=160,H=130;
+  cv.width=W; cv.height=H;
+
+  // ── FLOOR DEFINITIONS ─────────────────────────────────────────────────────
+  // Each floor: walls (thick/thin), doors (arc), pool, drawn sequentially
+  const floors=[
+
+    // ── PLANTA BAJA ──────────────────────────────────────────────────────────
+    {
+      // Outer walls: [x0,y0,x1,y1], lineWidth = thick
+      outer:[
+        [.06,.06, .70,.06],  // north top
+        [.70,.06, .70,.62],  // east side
+        [.70,.62, .06,.62],  // south bottom
+        [.06,.62, .06,.06],  // west side
+      ],
+      // Inner walls: thin
+      inner:[
+        [.30,.06, .30,.42],   // hall/salón divider
+        [.30,.42, .70,.42],   // salón/cocina horizontal
+        [.30,.42, .30,.62],   // hall/dormitorio divider
+        [.50,.42, .50,.62],   // dormitorio split
+      ],
+      // Doors: {x,y,r,startAngle,endAngle,wallDir}
+      // arc quarter-circle showing swing
+      doors:[
+        {x:.30,y:.22,r:.06,a0:Math.PI/2,a1:Math.PI,   flip:false, delay:.6},  // hall→salón
+        {x:.30,y:.52,r:.06,a0:0,        a1:Math.PI/2, flip:false, delay:.65}, // hall→dorm1
+        {x:.50,y:.52,r:.06,a0:Math.PI,  a1:3*Math.PI/2,flip:false,delay:.7},  // dorm1→dorm2
+        {x:.50,y:.42,r:.06,a0:3*Math.PI/2,a1:2*Math.PI,flip:false,delay:.72},// salón→cocina
+        {x:.06,y:.38,r:.07,a0:-Math.PI/2,a1:0,flip:false,delay:.55},          // entrada
+      ],
+      // Windows: short double-line ticks on outer walls
+      windows:[
+        {x0:.42,y0:.06,x1:.58,y1:.06},  // north/salón
+        {x0:.70,y0:.14,x1:.70,y1:.26},  // east/salón
+        {x0:.70,y0:.48,x1:.70,y1:.60},  // east/cocina
+        {x0:.14,y0:.62,x1:.26,y1:.62},  // south/dorm
+        {x0:.38,y0:.62,x1:.48,y1:.62},  // south/dorm2
+      ],
+      // Pool (exterior, bottom right)
+      pool:{x:.76,y:.28,w:.18,h:.30,rx:.04},
+      // Pool lane lines
+      poolLines:[
+        [.76,.35,.94,.35],
+        [.76,.42,.94,.42],
+        [.76,.49,.94,.49],
+      ],
+      label:'Planta Baja',
+    },
+
+    // ── PLANTA ALTA ──────────────────────────────────────────────────────────
+    {
+      outer:[
+        [.06,.06, .70,.06],
+        [.70,.06, .70,.55],
+        [.70,.55, .06,.55],
+        [.06,.55, .06,.06],
+      ],
+      inner:[
+        [.36,.06, .36,.55],   // main divider
+        [.36,.30, .70,.30],   // upper/lower rooms
+        [.06,.30, .36,.30],   // bedroom split
+      ],
+      doors:[
+        {x:.36,y:.18,r:.06,a0:Math.PI/2,a1:Math.PI,  flip:false,delay:.58},
+        {x:.36,y:.42,r:.06,a0:Math.PI/2,a1:Math.PI,  flip:false,delay:.63},
+        {x:.53,y:.30,r:.06,a0:3*Math.PI/2,a1:2*Math.PI,flip:false,delay:.68},
+        {x:.06,y:.42,r:.06,a0:-Math.PI/2,a1:0,flip:false,delay:.52},
+      ],
+      windows:[
+        {x0:.12,y0:.06,x1:.24,y1:.06},
+        {x0:.44,y0:.06,x1:.56,y1:.06},
+        {x0:.70,y0:.10,x1:.70,y1:.20},
+        {x0:.70,y0:.38,x1:.70,y1:.50},
+        {x0:.12,y0:.55,x1:.24,y1:.55},
+      ],
+      pool:null,
+      poolLines:[],
+      label:'Planta Alta',
+    },
   ];
 
-  // Animation state per segment
-  const segs=[];
-  rooms.forEach(r=>{
-    for(let i=0;i<r.pts.length-1;i++){
-      const p0=r.pts[i], p1=r.pts[i+1];
-      segs.push({
-        x0:p0[0]*W, y0:p0[1]*H,
-        x1:p1[0]*W, y1:p1[1]*H,
-        delay:r.delay,
-        t:0, // 0=not started, grows to 1
-        opa:0,
-      });
-    }
-  });
+  // ── TIMING ────────────────────────────────────────────────────────────────
+  const DRAW  = 2.4;   // draw phase
+  const HOLD  = 0.8;   // hold
+  const DRIFT = 1.0;   // explode out + fade
+  const FADE  = 0.3;   // gap
+  const FLOOR_CYCLE = DRAW+HOLD+DRIFT+FADE;
+  const TOTAL_CYCLE = FLOOR_CYCLE * floors.length;
 
-  // Second phase: "open" animation — segments slide outward from center
-  // Each seg gets a drift direction after fully drawn
   const CX=W/2, CY=H/2;
-  segs.forEach(s=>{
-    const mx=(s.x0+s.x1)/2, my=(s.y0+s.y1)/2;
-    const dx=mx-CX, dy=my-CY;
-    const mag=Math.hypot(dx,dy)||1;
-    s.drift={ x:dx/mag*6, y:dy/mag*6 }; // max drift px
-  });
-
-  const DRAW_DUR=2.2;   // seconds to draw all lines
-  const HOLD_DUR=0.8;   // hold fully drawn
-  const DRIFT_DUR=1.0;  // drift out + fade
-  const FADE_DUR=0.5;   // fade back in / restart
-  const CYCLE=DRAW_DUR+HOLD_DUR+DRIFT_DUR+FADE_DUR;
-
   let start=null;
 
-  function draw(ts){
-    if(!start)start=ts;
-    const elapsed=(ts-start)/1000;
-    const phase=elapsed%CYCLE;
-    cx.clearRect(0,0,W,H);
+  function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
 
-    segs.forEach(s=>{
-      let lineT=0, globalOpa=1;
+  function drawFloor(floor, phase, globalOpa){
+    const scX=W, scY=H;
 
-      if(phase<DRAW_DUR){
-        // Drawing phase: each seg starts at its delay offset
-        const segStart=s.delay*DRAW_DUR;
-        const segDur=DRAW_DUR*(1-s.delay)+.001;
-        lineT=Math.max(0,Math.min(1,(phase-segStart)/segDur*.7+.3));
-        lineT=lineT<0?0:lineT;
-        globalOpa=1;
-      } else if(phase<DRAW_DUR+HOLD_DUR){
-        lineT=1; globalOpa=1;
-      } else if(phase<DRAW_DUR+HOLD_DUR+DRIFT_DUR){
-        const dp=(phase-DRAW_DUR-HOLD_DUR)/DRIFT_DUR;
-        lineT=1; globalOpa=1-dp;
-      } else {
-        lineT=0; globalOpa=0;
-      }
+    // drift factor (0=still, 1=max drift)
+    let driftP=0;
+    if(phase>DRAW+HOLD) driftP=(phase-DRAW-HOLD)/DRIFT;
+    const driftEased=ease(Math.min(1,driftP));
 
-      if(lineT<=0||globalOpa<=0)return;
+    function segDrift(x,y){
+      const dx=(x-0.38)*W-CX, dy=(y-0.34)*H-CY;
+      const mag=Math.hypot(dx,dy)||1;
+      return{ox:dx/mag*driftEased*10, oy:dy/mag*driftEased*10};
+    }
 
-      // Drift offset
-      let driftP=0;
-      if(phase>DRAW_DUR+HOLD_DUR){
-        driftP=(phase-DRAW_DUR-HOLD_DUR)/DRIFT_DUR;
-      }
-      const ox=s.drift.x*driftP, oy=s.drift.y*driftP;
+    function tForSeg(delay){
+      const dur=DRAW*(1-delay)+.001;
+      return Math.max(0,Math.min(1,(phase-delay*DRAW)/dur));
+    }
 
-      const ix=s.x0+(s.x1-s.x0)*lineT;
-      const iy=s.y0+(s.y1-s.y0)*lineT;
-
-      cx.save();
-      cx.globalAlpha=globalOpa*0.88;
-      cx.strokeStyle='#c8e6ff';
-      cx.lineWidth=1.6;
+    function setLine(lw,alpha){
+      cx.globalAlpha=globalOpa*alpha;
       cx.lineCap='round';
-      cx.shadowColor='rgba(150,210,255,1)';
-      cx.shadowBlur=8;
+      cx.lineJoin='round';
+    }
+
+    function drawSeg(x0,y0,x1,y1,lw,delay,alpha){
+      const t=tForSeg(delay);
+      if(t<=0)return;
+      const ix=x0+(x1-x0)*t, iy=y0+(y1-y0)*t;
+      const {ox,oy}=segDrift((x0+x1)/2,(y0+y1)/2);
+      setLine(lw,alpha);
+      cx.lineWidth=lw;
+      cx.strokeStyle='#c8e6ff';
+      cx.shadowColor='rgba(150,210,255,0.9)';
+      cx.shadowBlur=lw>2?10:6;
       cx.beginPath();
-      cx.moveTo(s.x0+ox, s.y0+oy);
-      cx.lineTo(ix+ox, iy+oy);
+      cx.moveTo(x0*scX+ox, y0*scY+oy);
+      cx.lineTo(ix*scX+ox, iy*scY+oy);
+      cx.stroke();
+    }
+
+    // OUTER WALLS (thick)
+    floor.outer.forEach((s,i)=>{
+      cx.save();
+      drawSeg(s[0],s[1],s[2],s[3], 2.8, i*.04, .95);
+      cx.restore();
+    });
+
+    // INNER WALLS (thin)
+    floor.inner.forEach((s,i)=>{
+      cx.save();
+      drawSeg(s[0],s[1],s[2],s[3], 1.2, .18+i*.05, .85);
+      cx.restore();
+    });
+
+    // WINDOWS (double tick on wall)
+    floor.windows.forEach((w,i)=>{
+      const t=tForSeg(.45+i*.03);
+      if(t<=0)return;
+      const mx=(w.x0+w.x1)/2, my=(w.y0+w.y1)/2;
+      const {ox,oy}=segDrift(mx,my);
+      const horiz=Math.abs(w.x1-w.x0)>Math.abs(w.y1-w.y0);
+      cx.save();
+      cx.globalAlpha=globalOpa*.7;
+      cx.strokeStyle='#7ec8e3';
+      cx.lineWidth=1; cx.shadowBlur=3; cx.shadowColor='rgba(126,200,227,.7)';
+      // outer tick
+      cx.beginPath();
+      cx.moveTo(w.x0*scX+ox,w.y0*scY+oy);
+      cx.lineTo(w.x1*scX+ox,w.y1*scY+oy);
+      cx.stroke();
+      // inner tick offset
+      const off=horiz?[0,3]:[3,0];
+      cx.globalAlpha=globalOpa*.4;
+      cx.beginPath();
+      cx.moveTo(w.x0*scX+ox+off[0],w.y0*scY+oy+off[1]);
+      cx.lineTo(w.x1*scX+ox+off[0],w.y1*scY+oy+off[1]);
       cx.stroke();
       cx.restore();
     });
 
-    requestAnimationFrame(draw);
+    // DOORS (arc + hinge line)
+    floor.doors.forEach((d,i)=>{
+      const t=tForSeg(d.delay);
+      if(t<=0)return;
+      const {ox,oy}=segDrift(d.x,d.y);
+      const px=d.x*scX+ox, py=d.y*scY+oy;
+      const r=d.r*scX;
+      const arcEnd=d.a0+(d.a1-d.a0)*t;
+      cx.save();
+      cx.globalAlpha=globalOpa*.75;
+      cx.strokeStyle='#7ec8e3';
+      cx.lineWidth=.9;
+      cx.setLineDash([2,2]);
+      cx.shadowBlur=4; cx.shadowColor='rgba(126,200,227,.6)';
+      // hinge tick
+      cx.beginPath();
+      const hx=Math.cos(d.a0)*r, hy=Math.sin(d.a0)*r;
+      cx.moveTo(px,py); cx.lineTo(px+hx,py+hy);
+      cx.stroke();
+      // arc
+      cx.beginPath();
+      cx.arc(px,py,r,d.a0,arcEnd);
+      cx.stroke();
+      cx.setLineDash([]);
+      cx.restore();
+    });
+
+    // POOL
+    if(floor.pool){
+      const p=floor.pool;
+      const t=tForSeg(.8);
+      if(t>0){
+        const {ox,oy}=segDrift(p.x+p.w/2,p.y+p.h/2);
+        cx.save();
+        cx.globalAlpha=globalOpa*.7*t;
+        cx.strokeStyle='#38bdf8';
+        cx.lineWidth=1.5;
+        cx.shadowColor='rgba(56,189,248,.8)'; cx.shadowBlur=8;
+        cx.beginPath();
+        const rx=p.rx*scX, ry=p.rx*scY;
+        const x=p.x*scX+ox, y=p.y*scY+oy, w=p.w*scX, h=p.h*scY;
+        cx.moveTo(x+rx,y);
+        cx.lineTo(x+w-rx,y); cx.arcTo(x+w,y,x+w,y+ry,rx);
+        cx.lineTo(x+w,y+h-ry); cx.arcTo(x+w,y+h,x+w-rx,y+h,rx);
+        cx.lineTo(x+rx,y+h); cx.arcTo(x,y+h,x,y+h-ry,rx);
+        cx.lineTo(x,y+ry); cx.arcTo(x,y,x+rx,y,rx);
+        cx.closePath(); cx.stroke();
+        // fill tint
+        cx.globalAlpha=globalOpa*.12*t;
+        cx.fillStyle='#38bdf8'; cx.fill();
+        cx.restore();
+        // pool lane lines
+        floor.poolLines.forEach((l,li)=>{
+          const tl=tForSeg(.85+li*.03);
+          if(tl<=0)return;
+          const {ox:lox,oy:loy}=segDrift((l[0]+l[2])/2,(l[1]+l[3])/2);
+          cx.save();
+          cx.globalAlpha=globalOpa*.35*tl;
+          cx.strokeStyle='#38bdf8'; cx.lineWidth=.8;
+          cx.setLineDash([3,3]);
+          cx.beginPath();
+          cx.moveTo(l[0]*scX+lox,l[1]*scY+loy);
+          cx.lineTo(l[2]*scX+lox,l[3]*scY+loy);
+          cx.stroke(); cx.setLineDash([]);
+          cx.restore();
+        });
+      }
+    }
+
+    // FLOOR LABEL (fade in at end of draw)
+    if(phase>DRAW*.7){
+      const lt=Math.min(1,(phase-DRAW*.7)/(DRAW*.3));
+      cx.save();
+      cx.globalAlpha=globalOpa*lt*.55;
+      cx.fillStyle='rgba(200,230,255,1)';
+      cx.font='bold 7px Space Mono,monospace';
+      cx.textAlign='right';
+      cx.fillText(floor.label, W-2, H-3);
+      cx.restore();
+    }
   }
 
-  requestAnimationFrame(draw);
+  function frame(ts){
+    if(!start)start=ts;
+    const elapsed=(ts-start)/1000;
+    const cycleT=elapsed%TOTAL_CYCLE;
+    const floorIdx=Math.floor(cycleT/FLOOR_CYCLE);
+    const floorT=cycleT%FLOOR_CYCLE;
+
+    cx.clearRect(0,0,W,H);
+    cx.shadowBlur=0;
+
+    let globalOpa=1;
+    if(floorT>DRAW+HOLD){
+      globalOpa=1-Math.min(1,(floorT-DRAW-HOLD)/DRIFT);
+    }
+    // brief fade-in between floors
+    if(floorT<.15) globalOpa=floorT/.15;
+
+    drawFloor(floors[Math.min(floorIdx,floors.length-1)], floorT, globalOpa);
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 }
 window.addEventListener('load',startPlanAnim);
+
 </script>
 </body>
 </html>
