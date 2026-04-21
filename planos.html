@@ -460,63 +460,106 @@ function startPlanAnim(){
     }
   ];
 
-  const DRAW = 4.0;
+  const DRAW=3.5, HOLD=4.0, FADE=1.0, CYCLE=DRAW+HOLD+FADE;
   let start=null;
 
-  function drawFloor(floor, phase, globalOpa, tx, ty, scale){
+  function easeOut(t){return 1-Math.pow(1-t,3);}
+
+  function drawFloor(floor, phase, globalOpa){
     cx.save();
-    cx.translate(tx, ty);
-    cx.scale(scale, scale);
-    const scX=W, scY=H;
+
+    cx.strokeStyle=`rgba(126,200,227,${globalOpa*0.06})`;
+    cx.lineWidth=1;
+    for(let i=0;i<W;i+=14){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,H);cx.stroke();}
+    for(let i=0;i<H;i+=14){cx.beginPath();cx.moveTo(0,i);cx.lineTo(W,i);cx.stroke();}
+
+    const minX=Math.min(...floor.outer.map(s=>Math.min(s[0],s[2])));
+    const maxX=Math.max(...floor.outer.map(s=>Math.max(s[0],s[2])));
+    const minY=Math.min(...floor.outer.map(s=>Math.min(s[1],s[3])));
+    const maxY=Math.max(...floor.outer.map(s=>Math.max(s[1],s[3])));
+    
+    const bW=(maxX-minX)*W, bH=(maxY-minY)*H;
+    const scale=Math.min(W*.75/bW, H*.75/bH);
+    const tx=(W-bW*scale)/2 - minX*W*scale;
+    const ty=(H-bH*scale)/2 - minY*H*scale;
+
+    cx.translate(tx,ty);
+    cx.scale(scale,scale);
 
     function tForSeg(delay){
       const dur=DRAW*(1-delay)+.001;
-      return Math.max(0,Math.min(1,(phase-delay*DRAW)/dur));
+      const p=Math.max(0,Math.min(1,(phase-delay*DRAW)/dur));
+      return easeOut(p);
     }
 
-    function setLine(lw,alpha){
-      cx.globalAlpha=globalOpa*alpha;
-      cx.lineCap='round';
-      cx.lineJoin='round';
-    }
-
-    function drawSeg(x0,y0,x1,y1,lw,delay,alpha){
+    function drawSeg(x0,y0,x1,y1,lw,delay,alpha,isOuter){
       const t=tForSeg(delay);
       if(t<=0)return;
       const ix=x0+(x1-x0)*t, iy=y0+(y1-y0)*t;
-      setLine(lw,alpha);
+      
+      cx.globalAlpha=globalOpa*alpha;
+      cx.lineCap='round';
+      cx.lineJoin='round';
       cx.lineWidth=lw;
       cx.strokeStyle='#c8e6ff';
       cx.shadowColor='rgba(150,210,255,0.9)';
       cx.shadowBlur=lw>2?10:6;
       cx.beginPath();
-      cx.moveTo(x0*scX, y0*scY);
-      cx.lineTo(ix*scX, iy*scY);
+      cx.moveTo(x0*W,y0*H);
+      cx.lineTo(ix*W,iy*H);
       cx.stroke();
+
+      cx.shadowBlur=4;
+      cx.fillStyle=`rgba(255,255,255,${globalOpa*alpha*t})`;
+      cx.beginPath();
+      cx.arc(x0*W,y0*H,1.5,0,Math.PI*2);
+      cx.fill();
+      if(t>=1){
+        cx.beginPath();
+        cx.arc(x1*W,y1*H,1.5,0,Math.PI*2);
+        cx.fill();
+      }
+
+      if(isOuter && t>0.1 && t<0.95){
+        const dx=x1-x0, dy=y1-y0, len=Math.hypot(dx,dy);
+        const nx=-dy/len, ny=dx/len;
+        const off=12/scale;
+        const mx=(x0+(x1-x0)*t/2)*W+nx*off, my=(y0+(y1-y0)*t/2)*H+ny*off;
+        const val=(len*12.5).toFixed(2)+'m';
+        cx.save();
+        cx.translate(mx,my);
+        cx.rotate(Math.atan2(dy,dx));
+        cx.fillStyle=`rgba(126,200,227,${globalOpa*Math.sin(t*Math.PI)})`;
+        cx.font='bold '+(8/scale)+'px Space Mono,monospace';
+        cx.textAlign='center';
+        cx.textBaseline='middle';
+        cx.fillText(val,0,0);
+        cx.restore();
+      }
     }
 
-    floor.outer.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],4.5,i*.04,.95));
-    floor.inner.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],2.5,.18+i*.05,.85));
+    floor.outer.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],3.5,i*.04,.95,true));
+    floor.inner.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],2.0,.18+i*.05,.85,false));
 
     floor.windows.forEach((w,i)=>{
       const t=tForSeg(.45+i*.03);
       if(t<=0)return;
       const horiz=Math.abs(w.x1-w.x0)>Math.abs(w.y1-w.y0);
       cx.save();
-      cx.globalAlpha=globalOpa*.7;
+      cx.globalAlpha=globalOpa*.7*t;
       cx.strokeStyle='#7ec8e3';
-      cx.lineWidth=2.0;
+      cx.lineWidth=1.5;
       cx.shadowBlur=3;
       cx.shadowColor='rgba(126,200,227,.7)';
       cx.beginPath();
-      cx.moveTo(w.x0*scX,w.y0*scY);
-      cx.lineTo(w.x1*scX,w.y1*scY);
+      cx.moveTo(w.x0*W,w.y0*H);
+      cx.lineTo(w.x1*W,w.y1*H);
       cx.stroke();
-      const off=horiz?[0,4]:[4,0];
-      cx.globalAlpha=globalOpa*.4;
+      const off=horiz?[0,3/scale]:[3/scale,0];
+      cx.globalAlpha=globalOpa*.4*t;
       cx.beginPath();
-      cx.moveTo(w.x0*scX+off[0],w.y0*scY+off[1]);
-      cx.lineTo(w.x1*scX+off[0],w.y1*scY+off[1]);
+      cx.moveTo(w.x0*W+off[0],w.y0*H+off[1]);
+      cx.lineTo(w.x1*W+off[0],w.y1*H+off[1]);
       cx.stroke();
       cx.restore();
     });
@@ -524,13 +567,13 @@ function startPlanAnim(){
     floor.doors.forEach((d,i)=>{
       const t=tForSeg(d.delay);
       if(t<=0)return;
-      const px=d.x*scX, py=d.y*scY, r=d.r*scX;
+      const px=d.x*W, py=d.y*H, r=d.r*W;
       const arcEnd=d.a0+(d.a1-d.a0)*t;
       cx.save();
-      cx.globalAlpha=globalOpa*.75;
+      cx.globalAlpha=globalOpa*.75*t;
       cx.strokeStyle='#7ec8e3';
-      cx.lineWidth=2.0;
-      cx.setLineDash([3,3]);
+      cx.lineWidth=1.5;
+      cx.setLineDash([2,2]);
       cx.shadowBlur=4;
       cx.shadowColor='rgba(126,200,227,.6)';
       cx.beginPath();
@@ -551,19 +594,18 @@ function startPlanAnim(){
   function frame(ts){
     if(!start)start=ts;
     const elapsed=(ts-start)/1000;
-    const phase=Math.min(elapsed, DRAW + 0.1);
+    const cycleT=elapsed%CYCLE;
+    const phase=Math.min(cycleT, DRAW+0.1);
 
     cx.clearRect(0,0,W,H);
-    cx.shadowBlur=0;
 
     let globalOpa=1;
-    if(phase<.2) globalOpa=phase/.2;
+    if(cycleT<.3) globalOpa=cycleT/.3;
+    else if(cycleT>DRAW+HOLD) globalOpa=Math.max(0, 1-(cycleT-(DRAW+HOLD))/FADE);
 
-    drawFloor(floors[0], phase, globalOpa, 8, 13, 1.25);
+    drawFloor(floors[0], phase, globalOpa);
 
-    if(elapsed <= DRAW + 0.5) {
-       requestAnimationFrame(frame);
-    }
+    requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(frame);
