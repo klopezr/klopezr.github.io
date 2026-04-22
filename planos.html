@@ -272,6 +272,10 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 #lock-furn-btn.active{background:var(--red)!important;color:#fff!important}
 #group-panel{display:none;background:var(--p2);border:1px solid var(--brd);border-radius:6px;padding:6px 8px;margin-bottom:6px}
 #group-panel.show{display:flex;gap:4px;flex-wrap:wrap}
+#ui-tooltip{position:fixed;top:0;left:0;background:rgba(11,25,41,.96);color:var(--text);border:1px solid var(--brd);border-left:3px solid var(--acc2);padding:8px 12px;border-radius:6px;font-size:.72rem;font-family:'Outfit',sans-serif;z-index:10000;pointer-events:none;opacity:0;transition:opacity .15s;max-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:3px;will-change:transform}
+#ui-tooltip.show{opacity:1}
+#ui-tooltip strong{color:var(--acc2);font-size:.78rem;font-weight:600;letter-spacing:.02em}
+@media(max-width:767px){#ui-tooltip{display:none!important}}
 </style>
 </head>
 <body>
@@ -296,6 +300,25 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+const _uiTooltip=document.createElement('div');_uiTooltip.id='ui-tooltip';document.body.appendChild(_uiTooltip);
+const _tooltips=[
+  {s:'#acc-hdr-calib',t:'📐 Calibración',d:'Establece la escala. Clic en 2 puntos conocidos e introduce la medida real.'},
+  {s:'#acc-hdr-ruler',t:'📏 Metro / Área',d:'Mide distancias haciendo clic. Une el último punto con el primero para áreas.'},
+  {s:'#acc-hdr-add',t:'➕ Añadir Mueble',d:'Configura forma y medidas de un mueble para colocarlo en el plano.'},
+  {s:'#acc-hdr-list',t:'🛋 Lista de Muebles',d:'Alinea, agrupa, edita o elimina los muebles que ya están en el plano.'},
+  {s:'#acc-hdr-zoom',t:'🔍 Vista y Zoom',d:'Controla el zoom, imantado a la cuadrícula y oculta capas (medidas/muebles).'},
+  {s:'#acc-hdr-pdf',t:'📄 Exportar PDF',d:'Genera un documento PDF del plano en alta calidad listo para imprimir.'},
+  {s:'#acc-hdr-io',t:'💾 Guardar Proyecto',d:'Exporta tu trabajo (JSON) para no perderlo o importa un proyecto anterior.'},
+  {s:'#acc-hdr-floor',t:'🗺️ Gestión de Plantas',d:'Añade varios pisos (ej. Planta Baja, Planta Alta) para un proyecto completo.'},
+  {s:'#theme-btn',t:'Modo Color',d:'Alterna entre tema claro y tema oscuro.'},
+  {s:'#btn-ruler',t:'Herramienta Metro',d:'Activa la medición. Haz clic en el plano para dibujar líneas.'},
+  {s:'#btn-freeprobe',t:'Sonda Libre',d:'Mide la distancia mínima desde un punto libre a los muebles cercanos.'},
+  {s:'#btn-qm',t:'Distancia entre Muebles',d:'Selecciona dos muebles para saber la distancia exacta entre ellos.'},
+  {s:'#btn-ang-lock',t:'Forzar Ángulos',d:'Fija el trazado de líneas rectas forzando saltos de 45°.'},
+  {s:'#btn-angle-3pt',t:'Medir Ángulo (3 puntos)',d:'Haz clic en 3 puntos (el vértice en medio) para calcular su ángulo.'}
+];
+function _posTT(e){if(!_uiTooltip.classList.contains('show'))return;let x=e.clientX+15,y=e.clientY+15;const r=_uiTooltip.getBoundingClientRect();if(x+r.width>window.innerWidth)x=e.clientX-r.width-10;if(y+r.height>window.innerHeight)y=e.clientY-r.height-10;_uiTooltip.style.transform=`translate(${x}px, ${y}px)`;}
+window.addEventListener('load',()=>{_tooltips.forEach(tt=>{document.querySelectorAll(tt.s).forEach(el=>{el.addEventListener('mouseenter',e=>{if(isMob())return;_uiTooltip.innerHTML=`<strong>${tt.t}</strong><span>${tt.d}</span>`;_uiTooltip.style.transform=`translate(${e.clientX+15}px, ${e.clientY+15}px)`;_uiTooltip.classList.add('show');});el.addEventListener('mousemove',_posTT);el.addEventListener('mouseleave',()=>_uiTooltip.classList.remove('show'));});});});
 const _TRASH_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
 const _EYE_OPEN=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 const _EYE_CLOSED=`<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
