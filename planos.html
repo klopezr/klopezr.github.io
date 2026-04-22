@@ -526,7 +526,243 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){
 document.addEventListener('keyup',e=>{if(e.key==='Shift')shiftHeld=false;});
 carea.addEventListener('scroll',()=>{if(showMinimap)renderMinimap();},{passive:true});
 setDefaultAccordionState();
-function startPlanAnim(){const cv=document.getElementById('plan-anim');if(!cv)return;const cx=cv.getContext('2d');const W=320,H=170;cv.width=W;cv.height=H;const floors=[{outer:[[.06,.06,.70,.06],[.70,.06,.70,.62],[.70,.62,.06,.62],[.06,.62,.06,.06]],inner:[[.30,.06,.30,.42],[.50,.06,.50,.42],[.30,.42,.70,.42],[.30,.42,.30,.62],[.45,.42,.45,.62],[.58,.42,.58,.62],[.18,.06,.18,.22],[.06,.22,.18,.22],[.30,.20,.50,.20]],doors:[{x:.30,y:.26,r:.05,a0:Math.PI/2,a1:Math.PI,delay:.6},{x:.50,y:.26,r:.05,a0:Math.PI/2,a1:Math.PI,delay:.62},{x:.30,y:.52,r:.05,a0:0,a1:Math.PI/2,delay:.65},{x:.45,y:.52,r:.05,a0:0,a1:Math.PI/2,delay:.68},{x:.58,y:.52,r:.05,a0:0,a1:Math.PI/2,delay:.7},{x:.06,y:.38,r:.06,a0:-Math.PI/2,a1:0,delay:.55}],windows:[{x0:.42,y0:.06,x1:.58,y1:.06},{x0:.70,y0:.14,x1:.70,y1:.26},{x0:.70,y0:.48,x1:.70,y1:.60},{x0:.14,y0:.62,x1:.26,y1:.62},{x0:.38,y0:.62,x1:.48,y1:.62}]}];const DRAW=3.5,HOLD=4.0,FADE=1.0,CYCLE=DRAW+HOLD+FADE;let start=null;function easeOut(t){return 1-Math.pow(1-t,3);}function drawFloor(floor,phase,globalOpa){cx.save();cx.strokeStyle='rgba(126,200,227,'+(globalOpa*0.06)+')';cx.lineWidth=1;for(let i=0;i<W;i+=14){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,H);cx.stroke();}for(let i=0;i<H;i+=14){cx.beginPath();cx.moveTo(0,i);cx.lineTo(W,i);cx.stroke();}const minX=Math.min(...floor.outer.map(s=>Math.min(s[0],s[2])));const maxX=Math.max(...floor.outer.map(s=>Math.max(s[0],s[2])));const minY=Math.min(...floor.outer.map(s=>Math.min(s[1],s[3])));const maxY=Math.max(...floor.outer.map(s=>Math.max(s[1],s[3])));const bW=(maxX-minX)*W,bH=(maxY-minY)*H;const scale=Math.min(W*.75/bW,H*.75/bH);const tx=(W-bW*scale)/2-minX*W*scale;const ty=(H-bH*scale)/2-minY*H*scale;cx.translate(tx,ty);cx.scale(scale,scale);function tForSeg(delay){const dur=DRAW*(1-delay)+.001;const p=Math.max(0,Math.min(1,(phase-delay*DRAW)/dur));return easeOut(p);}function drawSeg(x0,y0,x1,y1,lw,delay,alpha,isOuter){const t=tForSeg(delay);if(t<=0)return;const ix=x0+(x1-x0)*t,iy=y0+(y1-y0)*t;cx.globalAlpha=globalOpa*alpha;cx.lineCap='round';cx.lineJoin='round';cx.lineWidth=lw;cx.strokeStyle='#c8e6ff';cx.shadowColor='rgba(150,210,255,0.9)';cx.shadowBlur=lw>2?10:6;cx.beginPath();cx.moveTo(x0*W,y0*H);cx.lineTo(ix*W,iy*H);cx.stroke();cx.shadowBlur=4;cx.fillStyle='rgba(255,255,255,'+(globalOpa*alpha*t)+')';cx.beginPath();cx.arc(x0*W,y0*H,1.5,0,Math.PI*2);cx.fill();if(t>=1){cx.beginPath();cx.arc(x1*W,y1*H,1.5,0,Math.PI*2);cx.fill();}if(isOuter&&t>0.1&&t<0.95){const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy);const nx=-dy/len,ny=dx/len;const off=12/scale;const mx=(x0+(x1-x0)*t/2)*W+nx*off,my=(y0+(y1-y0)*t/2)*H+ny*off;const val=(len*12.5).toFixed(2)+'m';cx.save();cx.translate(mx,my);cx.rotate(Math.atan2(dy,dx));cx.fillStyle='rgba(126,200,227,'+(globalOpa*Math.sin(t*Math.PI))+')';cx.font='bold '+(8/scale)+'px Space Mono,monospace';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(val,0,0);cx.restore();}}floor.outer.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],3.5,i*.04,.95,true));floor.inner.forEach((s,i)=>drawSeg(s[0],s[1],s[2],s[3],2.0,.18+i*.05,.85,false));floor.windows.forEach((w,i)=>{const t=tForSeg(.45+i*.03);if(t<=0)return;const horiz=Math.abs(w.x1-w.x0)>Math.abs(w.y1-w.y0);cx.save();cx.globalAlpha=globalOpa*.7*t;cx.strokeStyle='#7ec8e3';cx.lineWidth=1.5;cx.shadowBlur=3;cx.shadowColor='rgba(126,200,227,.7)';cx.beginPath();cx.moveTo(w.x0*W,w.y0*H);cx.lineTo(w.x1*W,w.y1*H);cx.stroke();const off=horiz?[0,3/scale]:[3/scale,0];cx.globalAlpha=globalOpa*.4*t;cx.beginPath();cx.moveTo(w.x0*W+off[0],w.y0*H+off[1]);cx.lineTo(w.x1*W+off[0],w.y1*H+off[1]);cx.stroke();cx.restore();});floor.doors.forEach((d,i)=>{const t=tForSeg(d.delay);if(t<=0)return;const px=d.x*W,py=d.y*H,r=d.r*W;const arcEnd=d.a0+(d.a1-d.a0)*t;cx.save();cx.globalAlpha=globalOpa*.75*t;cx.strokeStyle='#7ec8e3';cx.lineWidth=1.5;cx.setLineDash([2,2]);cx.shadowBlur=4;cx.shadowColor='rgba(126,200,227,.6)';cx.beginPath();const hx=Math.cos(d.a0)*r,hy=Math.sin(d.a0)*r;cx.moveTo(px,py);cx.lineTo(px+hx,py+hy);cx.stroke();cx.beginPath();cx.arc(px,py,r,d.a0,arcEnd);cx.stroke();cx.setLineDash([]);cx.restore();});cx.restore();}function frame(ts){if(!start)start=ts;const elapsed=(ts-start)/1000;const cycleT=elapsed%CYCLE;const phase=Math.min(cycleT,DRAW+0.1);cx.clearRect(0,0,W,H);let globalOpa=1;if(cycleT<.3)globalOpa=cycleT/.3;else if(cycleT>DRAW+HOLD)globalOpa=Math.max(0,1-(cycleT-(DRAW+HOLD))/FADE);drawFloor(floors[0],phase,globalOpa);requestAnimationFrame(frame);}requestAnimationFrame(frame);}
+function startPlanAnim() {
+    const cv = document.getElementById('plan-anim');
+    if (!cv) return;
+    const cx = cv.getContext('2d');
+    const W = 320, H = 170;
+    cv.width = W;
+    cv.height = H;
+
+    const scale = 125, tx = 40, ty = 15;
+    function getX(x) { return tx + x * scale; }
+    function getY(y) { return ty + y * scale; }
+
+    const myFloor = {
+        outer: [
+            [-0.1, 0.1, 1.2, 0.1],
+            [1.2, 0.1, 1.2, 0.9],
+            [1.2, 0.9, 0.8, 0.9],
+            [0.6, 0.9, -0.1, 0.9],
+            [-0.1, 0.9, -0.1, 0.1]
+        ],
+        inner: [
+            [0.6, 0.1, 0.6, 0.15],
+            [0.6, 0.35, 0.6, 0.45],
+            [1.0, 0.65, 1.2, 0.65],
+            [-0.1, 0.5, 0.2, 0.5],
+            [0.4, 0.5, 0.6, 0.5],
+            [0.2, 0.1, 0.2, 0.3],
+            [0.2, 0.7, 0.2, 0.9]
+        ],
+        stairs: [
+            [0.3, 0.1, 0.3, 0.4],
+            [0.5, 0.1, 0.5, 0.4],
+            [0.3, 0.14, 0.5, 0.14],
+            [0.3, 0.18, 0.5, 0.18],
+            [0.3, 0.22, 0.5, 0.22],
+            [0.3, 0.26, 0.5, 0.26],
+            [0.3, 0.30, 0.5, 0.30],
+            [0.3, 0.34, 0.5, 0.34],
+            [0.3, 0.38, 0.5, 0.38]
+        ],
+        doors: [
+            { x: 0.6, y: 0.9, r: 0.2, a0: 0, a1: -Math.PI/2, delay: 0.5 },
+            { x: 0.6, y: 0.35, r: 0.2, a0: -Math.PI/2, a1: 0, delay: 0.54 },
+            { x: 0.6, y: 0.65, r: 0.2, a0: -Math.PI/2, a1: 0, delay: 0.58 },
+            { x: 0.8, y: 0.65, r: 0.2, a0: 0, a1: Math.PI/2, delay: 0.62 },
+            { x: 0.2, y: 0.3, r: 0.2, a0: Math.PI/2, a1: Math.PI, delay: 0.66 },
+            { x: 0.2, y: 0.7, r: 0.2, a0: -Math.PI/2, a1: Math.PI, delay: 0.7 }
+        ],
+        windows: [
+            { x0: -0.05, y0: 0.1, x1: 0.15, y1: 0.1 },
+            { x0: 0.3, y0: 0.1, x1: 0.5, y1: 0.1 },
+            { x0: 0.8, y0: 0.1, x1: 1.0, y1: 0.1 },
+            { x0: 1.2, y0: 0.45, x1: 1.2, y1: 0.55 },
+            { x0: 1.2, y0: 0.7, x1: 1.2, y1: 0.8 },
+            { x0: -0.1, y0: 0.2, x1: -0.1, y1: 0.4 },
+            { x0: -0.1, y0: 0.6, x1: -0.1, y1: 0.8 }
+        ],
+        grass: [
+            [1.25, 0.05, 1.75, 0.05],
+            [1.75, 0.05, 1.75, 0.85],
+            [1.75, 0.85, 1.25, 0.85],
+            [1.25, 0.85, 1.25, 0.05]
+        ],
+        pool: [
+            [1.3, 0.1, 1.7, 0.1],
+            [1.7, 0.1, 1.7, 0.8],
+            [1.7, 0.8, 1.3, 0.8],
+            [1.3, 0.8, 1.3, 0.1],
+            [1.3, 0.2, 1.4, 0.2],
+            [1.4, 0.2, 1.4, 0.1]
+        ],
+        dims: [
+            { x0: -0.1, y0: 0.02, x1: 1.2, y1: 0.02, val: "16.50m", delay: 0.85 },
+            { x0: -0.26, y0: 0.1, x1: -0.26, y1: 0.9, val: "12.00m", delay: 0.88 },
+            { x0: 1.8, y0: 0.1, x1: 1.8, y1: 0.8, val: "9.60m", delay: 0.91 }
+        ]
+    };
+
+    const DRAW = 3.5;
+    let start = null;
+
+    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function drawFloor(floor, phase, globalOpa) {
+        cx.save();
+        cx.strokeStyle = 'rgba(126,200,227,' + (globalOpa * 0.06) + ')';
+        cx.lineWidth = 1;
+        for (let i = 0; i < W; i += 14) { cx.beginPath(); cx.moveTo(i, 0); cx.lineTo(i, H); cx.stroke(); }
+        for (let i = 0; i < H; i += 14) { cx.beginPath(); cx.moveTo(0, i); cx.lineTo(W, i); cx.stroke(); }
+
+        function tForSeg(delay) {
+            const dur = DRAW * (1 - delay) + .001;
+            const p = Math.max(0, Math.min(1, (phase - delay * DRAW) / dur));
+            return easeOut(p);
+        }
+
+        function drawGenericSeg(x0, y0, x1, y1, lw, delay, alpha, color, isDashed = false) {
+            const t = tForSeg(delay);
+            if (t <= 0) return;
+            const ix = x0 + (x1 - x0) * t;
+            const iy = y0 + (y1 - y0) * t;
+
+            cx.globalAlpha = globalOpa * alpha;
+            cx.lineCap = 'round';
+            cx.lineJoin = 'round';
+            cx.lineWidth = lw;
+            cx.strokeStyle = color;
+            cx.shadowColor = color;
+            cx.shadowBlur = lw > 2 ? 8 : 4;
+
+            if (isDashed) cx.setLineDash([4, 4]);
+            else cx.setLineDash([]);
+
+            cx.beginPath();
+            cx.moveTo(getX(x0), getY(y0));
+            cx.lineTo(getX(ix), getY(iy));
+            cx.stroke();
+            cx.shadowBlur = 0;
+            cx.setLineDash([]);
+
+            if (t >= 1 && !isDashed) {
+                cx.fillStyle = 'rgba(255,255,255,' + (globalOpa * alpha * t) + ')';
+                cx.beginPath();
+                cx.arc(getX(x1), getY(y1), lw * 0.4, 0, Math.PI * 2);
+                cx.fill();
+            }
+        }
+
+        floor.outer.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 3.0, i * .04, .95, '#c8e6ff'));
+        floor.inner.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 2.0, 0.2 + i * .04, .85, '#c8e6ff'));
+        if (floor.stairs) floor.stairs.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 1.2, 0.4 + i * .02, .6, '#c8e6ff'));
+
+        floor.windows.forEach((w, i) => {
+            const t = tForSeg(.65 + i * .03);
+            if (t <= 0) return;
+            const horiz = Math.abs(w.x1 - w.x0) > Math.abs(w.y1 - w.y0);
+            cx.save();
+            cx.globalAlpha = globalOpa * .8 * t;
+            cx.strokeStyle = '#7ec8e3';
+            cx.lineWidth = 1.5;
+            cx.shadowBlur = 4;
+            cx.shadowColor = 'rgba(126,200,227,.7)';
+            cx.beginPath(); cx.moveTo(getX(w.x0), getY(w.y0)); cx.lineTo(getX(w.x1), getY(w.y1)); cx.stroke();
+            const off = horiz ? [0, 3] : [3, 0];
+            cx.globalAlpha = globalOpa * .5 * t;
+            cx.beginPath(); cx.moveTo(getX(w.x0) + off[0], getY(w.y0) + off[1]); cx.lineTo(getX(w.x1) + off[0], getY(w.y1) + off[1]); cx.stroke();
+            cx.restore();
+        });
+
+        floor.doors.forEach((d, i) => {
+            const t = tForSeg(d.delay);
+            if (t <= 0) return;
+            const px = getX(d.x), py = getY(d.y), r = d.r * scale;
+            const currentAngle = d.a0 + (d.a1 - d.a0) * t;
+
+            cx.save();
+            cx.globalAlpha = globalOpa * .8 * t;
+            cx.strokeStyle = '#7ec8e3';
+            cx.lineWidth = 1.5;
+            cx.shadowBlur = 4;
+            cx.shadowColor = 'rgba(126,200,227,.6)';
+
+            cx.beginPath();
+            const leafX = Math.cos(currentAngle) * r;
+            const leafY = Math.sin(currentAngle) * r;
+            cx.moveTo(px, py);
+            cx.lineTo(px + leafX, py + leafY);
+            cx.stroke();
+
+            cx.setLineDash([2, 2]);
+            cx.beginPath();
+            cx.arc(px, py, r, d.a0, currentAngle, d.a1 < d.a0);
+            cx.stroke();
+            cx.setLineDash([]);
+            cx.restore();
+        });
+
+        floor.grass.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 1.5, 0.75 + i * .02, .7, '#4ade80', true));
+        floor.pool.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 2.0, 0.8 + i * .02, .9, '#22d3ee'));
+
+        floor.dims.forEach(d => {
+            const t = tForSeg(d.delay);
+            if (t <= 0) return;
+            const ix = d.x0 + (d.x1 - d.x0) * t;
+            const iy = d.y0 + (d.y1 - d.y0) * t;
+
+            cx.globalAlpha = globalOpa * 0.9 * t;
+            cx.lineWidth = 1.2;
+            cx.strokeStyle = '#ffb347';
+
+            cx.beginPath();
+            cx.moveTo(getX(d.x0), getY(d.y0));
+            cx.lineTo(getX(ix), getY(iy));
+            cx.stroke();
+
+            const tick = 3.5;
+            if (t > 0.05) {
+                cx.beginPath(); cx.moveTo(getX(d.x0) - tick, getY(d.y0) - tick); cx.lineTo(getX(d.x0) + tick, getY(d.y0) + tick); cx.stroke();
+            }
+            if (t >= 1) {
+                cx.beginPath(); cx.moveTo(getX(d.x1) - tick, getY(d.y1) - tick); cx.lineTo(getX(d.x1) + tick, getY(d.y1) + tick); cx.stroke();
+                const mx = getX((d.x0 + d.x1) / 2);
+                const my = getY((d.y0 + d.y1) / 2);
+                const dx = d.x1 - d.x0, dy = d.y1 - d.y0;
+                let angle = Math.atan2(dy, dx);
+                if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
+
+                cx.save();
+                cx.translate(mx, my);
+                cx.rotate(angle);
+                cx.fillStyle = '#ffb347';
+                cx.font = 'bold 9px Space Mono,monospace';
+                cx.textAlign = 'center';
+                cx.textBaseline = 'bottom';
+                cx.fillText(d.val, 0, -4);
+                cx.restore();
+            }
+        });
+
+        cx.restore();
+    }
+
+    function frame(ts) {
+        if (!start) start = ts;
+        const elapsed = (ts - start) / 1000;
+        const phase = Math.min(elapsed, DRAW + 0.5);
+        
+        cx.clearRect(0, 0, W, H);
+        let globalOpa = Math.min(elapsed / 0.5, 1);
+        drawFloor(myFloor, phase, globalOpa);
+        
+        if (elapsed < DRAW + 1.0) {
+            requestAnimationFrame(frame);
+        }
+    }
+    requestAnimationFrame(frame);
+}
 window.addEventListener('load',startPlanAnim);
 </script>
 </body>
