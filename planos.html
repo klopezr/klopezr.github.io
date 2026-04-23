@@ -330,6 +330,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/DragControls.js"></script>
 <script>
 const _uiTooltip=document.createElement('div');_uiTooltip.id='ui-tooltip';document.body.appendChild(_uiTooltip);
 const _tooltips=[
@@ -543,7 +544,62 @@ function init3D(){
   scene3d.add(dirLight3d);
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene3d.add(floor);
-  build3DWalls();build3DMeasures();build3DFurniture();build3DMenu();animate3D();
+  build3DWalls();build3DMeasures();build3DFurniture();build3DMenu();
+  setup3DInteractions();
+  animate3D();
+}
+let dragControls3d;
+function setup3DInteractions() {
+    const draggable = objects3d.filter(o => o.userData.type !== 'wall' && o.userData.type !== 'measure');
+    if (dragControls3d) dragControls3d.dispose();
+    dragControls3d = new THREE.DragControls(draggable, camera3d, renderer3d.domElement);
+    dragControls3d.addEventListener('dragstart', function (event) {
+        controls3d.enabled = false;
+        selId = event.object.userData.id;
+        build3DMenu();
+    });
+    dragControls3d.addEventListener('drag', function (event) {
+        const obj = event.object;
+        const f = furniture.find(x => x.id === obj.userData.id);
+        if (f) obj.position.y = (f.hZ || 0.8) / 2; // Mantener pegado al suelo
+    });
+    dragControls3d.addEventListener('dragend', function (event) {
+        controls3d.enabled = true;
+        updatePositionFrom3D(event.object);
+    });
+    renderer3d.domElement.addEventListener('mousedown', (e) => {
+        const rect = renderer3d.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera3d);
+        const intersects = raycaster.intersectObjects(objects3d, true);
+        if (intersects.length > 0) {
+            let obj = intersects[0].object;
+            while (obj && !obj.userData.id && obj.parent) obj = obj.parent;
+            if (obj && obj.userData.id) {
+                selId = obj.userData.id;
+                build3DMenu();
+                updateSel(); // Sincroniza el panel 2D lateral
+            }
+        }
+    });
+}
+function updatePositionFrom3D(mesh) {
+    const f = furniture.find(x => x.id === mesh.userData.id);
+    if (!f) return;
+    const pm = pxM(), pc = { x: canvas.width / 2, y: canvas.height / 2 };
+    if (f.type === 'zona') {
+        f.x = (mesh.position.x * pm) + pc.x;
+        f.y = (mesh.position.z * pm) + pc.y;
+    } else if (f.type === 'circle') {
+        const r = (f.d / 2) * pm;
+        f.x = (mesh.position.x * pm) + pc.x - r;
+        f.y = (mesh.position.z * pm) + pc.y - r;
+    } else {
+        f.x = (mesh.position.x * pm) + pc.x - (f.w * pm) / 2;
+        f.y = (mesh.position.z * pm) + pc.y - (f.h * pm) / 2;
+    }
+    saveLS(); render();
 }
 function update3DLight(prop, val){
   if(!dirLight3d)return;
@@ -629,8 +685,21 @@ function createSection(title,items,icon){
   const btnAll=document.createElement('button');btnAll.textContent='👁 Todo';btnAll.style.cssText='background:none; border:1px solid #334155; color:#94a3b8; font-size:0.6rem; padding:2px 5px; border-radius:4px;';
   btnAll.onclick=(e)=>{e.preventDefault(); const allVis=!items.every(i=>i.visible); items.forEach(i=>{i.visible=allVis; const orig=furniture.find(f=>f.id===i.userData.id)||measures.find(m=>m.id===i.userData.id); if(orig)orig.hidden=!allVis;}); build3DMenu(); render(); saveLS();};
   sum.innerHTML=`<span>${icon} ${title}</span>`;sum.appendChild(btnAll);det.appendChild(sum);
-  items.forEach(obj=>{const div=document.createElement('div');div.style.display='flex';div.style.alignItems='center';div.style.justifyContent='space-between';div.style.fontSize='0.75rem';div.style.padding='4px 0 4px 10px';let nameText=obj.userData.name;if(obj.userData.type==='measure'){const mData=measures.find(m=>m.id===obj.userData.id);if(mData)nameText+=` (${mData.total.toFixed(2)}m)`;} else { const fData=furniture.find(f=>f.id===obj.userData.id); if(fData)nameText+=` (H:${(fData.hZ||0.8).toFixed(2)}m)`; }
-const label=document.createElement('span');label.textContent=nameText;label.style.overflow='hidden';label.style.textOverflow='ellipsis';label.style.whiteSpace='nowrap';label.style.maxWidth='120px';const btn=document.createElement('button');btn.textContent=obj.visible?'👁':'🚫';btn.style.background='none';btn.style.border='none';btn.style.color='#fff';btn.style.opacity=obj.visible?'1':'0.4';btn.onclick=()=>{obj.visible=!obj.visible; const orig=furniture.find(f=>f.id===obj.userData.id)||measures.find(m=>m.id===obj.userData.id); if(orig)orig.hidden=!obj.visible; build3DMenu(); render(); saveLS();};div.appendChild(label);div.appendChild(btn);det.appendChild(div);});
+  items.forEach(obj=>{
+    const isSelected = obj.userData.id === selId;
+    const div=document.createElement('div');div.style.cssText='display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;padding:4px 6px 4px 10px;border-radius:4px;margin-bottom:2px;';
+    if(isSelected) div.style.background='rgba(77, 158, 255, 0.25)';
+    let nameText=obj.userData.name;if(obj.userData.type==='measure'){const mData=measures.find(m=>m.id===obj.userData.id);if(mData)nameText+=` (${mData.total.toFixed(2)}m)`;} else { const fData=furniture.find(f=>f.id===obj.userData.id); if(fData)nameText+=` (H:${(fData.hZ||0.8).toFixed(2)}m)`; }
+    const label=document.createElement('span');label.textContent=nameText;label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;cursor:pointer;';
+    label.onclick=()=>{selId=obj.userData.id; build3DMenu();};
+    const acts=document.createElement('div');acts.style.display='flex';acts.style.gap='6px';
+    const btnMove=document.createElement('button');btnMove.innerHTML='✥';btnMove.title='Mover (arrastra el mueble)';btnMove.style.cssText='background:none;border:none;color:#fff;cursor:help;opacity:0.6;font-size:0.9rem;padding:0;';
+    if(obj.userData.type==='wall'||obj.userData.type==='measure') btnMove.style.visibility='hidden';
+    const btnVis=document.createElement('button');btnVis.textContent=obj.visible?'👁':'🚫';btnVis.style.cssText='background:none;border:none;color:#fff;cursor:pointer;padding:0;'; btnVis.style.opacity=obj.visible?'1':'0.4';
+    btnVis.onclick=()=>{obj.visible=!obj.visible; const orig=furniture.find(f=>f.id===obj.userData.id)||measures.find(m=>m.id===obj.userData.id); if(orig)orig.hidden=!obj.visible; build3DMenu(); render(); saveLS();};
+    acts.appendChild(btnMove);acts.appendChild(btnVis);
+    div.appendChild(label);div.appendChild(acts);det.appendChild(div);
+  });
 list.appendChild(det);}
 createSection('MUROS',walls,'🧱');createSection('MEDIDAS',measuresList,'📏');createSection('MUEBLES',furnitureList,'🛋️');if(!objects3d.length){list.innerHTML='<span style="font-size:0.75rem;color:rgba(255,255,255,0.5)">No hay elementos visibles</span>';}}
 function createTextSprite(message,parameters){const fontface=parameters.fontface||'Arial';const fontsize=parameters.fontsize||18;const textColor=parameters.textColor||{r:255,g:255,b:255,a:1.0};const canvas=document.createElement('canvas');const context=canvas.getContext('2d');context.font=`Bold ${fontsize}px ${fontface}`;const metrics=context.measureText(message);const textWidth=metrics.width;canvas.width=textWidth+10;canvas.height=fontsize+10;context.font=`Bold ${fontsize}px ${fontface}`;context.fillStyle=`rgba(${textColor.r}, ${textColor.g}, ${textColor.b}, ${textColor.a})`;context.fillText(message,5,fontsize);const texture=new THREE.Texture(canvas);texture.needsUpdate=true;const spriteMaterial=new THREE.SpriteMaterial({map:texture});const sprite=new THREE.Sprite(spriteMaterial);sprite.scale.set(canvas.width/100,canvas.height/100,1.0);return sprite;}
