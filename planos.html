@@ -530,6 +530,7 @@ function wallFinish(){
 function drawWallActive(){if(mode!=='drawWall')return;const pm=pxM();const h=parseFloat(document.getElementById('wall-thick')?.value)||0.15;const W=h*pm;const col=document.getElementById('wall-color')?.value||'#94a3b8';ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=0.6;ctx.lineWidth=W;ctx.lineCap='round';ctx.lineJoin='round';if(wallPts.length>0){ctx.beginPath();ctx.moveTo(wallPts[0].x,wallPts[0].y);for(let i=1;i<wallPts.length;i++)ctx.lineTo(wallPts[i].x,wallPts[i].y);if(wallGhost)ctx.lineTo(wallGhost.x,wallGhost.y);ctx.stroke();if(wallGhost){const last=wallPts[wallPts.length-1];const d=d2(last,wallGhost)/pm;const ang=Math.atan2(wallGhost.y-last.y,wallGhost.x-last.x);pill(ctx,d.toFixed(2)+'m',(last.x+wallGhost.x)/2,(last.y+wallGhost.y)/2,ang,col);}}ctx.restore();}
 function updWallSel(prop,val){const f=furniture.find(x=>x.id===selId);if(!f||f.type!=='wall')return;
 if(prop==='name'){f.name=val;saveLS();updateList();render();return;}
+if(prop==='slab'){f.slab=val;saveLS();render();refresh3D();return;}
 const v=parseFloat(val);if(isNaN(v))return;if(prop==='thick')f.thick=Math.max(0.01,v);if(prop==='hZ')f.hZ=Math.max(0.1,v);if(prop==='rot'){if(f.pts&&f.pts.length>0){const cx=f.pts.reduce((s,p)=>s+p.x,0)/f.pts.length;const cy=f.pts.reduce((s,p)=>s+p.y,0)/f.pts.length;const rad=v*Math.PI/180;f.pts=f.pts.map(p=>{const dx=p.x-cx,dy=p.y-cy;return{x:cx+dx*Math.cos(rad)-dy*Math.sin(rad),y:cy+dx*Math.sin(rad)+dy*Math.cos(rad)};});const xs=f.pts.map(p=>p.x),ys=f.pts.map(p=>p.y);const minX=Math.min(...xs),minY=Math.min(...ys);const pm=pxM();f.x+=minX*pm;f.y+=minY*pm;f.pts=f.pts.map(p=>({x:p.x-minX,y:p.y-minY}));f.w=Math.max(...xs)-minX;f.h=Math.max(...ys)-minY;}const elR=document.getElementById('wedit-rot');if(elR)elR.value=0;}saveLS();render();updateList();updateSelDimensions();}
 function log3D(msg, isErr=true) {
     const box = document.getElementById('log3d-box');
@@ -629,13 +630,17 @@ function setup3DInteractions() {
     });
 }
 function build3DFloorSlab(fIdx) {
-    if (fIdx === 0 && visibleFloors3D.length === 1) return; // Suelo infinito si solo hay una planta
-    const walls = furniture.filter(f => f.floor === fIdx && f.type === 'wall');
-    if (!walls.length) return;
+    if (fIdx === 0 && visibleFloors3D.length === 1 && layout3DMode === 'vertical') return;
+    
+    const floorWalls = furniture.filter(f => f.floor === fIdx && f.type === 'wall');
+    const slabWalls = floorWalls.filter(w => w.slab);
+    const wallsToUse = slabWalls.length > 0 ? slabWalls : floorWalls;
+    
+    if (!wallsToUse.length) return;
     
     let pts = [];
     const pm = FLOORS[fIdx].px || 50;
-    walls.forEach(w => w.pts.forEach(p => pts.push({x: w.x + p.x * pm, y: w.y + p.y * pm})));
+    wallsToUse.forEach(w => w.pts.forEach(p => pts.push({x: w.x + p.x * pm, y: w.y + p.y * pm})));
     
     let minX = Math.min(...pts.map(p => p.x)), maxX = Math.max(...pts.map(p => p.x));
     let minY = Math.min(...pts.map(p => p.y)), maxY = Math.max(...pts.map(p => p.y));
@@ -644,14 +649,16 @@ function build3DFloorSlab(fIdx) {
     const w = (maxX - minX) / pm + 0.4; 
     const h = (maxY - minY) / pm + 0.4;
     const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-    const fOff = FLOORS[fIdx].off3d || {x:0, y:fIdx*2.5, z:0};
+    
+    let defY = layout3DMode === 'vertical' ? fIdx * 2.5 : 0;
+    const fOff = FLOORS[fIdx].off3d || {x: (layout3DMode==='horizontal'?fIdx*10:0), y: defY, z: 0};
 
     const geo = new THREE.PlaneGeometry(w, h);
     const mat = new THREE.MeshStandardMaterial({
         color: 0xffffff, 
         side: THREE.DoubleSide, 
         transparent: true, 
-        opacity: (fIdx === 0) ? 1.0 : 0.9,
+        opacity: (fIdx === 0 && layout3DMode === 'vertical') ? 1.0 : floorOpacity3D,
         roughness: 1
     });
     const mesh = new THREE.Mesh(geo, mat);
@@ -866,19 +873,6 @@ function createSection(title,items,icon,type){
   const btnAll=document.createElement('button');btnAll.textContent='👁 Todo';btnAll.style.cssText='background:none; border:1px solid #334155; color:#94a3b8; font-size:0.6rem; padding:2px 5px; border-radius:4px;';
   btnAll.onclick=(e)=>{e.preventDefault(); const allVis=!items.every(i=>i.visible); items.forEach(i=>{i.visible=allVis; const orig=furniture.find(f=>f.id===i.userData.id)||measures.find(m=>m.id===i.userData.id); if(orig)orig.hidden=!allVis;}); build3DMenu(); render(); saveLS();};
   sum.innerHTML=`<span>${icon} ${title}</span>`;
-  if(type === 'measure') { const bN = document.createElement('button'); bN.textContent = mode==='ruler'?'✓':'+ Medir'; bN.style.cssText='background:var(--cr); color:#fff; font-size:0.6rem; padding:2px 5px; border-radius:4px; margin-left:auto; margin-right:4px; border:none; cursor:pointer;'; bN.onclick = (e)=>{e.preventDefault(); e.stopPropagation(); if(mode==='ruler'){rulerFinish(false); refresh3D();}else{cancelMode(); mode='ruler'; showToast('📏 Clic en el suelo 3D'); build3DMenu();}}; sum.appendChild(bN); }
-  if(type === 'measure') { 
-    const bN = document.createElement('button'); 
-    bN.textContent = mode==='ruler'?'✓ Guardar':'+ Medir'; 
-    bN.style.cssText='background:var(--cr); color:#fff; font-size:0.6rem; padding:2px 5px; border-radius:4px; margin-left:auto; margin-right:4px; border:none; cursor:pointer; font-weight:600;'; 
-    bN.onclick = (e)=>{
-        e.preventDefault(); 
-        e.stopPropagation(); 
-        if(mode==='ruler'){ rulerFinish(false); refresh3D(); }
-        else { cancelMode(); mode='ruler'; showToast('📏 Clic en el suelo 3D para medir'); build3DMenu(); }
-    }; 
-    sum.appendChild(bN); 
-  }
   sum.appendChild(btnAll);det.appendChild(sum);
   items.forEach(obj=>{
     const isSelected = obj.userData.id === selId;
@@ -894,15 +888,24 @@ function createSection(title,items,icon,type){
     btnVis.onclick=()=>{obj.visible=!obj.visible; const orig=furniture.find(f=>f.id===obj.userData.id)||measures.find(m=>m.id===obj.userData.id); if(orig)orig.hidden=!obj.visible; build3DMenu(); render(); saveLS();};
     acts.appendChild(btnMove);acts.appendChild(btnVis);
     div.appendChild(label);div.appendChild(acts);det.appendChild(div);
-    if(isSelected && obj.userData.type !== 'measure' && obj.userData.type !== 'wall'){
-        const fD = furniture.find(f=>f.id===selId);
-        if(fD){
+    if(isSelected && obj.userData.type !== 'measure'){
+        const itemD = furniture.find(f=>f.id===selId);
+        if(itemD){
             const ed = document.createElement('div'); ed.style.cssText = 'padding:0 10px 10px 10px; display:flex; flex-direction:column; gap:4px;';
-            const iN = document.createElement('input'); iN.value=fD.name; iN.style.fontSize='0.7rem'; iN.oninput=(e)=>{fD.name=e.target.value; render(); saveLS();}; ed.appendChild(iN);
-            const row = document.createElement('div'); row.style.display='flex'; row.style.gap='4px';
-            const iH = document.createElement('input'); iH.type='number'; iH.step='0.05'; iH.value=fD.hZ||0.8; iH.style.flex='1'; iH.onchange=(e)=>{updateDim('hZ',e.target.value); refresh3D();};
-            const iC = document.createElement('input'); iC.type='color'; iC.value=fD.color; iC.style.width='30px'; iC.onchange=(e)=>{fD.color=e.target.value; refresh3D(); saveLS();};
-            row.appendChild(iH); row.appendChild(iC); ed.appendChild(row);
+            const iN = document.createElement('input'); iN.value=itemD.name || (obj.userData.type==='wall'?'Muro':'Mueble'); iN.style.fontSize='0.7rem'; iN.oninput=(e)=>{itemD.name=e.target.value; render(); saveLS();}; ed.appendChild(iN);
+            
+            if(obj.userData.type === 'wall'){
+                const togRow = document.createElement('div'); togRow.style.cssText='display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; color:#94a3b8; margin-top:2px;';
+                togRow.innerHTML = `<span>Suelo inteligente</span>`;
+                const iS = document.createElement('input'); iS.type='checkbox'; iS.checked = !!itemD.slab;
+                iS.onchange = (e)=>{ updWallSel('slab', e.target.checked); };
+                togRow.appendChild(iS); ed.appendChild(togRow);
+            } else {
+                const row = document.createElement('div'); row.style.display='flex'; row.style.gap='4px';
+                const iH = document.createElement('input'); iH.type='number'; iH.step='0.05'; iH.value=itemD.hZ||0.8; iH.style.flex='1'; iH.onchange=(e)=>{updateDim('hZ',e.target.value); refresh3D();};
+                const iC = document.createElement('input'); iC.type='color'; iC.value=itemD.color; iC.style.width='30px'; iC.onchange=(e)=>{itemD.color=e.target.value; refresh3D(); saveLS();};
+                row.appendChild(iH); row.appendChild(iC); ed.appendChild(row);
+            }
             det.appendChild(ed);
         }
     }
@@ -911,16 +914,30 @@ list.appendChild(det);}
 function createFloorSection(){
     const det=document.createElement('details'); det.open = true; det.style.marginBottom='10px';
     const sum=document.createElement('summary'); sum.style.cssText='font-size:0.7rem; font-weight:bold; color:#f43f5e; cursor:pointer; border-bottom:1px solid #334155; padding-bottom:4px;';
-    sum.innerHTML=`<span>🗺️ PLANTAS / CAPAS</span>`; det.appendChild(sum);
+    sum.innerHTML=`<span>🗺️ PLANTAS / CAPAS</span>`; 
+    det.appendChild(sum);
     
-    const sepRow = document.createElement('div'); sepRow.style.cssText='padding:8px 10px; display:flex; flex-direction:column; gap:5px; font-size:0.7rem; border-bottom:1px dashed #334155;';
-    sepRow.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><span>Ver suelos de capas</span></div>`;
-    const sepTog = document.createElement('input'); sepTog.type='checkbox'; sepTog.id='sep-tog-check'; sepTog.checked = true;
-    sepTog.onchange = (e)=>{ 
-        objects3d.filter(o => o.userData.type === 'floor_slab' && o.userData.floor > 0).forEach(s => s.visible = e.target.checked);
+    const layoutRow = document.createElement('div'); layoutRow.style.cssText='padding:8px 10px; display:flex; gap:4px; border-bottom:1px dashed #334155;';
+    const btnV = document.createElement('button'); btnV.className='lay-btn' + (layout3DMode==='vertical'?' on':''); btnV.textContent='↕ Vertical';
+    btnV.onclick=()=>{layout3DMode='vertical'; refresh3D();};
+    const btnH = document.createElement('button'); btnH.className='lay-btn' + (layout3DMode==='horizontal'?' on':''); btnH.textContent='↔ Horiz.';
+    btnH.onclick=()=>{layout3DMode='horizontal'; refresh3D();};
+    layoutRow.append(btnV, btnH); det.appendChild(layoutRow);
+
+    const opaRow = document.createElement('div'); opaRow.style.cssText='padding:8px 10px; font-size:0.65rem; color:#94a3b8; border-bottom:1px dashed #334155;';
+    opaRow.innerHTML = `<div>Opacidad Suelos:</div><input type="range" min="0" max="1" step="0.05" value="${floorOpacity3D}" style="width:100%">`;
+    opaRow.querySelector('input').oninput = (e)=>{ 
+        floorOpacity3D = parseFloat(e.target.value);
+        objects3d.filter(o => o.userData.type === 'floor_slab').forEach(s => s.material.opacity = floorOpacity3D);
     };
-    sepRow.querySelector('div').appendChild(sepTog);
-    det.appendChild(sepRow);
+    det.appendChild(opaRow);
+
+    const visRow = document.createElement('div'); visRow.style.cssText='padding:8px 10px; display:flex; align-items:center; justify-content:space-between; font-size:0.7rem; border-bottom:1px dashed #334155;';
+    visRow.innerHTML = `<span>Ver suelos</span><input type="checkbox" id="sep-tog-check" ${objects3d.some(o=>o.userData.type==='floor_slab'&&o.visible)?'checked':''}>`;
+    visRow.querySelector('input').onchange = (e)=>{ 
+        objects3d.filter(o => o.userData.type === 'floor_slab').forEach(s => s.visible = e.target.checked);
+    };
+    det.appendChild(visRow);
 
     FLOORS.forEach((f, i) => {
         const row = document.createElement('div'); row.style.cssText='padding:6px 10px; border-bottom:1px solid #1e293b;';
