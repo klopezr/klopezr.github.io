@@ -366,7 +366,7 @@ const _EYE_BTN_OFF=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="1
 const LP_MS=600;
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 let FLOORS=[], floorCnt=0, curFloor=0, furniture=[], measures=[], selId=null, dragging=false, dragPending=false, dragPendStart={x:0,y:0}, dox=0, doy=0, selMeasId=null, editMeasId=null, editPtIdx=-1, editDragging=false, measDragAll=false, measDragSx=0, measDragSy=0, measDragOrigPts=[], shape='rect', zoom=1, snapOn=false, mode='none', calibPt1=null, wallPts=[], wallGhost=null, rulerPts=[], rulerGhost=null, extendMeasId=null, pinching=false, pinchD0=0, pinchZ0=1, panActive=false, panStartX=0, panStartY=0, panScrollX=0, panScrollY=0, touchTapMoved=false, touchTapPos=null, touchDragActive=false, lpTimer=null, lpActive=false, lpPos=null, lpClientX=0, lpClientY=0, gridOpacity=0.35, rulerTab='medir', refPts={}, angleLocked=true, shiftHeld=false, rulerGhostSnapped=false, history=[], historyRedo=[], historyMax=14, showMinimap=false, _cmPendingId=null, layerFurn=true, layerMeas=true, layerGrid=true, layerWall=true, qmSel=[], qmMode=false, qmLastResult=null, qmProbeMode=false, qmProbeDragging=false, qmProbePos=null, freeProbeMode=false, freeProbePos=null, freeProbeDragging=false, freeProbeDragOff={x:0,y:0}, multiSel=[], multiDragging=false, multiDragBase=[], multiDragStart={x:0,y:0}, angleSelIds=[], parallelSelId=null, lockFurn=false, angle3PtMode=false, angle3PtPts=[], groups=[], lastSondaPos=null, drawZonePts=[], drawZoneGhost=null, placeWindowGhost=null, selHoleIdx=-1, holeRepoDragging=false, holeCornerDragging=false, holeCornerSide=-1, selZonaPtIdx=-1, zonaPtDragging=false, scene3d, camera3d, renderer3d, controls3d, in3DMode = false, reqFrame3d, separator3d;
-let visibleFloors3D = [], layout3DMode = 'vertical', floorOpacity3D = 0.9, ceilingOpacity3D = 0.7, showFloorSlab3D = true, showCeilingSlab3D = false;
+let visibleFloors3D = [], layout3DMode = 'vertical', floorOpacity3D = 0.9, ceilingOpacity3D = 0.7, showFloorSlab3D = true, showCeilingSlab3D = false, showAreas3D = true;
 const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#e2e8f0']; let selColor=COLORS[0];
 const imgEl=document.getElementById('pimg'), canvas=document.getElementById('ov'), ctx=canvas.getContext('2d'), pwrap=document.getElementById('pwrap'), carea=document.getElementById('carea'), isMob=()=>window.innerWidth<768;
 const LS='plan_v11', LSI='plan_v11_imgs';
@@ -830,6 +830,7 @@ function build3DScene(){
         build3DWalls(fIdx);
         build3DMeasures(fIdx);
         build3DFurniture(fIdx);
+        build3DAreas(fIdx);
         build3DFloorSlab(fIdx,'floor');
         build3DFloorSlab(fIdx,'ceiling');
     });
@@ -838,7 +839,7 @@ function build3DScene(){
 let dragControls3d;
 function setup3DInteractions() {
     const isMultiFloor = visibleFloors3D.length > 1;
-    const draggable = isMultiFloor ? [] : objects3d.filter(o => o.userData.type !== 'wall' && o.userData.type !== 'measure');
+    const draggable = isMultiFloor ? [] : objects3d.filter(o => o.userData.type !== 'wall' && o.userData.type !== 'measure' && o.userData.type !== 'area');
     if (dragControls3d) dragControls3d.dispose();
     dragControls3d = new THREE.DragControls(draggable, camera3d, renderer3d.domElement);
     dragControls3d.addEventListener('dragstart', function (event) {
@@ -863,7 +864,7 @@ function setup3DInteractions() {
         if (intersects.length > 0) {
             let obj = intersects[0].object;
             while (obj && !obj.userData.id && obj.parent) obj = obj.parent;
-            if (obj && obj.userData.id) {
+            if (obj && obj.userData.id && obj.userData.type !== 'area') {
                 if (isMultiFloor && obj.userData.type !== 'wall' && obj.userData.type !== 'measure') {
                     showToast("⚠️ Mueble bloqueado: desactiva otras plantas para moverlo.");
                 }
@@ -1014,7 +1015,7 @@ function update3DLight(prop, val){
 function destroy3D(){if(reqFrame3d)cancelAnimationFrame(reqFrame3d);if(renderer3d){const container=document.getElementById('view3d-container');if(container&&renderer3d.domElement&&container.contains(renderer3d.domElement)){container.removeChild(renderer3d.domElement);}renderer3d.dispose();}if(scene3d){scene3d.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});scene3d=null;}dirLight3d=null;objects3d=[];}
 function build3DFurniture(fIdx) {
     if(!FLOORS[fIdx]) return;
-    const furns = furniture.filter(f => f.floor === fIdx && f.type !== 'wall');
+    const furns = furniture.filter(f => f.floor === fIdx && f.type !== 'wall' && f.type !== 'zona');
     const fOff = FLOORS[fIdx].off3d || {x:0, y:fIdx*2.5, z:0};
     const pm = pxM();
     const planCenter_px = { x: canvas.width / 2, y: canvas.height / 2 };
@@ -1075,6 +1076,46 @@ function build3DFurniture(fIdx) {
         mesh.visible = !f.hidden;
         scene3d.add(mesh);
         objects3d.push(mesh);
+    });
+}
+function build3DAreas(fIdx) {
+    if (!showAreas3D || !FLOORS[fIdx]) return;
+    const pm = FLOORS[fIdx].px || 50;
+    const pc = {x: canvas.width/2, y: canvas.height/2};
+    const fOff = FLOORS[fIdx].off3d || {x:0, y:fIdx*2.5, z:0};
+    // Unified list: closed measures + zona furniture, both converted to absolute pixel pts
+    const items = [];
+    measures.filter(m => m.floor === fIdx && !m.hidden && m.closed && m.points && m.points.length >= 3)
+        .forEach(m => items.push({id: m.id, name: m.label || m.name || 'Área', color: m.color || '#10b981', opa: m.opa != null ? m.opa : 0.5, absPts: m.points}));
+    furniture.filter(f => f.floor === fIdx && f.type === 'zona' && !f.hidden && f.pts && f.pts.length >= 3)
+        .forEach(z => items.push({id: z.id, name: z.name || 'Área', color: z.color || '#10b981', opa: z.opa != null ? z.opa : 0.7, absPts: z.pts.map(p => ({x: z.x + p.x, y: z.y + p.y}))}));
+    items.forEach(item => {
+        const grp = new THREE.Group();
+        grp.userData = {type: 'area', id: item.id, name: item.name, floor: fIdx};
+        const col = new THREE.Color(item.color);
+        const pts3d = item.absPts.map(p => new THREE.Vector3(
+            (p.x - pc.x) / pm + fOff.x, fOff.y + 0.02, (p.y - pc.y) / pm + fOff.z
+        ));
+        // Closed outline
+        const lineGeo = new THREE.BufferGeometry().setFromPoints([...pts3d, pts3d[0]]);
+        grp.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color: col})));
+        // Filled surface via earcut on XZ projection
+        const v2 = [];
+        pts3d.forEach(p => v2.push(p.x, p.z));
+        const idx = earcut(v2, [], 2);
+        if (idx.length) {
+            const v3 = [];
+            for (let i = 0; i < v2.length; i += 2) v3.push(v2[i], 0, v2[i+1]);
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(v3, 3));
+            geo.setIndex(idx);
+            const mat = new THREE.MeshBasicMaterial({color: col, side: THREE.DoubleSide, transparent: true, opacity: item.opa * 0.6});
+            const fill = new THREE.Mesh(geo, mat);
+            fill.position.y = fOff.y + 0.01;
+            grp.add(fill);
+        }
+        scene3d.add(grp);
+        objects3d.push(grp);
     });
 }
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
@@ -1190,7 +1231,7 @@ function build3DMeasures(fIdx){
     const fOff = FLOORS[fIdx].off3d || {x:0, y:fIdx*2.5, z:0};
     const pm = FLOORS[fIdx].px || 50;
     const pc = {x:canvas.width/2, y:canvas.height/2};
-    const floorMeasures = measures.filter(m=>m.floor===fIdx && !m.hidden);
+    const floorMeasures = measures.filter(m=>m.floor===fIdx && !m.hidden && !m.closed);
     const lineMaterial = new THREE.LineBasicMaterial({color: 0xff6b35});
     floorMeasures.forEach(m=>{
         if(!m.points || m.points.length < 2) return;
@@ -1215,7 +1256,7 @@ function build3DMeasures(fIdx){
 }
 function build3DMenu(){const m=document.getElementById('menu3d');if(!m)return;const list=document.getElementById('menu3d-list');list.innerHTML='';
 const walls=objects3d.filter(o=>o.userData.type==='wall');const measuresList=objects3d.filter(o=>o.userData.type==='measure');
-const furnitureList=objects3d.filter(o=>o.userData.type!=='wall'&&o.userData.type!=='measure');
+const furnitureList=objects3d.filter(o=>o.userData.type!=='wall'&&o.userData.type!=='measure'&&o.userData.type!=='area'&&o.userData.type!=='zona');
 function createSection(title,items,icon,type){
   if(!items.length)return;
   if(!items.length && type !== 'measure')return;
@@ -1335,7 +1376,40 @@ function createFloorSection(){
     });
     list.appendChild(det);
 }
+function createAreaSection(){
+    const areaObjs = objects3d.filter(o => o.userData.type === 'area');
+    const det = document.createElement('details'); det.open = areaObjs.length > 0; det.style.marginBottom='10px';
+    const sum = document.createElement('summary'); sum.style.cssText='font-size:0.7rem; font-weight:bold; color:#10b981; cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:4px;';
+    const btnAll = document.createElement('button'); btnAll.textContent='👁 Todo'; btnAll.style.cssText='background:none; border:1px solid #334155; color:#10b981; font-size:0.6rem; padding:2px 5px; border-radius:4px;';
+    btnAll.onclick = (e) => { e.preventDefault(); showAreas3D = !showAreas3D; refresh3D(); build3DMenu(); };
+    sum.innerHTML = `<span>🎨 ÁREAS</span>`; sum.appendChild(btnAll);
+    det.appendChild(sum);
+    if (!areaObjs.length) {
+        const empty = document.createElement('div'); empty.style.cssText='padding:6px 10px; font-size:0.7rem; color:rgba(255,255,255,0.4);';
+        empty.textContent = 'No hay áreas en esta planta'; det.appendChild(empty);
+    } else {
+        areaObjs.forEach(obj => {
+            const srcData = furniture.find(f => f.id === obj.userData.id) || measures.find(m => m.id === obj.userData.id);
+            const isSelected = obj.userData.id === selId;
+            const div = document.createElement('div'); div.style.cssText='display:flex;align-items:center;justify-content:space-between;font-size:0.75rem;padding:4px 6px 4px 10px;border-radius:4px;margin-bottom:2px;';
+            if (isSelected) div.style.background='rgba(16, 185, 129, 0.2)';
+            const label = document.createElement('span'); label.textContent = (srcData?.name || srcData?.label || obj.userData.name || 'Área'); label.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;cursor:pointer;';
+            label.onclick = () => { selId = obj.userData.id; build3DMenu(); };
+            const acts = document.createElement('div'); acts.style.cssText='display:flex; gap:6px; align-items:center;';
+            if (srcData) {
+                const iC = document.createElement('input'); iC.type='color'; iC.value=srcData.color||'#10b981'; iC.style.cssText='width:20px; height:20px; border:none; cursor:pointer; background:none;';
+                iC.onchange = (e) => { srcData.color = e.target.value; refresh3D(); render(); saveLS(); };
+                acts.appendChild(iC);
+            }
+            const btnVis = document.createElement('button'); btnVis.textContent=obj.visible?'👁':'🚫'; btnVis.style.cssText='background:none;border:none;color:#fff;cursor:pointer;padding:0;'; btnVis.style.opacity=obj.visible?'1':'0.4';
+            btnVis.onclick = () => { obj.visible = !obj.visible; if(srcData) srcData.hidden = !obj.visible; build3DMenu(); render(); saveLS(); };
+            acts.appendChild(btnVis); div.appendChild(label); div.appendChild(acts); det.appendChild(div);
+        });
+    }
+    list.appendChild(det);
+}
 createFloorSection();
+createAreaSection();
 createSection('MUROS',walls,'🧱','wall');createSection('MEDIDAS',measuresList,'📏','measure');
 createSection('MUEBLES',furnitureList,'🛋️','furn');if(!objects3d.length){list.innerHTML='<span style="font-size:0.75rem;color:rgba(255,255,255,0.5)">No hay elementos visibles</span>';}}
 function createTextSprite(message,parameters){const fontface=parameters.fontface||'Arial';const fontsize=parameters.fontsize||18;const textColor=parameters.textColor||{r:255,g:255,b:255,a:1.0};const canvas=document.createElement('canvas');const context=canvas.getContext('2d');context.font=`Bold ${fontsize}px ${fontface}`;const metrics=context.measureText(message);const textWidth=metrics.width;canvas.width=textWidth+10;canvas.height=fontsize+10;context.font=`Bold ${fontsize}px ${fontface}`;context.fillStyle=`rgba(${textColor.r}, ${textColor.g}, ${textColor.b}, ${textColor.a})`;context.fillText(message,5,fontsize);const texture=new THREE.Texture(canvas);texture.needsUpdate=true;const spriteMaterial=new THREE.SpriteMaterial({map:texture});const sprite=new THREE.Sprite(spriteMaterial);sprite.scale.set(canvas.width/100,canvas.height/100,1.0);return sprite;}
