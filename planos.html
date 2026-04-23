@@ -585,15 +585,8 @@ function build3DScene(){
         build3DWalls(fIdx);
         build3DMeasures(fIdx);
         build3DFurniture(fIdx);
+        build3DFloorSlab(fIdx);
     });
-    if(!separator3d) {
-        separator3d = new THREE.Mesh(new THREE.PlaneGeometry(500,500), new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:0.35, side: THREE.DoubleSide}));
-        separator3d.rotation.x = -Math.PI/2;
-        separator3d.position.y = 2.50;
-        separator3d.visible = false;
-        separator3d.name = "floor_separator";
-    }
-    scene3d.add(separator3d);
     setup3DInteractions();
 }
 let dragControls3d;
@@ -634,6 +627,48 @@ function setup3DInteractions() {
             }
         }
     });
+}
+function build3DFloorSlab(fIdx) {
+    if (fIdx === 0 && visibleFloors3D.length === 1) return; // Suelo infinito si solo hay una planta
+    const walls = furniture.filter(f => f.floor === fIdx && f.type === 'wall');
+    if (!walls.length) return;
+    
+    let pts = [];
+    const pm = FLOORS[fIdx].px || 50;
+    walls.forEach(w => w.pts.forEach(p => pts.push({x: w.x + p.x * pm, y: w.y + p.y * pm})));
+    
+    let minX = Math.min(...pts.map(p => p.x)), maxX = Math.max(...pts.map(p => p.x));
+    let minY = Math.min(...pts.map(p => p.y)), maxY = Math.max(...pts.map(p => p.y));
+    
+    const pc = {x: canvas.width/2, y: canvas.height/2};
+    const w = (maxX - minX) / pm + 0.4; 
+    const h = (maxY - minY) / pm + 0.4;
+    const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+    const fOff = FLOORS[fIdx].off3d || {x:0, y:fIdx*2.5, z:0};
+
+    const geo = new THREE.PlaneGeometry(w, h);
+    const mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff, 
+        side: THREE.DoubleSide, 
+        transparent: true, 
+        opacity: (fIdx === 0) ? 1.0 : 0.9,
+        roughness: 1
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI/2;
+    mesh.position.set((cx - pc.x)/pm + fOff.x, fOff.y - 0.01, (cy - pc.y)/pm + fOff.z);
+    mesh.receiveShadow = true;
+    mesh.userData = { floor: fIdx, type: 'floor_slab' };
+    
+    // Si el separador global estaba oculto, respetamos esa preferencia
+    if (fIdx > 0) mesh.visible = document.getElementById('sep-tog-check')?.checked ?? true;
+
+    scene3d.add(mesh);
+    objects3d.push(mesh);
+}
+function change3DFloor(fIdx, axis, delta) {
+    const current = (FLOORS[fIdx].off3d && FLOORS[fIdx].off3d[axis]) || 0;
+    move3DFloor(fIdx, axis, current + delta);
 }
 function move3DFloor(fIdx, axis, val) {
     if(!FLOORS[fIdx]) return;
@@ -879,13 +914,13 @@ function createFloorSection(){
     sum.innerHTML=`<span>🗺️ PLANTAS / CAPAS</span>`; det.appendChild(sum);
     
     const sepRow = document.createElement('div'); sepRow.style.cssText='padding:8px 10px; display:flex; flex-direction:column; gap:5px; font-size:0.7rem; border-bottom:1px dashed #334155;';
-    sepRow.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><span>Suelo separador</span></div>`;
-    const sepTog = document.createElement('input'); sepTog.type='checkbox'; sepTog.checked = separator3d?.visible;
-    sepTog.onchange = (e)=>{ if(separator3d) separator3d.visible = e.target.checked; };
+    sepRow.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><span>Ver suelos de capas</span></div>`;
+    const sepTog = document.createElement('input'); sepTog.type='checkbox'; sepTog.id='sep-tog-check'; sepTog.checked = true;
+    sepTog.onchange = (e)=>{ 
+        objects3d.filter(o => o.userData.type === 'floor_slab' && o.userData.floor > 0).forEach(s => s.visible = e.target.checked);
+    };
     sepRow.querySelector('div').appendChild(sepTog);
-    const sepH = document.createElement('input'); sepH.type='range'; sepH.min="0"; sepH.max="10"; sepH.step="0.05"; sepH.value=separator3d?.position.y||2.5;
-    sepH.oninput = (e)=>{ if(separator3d) separator3d.position.y = parseFloat(e.target.value); };
-    sepRow.appendChild(sepH); det.appendChild(sepRow);
+    det.appendChild(sepRow);
 
     FLOORS.forEach((f, i) => {
         const row = document.createElement('div'); row.style.cssText='padding:6px 10px; border-bottom:1px solid #1e293b;';
@@ -903,12 +938,21 @@ function createFloorSection(){
             const ctrl = document.createElement('div'); ctrl.style.cssText='margin-top:6px; display:flex; flex-direction:column; gap:4px;';
             if(!f.off3d) f.off3d = {x:0, y:i*2.5, z:0};
             const off = f.off3d;
-            ctrl.innerHTML = `<label id="lbl-off-x-${i}" style="font-size:0.6rem; color:#94a3b8; margin:0">Izquierda ↔ Derecha: ${off.x.toFixed(2)}m</label>
-                <input type="range" min="-20" max="20" step="0.05" value="${off.x}" oninput="move3DFloor(${i}, 'x', parseFloat(this.value))">
-                <label id="lbl-off-y-${i}" style="font-size:0.6rem; color:#94a3b8; margin:0">Subir ↔ Bajar (Altura): ${off.y.toFixed(2)}m</label>
-                <input type="range" min="0" max="15" step="0.05" value="${off.y}" oninput="move3DFloor(${i}, 'y', parseFloat(this.value))">
-                <label id="lbl-off-z-${i}" style="font-size:0.6rem; color:#94a3b8; margin:0">Arriba ↔ Abajo (Fondo): ${off.z.toFixed(2)}m</label>
-                <input type="range" min="-20" max="20" step="0.05" value="${off.z}" oninput="move3DFloor(${i}, 'z', parseFloat(this.value))">`;
+            const axes = [
+                {id:'x', n:'Izquierda ↔ Derecha', min:-20, max:20},
+                {id:'y', n:'Subir ↔ Bajar (Altura)', min:0, max:15},
+                {id:'z', n:'Arriba ↔ Abajo (Fondo)', min:-20, max:20}
+            ];
+            axes.forEach(a => {
+                const l = document.createElement('label'); l.id=`lbl-off-${a.id}-${i}`; l.style.cssText='font-size:0.6rem; color:#94a3b8; margin:4px 0 0 0;';
+                l.textContent = `${a.n}: ${off[a.id].toFixed(2)}m`;
+                const row = document.createElement('div'); row.style.cssText='display:flex; align-items:center; gap:5px;';
+                const b1 = document.createElement('button'); b1.textContent='-'; b1.className='btn sm s'; b1.style.width='24px'; b1.onclick=()=>change3DFloor(i, a.id, -0.005);
+                const s = document.createElement('input'); s.type='range'; s.min=a.min; s.max=a.max; s.step="0.001"; s.value=off[a.id];
+                s.oninput=(e)=>move3DFloor(i, a.id, parseFloat(e.target.value));
+                const b2 = document.createElement('button'); b2.textContent='+'; b2.className='btn sm s'; b2.style.width='24px'; b2.onclick=()=>change3DFloor(i, a.id, 0.005);
+                row.append(b1, s, b2); ctrl.append(l, row);
+            });
             row.appendChild(ctrl);
         }
         det.appendChild(row);
