@@ -308,10 +308,11 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <div id="lp-ring"></div><div id="toast"></div><div id="calib-reminder"><span class="cr-title">📐 Sin calibrar — el contenido no se muestra</span><span class="cr-hint">1. Abre Calibración · 2. Pulsa en 2 puntos · 3. Escribe la distancia real</span></div><div id="furn-tooltip"></div><div id="minimap" onclick="jumpToMinimap(event)"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div><div style="margin-top:8px"><label><input type="checkbox" id="cm-scale"> Mantener distancia real (escalar)</label></div></div>
 <div id="view3d-container" style="display: none; position: fixed; inset: 0; z-index: 250;">
     <div id="menu3d" style="position:absolute; top: 10px; right: 10px; z-index:251; background:rgba(7,17,29,0.95); backdrop-filter:blur(10px); border-radius:8px; border:1px solid #1e293b; max-height:90vh; width:260px; color:#fff; font-family:Outfit,sans-serif; display:flex; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-        <div style="padding:10px 12px 8px; flex-shrink:0; border-bottom:1px solid #1e3050;">
-            <button onclick="toggle3DView(false)" class="btn d sm" style="width:100%; margin:0;">✕ Salir de 3D</button>
+        <div style="padding:10px 12px 8px; flex-shrink:0; border-bottom:1px solid #1e3050; display:flex; gap:6px; align-items:center;">
+            <button onclick="toggle3DView(false)" class="btn d sm" style="flex:1; margin:0;">✕ Salir de 3D</button>
+            <button id="btn-menu3d-collapse" onclick="toggleMenu3DCollapse()" style="flex:1;margin:0;padding:0;height:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.75);border-radius:5px;cursor:pointer;font-size:.72rem;font-family:Outfit,sans-serif;font-weight:600;transition:background .15s;display:inline-flex;align-items:center;justify-content:center;gap:4px">▾ Ocultar menú</button>
         </div>
-        <div style="overflow-y:auto; flex:1; padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px;">
+        <div id="menu3d-body" style="overflow-y:auto; flex:1; padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px;">
             <h4 style="margin:0 0 8px 0; font-size:0.9rem; border-bottom:1px solid #334155; padding-bottom:4px;">Capas 3D</h4>
             <div id="menu3d-lights" style="border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 5px;">
                 <details open>
@@ -797,6 +798,7 @@ function log3D(msg, isErr=true) {
     box.textContent += (isErr ? '❌ ' : 'ℹ️ ') + msg + '\n';
     console.error(msg);
 }
+function toggleMenu3DCollapse(){const body=document.getElementById('menu3d-body');const btn=document.getElementById('btn-menu3d-collapse');if(!body||!btn)return;const collapsed=body.style.display==='none';body.style.display=collapsed?'flex':'none';btn.textContent=collapsed?'▾ Ocultar menú':'▴ Mostrar menú';}
 function toggle3DView(force){
     in3DMode=(force!==undefined)?force:!in3DMode;
     const container=document.getElementById('view3d-container');
@@ -809,6 +811,7 @@ function toggle3DView(force){
         if(!FLOORS[curFloor]?.cal){showToast('⚠ Calibra primero para ver en 3D');in3DMode=false;return;}
         if(typeof THREE==='undefined'){showToast('Error: Three.js no está cargado.');in3DMode=false;return;}
         document.getElementById('calib-reminder')?.classList.remove('show');
+        const _mb=document.getElementById('menu3d-body');const _mcb=document.getElementById('btn-menu3d-collapse');if(_mb)_mb.style.display='flex';if(_mcb)_mcb.textContent='▾ Ocultar menú';
         container.style.display='block';main.style.display='none';header.style.display='none';mobnav.style.display='none';
         try { init3D(); } catch(e) { log3D("Fallo al iniciar 3D: " + e.message); }
     }else{
