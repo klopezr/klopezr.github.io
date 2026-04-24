@@ -1412,6 +1412,8 @@ function createAreaSection(){
         const empty = document.createElement('div'); empty.style.cssText='padding:6px 10px; font-size:0.7rem; color:rgba(255,255,255,0.4);';
         empty.textContent = 'No hay áreas en esta planta'; det.appendChild(empty);
     } else {
+        const aSrch=document.createElement('input');aSrch.type='text';aSrch.placeholder='🔍 Buscar...';aSrch.style.cssText='width:100%;background:rgba(255,255,255,0.04);border:1px solid #334155;color:#94a3b8;padding:4px 8px;border-radius:4px;font-size:0.65rem;box-sizing:border-box;font-family:Outfit,sans-serif;outline:none;margin:4px 0;';aSrch.addEventListener('click',e=>e.stopPropagation());det.appendChild(aSrch);
+        const _aRefs=[];
         areaObjs.forEach(obj => {
             const srcData = furniture.find(f => f.id === obj.userData.id) || measures.find(m => m.id === obj.userData.id);
             const isSelected = obj.userData.id === selId;
@@ -1428,7 +1430,9 @@ function createAreaSection(){
             const btnVis = document.createElement('button'); btnVis.textContent=obj.visible?'👁':'🚫'; btnVis.style.cssText='background:none;border:none;color:#fff;cursor:pointer;padding:0;'; btnVis.style.opacity=obj.visible?'1':'0.4';
             btnVis.onclick = () => { obj.visible = !obj.visible; if(srcData) srcData.hidden = !obj.visible; build3DMenu(); render(); saveLS(); };
             acts.appendChild(btnVis); div.appendChild(label); div.appendChild(acts); det.appendChild(div);
+            _aRefs.push({div,name:srcData?.name||srcData?.label||obj.userData.name||''});
         });
+        aSrch.oninput=()=>{const q=aSrch.value.toLowerCase().trim();_aRefs.forEach(({div,name})=>{div.style.display=(!q||name.toLowerCase().includes(q))?'flex':'none';});};
     }
     list.appendChild(det);
 }
@@ -1444,6 +1448,7 @@ function createSectionGrouped(title,items,icon,type){
   btnAllOuter.onclick=(e)=>{e.preventDefault();e.stopPropagation();const allVis=!items.every(i=>i.visible);items.forEach(i=>{i.visible=allVis;const orig=furniture.find(f=>f.id===i.userData.id)||measures.find(m=>m.id===i.userData.id);if(orig)orig.hidden=!allVis;});build3DMenu();render();saveLS();};
   outerSum.appendChild(btnAllOuter);
   outerDet.appendChild(outerSum);
+  const _itemRefs=[];const srchInp=document.createElement('input');srchInp.type='text';srchInp.placeholder='🔍 Buscar...';srchInp.style.cssText='width:100%;background:rgba(255,255,255,0.04);border:1px solid #334155;color:#94a3b8;padding:4px 8px;border-radius:4px;font-size:0.65rem;box-sizing:border-box;font-family:Outfit,sans-serif;outline:none;margin:4px 0;';srchInp.addEventListener('click',e=>e.stopPropagation());outerDet.appendChild(srchInp);
   // group by floor
   const byFloor={};
   items.forEach(obj=>{const fi=obj.userData.floor??0; if(!byFloor[fi])byFloor[fi]=[];byFloor[fi].push(obj);});
@@ -1452,12 +1457,12 @@ function createSectionGrouped(title,items,icon,type){
   floorKeys.forEach(fi=>{
     const floorItems=byFloor[fi];
     const floorHasSel=floorItems.some(i=>i.userData.id===selId);
-    let container;
+    let container;let _fd=null;
     if(multiFloor){
       const fd=document.createElement('details');fd.open=floorHasSel;fd.style.cssText='margin:4px 0;border-left:2px solid #334155;padding-left:8px;';
       const fs=document.createElement('summary');fs.style.cssText='font-size:0.65rem;color:#64748b;cursor:pointer;list-style:none;padding:2px 0;display:flex;align-items:center;';
       fs.innerHTML=`<span class="s-arr">▶</span>${FLOORS[fi]?.name||'Planta '+(fi+1)} (${floorItems.length})`;
-      fd.appendChild(fs);outerDet.appendChild(fd);container=fd;
+      fd.appendChild(fs);outerDet.appendChild(fd);container=fd;_fd=fd;
     } else {container=outerDet;}
     floorItems.forEach(obj=>{
       const isSelected=obj.userData.id===selId;
@@ -1472,6 +1477,7 @@ function createSectionGrouped(title,items,icon,type){
       const btnVis=document.createElement('button');btnVis.textContent=obj.visible?'👁':'🚫';btnVis.style.cssText='background:none;border:none;color:#fff;cursor:pointer;padding:0;';btnVis.style.opacity=obj.visible?'1':'0.4';
       btnVis.onclick=()=>{obj.visible=!obj.visible;const orig=furniture.find(f=>f.id===obj.userData.id)||measures.find(m=>m.id===obj.userData.id);if(orig)orig.hidden=!obj.visible;build3DMenu();render();saveLS();};
       acts.appendChild(btnVis);div.appendChild(label);div.appendChild(acts);container.appendChild(div);
+      const _ref={div,edDiv:null,name:obj.userData.name||'',floorDet:_fd};_itemRefs.push(_ref);
       if(isSelected&&type!=='measure'){
         const itemD=furniture.find(f=>f.id===selId);
         if(itemD){
@@ -1500,10 +1506,12 @@ function createSectionGrouped(title,items,icon,type){
             rowE.appendChild(lbE);rowE.appendChild(iE);ed.appendChild(rowE);
           }
           container.appendChild(ed);
+          _ref.edDiv=ed;
         }
       }
     });
   });
+  srchInp.oninput=()=>{const q=srchInp.value.toLowerCase().trim();const _fv=new Map();_itemRefs.forEach(({div,edDiv,name,floorDet})=>{const vis=!q||name.toLowerCase().includes(q);div.style.display=vis?'flex':'none';if(edDiv)edDiv.style.display=vis?'flex':'none';if(floorDet)_fv.set(floorDet,(_fv.get(floorDet)||0)+(vis?1:0));});if(multiFloor)_fv.forEach((cnt,fd)=>{fd.style.display=cnt>0?'':'none';});};
   list.appendChild(outerDet);
 }
 createFloorSection();
