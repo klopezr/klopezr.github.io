@@ -347,6 +347,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
     </div>
     <div id="log3d-box" style="position:absolute; bottom:10px; left:10px; background:rgba(0,0,0,0.85); color:#ff5555; font-family:'Space Mono',monospace; font-size:11px; padding:10px; border-radius:6px; max-width:85%; pointer-events:none; z-index:260; display:none; white-space:pre-wrap; border:1px solid #440000; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"></div>
     <div id="fp3d-hud" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(7,17,29,0.88);color:#e2e8f0;border-radius:10px;padding:8px 16px;font-size:.7rem;font-family:'Space Mono',monospace;z-index:260;flex-direction:row;gap:16px;align-items:center;white-space:nowrap;border:1px solid rgba(167,139,250,0.35);box-shadow:0 4px 20px rgba(0,0,0,0.5)"><span>WASD / ↑↓←→ mover</span><span style="color:#94a3b8">|</span><span>Arrastra para mirar</span><button onclick="exitFP3D()" style="pointer-events:all;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.7);color:#fca5a5;border-radius:5px;padding:2px 10px;cursor:pointer;font-size:.7rem;font-family:'Outfit',sans-serif;margin-left:4px">✕ Salir</button></div>
+    <div id="meas3d-hud" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(7,17,29,0.92);color:#e2e8f0;border-radius:10px;padding:8px 16px;font-size:.7rem;font-family:'Space Mono',monospace;z-index:260;flex-direction:row;gap:10px;align-items:center;white-space:nowrap;border:1px solid rgba(255,215,0,0.45);box-shadow:0 4px 20px rgba(0,0,0,0.6)"><span id="meas3d-hud-info" style="color:#ffd700;font-size:.68rem">Haz clic en el escenario</span><button onclick="undoMeasure3DPt()" style="pointer-events:all;background:rgba(148,163,184,0.15);border:1px solid rgba(148,163,184,0.4);color:#94a3b8;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif">↩ Deshacer</button><button onclick="saveMeasure3D()" id="btn-save-meas3d" style="pointer-events:all;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.6);color:#ffd700;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif;font-weight:600">✓ Guardar medida</button><button onclick="cancelMeasure3D()" style="pointer-events:all;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif">✕ Cancelar</button></div>
 </div>
 <div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="160" height="130"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
 <div id="main"><aside id="panel"><div id="phdl" onclick="closePanel()" title="Cerrar panel"></div>
@@ -398,6 +399,7 @@ if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudfl
 let FLOORS=[], floorCnt=0, curFloor=0, furniture=[], measures=[], selId=null, dragging=false, dragPending=false, wallEditMode=false, dragPendStart={x:0,y:0}, dox=0, doy=0, selMeasId=null, editMeasId=null, editPtIdx=-1, editDragging=false, measDragAll=false, measDragSx=0, measDragSy=0, measDragOrigPts=[], shape='rect', zoom=1, snapOn=false, mode='none', calibPt1=null, wallPts=[], wallGhost=null, rulerPts=[], rulerGhost=null, extendMeasId=null, pinching=false, pinchD0=0, pinchZ0=1, panActive=false, panStartX=0, panStartY=0, panScrollX=0, panScrollY=0, touchTapMoved=false, touchTapPos=null, touchDragActive=false, lpTimer=null, lpActive=false, lpPos=null, lpClientX=0, lpClientY=0, gridOpacity=0.35, rulerTab='medir', refPts={}, angleLocked=true, shiftHeld=false, rulerGhostSnapped=false, history=[], historyRedo=[], historyMax=14, showMinimap=false, _cmPendingId=null, layerFurn=true, layerMeas=true, layerGrid=true, layerWall=true, qmSel=[], qmMode=false, qmLastResult=null, qmProbeMode=false, qmProbeDragging=false, qmProbePos=null, freeProbeMode=false, freeProbePos=null, freeProbeDragging=false, freeProbeDragOff={x:0,y:0}, multiSel=[], multiDragging=false, multiDragBase=[], multiDragStart={x:0,y:0}, angleSelIds=[], parallelSelId=null, lockFurn=false, angle3PtMode=false, angle3PtPts=[], groups=[], lastSondaPos=null, drawZonePts=[], drawZoneGhost=null, placeWindowGhost=null, selHoleIdx=-1, holeRepoDragging=false, holeCornerDragging=false, holeCornerSide=-1, selZonaPtIdx=-1, zonaPtDragging=false, scene3d, camera3d, renderer3d, controls3d, in3DMode = false, reqFrame3d, separator3d;
 let visibleFloors3D = [], layout3DMode = 'vertical', floorOpacity3D = 0.9, ceilingOpacity3D = 0.7, showFloorSlab3D = true, showCeilingSlab3D = false, showAreas3D = true;
 let lpFurnId=null, lpFurnPos=null, lpFurnTimer=null;
+let rulerPanPending=false, rulerPanStart=null, rulerPanClickPos=null;
 const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#e2e8f0']; let selColor=COLORS[0];
 const imgEl=document.getElementById('pimg'), canvas=document.getElementById('ov'), ctx=canvas.getContext('2d'), pwrap=document.getElementById('pwrap'), carea=document.getElementById('carea'), isMob=()=>window.innerWidth<768;
 const LS='plan_v11', LSI='plan_v11_imgs';
@@ -844,6 +846,8 @@ let objects3d=[];
 let dirLight3d;
 let fpMode3D=false,fpYaw=0,fpPitch=0,fpKeys={},fpMouseDown=false,fpLastMouseX=null,fpLastMouseY=null,fpTouchLastX=null,fpTouchLastY=null;
 let furn3DEditId=null;
+let measure3DMode=false, measure3DPts=[], measure3DSaved=[], measure3DVisObjs=[], measure3DTempObjs=[], _measure3DId=1;
+let _click3dMeasHandler=null, _meas3DMouseDown=null, _meas3DMouseDownHandler=null;
 function init3D(){
   try {
   fpMode3D=false;fpKeys={};furn3DEditId=null;const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='none';
@@ -860,6 +864,7 @@ function init3D(){
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.name='floor';scene3d.add(floor);
   visibleFloors3D = [curFloor];
   build3DScene(); build3DMenu();
+  measure3DSaved.forEach(m => addMeasure3DVisual(m));
   setup3DInteractions();
   animate3D();
   } catch(e) { log3D("Error en init3D: " + e.message); }
@@ -897,8 +902,15 @@ function setup3DInteractions() {
     dragControls3d.addEventListener('dragend', function (event) {
         controls3d.enabled = true; updatePositionFrom3D(event.object); build3DMenu();
     });
+    if(_meas3DMouseDownHandler) renderer3d.domElement.removeEventListener('mousedown', _meas3DMouseDownHandler);
+    _meas3DMouseDownHandler = (e) => { _meas3DMouseDown={x:e.clientX,y:e.clientY}; };
+    renderer3d.domElement.addEventListener('mousedown', _meas3DMouseDownHandler);
+    if(_click3dMeasHandler) renderer3d.domElement.removeEventListener('click', _click3dMeasHandler);
+    _click3dMeasHandler = (e) => { if(measure3DMode) measure3DClick(e); };
+    renderer3d.domElement.addEventListener('click', _click3dMeasHandler);
     if(_mousedown3dHandler) renderer3d.domElement.removeEventListener('mousedown', _mousedown3dHandler);
     _mousedown3dHandler = (e) => {
+        if(measure3DMode) return;
         const rect = renderer3d.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
         const raycaster = new THREE.Raycaster();
@@ -1060,7 +1072,7 @@ function update3DLight(prop, val){
   if(prop==='intensity')dirLight3d.intensity=parseFloat(val);
   if(prop==='rotation'){const r=parseFloat(val);dirLight3d.position.set(Math.cos(r)*20, 25, Math.sin(r)*20);}
 }
-function destroy3D(){if(reqFrame3d)cancelAnimationFrame(reqFrame3d);if(renderer3d){const container=document.getElementById('view3d-container');if(container&&renderer3d.domElement&&container.contains(renderer3d.domElement)){container.removeChild(renderer3d.domElement);}renderer3d.dispose();}if(scene3d){scene3d.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});scene3d=null;}dirLight3d=null;objects3d=[];}
+function destroy3D(){if(reqFrame3d)cancelAnimationFrame(reqFrame3d);if(renderer3d){const container=document.getElementById('view3d-container');if(container&&renderer3d.domElement&&container.contains(renderer3d.domElement)){container.removeChild(renderer3d.domElement);}renderer3d.dispose();}if(scene3d){scene3d.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose();}});scene3d=null;}dirLight3d=null;objects3d=[];measure3DMode=false;measure3DPts=[];measure3DTempObjs=[];measure3DVisObjs=[];_click3dMeasHandler=null;_meas3DMouseDown=null;_meas3DMouseDownHandler=null;const _h3d=document.getElementById('meas3d-hud');if(_h3d)_h3d.style.display='none';}
 function build3DFurniture(fIdx) {
     if(!FLOORS[fIdx]) return;
     const furns = furniture.filter(f => f.floor === fIdx && f.type !== 'wall' && f.type !== 'zona');
@@ -1492,12 +1504,157 @@ function createSectionGrouped(title,items,icon,type){
   srchInp.oninput=()=>{const q=srchInp.value.toLowerCase().trim();const _fv=new Map();_itemRefs.forEach(({div,edDiv,name,floorDet})=>{const vis=!q||name.toLowerCase().includes(q);div.style.display=vis?'flex':'none';if(edDiv)edDiv.style.display=vis?'flex':'none';if(floorDet)_fv.set(floorDet,(_fv.get(floorDet)||0)+(vis?1:0));});if(multiFloor)_fv.forEach((cnt,fd)=>{fd.style.display=cnt>0?'':'none';});};
   list.appendChild(outerDet);
 }
+function createMeasure3DSection(){
+    const det=document.createElement('details');det.dataset.sec='meas3d';det.open=_openSecs.has('meas3d')||measure3DMode;det.style.marginBottom='10px';
+    const sum=document.createElement('summary');sum.style.cssText='font-size:0.7rem;font-weight:bold;color:#ffd700;cursor:pointer;list-style:none;display:flex;align-items:center;border-bottom:1px solid #334155;padding-bottom:4px;';
+    sum.innerHTML='<span class="s-arr">▶</span><span style="flex:1">📏 MEDIDAS 3D</span>';det.appendChild(sum);
+    const body=document.createElement('div');body.style.cssText='padding:8px 10px;display:flex;flex-direction:column;gap:6px;';
+    const btnToggle=document.createElement('button');
+    btnToggle.style.cssText='width:100%;padding:6px 8px;border-radius:5px;font-size:0.72rem;font-family:Outfit,sans-serif;font-weight:600;cursor:pointer;border:1px solid '+(measure3DMode?'rgba(255,215,0,0.8)':'rgba(255,215,0,0.4)')+';background:'+(measure3DMode?'rgba(255,215,0,0.2)':'rgba(255,215,0,0.08)')+';color:#ffd700;';
+    btnToggle.textContent=measure3DMode?'🔴 Desactivar medición':'📏 Activar medición 3D';
+    btnToggle.onclick=toggleMeasure3D;body.appendChild(btnToggle);
+    if(measure3DMode){
+        const hint=document.createElement('p');hint.style.cssText='font-size:0.62rem;color:#94a3b8;margin:0;font-family:Space Mono,monospace;';
+        hint.textContent=measure3DPts.length===0?'Haz clic en un punto del escenario':'✓ Punto A marcado — haz clic en otro punto';
+        body.appendChild(hint);
+    }
+    if(measure3DSaved.length>0){
+        const btnClear=document.createElement('button');btnClear.style.cssText='width:100%;padding:4px 8px;border-radius:5px;font-size:0.68rem;font-family:Outfit,sans-serif;cursor:pointer;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:#f87171;';
+        btnClear.textContent='🗑 Borrar todas las medidas 3D';btnClear.onclick=clearMeasure3DAll;body.appendChild(btnClear);
+        const measList=document.createElement('div');measList.style.cssText='display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto;';
+        measure3DSaved.forEach(m=>{
+            const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:4px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:4px;padding:4px 6px;';
+            const inp=document.createElement('input');inp.value=m.name||('M'+(measure3DSaved.indexOf(m)+1));inp.style.cssText='flex:1;font-size:0.65rem;background:transparent;border:none;color:#ffd700;font-family:Space Mono,monospace;min-width:0;';
+            inp.oninput=(e)=>{m.name=e.target.value;};
+            const dist=document.createElement('span');dist.style.cssText='font-size:0.68rem;color:#ffd700;font-family:Space Mono,monospace;white-space:nowrap;';dist.textContent=m.dist.toFixed(2)+'m';
+            const btnDel=document.createElement('button');btnDel.textContent='✕';btnDel.style.cssText='background:none;border:none;color:#f87171;cursor:pointer;font-size:0.75rem;padding:0 3px;flex-shrink:0;';
+            btnDel.onclick=()=>delMeasure3D(m.id);
+            row.appendChild(inp);row.appendChild(dist);row.appendChild(btnDel);measList.appendChild(row);
+        });
+        body.appendChild(measList);
+    }
+    det.appendChild(body);list.appendChild(det);
+}
+createMeasure3DSection();
 createFloorSection();
 createAreaSection();
 createSectionGrouped('MUROS',walls,'🧱','wall');
 createSectionGrouped('MEDIDAS',measuresList,'📏','measure');
 createSectionGrouped('MUEBLES',furnitureList,'🛋️','furn');
 if(!objects3d.length){list.innerHTML='<span style="font-size:0.75rem;color:rgba(255,255,255,0.5)">No hay elementos visibles</span>';}}
+function toggleMeasure3D(){
+    measure3DMode=!measure3DMode;
+    if(!measure3DMode){
+        measure3DTempObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});
+        measure3DTempObjs=[];measure3DPts=[];
+    }
+    setup3DInteractions();build3DMenu();updateMeasure3DHUD();
+    showToast(measure3DMode?'📏 Clic en el escenario para medir':'📏 Medición 3D desactivada');
+}
+function cancelMeasure3D(){
+    measure3DTempObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});
+    measure3DTempObjs=[];measure3DPts=[];
+    measure3DMode=false;setup3DInteractions();build3DMenu();updateMeasure3DHUD();
+}
+function measure3DClick(e){
+    if(!measure3DMode||!renderer3d||!camera3d||!scene3d)return;
+    if(_meas3DMouseDown&&Math.hypot(e.clientX-_meas3DMouseDown.x,e.clientY-_meas3DMouseDown.y)>8)return;
+    const rect=renderer3d.domElement.getBoundingClientRect();
+    const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
+    const raycaster=new THREE.Raycaster();raycaster.setFromCamera(mouse,camera3d);
+    const allMeshes=[];
+    scene3d.traverse(o=>{if(o.isMesh&&o.parent?.userData?.type!=='measure3d'&&o.parent?.userData?.type!=='measure3d_temp')allMeshes.push(o);});
+    const intersects=raycaster.intersectObjects(allMeshes,false);
+    if(!intersects.length)return;
+    const pt=intersects[0].point.clone();
+    measure3DPts.push(pt);
+    updateMeasure3DTempVisual();build3DMenu();
+    if(measure3DPts.length===1){showToast('📏 Punto 1 — añade más o guarda');}
+    else{let tot=0;for(let i=1;i<measure3DPts.length;i++)tot+=measure3DPts[i-1].distanceTo(measure3DPts[i]);showToast('📏 '+measure3DPts.length+' pts · '+tot.toFixed(2)+'m total');}
+}
+function updateMeasure3DTempVisual(){
+    measure3DTempObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});measure3DTempObjs=[];
+    if(!scene3d||!measure3DPts.length)return;
+    const group=new THREE.Group();group.userData={type:'measure3d_temp'};
+    const sGeo=new THREE.SphereGeometry(0.06,8,8);const sMat=new THREE.MeshBasicMaterial({color:0xffd700});
+    measure3DPts.forEach(pt=>{const s=new THREE.Mesh(sGeo,sMat);s.position.copy(pt);group.add(s);});
+    let total=0;
+    for(let i=1;i<measure3DPts.length;i++){
+        const p1=measure3DPts[i-1],p2=measure3DPts[i];
+        const dist=p1.distanceTo(p2);total+=dist;
+        const lGeo=new THREE.BufferGeometry().setFromPoints([p1,p2]);
+        group.add(new THREE.Line(lGeo,new THREE.LineBasicMaterial({color:0xffd700})));
+        const mid=new THREE.Vector3().lerpVectors(p1,p2,0.5);
+        const sp=createTextSprite(dist.toFixed(2)+'m',{fontsize:24,fontface:'Space Mono',textColor:{r:255,g:215,b:0,a:1}});
+        if(sp){sp.position.copy(mid);sp.position.y+=0.15;group.add(sp);}
+    }
+    if(measure3DPts.length>=3){
+        const lp=measure3DPts[measure3DPts.length-1];
+        const sp=createTextSprite('↑ '+total.toFixed(2)+'m',{fontsize:22,fontface:'Space Mono',textColor:{r:255,g:255,b:255,a:0.9}});
+        if(sp){sp.position.copy(lp);sp.position.y+=0.38;group.add(sp);}
+    }
+    scene3d.add(group);measure3DTempObjs.push(group);
+    updateMeasure3DHUD();
+}
+function updateMeasure3DHUD(){
+    const hud=document.getElementById('meas3d-hud');if(!hud)return;
+    const info=document.getElementById('meas3d-hud-info');
+    if(!measure3DMode){hud.style.display='none';return;}
+    hud.style.display='flex';
+    if(info){
+        if(!measure3DPts.length){info.textContent='Haz clic en el escenario';}
+        else{let tot=0;for(let i=1;i<measure3DPts.length;i++)tot+=measure3DPts[i-1].distanceTo(measure3DPts[i]);info.textContent=measure3DPts.length+(measure3DPts.length===1?' punto':' puntos')+(measure3DPts.length>=2?' · '+tot.toFixed(2)+'m':'');}
+    }
+    const btn=document.getElementById('btn-save-meas3d');if(btn)btn.style.opacity=measure3DPts.length>=2?'1':'0.4';
+}
+function saveMeasure3D(){
+    if(measure3DPts.length<2){showToast('⚠ Necesitas al menos 2 puntos');return;}
+    const segs=[];let total=0;
+    for(let i=1;i<measure3DPts.length;i++){const d=measure3DPts[i-1].distanceTo(measure3DPts[i]);segs.push(d);total+=d;}
+    const saved={id:_measure3DId++,pts:measure3DPts.map(p=>p.clone()),segs,dist:total,name:null};
+    measure3DSaved.push(saved);
+    measure3DTempObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});measure3DTempObjs=[];measure3DPts=[];
+    addMeasure3DVisual(saved);build3DMenu();updateMeasure3DHUD();
+    showToast('📏 Guardada: '+total.toFixed(2)+'m');
+}
+function undoMeasure3DPt(){
+    if(!measure3DPts.length)return;
+    measure3DPts.pop();updateMeasure3DTempVisual();build3DMenu();
+}
+function addMeasure3DVisual(saved){
+    if(!scene3d)return;
+    const group=new THREE.Group();group.userData={type:'measure3d',id:saved.id};
+    const sGeo=new THREE.SphereGeometry(0.06,8,8);const sMat=new THREE.MeshBasicMaterial({color:0xffd700});
+    saved.pts.forEach(pt=>{const s=new THREE.Mesh(sGeo,sMat);s.position.copy(pt);group.add(s);});
+    const segs=saved.segs||[];
+    for(let i=1;i<saved.pts.length;i++){
+        const p1=saved.pts[i-1],p2=saved.pts[i];
+        const lGeo=new THREE.BufferGeometry().setFromPoints([p1,p2]);
+        group.add(new THREE.Line(lGeo,new THREE.LineBasicMaterial({color:0xffd700,linewidth:2})));
+        const mid=new THREE.Vector3().lerpVectors(p1,p2,0.5);
+        const segDist=segs[i-1]!=null?segs[i-1]:p1.distanceTo(p2);
+        const sp=createTextSprite(segDist.toFixed(2)+'m',{fontsize:26,fontface:'Space Mono',textColor:{r:255,g:215,b:0,a:1}});
+        if(sp){sp.position.copy(mid);sp.position.y+=0.18;group.add(sp);}
+    }
+    if(saved.pts.length>=3){
+        const lp=saved.pts[saved.pts.length-1];
+        const sp=createTextSprite('↑ '+saved.dist.toFixed(2)+'m',{fontsize:22,fontface:'Space Mono',textColor:{r:255,g:255,b:255,a:0.9}});
+        if(sp){sp.position.copy(lp);sp.position.y+=0.38;group.add(sp);}
+    }
+    scene3d.add(group);measure3DVisObjs.push(group);
+}
+function delMeasure3D(id){
+    const idx=measure3DSaved.findIndex(m=>m.id===id);if(idx===-1)return;
+    measure3DSaved.splice(idx,1);
+    const oi=measure3DVisObjs.findIndex(o=>o.userData.id===id);
+    if(oi!==-1){if(scene3d)scene3d.remove(measure3DVisObjs[oi]);measure3DVisObjs.splice(oi,1);}
+    build3DMenu();
+}
+function clearMeasure3DAll(){
+    measure3DVisObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});measure3DVisObjs=[];
+    measure3DTempObjs.forEach(o=>{if(scene3d)scene3d.remove(o);});measure3DTempObjs=[];
+    measure3DSaved=[];measure3DPts=[];build3DMenu();updateMeasure3DHUD();showToast('🗑 Medidas 3D borradas');
+}
 function createTextSprite(message,parameters){if(typeof THREE==='undefined')return null;const fontface=parameters.fontface||'Arial';const fontsize=parameters.fontsize||18;const textColor=parameters.textColor||{r:255,g:255,b:255,a:1.0};const canvas=document.createElement('canvas');const context=canvas.getContext('2d');context.font=`Bold ${fontsize}px ${fontface}`;const metrics=context.measureText(message);const textWidth=metrics.width;canvas.width=textWidth+10;canvas.height=fontsize+10;context.font=`Bold ${fontsize}px ${fontface}`;context.fillStyle=`rgba(${textColor.r}, ${textColor.g}, ${textColor.b}, ${textColor.a})`;context.fillText(message,5,fontsize);const texture=new THREE.Texture(canvas);texture.needsUpdate=true;const spriteMaterial=new THREE.SpriteMaterial({map:texture});const sprite=new THREE.Sprite(spriteMaterial);sprite.scale.set(canvas.width/100,canvas.height/100,1.0);return sprite;}
 function render(){ctx.clearRect(0,0,canvas.width,canvas.height);const pm=pxM();if(snapOn&&layerGrid&&FLOORS[curFloor]?.cal){const step=.10*pm;ctx.save();ctx.strokeStyle='rgba(74,158,255,'+gridOpacity+')';ctx.lineWidth=0.8;for(let x=0;x<canvas.width;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}for(let y=0;y<canvas.height;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}ctx.restore();}
 furniture.filter(f=>f.floor===curFloor).forEach(f=>{if(!FLOORS[curFloor]?.cal)return;if(f.type==='wall'&&!layerWall)return;if(f.type!=='wall'&&!layerFurn)return;if(f.hidden&&f.id!==selId)return;const isSel=f.id===selId,op=ho(f.opa);if(f.type==='zona'){if(!f.pts||f.pts.length<3)return;const ox=f.x,oy=f.y;ctx.save();ctx.beginPath();ctx.moveTo(ox+f.pts[0].x,oy+f.pts[0].y);f.pts.slice(1).forEach(p=>ctx.lineTo(ox+p.x,oy+p.y));ctx.closePath();ctx.fillStyle=(f.color||'#10b981')+'33';ctx.fill();ctx.save();ctx.clip();ctx.strokeStyle=(f.color||'#10b981')+'44';ctx.lineWidth=.7;const _bb={x0:Math.min(...f.pts.map(p=>p.x)),x1:Math.max(...f.pts.map(p=>p.x)),y0:Math.min(...f.pts.map(p=>p.y)),y1:Math.max(...f.pts.map(p=>p.y))};for(let _d=_bb.x0-(_bb.y1-_bb.y0);_d<_bb.x1+(_bb.y1-_bb.y0);_d+=14){ctx.beginPath();ctx.moveTo(ox+_d,oy+_bb.y0);ctx.lineTo(ox+_d+(_bb.y1-_bb.y0),oy+_bb.y1);ctx.stroke();}ctx.restore();ctx.beginPath();ctx.moveTo(ox+f.pts[0].x,oy+f.pts[0].y);f.pts.slice(1).forEach(p=>ctx.lineTo(ox+p.x,oy+p.y));ctx.closePath();if(isSel){ctx.strokeStyle=_ZONA_SEL_COL;ctx.lineWidth=2.5;ctx.shadowColor=_ZONA_SEL_COL+'66';ctx.shadowBlur=6;}else{ctx.strokeStyle=f.color||'#10b981';ctx.lineWidth=1.8;ctx.shadowBlur=0;}ctx.stroke();ctx.shadowBlur=0;if(isSel){f.pts.forEach((p,_pi)=>{const _vx=ox+p.x,_vy=oy+p.y;const _isAct=_pi===selZonaPtIdx;const _cs=_isAct?10:7;ctx.save();if(_isAct){ctx.beginPath();ctx.arc(_vx,_vy,16,0,Math.PI*2);ctx.strokeStyle=_ZONA_SEL_COL+'44';ctx.lineWidth=1.5;ctx.setLineDash([3,2]);ctx.stroke();ctx.setLineDash([]);}ctx.strokeStyle=_isAct?'#fff':_ZONA_SEL_COL;ctx.lineWidth=_isAct?2.5:2;ctx.shadowColor='rgba(0,0,0,.8)';ctx.shadowBlur=4;ctx.beginPath();ctx.moveTo(_vx-_cs,_vy);ctx.lineTo(_vx+_cs,_vy);ctx.moveTo(_vx,_vy-_cs);ctx.lineTo(_vx,_vy+_cs);ctx.stroke();ctx.shadowBlur=0;ctx.beginPath();ctx.arc(_vx,_vy,_isAct?3.5:2.5,0,Math.PI*2);ctx.fillStyle=_isAct?'#fff':_ZONA_SEL_COL;ctx.fill();if(!_isAct){const _fs2=Math.max(7,Math.min(9,pm*.1));ctx.font='bold '+_fs2+'px Space Mono,monospace';ctx.fillStyle='rgba(0,0,0,.85)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(_pi+1,_vx,_vy-_cs-6);}ctx.restore();});const _pm2=pxM();for(let _si=0;_si<f.pts.length;_si++){const _pa={x:ox+f.pts[_si].x,y:oy+f.pts[_si].y};const _pb={x:ox+f.pts[(_si+1)%f.pts.length].x,y:oy+f.pts[(_si+1)%f.pts.length].y};const _dv=d2(_pa,_pb)/_pm2;const _ang=Math.atan2(_pb.y-_pa.y,_pb.x-_pa.x);const _mxs=(_pa.x+_pb.x)/2,_mys=(_pa.y+_pb.y)/2;const _fs3=Math.max(8,Math.min(11,_pm2*.12));pill(ctx,_dv.toFixed(2)+'m',_mxs,_mys,_ang,_ZONA_SEL_COL,_fs3);}
@@ -1574,16 +1731,16 @@ function detectRooms(){const pm=pxM();if(!pm||!FLOORS[curFloor]?.cal){showToast(
 function updateSelDimensions(){const selDiv=document.getElementById('sel-dim-edit');const wSelEdit=document.getElementById('wall-sel-edit');const winSelEdit=document.getElementById('window-sel-edit');const winHint=document.getElementById('win-hint');if(!selId){wallEditMode=false;if(selDiv)selDiv.innerHTML='';if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';return;}const f=furniture.find(x=>x.id===selId);if(!f)return;if(f.type==='wall'){if(selDiv)selDiv.innerHTML='';if(wSelEdit){wSelEdit.style.display='block';const _wmb=document.getElementById('btn-wall-edit-mode');if(_wmb){if(wallEditMode){_wmb.textContent='🔒 Bloquear muro';_wmb.style.background='rgba(245,158,11,0.15)';_wmb.style.borderColor='var(--warn)';_wmb.style.color='var(--warn)';_wmb.classList.remove('hint-glow');}else{_wmb.textContent='✏ Mover / Editar vértices';_wmb.style.background='';_wmb.style.borderColor='';_wmb.style.color='';_wmb.classList.add('hint-glow');}}document.getElementById('wall-sel-name').value=f.name||'';document.getElementById('wedit-thick').value=fmtDim(f.thick||0.15);document.getElementById('wedit-hz').value=fmtDim(f.hZ||2.5);document.getElementById('wedit-color').value=f.color||'#94a3b8';let len=0;if(f.pts)for(let i=1;i<f.pts.length;i++)len+=d2(f.pts[i-1],f.pts[i]);document.getElementById('wedit-len').textContent='Longitud total: '+len.toFixed(2)+'m';document.getElementById('wall-slab-floor').checked=!!f.slabFloor;document.getElementById('wall-slab-ceiling').checked=!!f.slabCeiling;const slabKind=f.slabKind||'none';Array.from(document.getElementsByName('wall-slab-kind')).forEach(el=>{el.checked=el.value===slabKind;});}if(winSelEdit){winSelEdit.style.display='block';if(winHint)winHint.style.display='none';document.getElementById('window-sel-name').textContent='Muro: '+(f.name||'Sin nombre');let holesHTML='';if(f.holes&&f.holes.length>0){f.holes.forEach((h,i)=>{const isSH=i===selHoleIdx;const hCol=h.type==='door'?'#ec4899':'#0ea5e9';const hIcon=h.type==='door'?'🚪':'🪟';const hBrd=isSH?hCol:'var(--brd)';const hBg=isSH?'rgba(14,165,233,0.08)':'var(--inp)';holesHTML+='<div style="background:'+hBg+';padding:6px;border-radius:4px;margin-bottom:6px;border:1px solid '+hBrd+';cursor:pointer" onclick="selHoleIdx='+i+';render();updateSelDimensions()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:0.65rem;color:'+hCol+'">'+hIcon+' '+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'</span><button class="fi-del" style="font-size:0.75rem;padding:0;background:none;border:none;color:var(--red);cursor:pointer" onclick="event.stopPropagation();delHole('+i+')">🗑</button></div>'+'<input type="text" placeholder="'+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'" value="'+(h.name||'')+'" onclick="event.stopPropagation()" oninput="event.stopPropagation();updHole('+i+',\'name\',this.value)" style="font-size:.64rem;margin-bottom:4px;width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:3px;padding:2px 4px;color:var(--fg)">'+'<div class="g2" style="margin-bottom:4px"><div><label style="font-size:0.6rem">Posición (m)</label><input type="number" step="0.1" value="'+h.offset.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'offset\',this.value)"></div><div><label style="font-size:0.6rem">Ancho (m)</label><input type="number" step="0.1" min="0.1" value="'+h.w.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'w\',this.value)"></div></div><div class="g2"><div><label style="font-size:0.6rem">Alto Z (m)</label><input type="number" step="0.1" min="0.1" value="'+h.h.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'h\',this.value)"></div><div><label style="font-size:0.6rem">Elev. (m)</label><input type="number" step="0.1" min="0" value="'+h.elev.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'elev\',this.value)"></div></div></div>';});}document.getElementById('wedit-holes').innerHTML=holesHTML;updateAllHolesList();}return;}wallEditMode=false;if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';if(f.type==='rect'){selDiv.innerHTML='<div class="g2" style="margin-top:6px"><div><label>Ancho (m)</label><input type="number" id="edit-w" value="'+fmtDim(f.w)+'" step="0.05" min="0.05" onchange="updateDim(\'w\',this.value)"></div><div><label>Fondo (m)</label><input type="number" id="edit-h" value="'+fmtDim(f.h)+'" step="0.05" min="0.05" onchange="updateDim(\'h\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='L'){selDiv.innerHTML='<div class="glbl">Brazo vertical (↕)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll2" value="'+fmtDim(f.h)+'" step="0.05" min="0.1" onchange="updateDim(\'h\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la2" value="'+fmtDim(f.a2)+'" step="0.05" min="0.05" onchange="updateDim(\'a2\',this.value)"></div></div><hr class="divl"><div class="glbl">Brazo horizontal (↔)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll1" value="'+fmtDim(f.w)+'" step="0.05" min="0.1" onchange="updateDim(\'w\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la1" value="'+fmtDim(f.a1)+'" step="0.05" min="0.05" onchange="updateDim(\'a1\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='zona'){selDiv.innerHTML='<p style="font-size:.65rem;color:'+_ZONA_SEL_COL+';margin-bottom:5px">✎ Arrastra los vértices naranjas para editar la forma</p><label>Nombre</label><input type="text" value="'+f.name+'" style="width:100%" onchange="const _z=furniture.find(x=>x.id===selId);if(_z){_z.name=this.value.trim()||\'Mueble\';saveLS();render();updateList();}"><label style="margin-top:6px">Color</label><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input type="color" value="'+(f.color||'#10b981')+'" oninput="const _z=furniture.find(x=>x.id===selId);if(_z){_z.color=this.value;render();}" onchange="const _z=furniture.find(x=>x.id===selId);if(_z)saveLS();" style="width:38px;height:28px;border:none;background:none;cursor:pointer;padding:0"><span style="font-size:.7rem;color:var(--t2)">'+(f.pts?f.pts.length+' vértices':'')+'</span></div>';}else if(f.type==='circle'){selDiv.innerHTML='<label>Diámetro (m)</label><input type="number" id="edit-d" value="'+fmtDim(f.d)+'" step="0.05" min="0.1" onchange="updateDim(\'d\',this.value)"><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}}
 function updateDim(prop,val){const f=furniture.find(x=>x.id===selId);if(!f)return;let num=parseFloat(val);if(isNaN(num))return;if(prop==='w')f.w=Math.max(0.05,num);else if(prop==='h')f.h=Math.max(0.05,num);else if(prop==='hZ')f.hZ=Math.max(0.1,num);else if(prop==='a1')f.a1=Math.max(0.05,num);else if(prop==='a2')f.a2=Math.max(0.05,num);else if(prop==='d')f.d=Math.max(0.1,num);else if(prop==='elevZ')f.elevZ=Math.max(0,num);saveLS();render();updateList();updateSelDimensions();}
 function mobileEdit(){if(selId){const sc=document.getElementById('sel-ctrl');if(sc)sc.style.display='block';updateSelDimensions();mobToggle('list');setTimeout(()=>{const dimDiv=document.getElementById('sel-dim-edit');if(dimDiv&&dimDiv.innerHTML.trim()!==''){dimDiv.scrollIntoView({behavior:'smooth',block:'center'});const firstInput=dimDiv.querySelector('input');if(firstInput)firstInput.focus();}else{showToast('Primero selecciona un mueble con los campos visibles');}},350);}else{showToast('Selecciona un mueble primero');}}
-canvas.addEventListener('mousedown',e=>{e.preventDefault();const pos=getCP(e.clientX,e.clientY);if(freeProbeMode){const _fp=pos;if(freeProbePos&&Math.hypot(_fp.x-freeProbePos.x,_fp.y-freeProbePos.y)<18/zoom){freeProbeDragging=true;freeProbeDragOff={x:_fp.x-freeProbePos.x,y:_fp.y-freeProbePos.y};}else{freeProbePos={x:_fp.x,y:_fp.y};}render();return;}if(qmProbeMode){const _f1=furniture.find(x=>x.id===qmLastResult.id1);if(_f1){qmProbePos=projectOnPerimeter(pos,getCorners(_f1));qmProbeDragging=true;render();}return;}if(qmMode){const _qhid=hitFurn(pos.x,pos.y);if(_qhid&&_qhid!==qmSel[0]){doQuickMeasure(_qhid);}else if(!_qhid)cancelQM();return;}if(mode==='refpt'){refPts[curFloor]={x:pos.x,y:pos.y};document.getElementById('refpt-hint').textContent='Cota fijada ✓';cancelMode();render();return;}if(mode==='calib'){doCalib(pos);return;}if(!FLOORS[curFloor]?.cal){if(mode!=='none'){showToast('⚠ Calibra primero esta planta');return;}selId=null;selMeasId=null;selZonaPtIdx=-1;selHoleIdx=-1;panActive=true;panStartX=e.clientX;panStartY=e.clientY;panScrollX=carea.scrollLeft;panScrollY=carea.scrollTop;carea.style.cursor='grabbing';return;}if(mode==='ruler'){rulerAddPoint(pos);return;}if(mode==='drawZone'){drawZoneAddPoint(pos);return;}if(mode==='drawWall'){handleDrawWall(pos);return;}if(mode==='placeWindow'){placeWindowAtPoint(pos);return;}if(mode==='placeDoor'){placeDoorAtPoint(pos);return;}if(angle3PtMode){addAngle3Pt(pos);return;}if(mode==='editPt'){const{id,idx}=hitMeasPt(pos.x,pos.y);if(id){editPtIdx=idx;editDragging=true;measDragAll=false;render();return;}if(hitMeasBody(pos.x,pos.y)){measDragAll=true;editDragging=true;editPtIdx=-1;measDragSx=pos.x;measDragSy=pos.y;const m=measures.find(x=>x.id===editMeasId);measDragOrigPts=m?m.points.map(p=>({...p})):[];render();return;}editMeasId=null;editPtIdx=-1;measDragAll=false;mode='none';hideBanner();carea.classList.remove('editpt-mode');updateCursor();render();updateMeasList();return;}
+canvas.addEventListener('mousedown',e=>{e.preventDefault();const pos=getCP(e.clientX,e.clientY);if(freeProbeMode){const _fp=pos;if(freeProbePos&&Math.hypot(_fp.x-freeProbePos.x,_fp.y-freeProbePos.y)<18/zoom){freeProbeDragging=true;freeProbeDragOff={x:_fp.x-freeProbePos.x,y:_fp.y-freeProbePos.y};}else{freeProbePos={x:_fp.x,y:_fp.y};}render();return;}if(qmProbeMode){const _f1=furniture.find(x=>x.id===qmLastResult.id1);if(_f1){qmProbePos=projectOnPerimeter(pos,getCorners(_f1));qmProbeDragging=true;render();}return;}if(qmMode){const _qhid=hitFurn(pos.x,pos.y);if(_qhid&&_qhid!==qmSel[0]){doQuickMeasure(_qhid);}else if(!_qhid)cancelQM();return;}if(mode==='refpt'){refPts[curFloor]={x:pos.x,y:pos.y};document.getElementById('refpt-hint').textContent='Cota fijada ✓';cancelMode();render();return;}if(mode==='calib'){doCalib(pos);return;}if(!FLOORS[curFloor]?.cal){if(mode!=='none'){showToast('⚠ Calibra primero esta planta');return;}selId=null;selMeasId=null;selZonaPtIdx=-1;selHoleIdx=-1;panActive=true;panStartX=e.clientX;panStartY=e.clientY;panScrollX=carea.scrollLeft;panScrollY=carea.scrollTop;carea.style.cursor='grabbing';return;}if(mode==='ruler'){rulerPanPending=true;rulerPanClickPos=pos;rulerPanStart={x:e.clientX,y:e.clientY};panStartX=e.clientX;panStartY=e.clientY;panScrollX=carea.scrollLeft;panScrollY=carea.scrollTop;return;}if(mode==='drawZone'){drawZoneAddPoint(pos);return;}if(mode==='drawWall'){handleDrawWall(pos);return;}if(mode==='placeWindow'){placeWindowAtPoint(pos);return;}if(mode==='placeDoor'){placeDoorAtPoint(pos);return;}if(angle3PtMode){addAngle3Pt(pos);return;}if(mode==='editPt'){const{id,idx}=hitMeasPt(pos.x,pos.y);if(id){editPtIdx=idx;editDragging=true;measDragAll=false;render();return;}if(hitMeasBody(pos.x,pos.y)){measDragAll=true;editDragging=true;editPtIdx=-1;measDragSx=pos.x;measDragSy=pos.y;const m=measures.find(x=>x.id===editMeasId);measDragOrigPts=m?m.points.map(p=>({...p})):[];render();return;}editMeasId=null;editPtIdx=-1;measDragAll=false;mode='none';hideBanner();carea.classList.remove('editpt-mode');updateCursor();render();updateMeasList();return;}
 if(mode==='none'&&!e.ctrlKey&&selHoleIdx>=0){const _hcs=hitHoleCorner(pos.x,pos.y);if(_hcs>=0){holeCornerDragging=true;holeCornerSide=_hcs;pushHistory();render();return;}}
 if(mode==='none'&&!e.ctrlKey){const _hh=hitHole(pos.x,pos.y);if(_hh){selId=_hh.wallId;selHoleIdx=_hh.holeIdx;holeRepoDragging=true;pushHistory();render();updateSel();updateList();updateSelDimensions();return;}}
 if(selId&&mode==='none'&&!e.ctrlKey){const _wlf=furniture.find(x=>x.id===selId);if(!(_wlf?.type==='wall'&&!wallEditMode)){const _vpi=hitZonaPt(pos.x,pos.y);if(_vpi>=0){selZonaPtIdx=_vpi;zonaPtDragging=true;pushHistory();render();return;}}}
 const hid=hitFurn(pos.x,pos.y);if(hid&&e.ctrlKey){const _mi=multiSel.indexOf(hid);if(_mi>=0)multiSel.splice(_mi,1);else multiSel.push(hid);selId=hid;document.getElementById('group-panel')?.classList.toggle('show',multiSel.length>1);render();updateList();return;}if(hid&&!e.ctrlKey&&multiSel.length>0&&multiSel.includes(hid)){dragPending=true;dragPendStart={x:pos.x,y:pos.y};multiDragBase=furniture.filter(f=>multiSel.includes(f.id)).map(f=>({id:f.id,x:f.x,y:f.y}));multiDragStart={x:pos.x,y:pos.y};pushHistory();return;}if(hid){selId=hid;selMeasId=null;selZonaPtIdx=-1;selHoleIdx=-1;if(!e.ctrlKey)multiSel=[];document.getElementById('group-panel')?.classList.remove('show');pushHistory();const _hf=furniture.find(x=>x.id===hid);if(!(_hf?.type==='wall'&&!wallEditMode)){dragPending=true;dragPendStart={x:pos.x,y:pos.y};dox=pos.x-_hf.x;doy=pos.y-_hf.y;furniture=[...furniture.filter(x=>x.id!==hid),_hf];}render();updateSel();updateList();updateSelDimensions();return;}selId=null;selMeasId=null;selZonaPtIdx=-1;selHoleIdx=-1;render();updateSel();updateList();updateSelDimensions();panActive=true;panStartX=e.clientX;panStartY=e.clientY;panScrollX=carea.scrollLeft;panScrollY=carea.scrollTop;carea.style.cursor='grabbing';});
 canvas.addEventListener('mousemove',e=>{if(freeProbeMode&&freeProbeDragging){const _fp=getCP(e.clientX,e.clientY);freeProbePos={x:_fp.x-freeProbeDragOff.x,y:_fp.y-freeProbeDragOff.y};render();return;}if(qmProbeMode){const _pp=getCP(e.clientX,e.clientY);const _f1=furniture.find(x=>x.id===qmLastResult?.id1);if(_f1){qmProbePos=projectOnPerimeter(_pp,getCorners(_f1));render();}return;}if(zonaPtDragging&&selId&&selZonaPtIdx>=0){const pos=getCP(e.clientX,e.clientY);const _sf=furniture.find(x=>x.id===selId);if(_sf&&_sf.pts){if(_sf.type==='wall'){const pm=pxM();_sf.pts[selZonaPtIdx]={x:(pos.x-_sf.x)/pm,y:(pos.y-_sf.y)/pm};const _xs=_sf.pts.map(p=>p.x*pm),_ys=_sf.pts.map(p=>p.y*pm);_sf.w=(Math.max(..._xs)-Math.min(..._xs))/pm;_sf.h=(Math.max(..._ys)-Math.min(..._ys))/pm;}else{_sf.pts[selZonaPtIdx]={x:pos.x-_sf.x,y:pos.y-_sf.y};const _xs=_sf.pts.map(p=>p.x),_ys=_sf.pts.map(p=>p.y);_sf.w=Math.max(..._xs)-Math.min(..._xs);_sf.h=Math.max(..._ys)-Math.min(..._ys);}}render();return;}if(holeCornerDragging&&selId&&selHoleIdx>=0){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f&&f.holes&&f.holes[selHoleIdx]){const hole=f.holes[selHoleIdx];const raw=getOffsetOnWall(pos,0,selId);const MIN_W=0.1;if(holeCornerSide===0){const endOff=hole.offset+hole.w;const nOff=Math.min(raw,endOff-MIN_W);hole.w=endOff-nOff;hole.offset=Math.max(0,nOff);}else{hole.w=Math.max(MIN_W,raw-hole.offset);}render();updateSelDimensions();}return;}
-if(holeRepoDragging&&selId&&selHoleIdx>=0){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f&&f.holes&&f.holes[selHoleIdx]){const hole=f.holes[selHoleIdx];hole.offset=getOffsetOnWall(pos,hole.w,selId);render();}return;}if(mode==='ruler'){const _r=getCP(e.clientX,e.clientY);const _s=snapToPoint(_r);rulerGhostSnapped=(_s.x!==_r.x||_s.y!==_r.y);rulerGhost=rulerGhostSnapped?_s:applyShiftAngle(_r);render();return;}if(mode==='drawZone'){drawZoneGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='drawWall'){wallGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='placeWindow'||mode==='placeDoor'){placeWindowGhost=_getWallGhost(getCP(e.clientX,e.clientY));render();return;}if(mode==='editPt'&&editDragging){const pos=getCP(e.clientX,e.clientY);const m=measures.find(x=>x.id===editMeasId);if(m){if(measDragAll){const dx=pos.x-measDragSx,dy=pos.y-measDragSy;m.points=measDragOrigPts.map(p=>({x:p.x+dx,y:p.y+dy}));}else if(editPtIdx>=0)m.points[editPtIdx]=pos;recalcM(m);render();}return;}if(multiDragging){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-multiDragStart.x,dy=pos.y-multiDragStart.y;multiDragBase.forEach(b=>{const f=furniture.find(x=>x.id===b.id);if(f){f.x=b.x+dx;f.y=b.y+dy;}});render();return;}if(dragPending&&multiSel.length>0){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;multiDragging=true;}else{return;}}if(dragPending){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;dragging=true;}else{return;}}if(dragging&&selId){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f){let nx=pos.x-dox,ny=pos.y-doy;if(snapOn&&FLOORS[curFloor]?.cal){const pm2=pxM(),sn=.10;nx=Math.round(nx/sn/pm2)*sn*pm2;ny=Math.round(ny/sn/pm2)*sn*pm2;}f.x=nx;f.y=ny;render();}return;}if(panActive){carea.scrollLeft=panScrollX-(e.clientX-panStartX);carea.scrollTop=panScrollY-(e.clientY-panStartY);}});
-canvas.addEventListener('mouseup',()=>{if(freeProbeDragging){freeProbeDragging=false;return;}if(qmProbeDragging){qmProbeDragging=false;return;}if(holeCornerDragging){holeCornerDragging=false;saveLS();render();updateSelDimensions();refresh3D();return;}if(holeRepoDragging){holeRepoDragging=false;saveLS();render();updateSelDimensions();return;}if(zonaPtDragging){zonaPtDragging=false;selZonaPtIdx=-1;saveLS();updateList();render();return;}if(editDragging){editDragging=false;measDragAll=false;saveLS();updateMeasList();return;}if(multiDragging){multiDragging=false;saveLS();updateList();return;}if(dragging)saveLS();dragPending=false;multiDragging=false;dragging=false;if(panActive){panActive=false;updateCursor();}});
+if(holeRepoDragging&&selId&&selHoleIdx>=0){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f&&f.holes&&f.holes[selHoleIdx]){const hole=f.holes[selHoleIdx];hole.offset=getOffsetOnWall(pos,hole.w,selId);render();}return;}if(rulerPanPending){const _dx=e.clientX-rulerPanStart.x,_dy=e.clientY-rulerPanStart.y;if(Math.hypot(_dx,_dy)>8){rulerPanPending=false;panActive=true;}else{const _r=getCP(e.clientX,e.clientY);const _s=snapToPoint(_r);rulerGhostSnapped=(_s.x!==_r.x||_s.y!==_r.y);rulerGhost=rulerGhostSnapped?_s:applyShiftAngle(_r);render();return;}}if(mode==='ruler'&&!panActive){const _r=getCP(e.clientX,e.clientY);const _s=snapToPoint(_r);rulerGhostSnapped=(_s.x!==_r.x||_s.y!==_r.y);rulerGhost=rulerGhostSnapped?_s:applyShiftAngle(_r);render();return;}if(mode==='drawZone'){drawZoneGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='drawWall'){wallGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='placeWindow'||mode==='placeDoor'){placeWindowGhost=_getWallGhost(getCP(e.clientX,e.clientY));render();return;}if(mode==='editPt'&&editDragging){const pos=getCP(e.clientX,e.clientY);const m=measures.find(x=>x.id===editMeasId);if(m){if(measDragAll){const dx=pos.x-measDragSx,dy=pos.y-measDragSy;m.points=measDragOrigPts.map(p=>({x:p.x+dx,y:p.y+dy}));}else if(editPtIdx>=0)m.points[editPtIdx]=pos;recalcM(m);render();}return;}if(multiDragging){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-multiDragStart.x,dy=pos.y-multiDragStart.y;multiDragBase.forEach(b=>{const f=furniture.find(x=>x.id===b.id);if(f){f.x=b.x+dx;f.y=b.y+dy;}});render();return;}if(dragPending&&multiSel.length>0){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;multiDragging=true;}else{return;}}if(dragPending){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;dragging=true;}else{return;}}if(dragging&&selId){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f){let nx=pos.x-dox,ny=pos.y-doy;if(snapOn&&FLOORS[curFloor]?.cal){const pm2=pxM(),sn=.10;nx=Math.round(nx/sn/pm2)*sn*pm2;ny=Math.round(ny/sn/pm2)*sn*pm2;}f.x=nx;f.y=ny;render();}return;}if(panActive){carea.scrollLeft=panScrollX-(e.clientX-panStartX);carea.scrollTop=panScrollY-(e.clientY-panStartY);}});
+canvas.addEventListener('mouseup',()=>{if(rulerPanPending){rulerPanPending=false;if(mode==='ruler')rulerAddPoint(rulerPanClickPos);panActive=false;updateCursor();return;}if(freeProbeDragging){freeProbeDragging=false;return;}if(qmProbeDragging){qmProbeDragging=false;return;}if(holeCornerDragging){holeCornerDragging=false;saveLS();render();updateSelDimensions();refresh3D();return;}if(holeRepoDragging){holeRepoDragging=false;saveLS();render();updateSelDimensions();return;}if(zonaPtDragging){zonaPtDragging=false;selZonaPtIdx=-1;saveLS();updateList();render();return;}if(editDragging){editDragging=false;measDragAll=false;saveLS();updateMeasList();return;}if(multiDragging){multiDragging=false;saveLS();updateList();return;}if(dragging)saveLS();dragPending=false;multiDragging=false;dragging=false;if(panActive){panActive=false;updateCursor();}});
 canvas.addEventListener('dblclick',e=>{if(isMob())return;const pos=getCP(e.clientX,e.clientY);const pm=pxM();const mm=measures.filter(m=>m.floor===curFloor);for(let i=mm.length-1;i>=0;i--){const m=mm[i];if(!m.points||m.points.length<2)continue;const lp=m.points[m.points.length-1];const lbl=m.total.toFixed(2)+'m'+(m.area!=null?'  ▣ '+m.area.toFixed(2)+'m²':'')+(m.label?'  '+m.label:'');const fs2=Math.max(10,Math.min(14,pm*.15));const tw2=lbl.length*fs2*.62+12;if(pos.x>=lp.x+10&&pos.x<=lp.x+10+tw2+12&&pos.y>=lp.y-8&&pos.y<=lp.y+8){const cur=m.label||'';const nv=window.prompt('Etiqueta de la medida:',cur);if(nv!==null){m.label=nv.trim();saveLS();render();updateMeasList();}return;}}});
-canvas.addEventListener('mouseleave',()=>{dragging=false;dragPending=false;editDragging=false;measDragAll=false;panActive=false;updateCursor();rulerGhost=null;if(mode==='ruler')render();});
+canvas.addEventListener('mouseleave',()=>{dragging=false;dragPending=false;editDragging=false;measDragAll=false;panActive=false;rulerPanPending=false;updateCursor();rulerGhost=null;if(mode==='ruler')render();});
 carea.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();const delta=e.deltaY>0?-0.05:0.05;setZoom(zoom+delta);}});
 function lpStart(src){lpPos=getCP(src.clientX,src.clientY);lpClientX=src.clientX;lpClientY=src.clientY;lpActive=true;showLpRing(src.clientX,src.clientY);lpTimer=setTimeout(()=>{if(!lpActive)return;lpActive=false;hideLpRing();if(navigator.vibrate)navigator.vibrate(40);if(mode==='calib'){doCalib(lpPos);showToast('📍 Punto colocado');}else if(mode==='ruler'){rulerAddPoint(lpPos);showToast('📍 Punto añadido ('+rulerPts.length+')');}else if(mode==='refpt'){refPts[curFloor]={x:lpPos.x,y:lpPos.y};document.getElementById('refpt-hint').textContent='Cota fijada ✓';cancelMode();render();showToast('📍 Cota fijada');}else if(angle3PtMode){addAngle3Pt(lpPos);showToast('∠ Punto '+angle3PtPts.length+'/3');}else if(mode==='drawZone'){drawZoneAddPoint(lpPos);showToast('📍 Punto añadido');}else if(mode==='drawWall'){handleDrawWall(lpPos);}},LP_MS);}
 function lpCancel(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null;}lpActive=false;hideLpRing();}
@@ -1634,7 +1791,7 @@ function renderFloorManage(){const list=document.getElementById('floor-manage-li
 function setFloor(n){cancelMode();selId=null;selMeasId=null;editMeasId=null;selZonaPtIdx=-1;curFloor=n;renderFloorTabs();updCalibBadge();updCalibWarn();loadFloor(n);updateList();updateMeasList();updateSel();updateSelDimensions();if(!isMob()){if(FLOORS[n]?.cal){if(!document.getElementById('acc-body-calib').classList.contains('closed'))toggleAcc('calib');}else{if(document.getElementById('acc-body-calib').classList.contains('closed'))toggleAcc('calib');}}}
 function loadFloor(n){const f=FLOORS[n];if(!f||!f.img){imgEl.src='';canvas.width=0;canvas.height=0;if(FLOORS.length===0)showWelcome();return;}imgEl.onload=()=>{canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;if(f.imgWidth&&f.imgHeight&&(Math.abs(f.imgWidth-imgEl.naturalWidth)>1||Math.abs(f.imgHeight-imgEl.naturalHeight)>1)){const sx=imgEl.naturalWidth/f.imgWidth,sy=imgEl.naturalHeight/f.imgHeight;furniture.filter(f=>f.floor===n).forEach(f=>{f.x*=sx;f.y*=sy;});measures.filter(m=>m.floor===n).forEach(m=>{m.points.forEach(p=>{p.x*=sx;p.y*=sy;});recalcM(m);});f.imgWidth=imgEl.naturalWidth;f.imgHeight=imgEl.naturalHeight;saveLS();}autoZoom();render();updateList();updateMeasList();};imgEl.src=f.img;}
 function updCalibBadge(){const cf=FLOORS[curFloor];document.getElementById('sbadge').textContent=cf?.cal?cf.px.toFixed(1)+' px/m':'Sin calibrar';document.getElementById('cst').textContent=cf?.cal?'✓ Calibrado ('+cf.px.toFixed(1)+'px/m)':'— Pulsa para calibrar —';}
-function updCalibWarn(){const hdr=document.getElementById('acc-hdr-calib');const cf=FLOORS[curFloor];if(!FLOORS.length||cf?.cal){hdr.classList.remove('uncal');document.getElementById('calib-reminder')?.classList.remove('show');}else{hdr.classList.add('uncal');if(!in3DMode)document.getElementById('calib-reminder')?.classList.add('show');}}
+function updCalibWarn(){const hdr=document.getElementById('acc-hdr-calib');const cf=FLOORS[curFloor];if(!FLOORS.length||cf?.cal||!cf?.img){hdr.classList.remove('uncal');document.getElementById('calib-reminder')?.classList.remove('show');}else{hdr.classList.add('uncal');if(!in3DMode)document.getElementById('calib-reminder')?.classList.add('show');}}
 function toggleAcc(id){if(isMob())return;const hdr=document.getElementById('acc-hdr-'+id);const body=document.getElementById('acc-body-'+id);const isOpen=hdr.classList.contains('open');if(isOpen){body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(()=>{body.style.maxHeight='0px';body.classList.add('closed');});hdr.classList.remove('open');}else{body.classList.remove('closed');body.style.maxHeight=body.scrollHeight+'px';hdr.classList.add('open');setTimeout(()=>{body.style.maxHeight='none';},250);}}
 function openAcc(id){if(!document.getElementById('acc-hdr-'+id).classList.contains('open'))toggleAcc(id);}
 function autoZoom(){if(!imgEl.naturalWidth)return;if(isMob())setZoom(window.innerWidth/imgEl.naturalWidth*.95);else{const pw=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--pw'));const avW=window.innerWidth-pw-10,avH=window.innerHeight-48;setZoom(Math.max(Math.min(avW/imgEl.naturalWidth,avH/imgEl.naturalHeight,1),.2));}}
@@ -1666,234 +1823,110 @@ function startPlanAnim() {
     const cv = document.getElementById('plan-anim');
     if (!cv) return;
     const cx = cv.getContext('2d');
-    const W = 320, H = 170;
+    const W = 380, H = 180;
     cv.width = W;
     cv.height = H;
 
-    const scale = 125, tx = 40, ty = 15;
-    function getX(x) { return tx + x * scale; }
-    function getY(y) { return ty + y * scale; }
-
-    const myFloor = {
-        outer: [
-            [-0.1, 0.1, 1.2, 0.1],
-            [1.2, 0.1, 1.2, 0.9],
-            [1.2, 0.9, 0.8, 0.9],
-            [0.6, 0.9, -0.1, 0.9],
-            [-0.1, 0.9, -0.1, 0.1]
-        ],
-        inner: [
-            [0.6, 0.1, 0.6, 0.15],
-            [0.6, 0.35, 0.6, 0.45],
-            [1.0, 0.65, 1.2, 0.65],
-            [-0.1, 0.5, 0.2, 0.5],
-            [0.4, 0.5, 0.6, 0.5],
-            [0.2, 0.1, 0.2, 0.3],
-            [0.2, 0.7, 0.2, 0.9]
-        ],
-        stairs: [
-            [0.3, 0.1, 0.3, 0.4],
-            [0.5, 0.1, 0.5, 0.4],
-            [0.3, 0.14, 0.5, 0.14],
-            [0.3, 0.18, 0.5, 0.18],
-            [0.3, 0.22, 0.5, 0.22],
-            [0.3, 0.26, 0.5, 0.26],
-            [0.3, 0.30, 0.5, 0.30],
-            [0.3, 0.34, 0.5, 0.34],
-            [0.3, 0.38, 0.5, 0.38]
-        ],
-        doors: [
-            { x: 0.6, y: 0.9, r: 0.2, a0: 0, a1: -Math.PI/2, delay: 0.5 },
-            { x: 0.6, y: 0.35, r: 0.2, a0: -Math.PI/2, a1: 0, delay: 0.54 },
-            { x: 0.6, y: 0.65, r: 0.2, a0: -Math.PI/2, a1: 0, delay: 0.58 },
-            { x: 0.8, y: 0.65, r: 0.2, a0: 0, a1: Math.PI/2, delay: 0.62 },
-            { x: 0.2, y: 0.3, r: 0.2, a0: Math.PI/2, a1: Math.PI, delay: 0.66 },
-            { x: 0.2, y: 0.7, r: 0.2, a0: -Math.PI/2, a1: Math.PI, delay: 0.7 }
-        ],
-        windows: [
-            { x0: -0.05, y0: 0.1, x1: 0.15, y1: 0.1 },
-            { x0: 0.3, y0: 0.1, x1: 0.5, y1: 0.1 },
-            { x0: 0.8, y0: 0.1, x1: 1.0, y1: 0.1 },
-            { x0: 1.2, y0: 0.45, x1: 1.2, y1: 0.55 },
-            { x0: 1.2, y0: 0.7, x1: 1.2, y1: 0.8 },
-            { x0: -0.1, y0: 0.2, x1: -0.1, y1: 0.4 },
-            { x0: -0.1, y0: 0.6, x1: -0.1, y1: 0.8 }
-        ],
-        grass: [
-            [1.25, 0.05, 1.75, 0.05],
-            [1.75, 0.05, 1.75, 0.85],
-            [1.75, 0.85, 1.25, 0.85],
-            [1.25, 0.85, 1.25, 0.05]
-        ],
-        pool: [
-            [1.3, 0.1, 1.7, 0.1],
-            [1.7, 0.1, 1.7, 0.8],
-            [1.7, 0.8, 1.3, 0.8],
-            [1.3, 0.8, 1.3, 0.1],
-            [1.3, 0.2, 1.4, 0.2],
-            [1.4, 0.2, 1.4, 0.1]
-        ],
-        dims: [
-            { x0: -0.1, y0: 0.02, x1: 1.2, y1: 0.02, val: "16.50m", delay: 0.85 },
-            { x0: -0.26, y0: 0.1, x1: -0.26, y1: 0.9, val: "12.00m", delay: 0.88 },
-            { x0: 1.8, y0: 0.1, x1: 1.8, y1: 0.8, val: "9.60m", delay: 0.91 }
-        ]
-    };
-
-    const DRAW = 3.5;
     let start = null;
+    const DURATION = 4.5;
 
     function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
-    function drawFloor(floor, phase, globalOpa) {
-        cx.save();
-        cx.strokeStyle = 'rgba(126,200,227,' + (globalOpa * 0.06) + ')';
-        cx.lineWidth = 1;
-        for (let i = 0; i < W; i += 14) { cx.beginPath(); cx.moveTo(i, 0); cx.lineTo(i, H); cx.stroke(); }
-        for (let i = 0; i < H; i += 14) { cx.beginPath(); cx.moveTo(0, i); cx.lineTo(W, i); cx.stroke(); }
-
-        function tForSeg(delay) {
-            const dur = DRAW * (1 - delay) + .001;
-            const p = Math.max(0, Math.min(1, (phase - delay * DRAW) / dur));
-            return easeOut(p);
-        }
-
-        function drawGenericSeg(x0, y0, x1, y1, lw, delay, alpha, color, isDashed = false) {
-            const t = tForSeg(delay);
-            if (t <= 0) return;
-            const ix = x0 + (x1 - x0) * t;
-            const iy = y0 + (y1 - y0) * t;
-
-            cx.globalAlpha = globalOpa * alpha;
-            cx.lineCap = 'round';
-            cx.lineJoin = 'round';
-            cx.lineWidth = lw;
-            cx.strokeStyle = color;
-            cx.shadowColor = color;
-            cx.shadowBlur = lw > 2 ? 8 : 4;
-
-            if (isDashed) cx.setLineDash([4, 4]);
-            else cx.setLineDash([]);
-
-            cx.beginPath();
-            cx.moveTo(getX(x0), getY(y0));
-            cx.lineTo(getX(ix), getY(iy));
-            cx.stroke();
-            cx.shadowBlur = 0;
-            cx.setLineDash([]);
-
-            if (t >= 1 && !isDashed) {
-                cx.fillStyle = 'rgba(255,255,255,' + (globalOpa * alpha * t) + ')';
-                cx.beginPath();
-                cx.arc(getX(x1), getY(y1), lw * 0.4, 0, Math.PI * 2);
-                cx.fill();
-            }
-        }
-
-        floor.outer.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 3.0, i * .04, .95, '#c8e6ff'));
-        floor.inner.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 2.0, 0.2 + i * .04, .85, '#c8e6ff'));
-        if (floor.stairs) floor.stairs.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 1.2, 0.4 + i * .02, .6, '#c8e6ff'));
-
-        floor.windows.forEach((w, i) => {
-            const t = tForSeg(.65 + i * .03);
-            if (t <= 0) return;
-            const horiz = Math.abs(w.x1 - w.x0) > Math.abs(w.y1 - w.y0);
-            cx.save();
-            cx.globalAlpha = globalOpa * .8 * t;
-            cx.strokeStyle = '#7ec8e3';
-            cx.lineWidth = 1.5;
-            cx.shadowBlur = 4;
-            cx.shadowColor = 'rgba(126,200,227,.7)';
-            cx.beginPath(); cx.moveTo(getX(w.x0), getY(w.y0)); cx.lineTo(getX(w.x1), getY(w.y1)); cx.stroke();
-            const off = horiz ? [0, 3] : [3, 0];
-            cx.globalAlpha = globalOpa * .5 * t;
-            cx.beginPath(); cx.moveTo(getX(w.x0) + off[0], getY(w.y0) + off[1]); cx.lineTo(getX(w.x1) + off[0], getY(w.y1) + off[1]); cx.stroke();
-            cx.restore();
-        });
-
-        floor.doors.forEach((d, i) => {
-            const t = tForSeg(d.delay);
-            if (t <= 0) return;
-            const px = getX(d.x), py = getY(d.y), r = d.r * scale;
-            const currentAngle = d.a0 + (d.a1 - d.a0) * t;
-
-            cx.save();
-            cx.globalAlpha = globalOpa * .8 * t;
-            cx.strokeStyle = '#7ec8e3';
-            cx.lineWidth = 1.5;
-            cx.shadowBlur = 4;
-            cx.shadowColor = 'rgba(126,200,227,.6)';
-
-            cx.beginPath();
-            const leafX = Math.cos(currentAngle) * r;
-            const leafY = Math.sin(currentAngle) * r;
-            cx.moveTo(px, py);
-            cx.lineTo(px + leafX, py + leafY);
-            cx.stroke();
-
-            cx.setLineDash([2, 2]);
-            cx.beginPath();
-            cx.arc(px, py, r, d.a0, currentAngle, d.a1 < d.a0);
-            cx.stroke();
-            cx.setLineDash([]);
-            cx.restore();
-        });
-
-        floor.grass.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 1.5, 0.75 + i * .02, .7, '#4ade80', true));
-        floor.pool.forEach((s, i) => drawGenericSeg(s[0], s[1], s[2], s[3], 2.0, 0.8 + i * .02, .9, '#22d3ee'));
-
-        floor.dims.forEach(d => {
-            const t = tForSeg(d.delay);
-            if (t <= 0) return;
-            const ix = d.x0 + (d.x1 - d.x0) * t;
-            const iy = d.y0 + (d.y1 - d.y0) * t;
-
-            cx.globalAlpha = globalOpa * 0.9 * t;
-            cx.lineWidth = 1.2;
-            cx.strokeStyle = '#ffb347';
-
-            cx.beginPath();
-            cx.moveTo(getX(d.x0), getY(d.y0));
-            cx.lineTo(getX(ix), getY(iy));
-            cx.stroke();
-
-            const tick = 3.5;
-            if (t > 0.05) {
-                cx.beginPath(); cx.moveTo(getX(d.x0) - tick, getY(d.y0) - tick); cx.lineTo(getX(d.x0) + tick, getY(d.y0) + tick); cx.stroke();
-            }
-            if (t >= 1) {
-                cx.beginPath(); cx.moveTo(getX(d.x1) - tick, getY(d.y1) - tick); cx.lineTo(getX(d.x1) + tick, getY(d.y1) + tick); cx.stroke();
-                const mx = getX((d.x0 + d.x1) / 2);
-                const my = getY((d.y0 + d.y1) / 2);
-                const dx = d.x1 - d.x0, dy = d.y1 - d.y0;
-                let angle = Math.atan2(dy, dx);
-                if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI;
-
-                cx.save();
-                cx.translate(mx, my);
-                cx.rotate(angle);
-                cx.fillStyle = '#ffb347';
-                cx.font = 'bold 9px Space Mono,monospace';
-                cx.textAlign = 'center';
-                cx.textBaseline = 'bottom';
-                cx.fillText(d.val, 0, -4);
-                cx.restore();
-            }
-        });
-
-        cx.restore();
-    }
 
     function frame(ts) {
         if (!start) start = ts;
         const elapsed = (ts - start) / 1000;
-        const phase = Math.min(elapsed, DRAW + 0.5);
+        const phase = Math.min(elapsed / DURATION, 1.0);
+        const easedPhase = easeOut(phase);
         
         cx.clearRect(0, 0, W, H);
-        let globalOpa = Math.min(elapsed / 0.5, 1);
-        drawFloor(myFloor, phase, globalOpa);
         
-        if (elapsed < DRAW + 1.0) {
+        // Grid de fondo animado
+        const gridAlpha = Math.min(elapsed / 1.0, 1.0);
+        cx.strokeStyle = `rgba(126,200,227, ${gridAlpha * 0.06})`;
+        cx.lineWidth = 1;
+        for (let i = 0; i < W; i += 20) { cx.beginPath(); cx.moveTo(i, 0); cx.lineTo(i, H); cx.stroke(); }
+        for (let i = 0; i < H; i += 20) { cx.beginPath(); cx.moveTo(0, i); cx.lineTo(W, i); cx.stroke(); }
+
+        cx.save();
+        cx.translate(W/2 + 45, H/2 - 25); 
+        cx.rotate(-Math.PI / 2); 
+
+        const fibs = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
+        const sc = 1.25;
+        const totalSteps = fibs.length - 1; 
+        const currentProgress = easedPhase * totalSteps;
+
+        for (let i = 0; i < totalSteps; i++) {
+            if (currentProgress < i) break;
+            const localT = Math.min(1.0, currentProgress - i);
+            const f = fibs[i] * sc;
+
+            // Rectángulos de construcción (proporción áurea)
+            cx.strokeStyle = `rgba(255, 179, 71, ${gridAlpha * 0.4 * localT})`;
+            cx.lineWidth = 0.8;
+            if (localT > 0) {
+                cx.strokeRect(0, 0, f, f);
+                
+                // Línea diagonal técnica cruzando el cuadrado
+                cx.beginPath();
+                cx.moveTo(0, 0);
+                cx.lineTo(f * localT, f * localT);
+                cx.stroke();
+                
+                // Radio de medición punteado que acompaña al trazo del arco
+                const currentAngle = -Math.PI/2 + localT * (Math.PI/2);
+                cx.beginPath();
+                cx.moveTo(0, f);
+                cx.lineTo(0 + Math.cos(currentAngle)*f, f + Math.sin(currentAngle)*f);
+                cx.setLineDash([2, 3]);
+                cx.strokeStyle = `rgba(255, 179, 71, ${0.6 * localT})`;
+                cx.stroke();
+                cx.setLineDash([]);
+            }
+
+            // Espiral Áurea Principal
+            cx.beginPath();
+            cx.arc(0, f, f, -Math.PI/2, -Math.PI/2 + localT * (Math.PI/2));
+            cx.strokeStyle = `rgba(255, 255, 255, ${0.95 * localT})`;
+            cx.lineWidth = 2.0;
+            cx.shadowBlur = 8;
+            cx.shadowColor = `rgba(255, 255, 255, ${0.6 * localT})`;
+            cx.stroke();
+            cx.shadowBlur = 0;
+
+            // Texto elegante para las dimensiones en los cuadrados
+            if (i >= 2 && localT > 0.4) {
+                const textAlpha = (localT - 0.4) / 0.6;
+                cx.fillStyle = `rgba(255, 179, 71, ${textAlpha * 0.9})`;
+                cx.font = '9px Space Mono';
+                cx.fillText(`φ${fibs[i]}`, 6, 12);
+            }
+
+            // Translación para la siguiente fase de la espiral
+            cx.translate(f, f);
+            cx.rotate(Math.PI/2);
+        }
+        cx.restore();
+
+        // Cruz de orientación central y ecuación dorada
+        if (phase > 0.2) {
+            const markAlpha = (phase - 0.2) / 0.8;
+            cx.strokeStyle = `rgba(255, 179, 71, ${markAlpha * 0.35})`;
+            cx.lineWidth = 1;
+            cx.setLineDash([2, 4]);
+            cx.beginPath();
+            cx.moveTo(W/2, 0); cx.lineTo(W/2, H - 25);
+            cx.moveTo(0, H/2); cx.lineTo(W, H/2);
+            cx.stroke();
+            cx.setLineDash([]);
+            
+            cx.fillStyle = `rgba(255, 179, 71, ${markAlpha * 0.8})`;
+            cx.font = '10px Space Mono';
+            cx.textAlign = 'center';
+            cx.fillText('a/b = (a+b)/a ≈ 1.618', W/2, H - 10);
+        }
+
+        if (phase < 1.0) {
             requestAnimationFrame(frame);
         }
     }
