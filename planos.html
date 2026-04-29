@@ -349,7 +349,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
     <div id="fp3d-hud" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(7,17,29,0.88);color:#e2e8f0;border-radius:10px;padding:8px 16px;font-size:.7rem;font-family:'Space Mono',monospace;z-index:260;flex-direction:row;gap:16px;align-items:center;white-space:nowrap;border:1px solid rgba(167,139,250,0.35);box-shadow:0 4px 20px rgba(0,0,0,0.5)"><span>WASD / ↑↓←→ mover</span><span style="color:#94a3b8">|</span><span>Arrastra para mirar</span><button onclick="exitFP3D()" style="pointer-events:all;background:rgba(239,68,68,0.25);border:1px solid rgba(239,68,68,0.7);color:#fca5a5;border-radius:5px;padding:2px 10px;cursor:pointer;font-size:.7rem;font-family:'Outfit',sans-serif;margin-left:4px">✕ Salir</button></div>
     <div id="meas3d-hud" style="display:none;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(7,17,29,0.92);color:#e2e8f0;border-radius:10px;padding:8px 16px;font-size:.7rem;font-family:'Space Mono',monospace;z-index:260;flex-direction:row;gap:10px;align-items:center;white-space:nowrap;border:1px solid rgba(255,215,0,0.45);box-shadow:0 4px 20px rgba(0,0,0,0.6)"><span id="meas3d-hud-info" style="color:#ffd700;font-size:.68rem">Haz clic en el escenario</span><button onclick="undoMeasure3DPt()" style="pointer-events:all;background:rgba(148,163,184,0.15);border:1px solid rgba(148,163,184,0.4);color:#94a3b8;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif">↩ Deshacer</button><button onclick="saveMeasure3D()" id="btn-save-meas3d" style="pointer-events:all;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.6);color:#ffd700;border-radius:5px;padding:3px 10px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif;font-weight:600">✓ Guardar medida</button><button onclick="cancelMeasure3D()" style="pointer-events:all;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:.68rem;font-family:'Outfit',sans-serif">✕ Cancelar</button></div>
 </div>
-<div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="160" height="130"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
+<div id="welcome"><div id="welcome-inner"><div class="wlc-logo"><canvas id="plan-anim" width="160" height="130"></canvas></div><div class="wlc-title">Planos</div><p class="wlc-sub">Carga el plano de tu vivienda para distribuir muebles, medir distancias y calcular áreas.</p><div id="wlc-resume-box" style="display:none;margin-bottom:14px"><button id="wlc-resume-btn" onclick="resumeProject()" style="width:100%;background:linear-gradient(135deg,#1a6cf0,#4d9eff);border:none;border-radius:10px;padding:14px 18px;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(77,158,255,0.3)">▶ Continuar proyecto guardado</button><p style="font-size:.68rem;color:var(--t2);margin-top:6px;font-family:'Space Mono',monospace" id="wlc-resume-hint"></p><div class="wlc-or">o carga uno nuevo</div></div><div class="wlc-card" id="wlc-pdf-zone" onclick="document.getElementById('fi-wlc-pdf').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="wlcDrop(event)"><div class="wci">📄</div><h3>Cargar PDF del plano</h3><p>Recomendado — máxima calidad del dibujo técnico.</p><span class="wlc-pages-tag">1 página → 1 planta<br>2 páginas → Planta Baja + Planta Alta automáticamente<br>(si hay más páginas solo se leen las 2 primeras)</span></div><input type="file" id="fi-wlc-pdf" accept="application/pdf" onchange="wlcPDF(this)" style="display:none"><div class="wlc-or">o</div><button class="wlc-img-btn" onclick="document.getElementById('fi-wlc-img').click()">🖼 Cargar imagen (JPG · PNG · WebP) — genera 1 planta</button><input type="file" id="fi-wlc-img" accept="image/*" onchange="wlcImg(this)" style="display:none"><div id="wlc-status"></div></div></div>
 <div id="main"><aside id="panel"><div id="phdl" onclick="closePanel()" title="Cerrar panel"></div>
 <div id="mob-close-bar" onclick="closePanel()"><div class="mcb-line"></div><span class="mcb-btn">✕ Cerrar menú</span><div class="mcb-line"></div></div>
 <div class="acc" data-c="calib"><div class="acc-hdr open" id="acc-hdr-calib" onclick="toggleAcc('calib')"><span class="acc-icon">📐</span><span class="acc-title">Calibrar</span><span class="wb" id="calib-wb">⚠ Sin calibrar</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-calib"><div class="acc-inner"><p class="hint">Pulsa 2 puntos del plano e introduce la distancia real para escalar.</p><label>Distancia real (metros)</label><input type="number" id="cdist" value="2.30" step="0.01" min="0.1"><button class="btn" style="background:var(--cc);color:#1a0e00;margin-top:7px" id="bcalib" onclick="startCalib()">⊕ Activar calibración</button><div id="cst">— Pulsa para calibrar —</div></div></div></div>
@@ -1893,7 +1893,8 @@ function renderFloorManage(){const list=document.getElementById('floor-manage-li
 function setFloor(n){cancelMode();selId=null;selMeasId=null;editMeasId=null;selZonaPtIdx=-1;curFloor=n;renderFloorTabs();updCalibBadge();updCalibWarn();loadFloor(n);updateList();updateMeasList();updateSel();updateSelDimensions();if(!isMob()){if(FLOORS[n]?.cal){if(!document.getElementById('acc-body-calib').classList.contains('closed'))toggleAcc('calib');}else{if(document.getElementById('acc-body-calib').classList.contains('closed'))toggleAcc('calib');}}}
 function loadFloor(n){const f=FLOORS[n];if(!f||!f.img){imgEl.src='';canvas.width=0;canvas.height=0;if(FLOORS.length===0)showWelcome();return;}imgEl.onload=()=>{canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;if(f.imgWidth&&f.imgHeight&&(Math.abs(f.imgWidth-imgEl.naturalWidth)>1||Math.abs(f.imgHeight-imgEl.naturalHeight)>1)){const sx=imgEl.naturalWidth/f.imgWidth,sy=imgEl.naturalHeight/f.imgHeight;furniture.filter(f=>f.floor===n).forEach(f=>{f.x*=sx;f.y*=sy;});measures.filter(m=>m.floor===n).forEach(m=>{m.points.forEach(p=>{p.x*=sx;p.y*=sy;});recalcM(m);});f.imgWidth=imgEl.naturalWidth;f.imgHeight=imgEl.naturalHeight;saveLS();}autoZoom();render();updateList();updateMeasList();};imgEl.src=f.img;}
 function updCalibBadge(){const cf=FLOORS[curFloor];document.getElementById('sbadge').textContent=cf?.cal?cf.px.toFixed(1)+' px/m':'Sin calibrar';document.getElementById('cst').textContent=cf?.cal?'✓ Calibrado ('+cf.px.toFixed(1)+'px/m)':'— Pulsa para calibrar —';}
-function updCalibWarn(){const hdr=document.getElementById('acc-hdr-calib');const cf=FLOORS[curFloor];if(!FLOORS.length||cf?.cal||!cf?.img){hdr.classList.remove('uncal');document.getElementById('calib-reminder')?.classList.remove('show');}else{hdr.classList.add('uncal');if(!in3DMode)document.getElementById('calib-reminder')?.classList.add('show');}}
+function updCalibWarn(){const hdr=document.getElementById('acc-hdr-calib');const cf=FLOORS[curFloor];const welcomeVisible=!document.getElementById('welcome').classList.contains('hidden');if(!FLOORS.length||cf?.cal||!cf?.img||welcomeVisible){hdr.classList.remove('uncal');document.getElementById('calib-reminder')?.classList.remove('show');}else{hdr.classList.add('uncal');if(!in3DMode)document.getElementById('calib-reminder')?.classList.add('show');}}
+
 function toggleAcc(id){if(isMob())return;const hdr=document.getElementById('acc-hdr-'+id);const body=document.getElementById('acc-body-'+id);const isOpen=hdr.classList.contains('open');if(isOpen){body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(()=>{body.style.maxHeight='0px';body.classList.add('closed');});hdr.classList.remove('open');}else{body.classList.remove('closed');body.style.maxHeight=body.scrollHeight+'px';hdr.classList.add('open');setTimeout(()=>{body.style.maxHeight='none';},250);}}
 function openAcc(id){if(!document.getElementById('acc-hdr-'+id).classList.contains('open'))toggleAcc(id);}
 function autoZoom(){if(!imgEl.naturalWidth)return;if(isMob())setZoom(window.innerWidth/imgEl.naturalWidth*.95);else{const pw=parseInt(getComputedStyle(document.documentElement).getPropertyValue('--pw'));const avW=window.innerWidth-pw-10,avH=window.innerHeight-48;setZoom(Math.max(Math.min(avW/imgEl.naturalWidth,avH/imgEl.naturalHeight,1),.2));}}
@@ -1905,7 +1906,28 @@ function updLP(){const L1=Math.max(.1,parseFloat(document.getElementById('ll1').
 function updCP(){const d=Math.max(.1,parseFloat(document.getElementById('fcd').value)||1.2),col=selColor,cx=59,cy=48,r=34;document.getElementById('cpsvg').innerHTML='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+col+'44" stroke="'+col+'" stroke-width="1.5"/><line x1="'+(cx-r)+'" y1="'+cy+'" x2="'+(cx+r)+'" y2="'+cy+'" stroke="#4d9eff88" stroke-width=".8" stroke-dasharray="4,3"/><text x="'+cx+'" y="'+(cy+13)+'" font-size="8" fill="#4d9eff" text-anchor="middle" font-family="Space Mono,monospace">⌀ '+fmtDim(d)+'m</text><circle cx="'+cx+'" cy="'+cy+'" r="2" fill="'+col+'"/>';}
 const swEl=document.getElementById('swatches');COLORS.forEach(c=>{const el=document.createElement('div');el.className='sw'+(c===selColor?' on':'');el.style.background=c;el.onclick=()=>{selColor=c;swEl.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');updRP();updLP();updCP();};swEl.appendChild(el);});
 function showSpinner(show){const sp=document.getElementById('spinner');if(sp)sp.style.display=show?'block':'none';}
-loadLS();renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();if(FLOORS.length>0&&FLOORS[curFloor]?.img)imgEl.src=FLOORS[curFloor].img;imgEl.onload=()=>{canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();updateList();updateMeasList();};if(imgEl.complete&&imgEl.naturalWidth){canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();updateList();updateMeasList();}
+loadLS();renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();
+// Show 'resume project' button if there's saved data with images
+(function(){
+  const hasSaved = FLOORS.length>0 && FLOORS.some(f=>f.img);
+  const resumeBox = document.getElementById('wlc-resume-box');
+  const resumeHint = document.getElementById('wlc-resume-hint');
+  if(hasSaved && resumeBox){
+    resumeBox.style.display='block';
+    const names = FLOORS.map(f=>f.name).join(', ');
+    if(resumeHint) resumeHint.textContent = FLOORS.length + ' planta(s): ' + names;
+  }
+})();
+function resumeProject(){
+  if(FLOORS.length>0&&FLOORS[curFloor]?.img){
+    imgEl.onload=()=>{canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();updateList();updateMeasList();};
+    imgEl.src=FLOORS[curFloor].img;
+    if(imgEl.complete&&imgEl.naturalWidth){canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();updateList();updateMeasList();}
+  }
+  hideWelcome();
+  renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();
+  if(!isMob()&&FLOORS[curFloor]?.cal){setTimeout(()=>{const b=document.getElementById('acc-body-calib');if(b&&!b.classList.contains('closed'))toggleAcc('calib');},200);}
+}
 document.getElementById('snapTog').addEventListener('change',e=>{snapOn=e.target.checked;render();});
 function openAddFloor(){document.getElementById('add-floor-form').style.display='block';document.getElementById('btn-open-add-floor').style.display='none';document.getElementById('new-floor-name').focus();}
 function closeAddFloor(){document.getElementById('add-floor-form').style.display='none';document.getElementById('btn-open-add-floor').style.display='';}
@@ -1921,95 +1943,168 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){
 document.addEventListener('keyup',e=>{if(e.key==='Shift')shiftHeld=false;if(in3DMode&&fpMode3D)fpKeys[e.key]=false;});
 carea.addEventListener('scroll',()=>{if(showMinimap)renderMinimap();},{passive:true});
 setDefaultAccordionState();
-function startPlanAnim() {
-    const cv = document.getElementById('plan-anim');
-    if (!cv) return;
-    const cx = cv.getContext('2d');
-    const W = 380, H = 180;
-    cv.width = W;
-    cv.height = H;
-
-    let start = null;
-    const DURATION = 4.5;
-
-    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
-    function frame(ts) {
-        if (!start) start = ts;
-        const elapsed = (ts - start) / 1000;
-        const phase = Math.min(elapsed / DURATION, 1.0);
-        const easedPhase = easeOut(phase);
-        
-        cx.clearRect(0, 0, W, H);
-        
-        const fadeAlpha = Math.min(elapsed / 1.0, 1.0);
-
-        cx.save();
-        cx.translate(W/2 + 35, H/2 - 20); 
-        cx.rotate(-Math.PI / 2); 
-
-        const fibs = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
-        const sc = 1.75;
-        const totalSteps = fibs.length - 1; 
-        const currentProgress = easedPhase * totalSteps;
-
-        for (let i = 0; i < totalSteps; i++) {
-            if (currentProgress < i) break;
-            const localT = Math.min(1.0, currentProgress - i);
-            const f = fibs[i] * sc;
-
-            cx.strokeStyle = `rgba(255, 179, 71, ${fadeAlpha * 0.4 * localT})`;
-            cx.lineWidth = 0.8;
-            if (localT > 0) {
-                cx.strokeRect(0, 0, f, f);
-                cx.beginPath();
-                cx.moveTo(0, 0);
-                cx.lineTo(f * localT, f * localT);
-                cx.stroke();
-                const currentAngle = -Math.PI/2 + localT * (Math.PI/2);
-                cx.beginPath();
-                cx.moveTo(0, f);
-                cx.lineTo(0 + Math.cos(currentAngle)*f, f + Math.sin(currentAngle)*f);
-                cx.setLineDash([2, 3]);
-                cx.strokeStyle = `rgba(255, 179, 71, ${0.6 * localT})`;
-                cx.stroke();
-                cx.setLineDash([]);
-            }
-
-            cx.beginPath();
-            cx.arc(0, f, f, -Math.PI/2, -Math.PI/2 + localT * (Math.PI/2));
-            cx.strokeStyle = `rgba(255, 255, 255, ${0.95 * localT})`;
-            cx.lineWidth = 2.0;
-            cx.shadowBlur = 8;
-            cx.shadowColor = `rgba(255, 255, 255, ${0.6 * localT})`;
-            cx.stroke();
-            cx.shadowBlur = 0;
-
-            if (i >= 2 && localT > 0.4) {
-                const textAlpha = (localT - 0.4) / 0.6;
-                cx.fillStyle = `rgba(255, 179, 71, ${textAlpha * 0.9})`;
-                cx.font = '11px Space Mono';
-                cx.fillText(`φ${fibs[i]}`, 8, 14);
-            }
-
-            cx.translate(f, f);
-            cx.rotate(Math.PI/2);
-        }
-        cx.restore();
-
-        if (phase > 0.2) {
-            const markAlpha = (phase - 0.2) / 0.8;
-            cx.fillStyle = `rgba(255, 179, 71, ${markAlpha * 0.8})`;
-            cx.font = '10px Space Mono';
-            cx.textAlign = 'center';
-            cx.fillText('a/b = (a+b)/a ≈ 1.618', W/2, H - 10);
-        }
-
-        if (phase < 1.0) {
-            requestAnimationFrame(frame);
-        }
+function startPlanAnim(){
+  const cv=document.getElementById('plan-anim');if(!cv)return;
+  const cx=cv.getContext('2d');
+  const W=200,H=160;cv.width=W;cv.height=H;cv.style.width=W+'px';cv.style.height=H+'px';
+  const ease=t=>1-Math.pow(1-t,3);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const fade=(p,s,e)=>clamp((p-s)/(e-s),0,1);
+  // colours
+  const BG='#050e1a',WALL='#4d9eff',WALL2='rgba(77,158,255,0.5)',FURN='rgba(255,255,255,0.2)';
+  // building
+  const L=14,T=18,R=138,B=118,DY=78,DX=93;
+  // pool
+  const PX=150,PY=26,PW=40,PH=66;
+  function polyLen(pts){let t=0;for(let i=0;i<pts.length-1;i++)t+=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);return t;}
+  function drawPoly(pts,prog,col,lw){
+    if(prog<=0)return;
+    const tgt=polyLen(pts)*clamp(prog,0,1);
+    cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
+    let acc=0;
+    for(let i=0;i<pts.length-1;i++){
+      const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],sl=Math.hypot(dx,dy);
+      if(acc+sl>=tgt){const f=(tgt-acc)/sl;cx.lineTo(pts[i][0]+dx*f,pts[i][1]+dy*f);break;}
+      cx.lineTo(pts[i+1][0],pts[i+1][1]);acc+=sl;
     }
-    requestAnimationFrame(frame);
+    cx.strokeStyle=col;cx.lineWidth=lw;cx.stroke();
+  }
+  function tail(pts,prog){
+    const tgt=polyLen(pts)*clamp(prog,0,1);let acc=0;
+    for(let i=0;i<pts.length-1;i++){
+      const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],sl=Math.hypot(dx,dy);
+      if(acc+sl>=tgt){const f=(tgt-acc)/sl;return[pts[i][0]+dx*f,pts[i][1]+dy*f];}
+      acc+=sl;
+    }return pts[pts.length-1];
+  }
+  function cursor(pt,el){
+    if(!pt)return;
+    const pulse=0.5+0.5*Math.sin(el/130);
+    cx.beginPath();cx.arc(pt[0],pt[1],2+pulse,0,Math.PI*2);cx.fillStyle=WALL;cx.fill();
+    cx.beginPath();cx.arc(pt[0],pt[1],5+pulse*1.5,0,Math.PI*2);cx.strokeStyle='rgba(77,158,255,0.28)';cx.lineWidth=1;cx.stroke();
+  }
+  function dim(x1,y1,x2,y2,lbl,a,off){
+    if(a<=0)return;
+    const ac='rgba(167,139,250,'+a+')',ao='rgba(167,139,250,'+(a*0.45)+')';
+    cx.setLineDash([3,2]);cx.strokeStyle=ao;cx.lineWidth=0.7;
+    cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();cx.setLineDash([]);
+    const ang=Math.atan2(y2-y1,x2-x1),pr=ang+Math.PI/2;
+    [[x1,y1],[x2,y2]].forEach(([px,py])=>{cx.beginPath();cx.moveTo(px+Math.cos(pr)*3,py+Math.sin(pr)*3);cx.lineTo(px-Math.cos(pr)*3,py-Math.sin(pr)*3);cx.strokeStyle=ac;cx.lineWidth=1;cx.stroke();});
+    cx.save();cx.translate((x1+x2)/2,(y1+y2)/2);
+    if(Math.abs(x2-x1)<Math.abs(y2-y1))cx.rotate(-Math.PI/2);
+    cx.fillStyle=ac;cx.font='bold 7px Space Mono';cx.textAlign='center';cx.fillText(lbl,0,off||-5);cx.restore();
+  }
+  function door(hx,hy,sa,ea,a){
+    if(a<=0)return;
+    const r=12;
+    cx.save();cx.globalAlpha=a*0.85;cx.strokeStyle='rgba(255,185,60,0.9)';cx.lineWidth=0.9;cx.setLineDash([]);cx.lineCap='round';
+    const ex=hx+Math.cos(ea)*r,ey=hy+Math.sin(ea)*r;
+    cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(ex,ey);cx.stroke();
+    cx.beginPath();cx.arc(hx,hy,r,sa,ea);cx.stroke();
+    cx.restore();
+  }
+  const outer=[[L,T],[R,T],[R,B],[L,B],[L,T]];
+  const hw=[[L,DY],[R,DY]];
+  const vt=[[DX,T],[DX,DY]];
+  const vb=[[DX,DY],[DX,B]];
+  const pool=[[PX+6,PY],[PX+PW-6,PY],[PX+PW,PY+6],[PX+PW,PY+PH-6],[PX+PW-6,PY+PH],[PX+6,PY+PH],[PX,PY+PH-6],[PX,PY+6],[PX+6,PY]];
+  let S=null;const TOTAL=7000;
+  function frame(ts){
+    if(!S)S=ts;const el=ts-S,p=clamp(el/TOTAL,0,1);
+    cx.clearRect(0,0,W,H);cx.fillStyle=BG;cx.fillRect(0,0,W,H);
+    // grid
+    cx.strokeStyle='rgba(55,110,200,0.07)';cx.lineWidth=0.5;
+    for(let i=0;i<W;i+=12){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,H);cx.stroke();}
+    for(let i=0;i<H;i+=12){cx.beginPath();cx.moveTo(0,i);cx.lineTo(W,i);cx.stroke();}
+    cx.lineCap='round';cx.lineJoin='round';cx.setLineDash([]);
+    // outer walls
+    const pO=ease(fade(p,0.02,0.34));drawPoly(outer,pO,WALL,2.0);
+    if(p<0.36)cursor(tail(outer,pO),el);
+    // room fill
+    const fA=ease(fade(p,0.32,0.45));
+    if(fA>0){cx.fillStyle='rgba(77,158,255,'+(fA*0.06)+')';cx.fillRect(L,T,R-L,B-T);}
+    // interior walls
+    const pH=ease(fade(p,0.35,0.51)),pVT=ease(fade(p,0.42,0.56)),pVB=ease(fade(p,0.49,0.62));
+    drawPoly(hw,pH,WALL2,1.5);drawPoly(vt,pVT,WALL2,1.5);drawPoly(vb,pVB,WALL2,1.5);
+    if(p>=0.35&&p<0.64){
+      let tp;if(p<0.51)tp=tail(hw,pH);else if(p<0.56)tp=tail(vt,pVT);else tp=tail(vb,pVB);
+      cursor(tp,el);
+    }
+    // pool outline
+    const pPl=ease(fade(p,0.50,0.70));drawPoly(pool,pPl,'rgba(0,185,255,0.7)',1.5);
+    if(p>=0.50&&p<0.72)cursor(tail(pool,pPl),el);
+    // pool fill + waves
+    if(pPl>0.85){
+      const wa=(pPl-0.85)*6.7;
+      cx.fillStyle='rgba(0,185,255,'+(wa*0.13)+')';cx.fillRect(PX+2,PY+2,PW-4,PH-4);
+      cx.strokeStyle='rgba(120,230,255,'+(wa*0.3)+')';cx.lineWidth=0.6;
+      for(let wy=PY+8;wy<PY+PH-4;wy+=6){
+        cx.beginPath();
+        for(let wx=PX+3;wx<=PX+PW-3;wx+=3){const of=Math.sin((wx*0.7+wy*0.5))*2;wx===PX+3?cx.moveTo(wx,wy+of):cx.lineTo(wx,wy+of);}
+        cx.stroke();
+      }
+    }
+    // pool connection to building
+    if(pPl>0.4){
+      const ta=Math.min((pPl-0.4)*2,1);
+      cx.strokeStyle='rgba(77,158,255,'+(ta*0.18)+')';cx.lineWidth=0.6;cx.setLineDash([4,3]);
+      cx.beginPath();cx.moveTo(R,DY-18);cx.lineTo(PX,PY+14);cx.stroke();cx.setLineDash([]);
+    }
+    // doors (hinge, startAngle, endAngle)
+    const dA=ease(fade(p,0.63,0.79));
+    door(L,66,  -Math.PI/2,0,dA);           // main entrance left wall opens right
+    door(38,DY, Math.PI,Math.PI/2,dA);      // bedroom hinge top opens down-left
+    door(DX,40, Math.PI/2,Math.PI,dA);      // kitchen hinge left opens down
+    door(DX,94, Math.PI/2,Math.PI,dA);      // bath hinge left opens down
+    // room labels
+    const lA=ease(fade(p,0.56,0.72));
+    if(lA>0){
+      cx.globalAlpha=lA;cx.fillStyle='rgba(180,210,255,1)';cx.font='bold 6px Space Mono';cx.textAlign='center';
+      cx.fillText('SALÓN',(L+DX)/2,(T+DY)/2-2);
+      cx.fillText('DORM.',(L+DX)/2,(DY+B)/2-2);
+      cx.fillText('COCINA',(DX+R)/2,(T+DY)/2-2);
+      cx.fillText('BAÑO',(DX+R)/2,(DY+B)/2-2);
+      if(pPl>0.6){cx.fillStyle='rgba(100,225,255,'+(Math.min((pPl-0.6)*2.5,1)*lA)+')';cx.font='bold 5.5px Space Mono';cx.fillText('PISCINA',PX+PW/2,PY+PH/2);}
+      cx.globalAlpha=1;
+    }
+    // furniture
+    const fuA=ease(fade(p,0.66,0.84));
+    if(fuA>0){
+      cx.globalAlpha=fuA;cx.strokeStyle=FURN;cx.lineWidth=0.9;
+      cx.strokeRect(L+7,T+9,36,11);cx.strokeRect(L+7,T+9,36,4);
+      cx.beginPath();cx.arc((L+DX)/2,T+54,9,0,Math.PI*2);cx.stroke();
+      cx.strokeRect(L+5,DY+8,25,21);cx.strokeRect(L+5,DY+8,25,6);
+      cx.strokeRect(DX+3,T+4,9,42);
+      cx.beginPath();cx.arc(DX+8,DY+10,6,0,Math.PI*2);cx.stroke();
+      cx.strokeRect(DX+19,DY+6,11,13);
+      cx.globalAlpha=1;
+    }
+    // dimensions
+    const dimA=ease(fade(p,0.80,0.96));
+    if(dimA>0){cx.save();dim(L,T-5,R,T-5,'12.40m',dimA,-5);dim(R+5,T,R+5,B,'10.00m',dimA,-5);cx.restore();}
+    // compass
+    const cA=ease(fade(p,0.88,1.0));
+    if(cA>0){
+      const cx2=W-15,cy2=H-15,r=8;cx.save();cx.globalAlpha=cA;
+      cx.strokeStyle='rgba(77,158,255,0.6)';cx.lineWidth=0.8;cx.beginPath();cx.arc(cx2,cy2,r,0,Math.PI*2);cx.stroke();
+      cx.fillStyle='rgba(77,158,255,0.9)';cx.beginPath();cx.moveTo(cx2,cy2-r+1);cx.lineTo(cx2-2.5,cy2+2);cx.lineTo(cx2,cy2);cx.closePath();cx.fill();
+      cx.fillStyle='rgba(255,255,255,0.45)';cx.beginPath();cx.moveTo(cx2,cy2-r+1);cx.lineTo(cx2+2.5,cy2+2);cx.lineTo(cx2,cy2);cx.closePath();cx.fill();
+      cx.fillStyle='rgba(180,210,255,0.9)';cx.font='bold 5px Space Mono';cx.textAlign='center';cx.fillText('N',cx2,cy2-r-1);
+      cx.restore();
+    }
+    // scale badge
+    if(cA>0){
+      cx.save();cx.globalAlpha=cA*0.9;
+      cx.fillStyle='rgba(5,14,26,0.85)';const bx=8,by=H-12,bw=35,bh=10;
+      if(cx.roundRect)cx.roundRect(bx-2,by-2,bw,bh,3);else cx.rect(bx-2,by-2,bw,bh);
+      cx.fill();cx.strokeStyle='rgba(77,158,255,0.4)';cx.lineWidth=0.5;cx.stroke();
+      cx.fillStyle='rgba(167,139,250,0.9)';cx.font='5.5px Space Mono';cx.textAlign='left';cx.fillText('1:100',bx,by+5);
+      cx.restore();
+    }
+    if(p<1)requestAnimationFrame(frame);
+    else setTimeout(()=>{S=null;requestAnimationFrame(frame);},2000);
+  }
+  requestAnimationFrame(frame);
 }
 window.addEventListener('load',startPlanAnim);
 </script>
