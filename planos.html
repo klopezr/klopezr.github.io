@@ -1907,7 +1907,6 @@ function updCP(){const d=Math.max(.1,parseFloat(document.getElementById('fcd').v
 const swEl=document.getElementById('swatches');COLORS.forEach(c=>{const el=document.createElement('div');el.className='sw'+(c===selColor?' on':'');el.style.background=c;el.onclick=()=>{selColor=c;swEl.querySelectorAll('.sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');updRP();updLP();updCP();};swEl.appendChild(el);});
 function showSpinner(show){const sp=document.getElementById('spinner');if(sp)sp.style.display=show?'block':'none';}
 loadLS();renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();
-// Show 'resume project' button if there's saved data with images
 (function(){
   const hasSaved = FLOORS.length>0 && FLOORS.some(f=>f.img);
   const resumeBox = document.getElementById('wlc-resume-box');
@@ -1950,11 +1949,8 @@ function startPlanAnim(){
   const ease=t=>1-Math.pow(1-t,3);
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const fade=(p,s,e)=>clamp((p-s)/(e-s),0,1);
-  // colours
   const BG='#050e1a',WALL='#4d9eff',WALL2='rgba(77,158,255,0.5)',FURN='rgba(255,255,255,0.2)';
-  // building
   const L=14,T=18,R=138,B=118,DY=78,DX=93;
-  // pool
   const PX=150,PY=26,PW=40,PH=66;
   function polyLen(pts){let t=0;for(let i=0;i<pts.length-1;i++)t+=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);return t;}
   function drawPoly(pts,prog,col,lw){
@@ -2012,28 +2008,22 @@ function startPlanAnim(){
   function frame(ts){
     if(!S)S=ts;const el=ts-S,p=clamp(el/TOTAL,0,1);
     cx.clearRect(0,0,W,H);cx.fillStyle=BG;cx.fillRect(0,0,W,H);
-    // grid
     cx.strokeStyle='rgba(55,110,200,0.07)';cx.lineWidth=0.5;
     for(let i=0;i<W;i+=12){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,H);cx.stroke();}
     for(let i=0;i<H;i+=12){cx.beginPath();cx.moveTo(0,i);cx.lineTo(W,i);cx.stroke();}
     cx.lineCap='round';cx.lineJoin='round';cx.setLineDash([]);
-    // outer walls
     const pO=ease(fade(p,0.02,0.34));drawPoly(outer,pO,WALL,2.0);
     if(p<0.36)cursor(tail(outer,pO),el);
-    // room fill
     const fA=ease(fade(p,0.32,0.45));
     if(fA>0){cx.fillStyle='rgba(77,158,255,'+(fA*0.06)+')';cx.fillRect(L,T,R-L,B-T);}
-    // interior walls
     const pH=ease(fade(p,0.35,0.51)),pVT=ease(fade(p,0.42,0.56)),pVB=ease(fade(p,0.49,0.62));
     drawPoly(hw,pH,WALL2,1.5);drawPoly(vt,pVT,WALL2,1.5);drawPoly(vb,pVB,WALL2,1.5);
     if(p>=0.35&&p<0.64){
       let tp;if(p<0.51)tp=tail(hw,pH);else if(p<0.56)tp=tail(vt,pVT);else tp=tail(vb,pVB);
       cursor(tp,el);
     }
-    // pool outline
     const pPl=ease(fade(p,0.50,0.70));drawPoly(pool,pPl,'rgba(0,185,255,0.7)',1.5);
     if(p>=0.50&&p<0.72)cursor(tail(pool,pPl),el);
-    // pool fill + waves
     if(pPl>0.85){
       const wa=(pPl-0.85)*6.7;
       cx.fillStyle='rgba(0,185,255,'+(wa*0.13)+')';cx.fillRect(PX+2,PY+2,PW-4,PH-4);
@@ -2044,19 +2034,16 @@ function startPlanAnim(){
         cx.stroke();
       }
     }
-    // pool connection to building
     if(pPl>0.4){
       const ta=Math.min((pPl-0.4)*2,1);
       cx.strokeStyle='rgba(77,158,255,'+(ta*0.18)+')';cx.lineWidth=0.6;cx.setLineDash([4,3]);
       cx.beginPath();cx.moveTo(R,DY-18);cx.lineTo(PX,PY+14);cx.stroke();cx.setLineDash([]);
     }
-    // doors (hinge, startAngle, endAngle)
     const dA=ease(fade(p,0.63,0.79));
-    door(L,66,  -Math.PI/2,0,dA);           // main entrance left wall opens right
-    door(38,DY, Math.PI,Math.PI/2,dA);      // bedroom hinge top opens down-left
-    door(DX,40, Math.PI/2,Math.PI,dA);      // kitchen hinge left opens down
-    door(DX,94, Math.PI/2,Math.PI,dA);      // bath hinge left opens down
-    // room labels
+    door(L,66,  -Math.PI/2, 0,         dA);
+    door(38,DY, 0,          Math.PI/2,  dA);
+    door(DX,40, -Math.PI/2, 0,          dA);
+    door(DX,94, -Math.PI/2, 0,          dA);
     const lA=ease(fade(p,0.56,0.72));
     if(lA>0){
       cx.globalAlpha=lA;cx.fillStyle='rgba(180,210,255,1)';cx.font='bold 6px Space Mono';cx.textAlign='center';
@@ -2067,7 +2054,6 @@ function startPlanAnim(){
       if(pPl>0.6){cx.fillStyle='rgba(100,225,255,'+(Math.min((pPl-0.6)*2.5,1)*lA)+')';cx.font='bold 5.5px Space Mono';cx.fillText('PISCINA',PX+PW/2,PY+PH/2);}
       cx.globalAlpha=1;
     }
-    // furniture
     const fuA=ease(fade(p,0.66,0.84));
     if(fuA>0){
       cx.globalAlpha=fuA;cx.strokeStyle=FURN;cx.lineWidth=0.9;
@@ -2079,10 +2065,8 @@ function startPlanAnim(){
       cx.strokeRect(DX+19,DY+6,11,13);
       cx.globalAlpha=1;
     }
-    // dimensions
     const dimA=ease(fade(p,0.80,0.96));
     if(dimA>0){cx.save();dim(L,T-5,R,T-5,'12.40m',dimA,-5);dim(R+5,T,R+5,B,'10.00m',dimA,-5);cx.restore();}
-    // compass
     const cA=ease(fade(p,0.88,1.0));
     if(cA>0){
       const cx2=W-15,cy2=H-15,r=8;cx.save();cx.globalAlpha=cA;
@@ -2092,7 +2076,6 @@ function startPlanAnim(){
       cx.fillStyle='rgba(180,210,255,0.9)';cx.font='bold 5px Space Mono';cx.textAlign='center';cx.fillText('N',cx2,cy2-r-1);
       cx.restore();
     }
-    // scale badge
     if(cA>0){
       cx.save();cx.globalAlpha=cA*0.9;
       cx.fillStyle='rgba(5,14,26,0.85)';const bx=8,by=H-12,bw=35,bh=10;
