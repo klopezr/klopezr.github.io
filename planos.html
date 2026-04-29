@@ -367,6 +367,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/controls/DragControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
 <script src="https://unpkg.com/earcut@2.2.4/dist/earcut.min.js"></script>
 <script>
 const _uiTooltip=document.createElement('div');_uiTooltip.id='ui-tooltip';document.body.appendChild(_uiTooltip);
@@ -851,8 +852,12 @@ let _click3dMeasHandler=null, _meas3DMouseDown=null, _meas3DMouseDownHandler=nul
 let paintWall3DMode=false, paintWall3DColor='#f97316';
 let _click3dPaintHandler=null;
 
-let sectionCut3D={enabled:false,orientation:'horizontal',axis:'x',angleDeg:0,value:0,invert:false,showPlane:false};
+let sectionCut3D={enabled:false,orientation:'horizontal',axis:'x',angleDeg:0,value:0,invert:false,showPlane:false,_autoOnOpenDone:false};
 let sectionCutPlane3D=null, sectionCutHelper3D=null;
+let export3DFileName='vivienda';
+let export3DIncludeFloor=false;
+let export3DIncludeMeasures=false;
+let export3DApplyCurrentCut=false;
 function _get3DContentBounds(){
     if(typeof THREE==='undefined' || !scene3d) return null;
     const box=new THREE.Box3();
@@ -990,6 +995,58 @@ function _resetSectionCutToBoundsCenter(){
     }
     applySectionCut3D(); build3DMenu?.();
 }
+function _downloadBlob(blob, filename){
+    const a=document.createElement('a');
+    const url=URL.createObjectURL(blob);
+    a.href=url;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 8000);
+}
+function _cloneSceneForExport(){
+    if(typeof THREE==='undefined' || !scene3d) return null;
+    const cloned=scene3d.clone(true);
+    const removeNames=new Set(['floor']);
+    const toRemove=[];
+    cloned.traverse(o=>{
+        if(o && o.name && removeNames.has(o.name)) toRemove.push(o);
+        if(o && o.type==='PlaneHelper') toRemove.push(o);
+        const t=o?.userData?.type;
+        if(!export3DIncludeMeasures && t==='measure') toRemove.push(o);
+        if(!export3DIncludeFloor && o?.name==='floor') toRemove.push(o);
+    });
+    toRemove.forEach(o=>{try{ if(o.parent) o.parent.remove(o); }catch(e){}});
+    if(!export3DApplyCurrentCut){
+        cloned.traverse(o=>{
+            if(o && o.isMesh && o.material){
+                const mats=Array.isArray(o.material)?o.material:[o.material];
+                mats.forEach(m=>{ if(m && m.clippingPlanes){ m.clippingPlanes=null; m.needsUpdate=true; } });
+            }
+        });
+    }
+    return cloned;
+}
+function export3DGLB(){
+    if(typeof THREE==='undefined' || !scene3d) { showToast('⚠️ No hay escena 3D para exportar'); return; }
+    if(!THREE || !THREE.GLTFExporter) { showToast('⚠️ Exportador GLTF no disponible'); return; }
+    const expScene=_cloneSceneForExport();
+    if(!expScene){ showToast('⚠️ No se pudo preparar la exportación'); return; }
+    const exporter=new THREE.GLTFExporter();
+    const opts={binary:true, onlyVisible:true, truncateDrawRange:true};
+    exporter.parse(expScene, (res)=>{
+        try{
+            const data = (res instanceof ArrayBuffer) ? res : res;
+            const blob = new Blob([data], {type:'model/gltf-binary'});
+            const base=(export3DFileName||'vivienda').trim().replace(/[\\\\/:*?\"<>|]+/g,'_')||'vivienda';
+            _downloadBlob(blob, base+'.glb');
+            showToast('⬇ Exportado GLB');
+        }catch(e){ showToast('⚠️ Error exportando'); }
+    }, (err)=>{
+        showToast('⚠️ Error exportando');
+    }, opts);
+}
 function init3D(){
   try {
   fpMode3D=false;fpKeys={};furn3DEditId=null;const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='none';
@@ -1007,12 +1064,6 @@ function init3D(){
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.name='floor';scene3d.add(floor);
   visibleFloors3D = [curFloor];
   build3DScene(); build3DMenu();
-  if(!window.__sectionCut3DAutoEnabledOnce){
-      window.__sectionCut3DAutoEnabledOnce=true;
-      sectionCut3D.enabled=true;
-      sectionCut3D.showPlane=false;
-      _resetSectionCutToBoundsCenter();
-  }
   applySectionCut3D();
   measure3DSaved.forEach(m => addMeasure3DVisual(m));
   setup3DInteractions();
@@ -1546,12 +1597,60 @@ function build3DMeasures(fIdx){
 function build3DMenu(){const m=document.getElementById('menu3d');if(!m)return;const list=document.getElementById('menu3d-list');const _openSecs=new Set();list.querySelectorAll('details[data-sec]').forEach(d=>{if(d.open)_openSecs.add(d.dataset.sec);});list.innerHTML='';
 const walls=objects3d.filter(o=>o.userData.type==='wall');const measuresList=objects3d.filter(o=>o.userData.type==='measure');
 const furnitureList=objects3d.filter(o=>o.userData.type!=='wall'&&o.userData.type!=='measure'&&o.userData.type!=='area'&&o.userData.type!=='zona');
+function createExport3DSection(){
+    const det=document.createElement('details');det.dataset.sec='exp3d';det.open=_openSecs.has('exp3d');det.style.marginBottom='10px';
+    const sum=document.createElement('summary');
+    sum.style.cssText='font-size:0.7rem;font-weight:bold;color:#38bdf8;cursor:pointer;list-style:none;display:flex;align-items:center;border-bottom:1px solid #334155;padding-bottom:4px;';
+    sum.innerHTML='<span class="s-arr">▶</span><span style="flex:1">📦 EXPORTAR 3D</span>';
+    det.appendChild(sum);
+
+    const body=document.createElement('div');body.style.cssText='padding:8px 10px;display:flex;flex-direction:column;gap:7px;';
+    const hint=document.createElement('div');hint.style.cssText='font-size:0.62rem;color:#94a3b8;line-height:1.25;';
+    hint.textContent='Exporta el modelo 3D a GLB (compatible con Blender, Three.js, Sketchfab…).';
+    body.appendChild(hint);
+
+    const nameRow=document.createElement('div');nameRow.style.cssText='display:flex;flex-direction:column;gap:4px;';
+    const nameLbl=document.createElement('div');nameLbl.style.cssText='font-size:0.65rem;color:#94a3b8;';nameLbl.textContent='Nombre de archivo';
+    const inp=document.createElement('input');inp.type='text';inp.value=export3DFileName||'vivienda';
+    inp.style.cssText='width:100%;background:rgba(255,255,255,0.04);border:1px solid #334155;color:#e2e8f0;padding:5px 8px;border-radius:4px;font-size:0.7rem;box-sizing:border-box;font-family:Outfit,sans-serif;outline:none;';
+    inp.oninput=(e)=>{export3DFileName=e.target.value;};
+    nameRow.append(nameLbl, inp);body.appendChild(nameRow);
+
+    const mkChk=(text,checked,onchg)=>{
+        const lab=document.createElement('label');lab.style.cssText='display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;color:#e2e8f0;';
+        const sp=document.createElement('span');sp.textContent=text;
+        const c=document.createElement('input');c.type='checkbox';c.checked=!!checked;c.onchange=(e)=>onchg(e.target.checked);
+        lab.append(sp,c); return lab;
+    };
+    body.appendChild(mkChk('Incluir suelo base',export3DIncludeFloor,(v)=>{export3DIncludeFloor=!!v;}));
+    body.appendChild(mkChk('Incluir medidas 3D',export3DIncludeMeasures,(v)=>{export3DIncludeMeasures=!!v;}));
+    body.appendChild(mkChk('Aplicar corte actual',export3DApplyCurrentCut,(v)=>{export3DApplyCurrentCut=!!v;}));
+
+    const btn=document.createElement('button');
+    btn.style.cssText='width:100%;padding:7px 8px;border-radius:6px;font-size:0.74rem;font-family:Outfit,sans-serif;font-weight:700;cursor:pointer;border:1px solid rgba(56,189,248,0.55);background:rgba(56,189,248,0.12);color:#38bdf8;';
+    btn.textContent='⬇ Exportar GLB (.glb)';
+    btn.onclick=export3DGLB;
+    body.appendChild(btn);
+
+    det.appendChild(body);
+    list.appendChild(det);
+}
 function createSectionCutSection(){
-    const det=document.createElement('details');det.dataset.sec='cut';det.open=_openSecs.has('cut')||sectionCut3D.enabled;det.style.marginBottom='10px';
+    const det=document.createElement('details');det.dataset.sec='cut';det.open=_openSecs.has('cut');det.style.marginBottom='10px';
     const sum=document.createElement('summary');
     sum.style.cssText='font-size:0.7rem;font-weight:bold;color:#ff4d9e;cursor:pointer;list-style:none;display:flex;align-items:center;border-bottom:1px solid #334155;padding-bottom:4px;';
     sum.innerHTML='<span class="s-arr">▶</span><span style="flex:1">✂ CORTE DE SECCIÓN</span>';
     det.appendChild(sum);
+    det.addEventListener('toggle', ()=>{
+        if(det.open && !sectionCut3D.enabled && !sectionCut3D._autoOnOpenDone){
+            sectionCut3D._autoOnOpenDone=true;
+            sectionCut3D.enabled=true;
+            sectionCut3D.showPlane=false;
+            _resetSectionCutToBoundsCenter();
+            applySectionCut3D();
+            build3DMenu();
+        }
+    });
 
     const body=document.createElement('div');body.style.cssText='padding:8px 10px;display:flex;flex-direction:column;gap:8px;';
     const rowTop=document.createElement('div');rowTop.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;';
@@ -1841,6 +1940,7 @@ function createMeasure3DSection(){
 }
 createMeasure3DSection();
 createPaintWallSection();
+createExport3DSection();
 createSectionCutSection();
 createFloorSection();
 function createPaintWallSection(){
