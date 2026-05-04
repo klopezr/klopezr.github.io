@@ -1268,9 +1268,14 @@ function build3DFloorSlab(fIdx, kind) {
         const cosR=Math.cos(rot), sinR=Math.sin(rot);
         // Convierte un punto (x,z) del marco LOCAL centrado de la escalera
         // (origen en el centro del bbox, sin rotar) al marco del slab actual.
+        // Importante: la escalera 3D está rotada con `g.rotation.y = rot`
+        // (Three.js Y-axis rotation). La matriz LOCAL→WORLD correcta es:
+        //   worldX =  lx·cos(rot) + lz·sin(rot)
+        //   worldZ = -lx·sin(rot) + lz·cos(rot)
+        // (no `lx·cos − lz·sin`, que sería la inversa WORLD→LOCAL).
         const localToSlab = (p)=>{
-          const xW = cxW + (p.x*cosR - p.z*sinR);
-          const zW = czW + (p.x*sinR + p.z*cosR);
+          const xW = cxW + (p.x*cosR + p.z*sinR);
+          const zW = czW + (-p.x*sinR + p.z*cosR);
           return {x: xW - fOff.x, z: zW - fOff.z};
         };
         const addRect=(rw,rd,rx,rz)=>{
@@ -1284,41 +1289,52 @@ function build3DFloorSlab(fIdx, kind) {
         };
         const gp=_stairGeomParams(s);
         if(gp.kind==='u'){
-          // Escalera en U:
-          //   - Los dos brazos de la U son los TRAMOS (1º y 2º).
-          //   - El RELLANO ocupa el ancho COMPLETO de la escalera (w1+w2)
-          //     y une los dos tramos por el lado curvo (es el "límite" del U,
-          //     con su propia profundidad `land`).
-          // El hueco que se proyecta en la planta superior debe dejar ver:
-          //   1) El RELLANO completo (rect de ancho wM y profundidad land
-          //      pegado al lado del rellano, es decir, al fondo del bbox).
-          //   2) El SEGUNDO TRAMO (el tramo más alto, en el lado opuesto al
-          //      lado de inicio): rect de ancho w2 y profundidad r2.
-          // El primer tramo (lado de inicio) queda CUBIERTO por el suelo de
-          // arriba (no se ve desde la planta superior).
+          // Hueco en U: un único polígono en L que cubre RELLANO + SEGUNDO TRAMO
+          // (el primer tramo queda cubierto por el suelo de arriba).
+          // Pasarlo como un solo polígono evita que earcut reciba dos huecos
+          // que comparten un borde — caso en el que uno de los dos podía
+          // quedarse sin recortar (segundo tramo no transparente).
           const w1=gp.w1, w2=gp.w2, r1=gp.run1, r2=gp.run2, land=gp.land;
           const dz=Math.max(0, r2-r1);
-          const zA0=dz;
-          const landZ0=zA0+r1;            // z donde empieza el rellano (corner-frame)
-          const landZ1=landZ0+land;       // z donde acaba el rellano (= fondo del bbox)
-          const flightBz0=Math.max(0, landZ0-r2); // z donde empieza el tramo B
-          const flightBz1=landZ0;          // z donde acaba el tramo B (= empieza rellano)
+          const landZ0=dz+r1;
+          const landZ1=landZ0+land;
+          const flightBz0=Math.max(0, landZ0-r2);
           const side=(s.stairStartSide||'right')==='left'?'left':'right';
-          // Tramo 1 ocupa x=[xA, xA+w1]; tramo 2 (B) ocupa x=[xB, xB+w2].
-          const xB_corner = side==='right' ? 0 : (wM - w2);
-          // Pequeño solapado en z para que el corte se vea como un único
-          // hueco continuo (sin línea entre rellano y tramo B).
-          const EPS = 0.005;
-          // Hueco 1 — RELLANO (ancho completo W, profundidad land)
-          // Centrado en x=0 (centro del bbox); z = punto medio del rellano − hM/2.
-          const rellanoZc = ((landZ0+landZ1)/2) - hM/2;
-          addRect(wM, Math.max(0.1, land + EPS), 0, rellanoZc);
-          // Hueco 2 — SEGUNDO TRAMO (anchura w2, profundidad r2)
-          // Posicionado en el lado opuesto al primer tramo.
-          const flightBzC = ((flightBz0+flightBz1)/2) - hM/2;
-          const flightBzD = Math.max(0.1, (flightBz1-flightBz0) + EPS);
-          const flightBxC = (xB_corner + w2/2) - wM/2;
-          addRect(w2, flightBzD, flightBxC, flightBzC);
+          // Coords en marco LOCAL CENTRADO de la escalera (sin rotar)
+          const xLmin=-wM/2,  xLmax=wM/2;
+          const zLmin=landZ0  - hM/2;     // borde frontal del rellano = final del 2º tramo
+          const zLmax=landZ1  - hM/2;     // borde trasero del rellano (fondo del bbox)
+          const zBmin=flightBz0 - hM/2;   // donde llega el 2º tramo a la planta superior
+          // x del 2º tramo (lado opuesto al lado de inicio del 1º tramo)
+          let xBmin, xBmax;
+          if(side==='right'){             // 1º a la derecha → 2º a la izquierda
+            xBmin=xLmin;  xBmax=xLmin+w2;
+          }else{                           // 1º a la izquierda → 2º a la derecha
+            xBmin=xLmax-w2;  xBmax=xLmax;
+          }
+          // Polígono en L (CCW). El "brazo" vertical es el 2º tramo, la
+          // "barra" horizontal es el rellano completo.
+          let poly;
+          if(side==='right'){
+            poly=[
+              {x:xBmin, z:zBmin},
+              {x:xBmax, z:zBmin},
+              {x:xBmax, z:zLmin},
+              {x:xLmax, z:zLmin},
+              {x:xLmax, z:zLmax},
+              {x:xLmin, z:zLmax}
+            ];
+          }else{
+            poly=[
+              {x:xBmin, z:zBmin},
+              {x:xBmax, z:zBmin},
+              {x:xBmax, z:zLmax},
+              {x:xLmin, z:zLmax},
+              {x:xLmin, z:zLmin},
+              {x:xBmin, z:zLmin}
+            ];
+          }
+          addPoly(poly);
         }else if(gp.kind==='landing'){
           // Escalera con rellano al final: hueco = tramo + rellano (todo el footprint).
           addRect(wM,hM,0,0);
@@ -2060,7 +2076,16 @@ function createFloorSection(){
         top.appendChild(tog); row.appendChild(top);
 
         if(visibleFloors3D.includes(i) && i !== curFloor) {
-            const ctrl = document.createElement('div'); ctrl.style.cssText='margin-top:6px; display:flex; flex-direction:column; gap:4px;';
+            // Acordeón colapsable por planta para los 3 controles de posición 3D.
+            const fdet = document.createElement('details');
+            fdet.dataset.sec = `floor-pos-${i}`;
+            fdet.open = _openSecs.has(`floor-pos-${i}`);
+            fdet.style.cssText = 'margin-top:4px;';
+            const fsum = document.createElement('summary');
+            fsum.style.cssText = 'font-size:0.62rem; color:#94a3b8; cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px; padding:2px 0;';
+            fsum.innerHTML = '<span class="s-arr" style="font-size:0.55rem">▶</span><span>Posición 3D (X · Y · Z)</span>';
+            fdet.appendChild(fsum);
+            const ctrl = document.createElement('div'); ctrl.style.cssText='margin-top:4px; display:flex; flex-direction:column; gap:4px;';
             if(!f.off3d) f.off3d = {x:0, y:i*2.5, z:0};
             const off = f.off3d;
             const axes = [
@@ -2071,14 +2096,15 @@ function createFloorSection(){
             axes.forEach(a => {
                 const l = document.createElement('label'); l.id=`lbl-off-${a.id}-${i}`; l.style.cssText='font-size:0.6rem; color:#94a3b8; margin:4px 0 0 0;';
                 l.textContent = `${a.n}: ${off[a.id].toFixed(2)}m`;
-                const row = document.createElement('div'); row.style.cssText='display:flex; align-items:center; gap:5px;';
+                const arow = document.createElement('div'); arow.style.cssText='display:flex; align-items:center; gap:5px;';
                 const b1 = document.createElement('button'); b1.textContent='-'; b1.className='btn sm s'; b1.style.width='24px'; b1.onclick=()=>change3DFloor(i, a.id, -0.005);
                 const s = document.createElement('input'); s.type='range'; s.min=a.min; s.max=a.max; s.step="0.001"; s.value=off[a.id];
                 s.oninput=(e)=>move3DFloor(i, a.id, parseFloat(e.target.value));
                 const b2 = document.createElement('button'); b2.textContent='+'; b2.className='btn sm s'; b2.style.width='24px'; b2.onclick=()=>change3DFloor(i, a.id, 0.005);
-                row.append(b1, s, b2); ctrl.append(l, row);
+                arow.append(b1, s, b2); ctrl.append(l, arow);
             });
-            row.appendChild(ctrl);
+            fdet.appendChild(ctrl);
+            row.appendChild(fdet);
         }
         det.appendChild(row);
     });
