@@ -458,7 +458,8 @@ function _stairGeomParams(s){
   const kind=s.stairKind||'straight';
   const w1=Math.max(0.4,parseFloat(s.stairW1)||parseFloat(s.w)||1);
   const w2=Math.max(0.4,parseFloat(s.stairW2)||w1);
-  let land=Math.max(0.0,parseFloat(s.stairLanding)||0);
+  let land=parseFloat(s.stairLanding);
+  if(!isFinite(land)) land=NaN;
   let r1=parseFloat(s.stairRun1);
   let r2=parseFloat(s.stairRun2);
   const hM=Math.max(0.1,parseFloat(s.h)||1);
@@ -473,15 +474,18 @@ function _stairGeomParams(s){
       if(!isFinite(r2)) r2=isFinite(r1)?Math.max(0.6,Math.max(0,hM-land-r1)):r1;
       r1=Math.max(0.6,r1); r2=Math.max(0.6,r2);
     }
-    land=isFinite(land)?land:Math.max(0,hM-Math.max(r1,r2));
+    if(!isFinite(land)) land=Math.max(0,hM-Math.max(r1,r2));
   }else if(kind==='landing'){
-    if(!isFinite(r1)) r1=Math.max(0.6,Math.max(0,hM-land));
+    if(!isFinite(land)) land=NaN;
+    if(!isFinite(r1)) r1=Math.max(0.6,Math.max(0,hM-(isFinite(land)?land:0)));
     if(!isFinite(r2)) r2=r1;
     r1=Math.max(0.6,r1); r2=Math.max(0.6,r2);
+    if(!isFinite(land)) land=Math.max(0,hM-r1);
   }else{
     if(!isFinite(r1)) r1=Math.max(0.6,hM);
     if(!isFinite(r2)) r2=r1;
     r1=Math.max(0.6,r1); r2=Math.max(0.6,r2);
+    if(!isFinite(land)) land=0;
   }
   const W=kind==='u'?(w1+w2):w1;
   const H=kind==='u'?Math.max(0.8,Math.max(r1,r2)+land):(kind==='landing'?Math.max(0.8,r1+land):Math.max(0.8,r1));
@@ -1237,14 +1241,20 @@ function build3DFloorSlab(fIdx, kind) {
     const color = kind==='floor' ? 0xffffff : 0x8fb3ff;
     const opacity = kind==='floor' ? floorOpacity3D : ceilingOpacity3D;
 
-    const stairsBelow = (kind==='floor' && fIdx>0)
+    // Cortes de hueco de escalera:
+    // - En el SUELO de la planta superior, recortamos las escaleras de la planta inmediatamente inferior.
+    // - En el TECHO de la planta donde está la escalera, recortamos esas escaleras (para que el techo
+    //   también sea transparente sobre el hueco y se vea el rellano y el tramo más alto desde arriba).
+    const stairsForCutout = (kind==='floor' && fIdx>0)
       ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx-1)
+      : (kind==='ceiling')
+      ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx)
       : [];
 
     const holePolysForSlab = ()=>{
-      if(!stairsBelow.length) return [];
+      if(!stairsForCutout.length) return [];
       const holes=[];
-      stairsBelow.forEach(s=>{
+      stairsForCutout.forEach(s=>{
         const srcFloor = s.floor ?? (fIdx-1);
         const pmSrc = FLOORS[srcFloor]?.px || pm;
         const pcSrc = {x:(FLOORS[srcFloor]?.imgWidth||canvas.width)/2, y:(FLOORS[srcFloor]?.imgHeight||canvas.height)/2};
@@ -1256,17 +1266,66 @@ function build3DFloorSlab(fIdx, kind) {
         const czW = (s.y + hPx/2 - pcSrc.y)/pmSrc + fOffSrc.z;
         const rot = -((s.rot||0) * Math.PI/180);
         const cosR=Math.cos(rot), sinR=Math.sin(rot);
+        // Convierte un punto (x,z) del marco LOCAL centrado de la escalera
+        // (origen en el centro del bbox, sin rotar) al marco del slab actual.
+        const localToSlab = (p)=>{
+          const xW = cxW + (p.x*cosR - p.z*sinR);
+          const zW = czW + (p.x*sinR + p.z*cosR);
+          return {x: xW - fOff.x, z: zW - fOff.z};
+        };
         const addRect=(rw,rd,rx,rz)=>{
           const hw=rw/2, hh=rd/2;
           const pts=[{x:rx-hw,z:rz-hh},{x:rx+hw,z:rz-hh},{x:rx+hw,z:rz+hh},{x:rx-hw,z:rz+hh}];
-          const out=pts.map(p=>{
-            const xW = cxW + (p.x*cosR - p.z*sinR);
-            const zW = czW + (p.x*sinR + p.z*cosR);
-            return {x: xW - fOff.x, z: zW - fOff.z};
-          });
-          holes.push(out);
+          holes.push(pts.map(localToSlab));
         };
-        addRect(wM,hM,0,0);
+        const addPoly=(localPts)=>{
+          if(!localPts || localPts.length<3) return;
+          holes.push(localPts.map(localToSlab));
+        };
+        const gp=_stairGeomParams(s);
+        if(gp.kind==='u'){
+          // Escalera en U:
+          //   - Los dos brazos de la U son los TRAMOS (1º y 2º).
+          //   - El RELLANO ocupa el ancho COMPLETO de la escalera (w1+w2)
+          //     y une los dos tramos por el lado curvo (es el "límite" del U,
+          //     con su propia profundidad `land`).
+          // El hueco que se proyecta en la planta superior debe dejar ver:
+          //   1) El RELLANO completo (rect de ancho wM y profundidad land
+          //      pegado al lado del rellano, es decir, al fondo del bbox).
+          //   2) El SEGUNDO TRAMO (el tramo más alto, en el lado opuesto al
+          //      lado de inicio): rect de ancho w2 y profundidad r2.
+          // El primer tramo (lado de inicio) queda CUBIERTO por el suelo de
+          // arriba (no se ve desde la planta superior).
+          const w1=gp.w1, w2=gp.w2, r1=gp.run1, r2=gp.run2, land=gp.land;
+          const dz=Math.max(0, r2-r1);
+          const zA0=dz;
+          const landZ0=zA0+r1;            // z donde empieza el rellano (corner-frame)
+          const landZ1=landZ0+land;       // z donde acaba el rellano (= fondo del bbox)
+          const flightBz0=Math.max(0, landZ0-r2); // z donde empieza el tramo B
+          const flightBz1=landZ0;          // z donde acaba el tramo B (= empieza rellano)
+          const side=(s.stairStartSide||'right')==='left'?'left':'right';
+          // Tramo 1 ocupa x=[xA, xA+w1]; tramo 2 (B) ocupa x=[xB, xB+w2].
+          const xB_corner = side==='right' ? 0 : (wM - w2);
+          // Pequeño solapado en z para que el corte se vea como un único
+          // hueco continuo (sin línea entre rellano y tramo B).
+          const EPS = 0.005;
+          // Hueco 1 — RELLANO (ancho completo W, profundidad land)
+          // Centrado en x=0 (centro del bbox); z = punto medio del rellano − hM/2.
+          const rellanoZc = ((landZ0+landZ1)/2) - hM/2;
+          addRect(wM, Math.max(0.1, land + EPS), 0, rellanoZc);
+          // Hueco 2 — SEGUNDO TRAMO (anchura w2, profundidad r2)
+          // Posicionado en el lado opuesto al primer tramo.
+          const flightBzC = ((flightBz0+flightBz1)/2) - hM/2;
+          const flightBzD = Math.max(0.1, (flightBz1-flightBz0) + EPS);
+          const flightBxC = (xB_corner + w2/2) - wM/2;
+          addRect(w2, flightBzD, flightBxC, flightBzC);
+        }else if(gp.kind==='landing'){
+          // Escalera con rellano al final: hueco = tramo + rellano (todo el footprint).
+          addRect(wM,hM,0,0);
+        }else{
+          // Escalera recta: hueco = footprint completo.
+          addRect(wM,hM,0,0);
+        }
       });
       return holes;
     };
@@ -1294,6 +1353,19 @@ function build3DFloorSlab(fIdx, kind) {
         mesh.userData = {floor:fIdx, type: kind==='floor'?'floor_slab_floor':'floor_slab_ceiling'};
         if (fIdx > 0) mesh.visible = document.getElementById('sep-tog-check')?.checked ?? true;
         scene3d.add(mesh); objects3d.push(mesh);
+        if(kind==='floor' && holes.length){
+          holes.forEach(hp=>{
+            const pts=hp.map(p=>new THREE.Vector3(p.x, planeY+0.02, p.z));
+            pts.push(new THREE.Vector3(hp[0].x, planeY+0.02, hp[0].z));
+            const lGeo=new THREE.BufferGeometry().setFromPoints(pts);
+            const lMat=new THREE.LineBasicMaterial({color:0xff4d9e,transparent:true,opacity:0.85,depthTest:false});
+            const line=new THREE.Line(lGeo,lMat);
+            line.position.set(fOff.x,0,fOff.z);
+            line.userData={floor:fIdx,type:'stair_opening_mark'};
+            if (fIdx > 0) line.visible = document.getElementById('sep-tog-check')?.checked ?? true;
+            scene3d.add(line); objects3d.push(line);
+          });
+        }
     });
 }
 function change3DFloor(fIdx, axis, delta) {
@@ -1745,6 +1817,18 @@ function build3DWalls(fIdx){
               wallSegment.userData = {wallId: wall.id, segIndex: i, type: 'wallSeg', floor: fIdx};
               wallSegment.castShadow = true; wallSegment.receiveShadow = true;
               wallGroup.add(wallSegment);
+              // Arista fina negra: marca esquinas y uniones entre muros sin
+              // obstaculizar la visión (solo bordes reales con umbral 10°).
+              try{
+                const edgesGeo = new THREE.EdgesGeometry(geometry, 10);
+                const edgesMat = new THREE.LineBasicMaterial({color:0x000000, transparent:true, opacity:0.55, depthWrite:false, linewidth:1});
+                const edgesLines = new THREE.LineSegments(edgesGeo, edgesMat);
+                edgesLines.position.copy(v1);
+                edgesLines.rotation.y = -angle;
+                edgesLines.renderOrder = 2;
+                edgesLines.userData = {wallId: wall.id, segIndex: i, type: 'wallEdge', floor: fIdx};
+                wallGroup.add(edgesLines);
+              }catch(_){ }
             };
             if(!merged.length){
               makeSeg(0,length,wallMaterial);
