@@ -1734,7 +1734,26 @@ function build3DAreas(fIdx) {
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
 function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
-function updateFPMovement(){if(!fpMode3D||!camera3d)return;const spd=0.08;const fwd=new THREE.Vector3(Math.sin(fpYaw),0,Math.cos(fpYaw));const rgt=new THREE.Vector3(Math.cos(fpYaw),0,-Math.sin(fpYaw));if(fpKeys['w']||fpKeys['W']||fpKeys['ArrowUp']||fpKeys['__up'])camera3d.position.addScaledVector(fwd,spd);if(fpKeys['s']||fpKeys['S']||fpKeys['ArrowDown']||fpKeys['__down'])camera3d.position.addScaledVector(fwd,-spd);if(fpKeys['a']||fpKeys['A']||fpKeys['ArrowLeft']||fpKeys['__left'])camera3d.position.addScaledVector(rgt,-spd);if(fpKeys['d']||fpKeys['D']||fpKeys['ArrowRight']||fpKeys['__right'])camera3d.position.addScaledVector(rgt,spd);camera3d.position.y=1.7;updateFPCamera();}
+function updateFPMovement(){
+  if(!fpMode3D||!camera3d)return;
+  const spd=0.08;
+  const turnSpd=0.035;   // velocidad de giro con flechas
+  const fwd=new THREE.Vector3(Math.sin(fpYaw),0,Math.cos(fpYaw));
+  const rgt=new THREE.Vector3(Math.cos(fpYaw),0,-Math.sin(fpYaw));
+  // WASD + D-pad móvil = MOVER
+  if(fpKeys['w']||fpKeys['W']||fpKeys['__up'])    camera3d.position.addScaledVector(fwd, spd);
+  if(fpKeys['s']||fpKeys['S']||fpKeys['__down'])  camera3d.position.addScaledVector(fwd,-spd);
+  if(fpKeys['a']||fpKeys['A']||fpKeys['__left'])  camera3d.position.addScaledVector(rgt,-spd);
+  if(fpKeys['d']||fpKeys['D']||fpKeys['__right']) camera3d.position.addScaledVector(rgt, spd);
+  // Flechas = MIRAR (sin necesidad de pointer lock ni ratón)
+  let turned=false;
+  if(fpKeys['ArrowLeft']) { fpYaw  += turnSpd; turned=true; }
+  if(fpKeys['ArrowRight']){ fpYaw  -= turnSpd; turned=true; }
+  if(fpKeys['ArrowUp'])   { fpPitch=Math.min(Math.PI/2-0.05, fpPitch+turnSpd); turned=true; }
+  if(fpKeys['ArrowDown']) { fpPitch=Math.max(-Math.PI/2+0.05, fpPitch-turnSpd); turned=true; }
+  camera3d.position.y=1.7;
+  if(turned) updateFPCamera(); else updateFPCamera();
+}
 function enterFP3D(){
   if(!scene3d||!camera3d||!renderer3d)return;
   fpMode3D=true;if(controls3d)controls3d.enabled=false;
@@ -1743,7 +1762,7 @@ function enterFP3D(){
   const dpad=document.getElementById('fp3d-dpad');
   if(dpad&&isMob&&isMob()){dpad.style.display='block';_bindFP3DDPad();}
   const hint=document.getElementById('fp3d-hud-hint');
-  if(hint){hint.textContent=(isMob&&isMob())?'Arrastra a la derecha para mirar — D-pad para mover':'Clic en el escenario para mirar (Esc para liberar) — WASD/↑↓←→ mover';}
+  if(hint){hint.textContent=(isMob&&isMob())?'Arrastra a la derecha para mirar — D-pad para mover':'Clic en escenario = mirar con ratón (Esc libera) · WASD mover · ↑↓←→ girar la cámara';}
   // Desktop: pointer lock para mirar sin botón pulsado
   renderer3d.domElement.addEventListener('mousedown',_fpRequestLock);
   document.addEventListener('pointerlockchange',_fpLockChange);
