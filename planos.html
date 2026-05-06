@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Planos - Distribuidor de muebles</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -337,7 +339,9 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
                 <details open data-sec="sun">
                     <summary style="font-size:0.75rem;font-weight:bold;color:#fbbf24;cursor:pointer;margin-bottom:5px;list-style:none;display:flex;align-items:center;"><span class="s-arr">▶</span>☀ SOL Y SOMBRAS</summary>
                     <div style="padding:5px 0;display:flex;flex-direction:column;gap:6px;">
-                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Azimut (brújula)</span><span id="sun-az-val" style="color:#fbbf24;font-family:'Space Mono',monospace">180°</span></div>
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">🧭 Norte de la casa (a qué grados de la brújula apunta el "arriba" del plano)</span><span id="sun-heading-val" style="color:#22d3ee;font-family:'Space Mono',monospace">0°</span></div>
+                        <input type="range" id="sun-heading" min="0" max="359" step="1" value="0" oninput="updateSun3D('heading',this.value)" style="width:100%">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Azimut sol (brújula)</span><span id="sun-az-val" style="color:#fbbf24;font-family:'Space Mono',monospace">180°</span></div>
                         <input type="range" id="sun-az" min="0" max="360" step="1" value="180" oninput="updateSun3D('az',this.value)" style="width:100%">
                         <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Altitud (horizonte → cenit)</span><span id="sun-alt-val" style="color:#fbbf24;font-family:'Space Mono',monospace">45°</span></div>
                         <input type="range" id="sun-alt" min="-10" max="90" step="1" value="45" oninput="updateSun3D('alt',this.value)" style="width:100%">
@@ -351,6 +355,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
                                     <label>Latitud °<input type="number" id="sun-lat" step="0.0001" value="40.4168" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
                                     <label>Longitud °<input type="number" id="sun-lon" step="0.0001" value="-3.7038" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
                                 </div>
+                                <button onclick="openSunMapModal()" style="padding:6px 8px;font-size:0.66rem;background:rgba(34,197,94,0.13);border:1px solid rgba(34,197,94,0.5);color:#4ade80;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600;margin-top:2px">🗺 Colocar la casa en el mapa real</button>
                                 <label style="font-size:0.6rem;color:#94a3b8">Fecha y hora local<input type="datetime-local" id="sun-dt" oninput="onSunDtManualInput()" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
                                 <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:#94a3b8;margin-top:4px;"><span style="flex:1">⏰ Hora del día</span><span id="sun-hour-val" style="color:#fbbf24;font-family:'Space Mono',monospace">12:00</span></div>
                                 <input type="range" id="sun-hour" min="0" max="1439" step="1" value="720" oninput="onSunTimeSlider('hour',this.value)" style="width:100%">
@@ -401,6 +406,29 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <div class="acc" data-c="floor"><div class="acc-hdr" id="acc-hdr-floor" onclick="toggleAcc('floor')"><span class="acc-icon">🗺️</span><span class="acc-title">Plantas</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-floor"><div class="acc-inner"><p class="hint">Gestiona las plantas del proyecto: renombra, elimina o cambia la imagen.</p><div id="floor-manage-list"></div><div class="add-floor-form" id="add-floor-form" style="display:none"><label>Nombre de la nueva planta</label><input type="text" id="new-floor-name" placeholder="ej: Planta Segunda" style="margin-bottom:6px"><div class="g2"><button class="btn io-btn img-btn sm" onclick="document.getElementById('fi-new-img').click()" style="min-height:36px">🖼 Imagen</button><button class="btn io-btn pdf-btn sm" onclick="document.getElementById('fi-new-pdf').click()" style="min-height:36px">📄 PDF</button></div><input type="file" id="fi-new-img" accept="image/*" onchange="newFloorFromFile(this,'img')"><input type="file" id="fi-new-pdf" accept="application/pdf" onchange="newFloorFromFile(this,'pdf')"><div id="new-floor-status" style="font-family:'Space Mono',monospace;font-size:.6rem;margin-top:5px;color:var(--cf)"></div><button class="btn sm s" onclick="closeAddFloor()" style="margin-top:6px;width:100%">Cancelar</button></div><button class="btn sm" onclick="openAddFloor()" id="btn-open-add-floor" style="background:rgba(236,72,153,.15);border:1px solid rgba(236,72,153,.4);color:var(--cf);margin-top:5px;width:100%">+ Añadir nueva planta</button></div></div></div><div style="height:10px"></div></aside><div id="carea"><div id="pwrap"><img id="pimg" src="" alt="Plano" draggable="false"><canvas id="ov"></canvas></div></div></div>
 <div id="mobnav"><button class="mnb" id="mn-calib" data-section="calib" onclick="mobToggle('calib')"><span class="ic">📐</span>Calibrar</button><button class="mnb" id="mn-ruler" data-section="ruler" onclick="mobToggle('ruler')"><span class="ic">📏</span>Medir</button><button class="mnb" id="mn-wall" data-section="wall" onclick="mobToggle('wall')"><span class="ic">🧱</span>Muros</button><button class="mnb" id="mn-window" data-section="window" onclick="mobToggle('window')"><span class="ic">🪟</span>Huecos</button><button class="mnb" id="mn-list" data-section="list" onclick="mobToggle('list')"><span class="ic">🛋</span>Muebles</button><button class="mnb" id="mn-zoom" data-section="zoom" onclick="mobToggle('zoom')"><span class="ic">🔍</span>Vista</button><button class="mnb" id="mn-io" data-section="io" onclick="mobToggle('io')"><span class="ic">💾</span>Guardar</button><button class="mnb" id="mn-floor" data-section="floor" onclick="mobToggle('floor')"><span class="ic">🗺️</span>Plantas</button></div>
 <div id="spinner" class="spinner"></div>
+<div id="sun-map-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(7,17,29,0.92);align-items:center;justify-content:center;padding:18px;font-family:'Outfit',sans-serif">
+  <div style="background:#0e1a2c;border:1px solid #334155;border-radius:12px;width:min(960px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.7)">
+    <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #334155">
+      <span style="color:#4ade80;font-weight:600;font-size:0.85rem">🗺 Colocar la casa</span>
+      <input id="sun-map-search" type="text" placeholder="Buscar dirección, ciudad, lugar…" style="flex:1;font-size:0.78rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:5px;padding:6px 9px;font-family:'Outfit',sans-serif;outline:none">
+      <button onclick="sunMapSearch()" style="padding:6px 10px;font-size:0.74rem;background:rgba(34,197,94,0.18);border:1px solid rgba(34,197,94,0.55);color:#4ade80;border-radius:5px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600">Buscar</button>
+      <button onclick="sunMapUseGPS()" style="padding:6px 10px;font-size:0.74rem;background:rgba(167,139,250,0.18);border:1px solid rgba(167,139,250,0.55);color:#a78bfa;border-radius:5px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600">📍 GPS</button>
+      <button onclick="closeSunMapModal()" style="padding:6px 10px;font-size:0.74rem;background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.55);color:#fca5a5;border-radius:5px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:600">✕</button>
+    </div>
+    <div id="sun-map-canvas" style="flex:1;min-height:420px;position:relative"></div>
+    <div style="padding:9px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #334155;background:#0a1421">
+      <div style="font-size:0.7rem;color:#94a3b8;font-family:'Space Mono',monospace">📍 <span id="sun-map-coord">—</span></div>
+      <div style="font-size:0.7rem;color:#94a3b8;display:flex;align-items:center;gap:6px">
+        <span>🧭 Heading</span>
+        <span id="sun-map-heading-val" style="color:#22d3ee;font-family:'Space Mono',monospace">0°</span>
+        <input type="range" id="sun-map-heading" min="0" max="359" step="1" value="0" oninput="sunMapSetHeading(this.value)" style="width:140px">
+      </div>
+      <div style="flex:1"></div>
+      <button onclick="applySunMapSelection()" style="padding:8px 16px;font-size:0.78rem;background:linear-gradient(135deg,#22d3ee,#06b6d4);border:none;color:#001;border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700">✓ Aplicar</button>
+    </div>
+    <div style="padding:6px 14px;border-top:1px solid #1e293b;font-size:0.6rem;color:#64748b;line-height:1.35">Mueve el marcador con el dedo o el ratón para colocar la casa, arrastra el ◆ para girarla. Mapa © OpenStreetMap.</div>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
@@ -1202,6 +1230,8 @@ function init3D(){
   const _alS=document.getElementById('sun-alt');if(_alS)_alS.value=Math.max(-10,sunCfg.alt);
   const _inS=document.getElementById('sun-int');if(_inS)_inS.value=sunCfg.intensity;
   const _shS=document.getElementById('sun-shadow');if(_shS)_shS.checked=!!sunCfg.shadow;
+  const _hdS=document.getElementById('sun-heading');if(_hdS)_hdS.value=sunCfg.houseHeading||0;
+  const _hdV=document.getElementById('sun-heading-val');if(_hdV)_hdV.textContent=Math.round(sunCfg.houseHeading||0)+'°';
   const _laS=document.getElementById('sun-lat');if(_laS&&sunCfg.lat!=null)_laS.value=sunCfg.lat;
   const _loS=document.getElementById('sun-lon');if(_loS&&sunCfg.lon!=null)_loS.value=sunCfg.lon;
   const _dtS=document.getElementById('sun-dt');if(_dtS&&sunCfg.dt)_dtS.value=sunCfg.dt;
@@ -1571,10 +1601,12 @@ function updatePositionFrom3D(mesh) {
     }
     saveLS(); render();
 }
-let sunCfg={az:180,alt:45,intensity:0.85,shadow:true,lat:40.4168,lon:-3.7038,dt:null};
+let sunCfg={az:180,alt:45,intensity:0.85,shadow:true,lat:40.4168,lon:-3.7038,dt:null,houseHeading:0};
 function _applySunPosition(){
   if(!dirLight3d)return;
-  const az=sunCfg.az*Math.PI/180, alt=Math.max(-10,sunCfg.alt)*Math.PI/180;
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const azWorld=((sunCfg.az-heading)%360+360)%360;
+  const az=azWorld*Math.PI/180, alt=Math.max(-10,sunCfg.alt)*Math.PI/180;
   const D=35;
   const x=Math.sin(az)*Math.cos(alt)*D;
   const y=Math.max(0.5,Math.sin(alt)*D);
@@ -1595,6 +1627,7 @@ function updateSun3D(prop,val){
   else if(prop==='alt'){sunCfg.alt=parseFloat(val)||0; const e=document.getElementById('sun-alt-val'); if(e) e.textContent=Math.round(sunCfg.alt)+'°';}
   else if(prop==='int'){sunCfg.intensity=parseFloat(val)||0; const e=document.getElementById('sun-int-val'); if(e) e.textContent=Number(sunCfg.intensity).toFixed(2);}
   else if(prop==='shadow'){sunCfg.shadow=!!val;}
+  else if(prop==='heading'){sunCfg.houseHeading=((parseFloat(val)||0)%360+360)%360; const e=document.getElementById('sun-heading-val'); if(e) e.textContent=Math.round(sunCfg.houseHeading)+'°';}
   _applySunPosition();
   try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
 }
@@ -1722,6 +1755,172 @@ function toggleSunAnim(){
     _sunAnimRAF=requestAnimationFrame(tick);
   };
   _sunAnimRAF=requestAnimationFrame(tick);
+}
+let _sunMap=null, _sunMapHouseMarker=null, _sunMapHeadingMarker=null, _sunMapHeading=0, _sunMapPos=null, _sunMapWallLayer=null;
+function _sunMapBuildWallLayer(){
+  if(!_sunMap||!_sunMapPos||typeof L==='undefined')return;
+  if(_sunMapWallLayer){try{_sunMap.removeLayer(_sunMapWallLayer);}catch(_){} _sunMapWallLayer=null;}
+  const fIdx=(typeof curFloor==='number')?curFloor:0;
+  if(!FLOORS[fIdx]||!FLOORS[fIdx].cal)return;
+  const walls=furniture.filter(f=>f.type==='wall'&&f.floor===fIdx&&!f.hidden&&f.pts&&f.pts.length>=2);
+  if(!walls.length)return;
+  const pm=FLOORS[fIdx].px||50;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  walls.forEach(w=>{w.pts.forEach(p=>{const X=w.x+p.x*pm,Y=w.y+p.y*pm;if(X<minX)minX=X;if(X>maxX)maxX=X;if(Y<minY)minY=Y;if(Y>maxY)maxY=Y;});});
+  if(!isFinite(minX))return;
+  const cxPx=(minX+maxX)/2, cyPx=(minY+maxY)/2;
+  const H=_sunMapHeading*Math.PI/180;
+  const cosH=Math.cos(H), sinH=Math.sin(H);
+  const lat=_sunMapPos.lat;
+  const cosLatR=Math.cos(lat*Math.PI/180);
+  const off=(px,py)=>{
+    const xM=px/pm, yM=py/pm;
+    const E=xM*cosH - yM*sinH;
+    const N=-xM*sinH - yM*cosH;
+    return L.latLng(lat+(N/111320), _sunMapPos.lng+(E/(111320*Math.max(0.0001,cosLatR))));
+  };
+  const layer=L.layerGroup();
+  L.circleMarker(_sunMapPos,{radius:3,color:'#facc15',fillColor:'#facc15',fillOpacity:0.9,weight:1}).addTo(layer);
+  walls.forEach(w=>{
+    const thick=Math.max(0.5,(w.thick||0.15)*8);
+    const pts=w.pts.map(p=>off(w.x+p.x*pm-cxPx, w.y+p.y*pm-cyPx));
+    L.polyline(pts,{color:'#22d3ee',weight:thick,opacity:0.9,lineCap:'round',lineJoin:'round'}).addTo(layer);
+    L.polyline(pts,{color:'#0e7490',weight:thick+2,opacity:0.5,lineCap:'round',lineJoin:'round'}).addTo(layer).bringToBack();
+  });
+  layer.addTo(_sunMap);
+  _sunMapWallLayer=layer;
+}
+function _sunMapMakeIcons(){
+  const houseHTML=`<div style="position:relative;width:54px;height:54px;transform:translate(-27px,-27px);pointer-events:none">
+    <div id="_smHouseRot" style="position:absolute;inset:0;transform-origin:50% 50%;transform:rotate(0deg);">
+      <div style="position:absolute;left:50%;top:50%;width:30px;height:36px;transform:translate(-50%,-50%);background:rgba(34,197,94,0.85);border:2px solid #4ade80;border-radius:4px 4px 6px 6px;box-shadow:0 0 0 2px rgba(0,0,0,0.45),0 6px 14px rgba(0,0,0,0.5)"></div>
+      <div style="position:absolute;left:50%;top:50%;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:11px solid #facc15;transform:translate(-50%,-100%) translateY(-12px);filter:drop-shadow(0 0 3px rgba(0,0,0,0.6))"></div>
+      <div style="position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:9px;color:#facc15;font-family:Space Mono,monospace;font-weight:700;text-shadow:0 0 4px #000">N</div>
+    </div>
+  </div>`;
+  return L.divIcon({className:'sun-map-house-icon',html:houseHTML,iconSize:[54,54],iconAnchor:[27,27]});
+}
+function _sunMapHeadingIcon(){
+  return L.divIcon({className:'sun-map-heading-icon',html:`<div style="width:18px;height:18px;transform:translate(-9px,-9px);background:#22d3ee;border:2px solid #001;border-radius:50%;box-shadow:0 0 0 2px #22d3ee88;cursor:grab"></div>`,iconSize:[18,18],iconAnchor:[9,9]});
+}
+function _sunMapHeadingOffset(latlng,heading,distMeters){
+  const R=6378137, br=heading*Math.PI/180;
+  const lat1=latlng.lat*Math.PI/180, lon1=latlng.lng*Math.PI/180;
+  const ang=distMeters/R;
+  const lat2=Math.asin(Math.sin(lat1)*Math.cos(ang)+Math.cos(lat1)*Math.sin(ang)*Math.cos(br));
+  const lon2=lon1+Math.atan2(Math.sin(br)*Math.sin(ang)*Math.cos(lat1),Math.cos(ang)-Math.sin(lat1)*Math.sin(lat2));
+  return L.latLng(lat2*180/Math.PI,lon2*180/Math.PI);
+}
+function _sunMapBearing(a,b){
+  const φ1=a.lat*Math.PI/180, φ2=b.lat*Math.PI/180;
+  const λ1=a.lng*Math.PI/180, λ2=b.lng*Math.PI/180;
+  const y=Math.sin(λ2-λ1)*Math.cos(φ2);
+  const x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(λ2-λ1);
+  return ((Math.atan2(y,x)*180/Math.PI)+360)%360;
+}
+function _sunMapUpdateUI(){
+  const c=document.getElementById('sun-map-coord');
+  if(c&&_sunMapPos)c.textContent=`${_sunMapPos.lat.toFixed(5)}, ${_sunMapPos.lng.toFixed(5)}`;
+  const hv=document.getElementById('sun-map-heading-val');
+  if(hv)hv.textContent=Math.round(_sunMapHeading)+'°';
+  const hs=document.getElementById('sun-map-heading');
+  if(hs)hs.value=Math.round(_sunMapHeading);
+  const rot=document.querySelector('.sun-map-house-icon #_smHouseRot');
+  if(rot)rot.style.transform=`rotate(${_sunMapHeading}deg)`;
+}
+function _sunMapSyncMarkers(){
+  if(!_sunMap||!_sunMapPos)return;
+  if(!_sunMapHouseMarker){
+    _sunMapHouseMarker=L.marker(_sunMapPos,{draggable:true,icon:_sunMapMakeIcons(),zIndexOffset:500}).addTo(_sunMap);
+    _sunMapHouseMarker.on('drag',ev=>{const p=ev.target.getLatLng();_sunMapPos=p;_sunMapSyncMarkers();_sunMapUpdateUI();_sunMapBuildWallLayer();});
+    _sunMapHouseMarker.on('dragend',()=>{_sunMapUpdateUI();_sunMapBuildWallLayer();});
+  }else _sunMapHouseMarker.setLatLng(_sunMapPos);
+  const handlePos=_sunMapHeadingOffset(_sunMapPos,_sunMapHeading,18);
+  if(!_sunMapHeadingMarker){
+    _sunMapHeadingMarker=L.marker(handlePos,{draggable:true,icon:_sunMapHeadingIcon(),zIndexOffset:1000}).addTo(_sunMap);
+    _sunMapHeadingMarker.on('drag',ev=>{
+      const p=ev.target.getLatLng();
+      _sunMapHeading=_sunMapBearing(_sunMapPos,p);
+      _sunMapUpdateUI();
+      _sunMapBuildWallLayer();
+    });
+  }else _sunMapHeadingMarker.setLatLng(handlePos);
+}
+function sunMapSetHeading(val){
+  _sunMapHeading=((parseFloat(val)||0)%360+360)%360;
+  _sunMapSyncMarkers(); _sunMapUpdateUI(); _sunMapBuildWallLayer();
+}
+function openSunMapModal(){
+  if(typeof L==='undefined'){showToast('⚠ Leaflet aún no se ha cargado');return;}
+  const modal=document.getElementById('sun-map-modal');
+  if(!modal)return;
+  modal.style.display='flex';
+  const lat=parseFloat(document.getElementById('sun-lat')?.value)||sunCfg.lat||40.4168;
+  const lon=parseFloat(document.getElementById('sun-lon')?.value)||sunCfg.lon||-3.7038;
+  _sunMapPos=L.latLng(lat,lon);
+  _sunMapHeading=parseFloat(sunCfg.houseHeading)||0;
+  setTimeout(()=>{
+    if(!_sunMap){
+      _sunMap=L.map('sun-map-canvas',{zoomControl:true}).setView(_sunMapPos,17);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(_sunMap);
+      _sunMap.on('click',ev=>{_sunMapPos=ev.latlng;_sunMapSyncMarkers();_sunMapUpdateUI();_sunMapBuildWallLayer();});
+    }else{
+      _sunMap.invalidateSize();
+      _sunMap.setView(_sunMapPos,_sunMap.getZoom()<14?17:_sunMap.getZoom());
+    }
+    _sunMapSyncMarkers(); _sunMapUpdateUI(); _sunMapBuildWallLayer();
+  },50);
+  const inp=document.getElementById('sun-map-search'); if(inp){inp.value='';inp.focus();}
+  const onKey=(e)=>{if(e.key==='Enter'){e.preventDefault();sunMapSearch();}};
+  if(inp){inp.removeEventListener('keydown',inp._smKey||(()=>{}));inp._smKey=onKey;inp.addEventListener('keydown',onKey);}
+}
+function closeSunMapModal(){
+  const modal=document.getElementById('sun-map-modal');
+  if(modal)modal.style.display='none';
+}
+async function sunMapSearch(){
+  const inp=document.getElementById('sun-map-search'); const q=inp&&inp.value.trim();
+  if(!q){showToast('⚠ Escribe una dirección o ciudad');return;}
+  showToast('🔎 Buscando…',900);
+  const url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=0&limit=5&q='+encodeURIComponent(q);
+  try{
+    const r=await fetch(url);
+    if(!r.ok){showToast('⚠ Búsqueda no disponible ('+r.status+')');return;}
+    const arr=await r.json();
+    if(!Array.isArray(arr)||!arr.length){showToast('No se encontró «'+q+'»');return;}
+    const hit=arr[0];
+    const lat=parseFloat(hit.lat), lon=parseFloat(hit.lon);
+    if(!isFinite(lat)||!isFinite(lon)){showToast('⚠ Resultado inválido');return;}
+    _sunMapPos=L.latLng(lat,lon);
+    let zoom=17;
+    if(hit.boundingbox&&hit.boundingbox.length===4){
+      const bb=hit.boundingbox.map(parseFloat);
+      try{_sunMap.fitBounds([[bb[0],bb[2]],[bb[1],bb[3]]],{maxZoom:18,padding:[40,40]});zoom=null;}catch(_){zoom=17;}
+    }
+    if(zoom!==null&&_sunMap)_sunMap.setView(_sunMapPos,zoom);
+    _sunMapSyncMarkers(); _sunMapUpdateUI(); _sunMapBuildWallLayer();
+    showToast('📍 '+(hit.display_name||q).split(',').slice(0,2).join(', '));
+  }catch(e){console.warn('sunMapSearch error:',e);showToast('⚠ Sin conexión o búsqueda bloqueada');}
+}
+function sunMapUseGPS(){
+  if(!navigator.geolocation){showToast('⚠ Geolocalización no disponible');return;}
+  showToast('📍 Obteniendo ubicación…',900);
+  navigator.geolocation.getCurrentPosition(p=>{
+    _sunMapPos=L.latLng(p.coords.latitude,p.coords.longitude);
+    if(_sunMap){_sunMap.setView(_sunMapPos,18);}
+    _sunMapSyncMarkers(); _sunMapUpdateUI(); _sunMapBuildWallLayer();
+  },()=>showToast('⚠ No se pudo obtener'),{timeout:6000,enableHighAccuracy:true});
+}
+function applySunMapSelection(){
+  if(!_sunMapPos){closeSunMapModal();return;}
+  const latEl=document.getElementById('sun-lat'); if(latEl) latEl.value=_sunMapPos.lat.toFixed(5);
+  const lonEl=document.getElementById('sun-lon'); if(lonEl) lonEl.value=_sunMapPos.lng.toFixed(5);
+  sunCfg.houseHeading=_sunMapHeading;
+  const hdS=document.getElementById('sun-heading'); if(hdS) hdS.value=Math.round(_sunMapHeading);
+  const hdV=document.getElementById('sun-heading-val'); if(hdV) hdV.textContent=Math.round(_sunMapHeading)+'°';
+  applySunFromDateTime();
+  closeSunMapModal();
+  showToast('✓ Casa colocada y orientada');
 }
 function applySunFromNowHere(){
   const dtEl=document.getElementById('sun-dt');
