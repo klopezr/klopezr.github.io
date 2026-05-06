@@ -334,13 +334,42 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
         </div>
         <div id="menu3d-body" style="overflow-y:auto; flex:1; padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px;">
             <div id="menu3d-lights" style="border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 5px;">
-                <details open>
-                    <summary style="font-size:0.75rem;font-weight:bold;color:#a78bfa;cursor:pointer;margin-bottom:5px;list-style:none;display:flex;align-items:center;"><span class="s-arr">▶</span>💡 ILUMINACIÓN</summary>
-                    <div style="padding: 5px 0;">
-                        <label style="font-size: 0.65rem; color: #94a3b8; display: block;">Intensidad Sol</label>
-                        <input type="range" min="0" max="2" step="0.1" value="0.8" oninput="update3DLight('intensity', this.value)" style="width:100%; margin-bottom:8px;">
-                        <label style="font-size: 0.65rem; color: #94a3b8; display: block;">Posición Sol (Giro)</label>
-                        <input type="range" min="0" max="6.28" step="0.1" value="0.5" oninput="update3DLight('rotation', this.value)" style="width:100%;">
+                <details open data-sec="sun">
+                    <summary style="font-size:0.75rem;font-weight:bold;color:#fbbf24;cursor:pointer;margin-bottom:5px;list-style:none;display:flex;align-items:center;"><span class="s-arr">▶</span>☀ SOL Y SOMBRAS</summary>
+                    <div style="padding:5px 0;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Azimut (brújula)</span><span id="sun-az-val" style="color:#fbbf24;font-family:'Space Mono',monospace">180°</span></div>
+                        <input type="range" id="sun-az" min="0" max="360" step="1" value="180" oninput="updateSun3D('az',this.value)" style="width:100%">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Altitud (horizonte → cenit)</span><span id="sun-alt-val" style="color:#fbbf24;font-family:'Space Mono',monospace">45°</span></div>
+                        <input type="range" id="sun-alt" min="-10" max="90" step="1" value="45" oninput="updateSun3D('alt',this.value)" style="width:100%">
+                        <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Intensidad</span><span id="sun-int-val" style="color:#fbbf24;font-family:'Space Mono',monospace">0.85</span></div>
+                        <input type="range" id="sun-int" min="0" max="2" step="0.05" value="0.85" oninput="updateSun3D('int',this.value)" style="width:100%">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.62rem;color:#94a3b8;margin-top:4px;"><span>Sombras</span><label class="tog"><input type="checkbox" id="sun-shadow" checked onchange="updateSun3D('shadow',this.checked)"><span class="togsl"></span></label></div>
+                        <details data-sec="sun-astro" style="margin-top:6px;border-top:1px dashed #334155;padding-top:6px">
+                            <summary style="font-size:0.62rem;color:#a78bfa;cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px"><span class="s-arr">▶</span>📅 Calcular del momento (lat/lon/fecha)</summary>
+                            <div style="padding:6px 0 0 0;display:flex;flex-direction:column;gap:5px;">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:0.6rem;color:#94a3b8">
+                                    <label>Latitud °<input type="number" id="sun-lat" step="0.0001" value="40.4168" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
+                                    <label>Longitud °<input type="number" id="sun-lon" step="0.0001" value="-3.7038" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
+                                </div>
+                                <label style="font-size:0.6rem;color:#94a3b8">Fecha y hora local<input type="datetime-local" id="sun-dt" oninput="onSunDtManualInput()" style="width:100%;font-size:0.66rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:3px;padding:3px 5px;font-family:'Space Mono',monospace"></label>
+                                <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:#94a3b8;margin-top:4px;"><span style="flex:1">⏰ Hora del día</span><span id="sun-hour-val" style="color:#fbbf24;font-family:'Space Mono',monospace">12:00</span></div>
+                                <input type="range" id="sun-hour" min="0" max="1439" step="1" value="720" oninput="onSunTimeSlider('hour',this.value)" style="width:100%">
+                                <div style="display:flex;align-items:center;gap:6px;font-size:0.6rem;color:#94a3b8;"><span style="flex:1">📆 Día del año</span><span id="sun-day-val" style="color:#fbbf24;font-family:'Space Mono',monospace">1 ene</span></div>
+                                <input type="range" id="sun-day" min="1" max="366" step="1" value="172" oninput="onSunTimeSlider('day',this.value)" style="width:100%">
+                                <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+                                    <button id="sun-anim-btn" onclick="toggleSunAnim()" style="padding:5px 6px;font-size:0.65rem;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.45);color:#22d3ee;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif;flex:1">▶ Animar día</button>
+                                    <select id="sun-anim-mode" onchange="if(_sunAnimRunning){toggleSunAnim();toggleSunAnim();}" style="font-size:0.62rem;background:rgba(255,255,255,0.05);border:1px solid #334155;color:#e2e8f0;border-radius:4px;padding:4px 5px;font-family:'Outfit',sans-serif;cursor:pointer">
+                                        <option value="day">Hora 24h</option>
+                                        <option value="year">Año</option>
+                                    </select>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:2px;">
+                                    <button onclick="applySunFromDateTime()" style="padding:5px 6px;font-size:0.65rem;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.5);color:#fbbf24;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif">☀ Aplicar</button>
+                                    <button onclick="applySunFromNowHere()" style="padding:5px 6px;font-size:0.65rem;background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.5);color:#a78bfa;border-radius:4px;cursor:pointer;font-family:'Outfit',sans-serif">📍 Ahora aquí</button>
+                                </div>
+                                <div id="sun-astro-info" style="font-size:0.58rem;color:#64748b;font-family:'Space Mono',monospace"></div>
+                            </div>
+                        </details>
                     </div>
                 </details>
             </div>
@@ -1164,9 +1193,23 @@ function init3D(){
   renderer3d.localClippingEnabled=true;
   container.appendChild(renderer3d.domElement);controls3d=new THREE.OrbitControls(camera3d,renderer3d.domElement);
   scene3d.add(new THREE.AmbientLight(0xffffff,0.5));
-  dirLight3d=new THREE.DirectionalLight(0xffffff,0.8);dirLight3d.position.set(15,25,10);dirLight3d.castShadow=true;
-  dirLight3d.shadow.mapSize.width=1024;dirLight3d.shadow.mapSize.height=1024;
-  scene3d.add(dirLight3d);
+  dirLight3d=new THREE.DirectionalLight(0xffffff,0.85);dirLight3d.position.set(15,25,10);dirLight3d.castShadow=true;
+  dirLight3d.shadow.mapSize.width=2048;dirLight3d.shadow.mapSize.height=2048;
+  dirLight3d.shadow.bias=-0.0005;
+  scene3d.add(dirLight3d);scene3d.add(dirLight3d.target);
+  try{const _saved=JSON.parse(localStorage.getItem('planos_sun')||'null');if(_saved&&typeof _saved==='object')Object.assign(sunCfg,_saved);}catch(_){}
+  const _azS=document.getElementById('sun-az');if(_azS)_azS.value=sunCfg.az;
+  const _alS=document.getElementById('sun-alt');if(_alS)_alS.value=Math.max(-10,sunCfg.alt);
+  const _inS=document.getElementById('sun-int');if(_inS)_inS.value=sunCfg.intensity;
+  const _shS=document.getElementById('sun-shadow');if(_shS)_shS.checked=!!sunCfg.shadow;
+  const _laS=document.getElementById('sun-lat');if(_laS&&sunCfg.lat!=null)_laS.value=sunCfg.lat;
+  const _loS=document.getElementById('sun-lon');if(_loS&&sunCfg.lon!=null)_loS.value=sunCfg.lon;
+  const _dtS=document.getElementById('sun-dt');if(_dtS&&sunCfg.dt)_dtS.value=sunCfg.dt;
+  const _azV=document.getElementById('sun-az-val');if(_azV)_azV.textContent=Math.round(sunCfg.az)+'°';
+  const _alV=document.getElementById('sun-alt-val');if(_alV)_alV.textContent=Math.round(sunCfg.alt)+'°';
+  const _inV=document.getElementById('sun-int-val');if(_inV)_inV.textContent=Number(sunCfg.intensity).toFixed(2);
+  try{_sunSyncSlidersFromDt(_sunReadDt());}catch(_){}
+  _applySunPosition();
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
   floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.name='floor';scene3d.add(floor);
   visibleFloors3D = [curFloor];
@@ -1528,10 +1571,169 @@ function updatePositionFrom3D(mesh) {
     }
     saveLS(); render();
 }
+let sunCfg={az:180,alt:45,intensity:0.85,shadow:true,lat:40.4168,lon:-3.7038,dt:null};
+function _applySunPosition(){
+  if(!dirLight3d)return;
+  const az=sunCfg.az*Math.PI/180, alt=Math.max(-10,sunCfg.alt)*Math.PI/180;
+  const D=35;
+  const x=Math.sin(az)*Math.cos(alt)*D;
+  const y=Math.max(0.5,Math.sin(alt)*D);
+  const z=-Math.cos(az)*Math.cos(alt)*D;
+  dirLight3d.position.set(x,y,z);
+  dirLight3d.target?.position?.set?.(0,0,0);
+  dirLight3d.intensity=Math.max(0,sunCfg.intensity)*(sunCfg.alt<=0?0.15:1);
+  dirLight3d.castShadow=!!sunCfg.shadow;
+  if(dirLight3d.shadow&&dirLight3d.shadow.camera){
+    const sc=dirLight3d.shadow.camera;
+    sc.left=-30; sc.right=30; sc.top=30; sc.bottom=-30;
+    sc.near=0.5; sc.far=120;
+    sc.updateProjectionMatrix();
+  }
+}
+function updateSun3D(prop,val){
+  if(prop==='az'){sunCfg.az=parseFloat(val)||0; const e=document.getElementById('sun-az-val'); if(e) e.textContent=Math.round(sunCfg.az)+'°';}
+  else if(prop==='alt'){sunCfg.alt=parseFloat(val)||0; const e=document.getElementById('sun-alt-val'); if(e) e.textContent=Math.round(sunCfg.alt)+'°';}
+  else if(prop==='int'){sunCfg.intensity=parseFloat(val)||0; const e=document.getElementById('sun-int-val'); if(e) e.textContent=Number(sunCfg.intensity).toFixed(2);}
+  else if(prop==='shadow'){sunCfg.shadow=!!val;}
+  _applySunPosition();
+  try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
+}
 function update3DLight(prop, val){
   if(!dirLight3d)return;
-  if(prop==='intensity')dirLight3d.intensity=parseFloat(val);
-  if(prop==='rotation'){const r=parseFloat(val);dirLight3d.position.set(Math.cos(r)*20, 25, Math.sin(r)*20);}
+  if(prop==='intensity'){updateSun3D('int',val);return;}
+  if(prop==='rotation'){updateSun3D('az',(parseFloat(val)*180/Math.PI)%360);return;}
+}
+function _solarAzAlt(date,latDeg,lonDeg){
+  const rad=Math.PI/180, deg=180/Math.PI;
+  const jd=date.getTime()/86400000+2440587.5;
+  const n=jd-2451545.0;
+  const L=((280.460+0.9856474*n)%360+360)%360;
+  const g=(((357.528+0.9856003*n)%360+360)%360)*rad;
+  const lambda=(L+1.915*Math.sin(g)+0.020*Math.sin(2*g))*rad;
+  const epsilon=(23.439-0.0000004*n)*rad;
+  const ra=Math.atan2(Math.cos(epsilon)*Math.sin(lambda),Math.cos(lambda));
+  const dec=Math.asin(Math.sin(epsilon)*Math.sin(lambda));
+  const gmst=((18.697374558+24.06570982441908*n)%24+24)%24;
+  const lstDeg=(gmst*15+lonDeg)%360;
+  const ha=((lstDeg-ra*deg+360)%360)*rad;
+  const lat=latDeg*rad;
+  const alt=Math.asin(Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(ha));
+  let az=Math.atan2(-Math.cos(dec)*Math.sin(ha),Math.sin(dec)*Math.cos(lat)-Math.cos(dec)*Math.sin(lat)*Math.cos(ha));
+  return {az:((az*deg+360)%360),alt:alt*deg};
+}
+function applySunFromDateTime(silent){
+  const lat=parseFloat(document.getElementById('sun-lat')?.value);
+  const lon=parseFloat(document.getElementById('sun-lon')?.value);
+  const dtStr=document.getElementById('sun-dt')?.value;
+  if(!isFinite(lat)||!isFinite(lon)){if(!silent)showToast('⚠ Introduce latitud y longitud');return;}
+  const d=dtStr?new Date(dtStr):new Date();
+  const r=_solarAzAlt(d,lat,lon);
+  sunCfg.lat=lat; sunCfg.lon=lon; sunCfg.dt=dtStr||null;
+  sunCfg.az=r.az; sunCfg.alt=r.alt;
+  const azS=document.getElementById('sun-az'); if(azS) azS.value=Math.round(r.az);
+  const alS=document.getElementById('sun-alt'); if(alS) alS.value=Math.round(Math.max(-10,r.alt));
+  const azV=document.getElementById('sun-az-val'); if(azV) azV.textContent=Math.round(r.az)+'°';
+  const alV=document.getElementById('sun-alt-val'); if(alV) alV.textContent=Math.round(r.alt)+'°';
+  _sunSyncSlidersFromDt(d);
+  const info=document.getElementById('sun-astro-info');
+  if(info) info.textContent=`Az ${r.az.toFixed(1)}° · Alt ${r.alt.toFixed(1)}° · ${d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+  _applySunPosition();
+  try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
+  if(!silent&&!_sunAnimRunning) showToast(r.alt<0?'🌙 Sol bajo el horizonte':'☀ Sol calculado');
+}
+const _MONTHS_ES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function _sunReadDt(){
+  const dtEl=document.getElementById('sun-dt');
+  let d;
+  if(dtEl&&dtEl.value){d=new Date(dtEl.value);}
+  else d=new Date();
+  if(isNaN(d.getTime())) d=new Date();
+  return d;
+}
+function _sunWriteDt(d){
+  const dtEl=document.getElementById('sun-dt');
+  if(!dtEl) return;
+  const tz=d.getTimezoneOffset();
+  const local=new Date(d.getTime()-tz*60000);
+  dtEl.value=local.toISOString().slice(0,16);
+}
+function _sunSyncSlidersFromDt(d){
+  const hh=document.getElementById('sun-hour'); const hv=document.getElementById('sun-hour-val');
+  const dd=document.getElementById('sun-day'); const dv=document.getElementById('sun-day-val');
+  const minutes=d.getHours()*60+d.getMinutes();
+  if(hh) hh.value=minutes;
+  if(hv) hv.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const start=new Date(d.getFullYear(),0,0);
+  const diff=d-start; const oneDay=86400000;
+  const doy=Math.floor(diff/oneDay);
+  if(dd) dd.value=Math.max(1,Math.min(366,doy));
+  if(dv) dv.textContent=d.getDate()+' '+_MONTHS_ES[d.getMonth()];
+}
+function onSunDtManualInput(){
+  const d=_sunReadDt();
+  _sunSyncSlidersFromDt(d);
+  applySunFromDateTime();
+}
+function onSunTimeSlider(kind,val){
+  const v=parseInt(val,10);
+  let d=_sunReadDt();
+  if(kind==='hour'){
+    const h=Math.floor(v/60), m=v%60;
+    d.setHours(h,m,0,0);
+    const hv=document.getElementById('sun-hour-val');
+    if(hv) hv.textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  }else if(kind==='day'){
+    const yr=d.getFullYear();
+    const target=new Date(yr,0,1);
+    target.setDate(v);
+    d.setMonth(target.getMonth(),target.getDate());
+    const dv=document.getElementById('sun-day-val');
+    if(dv) dv.textContent=d.getDate()+' '+_MONTHS_ES[d.getMonth()];
+  }
+  _sunWriteDt(d);
+  applySunFromDateTime();
+}
+let _sunAnimRunning=false, _sunAnimRAF=null, _sunAnimLastT=0;
+function toggleSunAnim(){
+  const btn=document.getElementById('sun-anim-btn');
+  if(_sunAnimRunning){
+    _sunAnimRunning=false;
+    if(_sunAnimRAF)cancelAnimationFrame(_sunAnimRAF);
+    if(btn){btn.textContent='▶ Animar día';btn.style.background='rgba(34,211,238,0.12)';}
+    return;
+  }
+  _sunAnimRunning=true;
+  _sunAnimLastT=performance.now();
+  if(btn){btn.textContent='⏸ Pausar';btn.style.background='rgba(34,211,238,0.3)';}
+  const tick=(t)=>{
+    if(!_sunAnimRunning) return;
+    const dt=Math.min(0.1,(t-_sunAnimLastT)/1000);
+    _sunAnimLastT=t;
+    const mode=document.getElementById('sun-anim-mode')?.value||'day';
+    let d=_sunReadDt();
+    if(mode==='day'){
+      d=new Date(d.getTime()+dt*1000*60*5);
+    }else{
+      d=new Date(d.getTime()+dt*1000*86400*1.5);
+    }
+    _sunWriteDt(d);
+    _sunSyncSlidersFromDt(d);
+    applySunFromDateTime();
+    _sunAnimRAF=requestAnimationFrame(tick);
+  };
+  _sunAnimRAF=requestAnimationFrame(tick);
+}
+function applySunFromNowHere(){
+  const dtEl=document.getElementById('sun-dt');
+  const now=new Date(); const tz=now.getTimezoneOffset();
+  if(dtEl){const local=new Date(now.getTime()-tz*60000); dtEl.value=local.toISOString().slice(0,16);}
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(p=>{
+      const latEl=document.getElementById('sun-lat'); if(latEl) latEl.value=p.coords.latitude.toFixed(4);
+      const lonEl=document.getElementById('sun-lon'); if(lonEl) lonEl.value=p.coords.longitude.toFixed(4);
+      applySunFromDateTime();
+    },()=>applySunFromDateTime(),{timeout:5000});
+  }else applySunFromDateTime();
 }
 function destroy3D(){
     if(reqFrame3d)cancelAnimationFrame(reqFrame3d);
