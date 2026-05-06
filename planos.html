@@ -414,7 +414,7 @@ let lpFurnId=null, lpFurnPos=null, lpFurnTimer=null;
 let rulerPanPending=false, rulerPanStart=null, rulerPanClickPos=null;
 let _stairUIDone=false;
 const COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#e2e8f0']; let selColor=COLORS[0];
-const imgEl=document.getElementById('pimg'), canvas=document.getElementById('ov'), ctx=canvas.getContext('2d'), pwrap=document.getElementById('pwrap'), carea=document.getElementById('carea'), isMob=()=>window.innerWidth<768;
+const imgEl=document.getElementById('pimg'), canvas=document.getElementById('ov'), ctx=canvas.getContext('2d'), pwrap=document.getElementById('pwrap'), carea=document.getElementById('carea'), isMob=()=>window.innerWidth<768, hasTouch=()=>('ontouchstart'in window)||(navigator.maxTouchPoints>0);
 const LS='plan_v11', LSI='plan_v11_imgs';
 const _ZONA_SEL_COL='#f59e0b';
 function fmtDim(v){return v.toFixed(2);}
@@ -1764,16 +1764,25 @@ function enterFP3D(){
   camera3d.position.set(0,1.7,0);fpYaw=0;fpPitch=0;updateFPCamera();
   const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='flex';
   const dpad=document.getElementById('fp3d-dpad');
-  if(dpad&&isMob&&isMob()){dpad.style.display='block';_bindFP3DDPad();}
+  const touchOK=(typeof hasTouch==='function')&&hasTouch();
+  if(dpad&&touchOK){dpad.style.display='block';_bindFP3DDPad();}
   const hint=document.getElementById('fp3d-hud-hint');
-  if(hint){hint.textContent=(isMob&&isMob())?'Arrastra a la derecha para mirar — D-pad para mover':'Clic en escenario = mirar con ratón (Esc libera) · WASD mover · ↑↓←→ girar la cámara';}
+  if(hint){
+    if(touchOK&&!(isMob&&isMob())){
+      hint.textContent='Ratón: clic = mirar (Esc libera) · Tocar derecha = mirar · D-pad o WASD = mover';
+    }else if(touchOK){
+      hint.textContent='Arrastra a la derecha para mirar — D-pad para mover';
+    }else{
+      hint.textContent='Clic en escenario = mirar con ratón (Esc libera) · WASD mover · ↑↓←→ girar la cámara';
+    }
+  }
   renderer3d.domElement.addEventListener('mousedown',_fpRequestLock);
   document.addEventListener('pointerlockchange',_fpLockChange);
   document.addEventListener('mousemove',_fpMM);
   renderer3d.domElement.addEventListener('touchstart',_fpTS,{passive:false});
   renderer3d.domElement.addEventListener('touchmove',_fpTM,{passive:false});
   renderer3d.domElement.addEventListener('touchend',_fpTE);
-  showToast((isMob&&isMob())?'🚶 Móvil: D-pad para mover, arrastra a la derecha para mirar':'🚶 1ª Persona — Clic para activar mirar, WASD para mover, Esc para liberar');
+  showToast(touchOK?'🚶 Mover: D-pad o WASD · Mirar: dedo en la derecha o clic+ratón':'🚶 1ª Persona — Clic para mirar con ratón, WASD para mover, Esc para liberar');
 }
 function exitFP3D(){
   if(!fpMode3D)return;
