@@ -1649,6 +1649,110 @@ function exportScene3DKML(){
   _downloadBlob(blob,`planos-${stamp}.kml`);
   showToast('🌍 KML exportado · ábrelo en Google Earth');
 }
+let _satGroundMesh=null, _satGroundOn=false;
+function toggleSatelliteGround(){
+  console.log('[satGround] toggle clicked, on=',_satGroundOn,'scene3d=',!!scene3d,'lat=',sunCfg?.lat,'lon=',sunCfg?.lon);
+  if(_satGroundOn){
+    if(_satGroundMesh){try{scene3d.remove(_satGroundMesh);_satGroundMesh.geometry.dispose();_satGroundMesh.material.dispose();}catch(_){}}
+    _satGroundMesh=null; _satGroundOn=false;
+    showToast('🛰 Suelo desactivado');
+    return;
+  }
+  if(!scene3d){showToast('⚠ Entra primero en la vista 3D');return;}
+  const lat=parseFloat(sunCfg?.lat), lon=parseFloat(sunCfg?.lon);
+  if(!isFinite(lat)||!isFinite(lon)){showToast('⚠ Coloca primero la casa en el mapa real');return;}
+  showToast('🛰 Descargando teselas…',1800);
+  _buildSatGround(lat,lon).then((info)=>{
+    _satGroundOn=true;
+    showToast('🛰 Suelo activado · '+info.ok+'/'+info.total+' teselas ('+info.src+')');
+  }).catch(e=>{console.warn('[satGround] error:',e);showToast('⚠ '+(e.message||'No se pudo cargar el suelo'));});
+}
+function _lonToTileX(lon,z){return (lon+180)/360*Math.pow(2,z);}
+function _latToTileY(lat,z){const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z);}
+function _tileXToLon(x,z){return x/Math.pow(2,z)*360-180;}
+function _tileYToLat(y,z){const n=Math.PI-2*Math.PI*y/Math.pow(2,z);return Math.atan(Math.sinh(n))*180/Math.PI;}
+function _fetchTileBlob(url){
+  return fetch(url,{mode:'cors',credentials:'omit'}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.blob();
+  }).then(blob=>new Promise((resolve,reject)=>{
+    const u=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{ resolve(img); setTimeout(()=>URL.revokeObjectURL(u),5000); };
+    img.onerror=()=>{ URL.revokeObjectURL(u); reject(new Error('decode failed')); };
+    img.src=u;
+  }));
+}
+function _tileURLs(z,x,y){
+  return [
+    {src:'Esri', url:`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
+    {src:'CartoDB', url:`https://a.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`},
+    {src:'OSM', url:`https://tile.openstreetmap.org/${z}/${x}/${y}.png`}
+  ];
+}
+async function _buildSatGround(lat,lon){
+  const z=18, N=6, tileSize=256;
+  const xC=_lonToTileX(lon,z), yC=_latToTileY(lat,z);
+  const xs=Math.floor(xC-N/2), ys=Math.floor(yC-N/2);
+  const cx=document.createElement('canvas'); cx.width=N*tileSize; cx.height=N*tileSize;
+  const cctx=cx.getContext('2d');
+  cctx.fillStyle='#1f2937'; cctx.fillRect(0,0,cx.width,cx.height);
+  const providers=_tileURLs(z,0,0).map(p=>p.src);
+  const probe=_tileURLs(z,xs,ys);
+  let chosen=null;
+  for(const cand of probe){
+    try{ await _fetchTileBlob(cand.url); chosen=cand.src; break; }
+    catch(e){ console.warn('[satGround] proveedor falló:',cand.src,e.message); }
+  }
+  if(!chosen) throw new Error('Ningún proveedor disponible (CORS)');
+  console.log('[satGround] usando',chosen);
+  let ok=0, total=N*N;
+  const tasks=[];
+  for(let i=0;i<N;i++){
+    for(let j=0;j<N;j++){
+      const url=_tileURLs(z,xs+i,ys+j).find(p=>p.src===chosen).url;
+      tasks.push(_fetchTileBlob(url).then(img=>{
+        try{ cctx.drawImage(img,i*tileSize,j*tileSize); ok++; }catch(_){}
+      }).catch(e=>{ console.warn('[satGround] tile',i,j,'fallo'); }));
+    }
+  }
+  await Promise.all(tasks);
+  if(ok===0) throw new Error('No se descargó ninguna tesela');
+  await new Promise(res=>{
+    _finishSatGround(cx,lat,lon,xs,ys,N,z,res);
+  });
+  return {ok,total,src:chosen};
+}
+function _finishSatGround(canvas,lat,lon,xs,ys,N,z,resolve){
+  if(_satGroundMesh){try{scene3d.remove(_satGroundMesh);_satGroundMesh.geometry.dispose();_satGroundMesh.material.dispose();}catch(_){}}
+  const tex=new THREE.CanvasTexture(canvas);
+  if('SRGBColorSpace' in THREE) tex.colorSpace=THREE.SRGBColorSpace;
+  tex.anisotropy=8; tex.minFilter=THREE.LinearFilter; tex.magFilter=THREE.LinearFilter;
+  const tileMeters=40075016.686*Math.cos(lat*Math.PI/180)/Math.pow(2,z);
+  const sizeM=tileMeters*N;
+  const lonC=_tileXToLon(xs+N/2,z);
+  const latC=_tileYToLat(ys+N/2,z);
+  const dE=(lon-lonC)*111320*Math.cos(lat*Math.PI/180);
+  const dN=(lat-latC)*111320;
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const H=heading*Math.PI/180;
+  const sinH=Math.sin(H), cosH=Math.cos(H);
+  const shiftX=-(dE*cosH + dN*sinH);
+  const shiftZ=-(dE*sinH - dN*cosH);
+  const geo=new THREE.PlaneGeometry(sizeM,sizeM);
+  const mat=new THREE.MeshStandardMaterial({map:tex,roughness:1,metalness:0,side:THREE.DoubleSide});
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.rotation.x=Math.PI/2;
+  mesh.rotation.z=-H;
+  mesh.position.set(shiftX,-0.04,shiftZ);
+  mesh.receiveShadow=true;
+  mesh.userData={type:'sat_ground'};
+  mesh.renderOrder=-1;
+  scene3d.add(mesh);
+  _satGroundMesh=mesh;
+  console.log('[satGround] plano '+sizeM.toFixed(1)+'m × '+sizeM.toFixed(1)+'m colocado en ('+shiftX.toFixed(1)+','+shiftZ.toFixed(1)+')');
+  resolve();
+}
 function openGoogleEarth(){
   const lat=parseFloat(sunCfg?.lat); const lon=parseFloat(sunCfg?.lon);
   let url='https://earth.google.com/web/';
@@ -3055,6 +3159,7 @@ function createExportSection(){
     body.appendChild(mkBtn('📐  Modelo 3D — OBJ','#f59e0b',exportScene3DOBJ));
     body.appendChild(mkBtn('🌍  KML georreferenciado (Google Earth)','#34d399',exportScene3DKML));
     body.appendChild(mkBtn('🚀  Abrir Google Earth con la ubicación','#60a5fa',openGoogleEarth));
+    body.appendChild(mkBtn('🛰  Suelo satelital real bajo la casa','#f59e0b',toggleSatelliteGround));
     const hint=document.createElement('div');hint.style.cssText='font-size:0.6rem;color:#64748b;line-height:1.3;margin-top:4px;';
     hint.innerHTML='PNG: captura tal y como ves.<br>GLB/GLTF/OBJ: el modelo 3D para abrir en Blender, SketchUp, etc.<br>KML: abre el archivo en Google Earth Pro o súbelo a Google Earth Web para verlo a tamaño real en su ubicación.';
     body.appendChild(hint);
@@ -3476,150 +3581,122 @@ carea.addEventListener('scroll',()=>{if(showMinimap)renderMinimap();},{passive:t
 setDefaultAccordionState();
 function startPlanAnim(){
   const cv=document.getElementById('plan-anim');if(!cv)return;
-  const cx=cv.getContext('2d');
-  const W=200,H=160;cv.width=W;cv.height=H;cv.style.width=W+'px';cv.style.height=H+'px';
-  const ease=t=>1-Math.pow(1-t,3);
-  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-  const fade=(p,s,e)=>clamp((p-s)/(e-s),0,1);
-  const BG='#050e1a',WALL='#4d9eff',WALL2='rgba(77,158,255,0.5)',FURN='rgba(255,255,255,0.2)';
-  const L=14,T=18,R=138,B=118,DY=78,DX=93;
-  const PX=150,PY=26,PW=40,PH=66;
-  function polyLen(pts){let t=0;for(let i=0;i<pts.length-1;i++)t+=Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);return t;}
-  function drawPoly(pts,prog,col,lw){
-    if(prog<=0)return;
-    const tgt=polyLen(pts)*clamp(prog,0,1);
-    cx.beginPath();cx.moveTo(pts[0][0],pts[0][1]);
-    let acc=0;
-    for(let i=0;i<pts.length-1;i++){
-      const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],sl=Math.hypot(dx,dy);
-      if(acc+sl>=tgt){const f=(tgt-acc)/sl;cx.lineTo(pts[i][0]+dx*f,pts[i][1]+dy*f);break;}
-      cx.lineTo(pts[i+1][0],pts[i+1][1]);acc+=sl;
+  const targetW = 220, targetH = 160; 
+  cv.width=targetW;cv.height=targetH;cv.style.width=targetW+'px';cv.style.height=targetH+'px';
+  cv.style.cursor = 'grab';
+  
+  if(typeof THREE==='undefined'){setTimeout(startPlanAnim,100);return;}
+  if(cv._animId) cancelAnimationFrame(cv._animId);
+  
+  const scene=new THREE.Scene();
+  
+  const camera=new THREE.PerspectiveCamera(45,targetW/targetH,0.1,100);
+  camera.position.set(0, 11, 10);
+  
+  const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  renderer.setSize(targetW,targetH);
+  renderer.setPixelRatio(window.devicePixelRatio||1);
+  
+  const controls=new THREE.OrbitControls(camera,renderer.domElement);
+  controls.enableZoom=false;
+  controls.enablePan=false;
+  controls.autoRotate=true;
+  controls.autoRotateSpeed=1.5;
+  controls.maxPolarAngle=Math.PI/2 - 0.05;
+  controls.target.set(0, 0, 1);
+  
+  const grid=new THREE.GridHelper(16, 32, 0x4d9eff, 0x1a2d47);
+  grid.position.y=-0.05;
+  grid.material.opacity=0.4;
+  grid.material.transparent=true;
+  scene.add(grid);
+  
+  const paths = [
+    [ [-5,0,-3], [5,0,-3], [5,0,1], [-1,0,1], [-1,0,5], [-5,0,5], [-5,0,-3] ],
+    [ [-4.8,0,-2.8], [4.8,0,-2.8], [4.8,0,0.8], [-0.8,0,0.8], [-0.8,0,4.8], [-4.8,0,4.8], [-4.8,0,-2.8] ],
+    [ [2,0,0.8], [2,0,-2.8] ], [ [-1,0,0.8], [-1,0,-2.8] ], [ [-4.8,0,0.8], [-0.8,0,0.8] ],
+    [ [-4.8,0,2.8], [-0.8,0,2.8] ], [ [-1,0,-1], [0.5,0,-1], [0.5,0,-2.8] ], [ [3.5,0,0.8], [3.5,0,-1], [4.8,0,-1] ],
+    [ [0,0,1.5], [4,0,1.5], [4,0,4], [1.5,0,4], [1.5,0,5], [0,0,5], [0,0,1.5] ]
+  ];
+
+  const allSegments = [];
+  for(const p of paths) {
+    for(let i=0; i<p.length-1; i++) {
+      allSegments.push({ a: new THREE.Vector3(...p[i]), b: new THREE.Vector3(...p[i+1]) });
     }
-    cx.strokeStyle=col;cx.lineWidth=lw;cx.stroke();
   }
-  function tail(pts,prog){
-    const tgt=polyLen(pts)*clamp(prog,0,1);let acc=0;
-    for(let i=0;i<pts.length-1;i++){
-      const dx=pts[i+1][0]-pts[i][0],dy=pts[i+1][1]-pts[i][1],sl=Math.hypot(dx,dy);
-      if(acc+sl>=tgt){const f=(tgt-acc)/sl;return[pts[i][0]+dx*f,pts[i][1]+dy*f];}
-      acc+=sl;
-    }return pts[pts.length-1];
-  }
-  function cursor(pt,el){
-    if(!pt)return;
-    const pulse=0.5+0.5*Math.sin(el/130);
-    cx.beginPath();cx.arc(pt[0],pt[1],2+pulse,0,Math.PI*2);cx.fillStyle=WALL;cx.fill();
-    cx.beginPath();cx.arc(pt[0],pt[1],5+pulse*1.5,0,Math.PI*2);cx.strokeStyle='rgba(77,158,255,0.28)';cx.lineWidth=1;cx.stroke();
-  }
-  function dim(x1,y1,x2,y2,lbl,a,off){
-    if(a<=0)return;
-    const ac='rgba(167,139,250,'+a+')',ao='rgba(167,139,250,'+(a*0.45)+')';
-    cx.setLineDash([3,2]);cx.strokeStyle=ao;cx.lineWidth=0.7;
-    cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();cx.setLineDash([]);
-    const ang=Math.atan2(y2-y1,x2-x1),pr=ang+Math.PI/2;
-    [[x1,y1],[x2,y2]].forEach(([px,py])=>{cx.beginPath();cx.moveTo(px+Math.cos(pr)*3,py+Math.sin(pr)*3);cx.lineTo(px-Math.cos(pr)*3,py-Math.sin(pr)*3);cx.strokeStyle=ac;cx.lineWidth=1;cx.stroke();});
-    cx.save();cx.translate((x1+x2)/2,(y1+y2)/2);
-    if(Math.abs(x2-x1)<Math.abs(y2-y1))cx.rotate(-Math.PI/2);
-    cx.fillStyle=ac;cx.font='bold 7px Space Mono';cx.textAlign='center';cx.fillText(lbl,0,off||-5);cx.restore();
-  }
-  function door(hx,hy,sa,ea,a){
-    if(a<=0)return;
-    const r=12;
-    cx.save();cx.globalAlpha=a*0.85;cx.strokeStyle='rgba(255,185,60,0.9)';cx.lineWidth=0.9;cx.setLineDash([]);cx.lineCap='round';
-    const ex=hx+Math.cos(ea)*r,ey=hy+Math.sin(ea)*r;
-    cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(ex,ey);cx.stroke();
-    cx.beginPath();cx.arc(hx,hy,r,sa,ea);cx.stroke();
-    cx.restore();
-  }
-  const outer=[[L,T],[R,T],[R,B],[L,B],[L,T]];
-  const hw=[[L,DY],[R,DY]];
-  const vt=[[DX,T],[DX,DY]];
-  const vb=[[DX,DY],[DX,B]];
-  const pool=[[PX+6,PY],[PX+PW-6,PY],[PX+PW,PY+6],[PX+PW,PY+PH-6],[PX+PW-6,PY+PH],[PX+6,PY+PH],[PX,PY+PH-6],[PX,PY+6],[PX+6,PY]];
-  let S=null;const TOTAL=7000;
-  function frame(ts){
-    if(!S)S=ts;const el=ts-S,p=clamp(el/TOTAL,0,1);
-    cx.clearRect(0,0,W,H);cx.fillStyle=BG;cx.fillRect(0,0,W,H);
-    cx.strokeStyle='rgba(55,110,200,0.07)';cx.lineWidth=0.5;
-    for(let i=0;i<W;i+=12){cx.beginPath();cx.moveTo(i,0);cx.lineTo(i,H);cx.stroke();}
-    for(let i=0;i<H;i+=12){cx.beginPath();cx.moveTo(0,i);cx.lineTo(W,i);cx.stroke();}
-    cx.lineCap='round';cx.lineJoin='round';cx.setLineDash([]);
-    const pO=ease(fade(p,0.02,0.34));drawPoly(outer,pO,WALL,2.0);
-    if(p<0.36)cursor(tail(outer,pO),el);
-    const fA=ease(fade(p,0.32,0.45));
-    if(fA>0){cx.fillStyle='rgba(77,158,255,'+(fA*0.06)+')';cx.fillRect(L,T,R-L,B-T);}
-    const pH=ease(fade(p,0.35,0.51)),pVT=ease(fade(p,0.42,0.56)),pVB=ease(fade(p,0.49,0.62));
-    drawPoly(hw,pH,WALL2,1.5);drawPoly(vt,pVT,WALL2,1.5);drawPoly(vb,pVB,WALL2,1.5);
-    if(p>=0.35&&p<0.64){
-      let tp;if(p<0.51)tp=tail(hw,pH);else if(p<0.56)tp=tail(vt,pVT);else tp=tail(vb,pVB);
-      cursor(tp,el);
-    }
-    const pPl=ease(fade(p,0.50,0.70));drawPoly(pool,pPl,'rgba(0,185,255,0.7)',1.5);
-    if(p>=0.50&&p<0.72)cursor(tail(pool,pPl),el);
-    if(pPl>0.85){
-      const wa=(pPl-0.85)*6.7;
-      cx.fillStyle='rgba(0,185,255,'+(wa*0.13)+')';cx.fillRect(PX+2,PY+2,PW-4,PH-4);
-      cx.strokeStyle='rgba(120,230,255,'+(wa*0.3)+')';cx.lineWidth=0.6;
-      for(let wy=PY+8;wy<PY+PH-4;wy+=6){
-        cx.beginPath();
-        for(let wx=PX+3;wx<=PX+PW-3;wx+=3){const of=Math.sin((wx*0.7+wy*0.5))*2;wx===PX+3?cx.moveTo(wx,wy+of):cx.lineTo(wx,wy+of);}
-        cx.stroke();
+  
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(allSegments.length * 6);
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.9, linewidth: 2 });
+  const line = new THREE.LineSegments(geometry, material);
+  scene.add(line);
+  
+  const poolMat = new THREE.MeshBasicMaterial({color: 0x38bdf8, transparent:true, opacity:0});
+  const treeMat = new THREE.MeshBasicMaterial({color: 0x10b981, transparent:true, opacity:0});
+  const extrasGroup = new THREE.Group();
+  
+  const poolShape = new THREE.Shape();
+  poolShape.moveTo(0.1, -1.6); poolShape.lineTo(3.9, -1.6); poolShape.lineTo(3.9, -3.9);
+  poolShape.lineTo(1.6, -3.9); poolShape.lineTo(1.6, -4.9); poolShape.lineTo(0.1, -4.9);
+  const p1 = new THREE.Mesh(new THREE.ShapeGeometry(poolShape), poolMat); 
+  p1.rotation.x = -Math.PI / 2; p1.position.set(0, 0.05, 0); extrasGroup.add(p1);
+  
+  const treeGeo = new THREE.ConeGeometry(0.35, 1.0, 5);
+  const addTree = (x, z, s) => {
+    const t = new THREE.Mesh(treeGeo, treeMat);
+    t.position.set(x, 0.5*s, z); t.scale.set(s, s, s);
+    extrasGroup.add(t);
+  };
+  // Bosque solo en el lado opuesto a la casa (borde exterior de la piscina)
+  addTree(3.8, 5.2, 1.0); addTree(3.2, 5.5, 1.3); addTree(2.5, 5.3, 0.9); 
+  addTree(1.8, 5.6, 1.2); addTree(1.1, 5.4, 1.0); addTree(0.4, 5.7, 1.1);
+  addTree(-0.3, 5.3, 0.8); addTree(-1.0, 5.5, 1.2); addTree(-1.6, 5.2, 0.9);
+  scene.add(extrasGroup);
+  
+  let drawProgress = 0, phase = 0, waitFrames = 0;
+  
+  function animate(){
+    cv._animId = requestAnimationFrame(animate);
+    if(phase === 0){
+      drawProgress += 0.06;
+      if(drawProgress >= allSegments.length){
+        drawProgress = allSegments.length;
+        phase = 1; waitFrames = 0;
+      }
+      const count = Math.floor(drawProgress);
+      const frac = drawProgress - count;
+      for(let i=0; i<count; i++) {
+        positions[i*6] = allSegments[i].a.x; positions[i*6+1] = allSegments[i].a.y; positions[i*6+2] = allSegments[i].a.z;
+        positions[i*6+3] = allSegments[i].b.x; positions[i*6+4] = allSegments[i].b.y; positions[i*6+5] = allSegments[i].b.z;
+      }
+      if(count < allSegments.length) {
+        positions[count*6] = allSegments[count].a.x; positions[count*6+1] = allSegments[count].a.y; positions[count*6+2] = allSegments[count].a.z;
+        positions[count*6+3] = allSegments[count].a.x + (allSegments[count].b.x - allSegments[count].a.x) * frac;
+        positions[count*6+4] = allSegments[count].a.y + (allSegments[count].b.y - allSegments[count].a.y) * frac;
+        positions[count*6+5] = allSegments[count].a.z + (allSegments[count].b.z - allSegments[count].a.z) * frac;
+      }
+      geometry.setDrawRange(0, (count + (frac>0?1:0)) * 2);
+      geometry.attributes.position.needsUpdate = true;
+    } else if(phase === 1){
+      treeMat.opacity = Math.min(0.85, treeMat.opacity + 0.02);
+      poolMat.opacity = Math.min(0.75, poolMat.opacity + 0.025);
+      if(++waitFrames > 200) phase = 2;
+    } else if(phase === 2){
+      treeMat.opacity = Math.max(0, treeMat.opacity - 0.02);
+      poolMat.opacity = Math.max(0, poolMat.opacity - 0.02);
+      material.opacity = Math.max(0, material.opacity - 0.02);
+      if(treeMat.opacity <= 0 && poolMat.opacity <= 0 && material.opacity <= 0){
+        drawProgress = 0; phase = 0; material.opacity = 0.9;
+        for(let i=0; i<positions.length; i++) positions[i] = 0;
+        geometry.setDrawRange(0, 0); geometry.attributes.position.needsUpdate = true;
       }
     }
-    if(pPl>0.4){
-      const ta=Math.min((pPl-0.4)*2,1);
-      cx.strokeStyle='rgba(77,158,255,'+(ta*0.18)+')';cx.lineWidth=0.6;cx.setLineDash([4,3]);
-      cx.beginPath();cx.moveTo(R,DY-18);cx.lineTo(PX,PY+14);cx.stroke();cx.setLineDash([]);
-    }
-    const dA=ease(fade(p,0.63,0.79));
-    door(L,66,  -Math.PI/2, 0,         dA);
-    door(38,DY, 0,          Math.PI/2,  dA);
-    door(DX,40, -Math.PI/2, 0,          dA);
-    door(DX,94, -Math.PI/2, 0,          dA);
-    const lA=ease(fade(p,0.56,0.72));
-    if(lA>0){
-      cx.globalAlpha=lA;cx.fillStyle='rgba(180,210,255,1)';cx.font='bold 6px Space Mono';cx.textAlign='center';
-      cx.fillText('SALÓN',(L+DX)/2,(T+DY)/2-2);
-      cx.fillText('DORM.',(L+DX)/2,(DY+B)/2-2);
-      cx.fillText('COCINA',(DX+R)/2,(T+DY)/2-2);
-      cx.fillText('BAÑO',(DX+R)/2,(DY+B)/2-2);
-      if(pPl>0.6){cx.fillStyle='rgba(100,225,255,'+(Math.min((pPl-0.6)*2.5,1)*lA)+')';cx.font='bold 5.5px Space Mono';cx.fillText('PISCINA',PX+PW/2,PY+PH/2);}
-      cx.globalAlpha=1;
-    }
-    const fuA=ease(fade(p,0.66,0.84));
-    if(fuA>0){
-      cx.globalAlpha=fuA;cx.strokeStyle=FURN;cx.lineWidth=0.9;
-      cx.strokeRect(L+7,T+9,36,11);cx.strokeRect(L+7,T+9,36,4);
-      cx.beginPath();cx.arc((L+DX)/2,T+54,9,0,Math.PI*2);cx.stroke();
-      cx.strokeRect(L+5,DY+8,25,21);cx.strokeRect(L+5,DY+8,25,6);
-      cx.strokeRect(DX+3,T+4,9,42);
-      cx.beginPath();cx.arc(DX+8,DY+10,6,0,Math.PI*2);cx.stroke();
-      cx.strokeRect(DX+19,DY+6,11,13);
-      cx.globalAlpha=1;
-    }
-    const dimA=ease(fade(p,0.80,0.96));
-    if(dimA>0){cx.save();dim(L,T-5,R,T-5,'12.40m',dimA,-5);dim(R+5,T,R+5,B,'10.00m',dimA,-5);cx.restore();}
-    const cA=ease(fade(p,0.88,1.0));
-    if(cA>0){
-      const cx2=W-15,cy2=H-15,r=8;cx.save();cx.globalAlpha=cA;
-      cx.strokeStyle='rgba(77,158,255,0.6)';cx.lineWidth=0.8;cx.beginPath();cx.arc(cx2,cy2,r,0,Math.PI*2);cx.stroke();
-      cx.fillStyle='rgba(77,158,255,0.9)';cx.beginPath();cx.moveTo(cx2,cy2-r+1);cx.lineTo(cx2-2.5,cy2+2);cx.lineTo(cx2,cy2);cx.closePath();cx.fill();
-      cx.fillStyle='rgba(255,255,255,0.45)';cx.beginPath();cx.moveTo(cx2,cy2-r+1);cx.lineTo(cx2+2.5,cy2+2);cx.lineTo(cx2,cy2);cx.closePath();cx.fill();
-      cx.fillStyle='rgba(180,210,255,0.9)';cx.font='bold 5px Space Mono';cx.textAlign='center';cx.fillText('N',cx2,cy2-r-1);
-      cx.restore();
-    }
-    if(cA>0){
-      cx.save();cx.globalAlpha=cA*0.9;
-      cx.fillStyle='rgba(5,14,26,0.85)';const bx=8,by=H-12,bw=35,bh=10;
-      if(cx.roundRect)cx.roundRect(bx-2,by-2,bw,bh,3);else cx.rect(bx-2,by-2,bw,bh);
-      cx.fill();cx.strokeStyle='rgba(77,158,255,0.4)';cx.lineWidth=0.5;cx.stroke();
-      cx.fillStyle='rgba(167,139,250,0.9)';cx.font='5.5px Space Mono';cx.textAlign='left';cx.fillText('1:100',bx,by+5);
-      cx.restore();
-    }
-    if(p<1)requestAnimationFrame(frame);
-    else setTimeout(()=>{S=null;requestAnimationFrame(frame);},2000);
+    controls.update();
+    renderer.render(scene, camera);
   }
-  requestAnimationFrame(frame);
+  animate();
 }
 window.addEventListener('load',startPlanAnim);
 </script>
