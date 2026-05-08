@@ -1649,110 +1649,6 @@ function exportScene3DKML(){
   _downloadBlob(blob,`planos-${stamp}.kml`);
   showToast('🌍 KML exportado · ábrelo en Google Earth');
 }
-let _satGroundMesh=null, _satGroundOn=false;
-function toggleSatelliteGround(){
-  console.log('[satGround] toggle clicked, on=',_satGroundOn,'scene3d=',!!scene3d,'lat=',sunCfg?.lat,'lon=',sunCfg?.lon);
-  if(_satGroundOn){
-    if(_satGroundMesh){try{scene3d.remove(_satGroundMesh);_satGroundMesh.geometry.dispose();_satGroundMesh.material.dispose();}catch(_){}}
-    _satGroundMesh=null; _satGroundOn=false;
-    showToast('🛰 Suelo desactivado');
-    return;
-  }
-  if(!scene3d){showToast('⚠ Entra primero en la vista 3D');return;}
-  const lat=parseFloat(sunCfg?.lat), lon=parseFloat(sunCfg?.lon);
-  if(!isFinite(lat)||!isFinite(lon)){showToast('⚠ Coloca primero la casa en el mapa real');return;}
-  showToast('🛰 Descargando teselas…',1800);
-  _buildSatGround(lat,lon).then((info)=>{
-    _satGroundOn=true;
-    showToast('🛰 Suelo activado · '+info.ok+'/'+info.total+' teselas ('+info.src+')');
-  }).catch(e=>{console.warn('[satGround] error:',e);showToast('⚠ '+(e.message||'No se pudo cargar el suelo'));});
-}
-function _lonToTileX(lon,z){return (lon+180)/360*Math.pow(2,z);}
-function _latToTileY(lat,z){const r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z);}
-function _tileXToLon(x,z){return x/Math.pow(2,z)*360-180;}
-function _tileYToLat(y,z){const n=Math.PI-2*Math.PI*y/Math.pow(2,z);return Math.atan(Math.sinh(n))*180/Math.PI;}
-function _fetchTileBlob(url){
-  return fetch(url,{mode:'cors',credentials:'omit'}).then(r=>{
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.blob();
-  }).then(blob=>new Promise((resolve,reject)=>{
-    const u=URL.createObjectURL(blob);
-    const img=new Image();
-    img.onload=()=>{ resolve(img); setTimeout(()=>URL.revokeObjectURL(u),5000); };
-    img.onerror=()=>{ URL.revokeObjectURL(u); reject(new Error('decode failed')); };
-    img.src=u;
-  }));
-}
-function _tileURLs(z,x,y){
-  return [
-    {src:'Esri', url:`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`},
-    {src:'CartoDB', url:`https://a.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`},
-    {src:'OSM', url:`https://tile.openstreetmap.org/${z}/${x}/${y}.png`}
-  ];
-}
-async function _buildSatGround(lat,lon){
-  const z=18, N=6, tileSize=256;
-  const xC=_lonToTileX(lon,z), yC=_latToTileY(lat,z);
-  const xs=Math.floor(xC-N/2), ys=Math.floor(yC-N/2);
-  const cx=document.createElement('canvas'); cx.width=N*tileSize; cx.height=N*tileSize;
-  const cctx=cx.getContext('2d');
-  cctx.fillStyle='#1f2937'; cctx.fillRect(0,0,cx.width,cx.height);
-  const providers=_tileURLs(z,0,0).map(p=>p.src);
-  const probe=_tileURLs(z,xs,ys);
-  let chosen=null;
-  for(const cand of probe){
-    try{ await _fetchTileBlob(cand.url); chosen=cand.src; break; }
-    catch(e){ console.warn('[satGround] proveedor falló:',cand.src,e.message); }
-  }
-  if(!chosen) throw new Error('Ningún proveedor disponible (CORS)');
-  console.log('[satGround] usando',chosen);
-  let ok=0, total=N*N;
-  const tasks=[];
-  for(let i=0;i<N;i++){
-    for(let j=0;j<N;j++){
-      const url=_tileURLs(z,xs+i,ys+j).find(p=>p.src===chosen).url;
-      tasks.push(_fetchTileBlob(url).then(img=>{
-        try{ cctx.drawImage(img,i*tileSize,j*tileSize); ok++; }catch(_){}
-      }).catch(e=>{ console.warn('[satGround] tile',i,j,'fallo'); }));
-    }
-  }
-  await Promise.all(tasks);
-  if(ok===0) throw new Error('No se descargó ninguna tesela');
-  await new Promise(res=>{
-    _finishSatGround(cx,lat,lon,xs,ys,N,z,res);
-  });
-  return {ok,total,src:chosen};
-}
-function _finishSatGround(canvas,lat,lon,xs,ys,N,z,resolve){
-  if(_satGroundMesh){try{scene3d.remove(_satGroundMesh);_satGroundMesh.geometry.dispose();_satGroundMesh.material.dispose();}catch(_){}}
-  const tex=new THREE.CanvasTexture(canvas);
-  if('SRGBColorSpace' in THREE) tex.colorSpace=THREE.SRGBColorSpace;
-  tex.anisotropy=8; tex.minFilter=THREE.LinearFilter; tex.magFilter=THREE.LinearFilter;
-  const tileMeters=40075016.686*Math.cos(lat*Math.PI/180)/Math.pow(2,z);
-  const sizeM=tileMeters*N;
-  const lonC=_tileXToLon(xs+N/2,z);
-  const latC=_tileYToLat(ys+N/2,z);
-  const dE=(lon-lonC)*111320*Math.cos(lat*Math.PI/180);
-  const dN=(lat-latC)*111320;
-  const heading=parseFloat(sunCfg.houseHeading)||0;
-  const H=heading*Math.PI/180;
-  const sinH=Math.sin(H), cosH=Math.cos(H);
-  const shiftX=-(dE*cosH + dN*sinH);
-  const shiftZ=-(dE*sinH - dN*cosH);
-  const geo=new THREE.PlaneGeometry(sizeM,sizeM);
-  const mat=new THREE.MeshStandardMaterial({map:tex,roughness:1,metalness:0,side:THREE.DoubleSide});
-  const mesh=new THREE.Mesh(geo,mat);
-  mesh.rotation.x=Math.PI/2;
-  mesh.rotation.z=-H;
-  mesh.position.set(shiftX,-0.04,shiftZ);
-  mesh.receiveShadow=true;
-  mesh.userData={type:'sat_ground'};
-  mesh.renderOrder=-1;
-  scene3d.add(mesh);
-  _satGroundMesh=mesh;
-  console.log('[satGround] plano '+sizeM.toFixed(1)+'m × '+sizeM.toFixed(1)+'m colocado en ('+shiftX.toFixed(1)+','+shiftZ.toFixed(1)+')');
-  resolve();
-}
 function openGoogleEarth(){
   const lat=parseFloat(sunCfg?.lat); const lon=parseFloat(sunCfg?.lon);
   let url='https://earth.google.com/web/';
@@ -3159,7 +3055,6 @@ function createExportSection(){
     body.appendChild(mkBtn('📐  Modelo 3D — OBJ','#f59e0b',exportScene3DOBJ));
     body.appendChild(mkBtn('🌍  KML georreferenciado (Google Earth)','#34d399',exportScene3DKML));
     body.appendChild(mkBtn('🚀  Abrir Google Earth con la ubicación','#60a5fa',openGoogleEarth));
-    body.appendChild(mkBtn('🛰  Suelo satelital real bajo la casa','#f59e0b',toggleSatelliteGround));
     const hint=document.createElement('div');hint.style.cssText='font-size:0.6rem;color:#64748b;line-height:1.3;margin-top:4px;';
     hint.innerHTML='PNG: captura tal y como ves.<br>GLB/GLTF/OBJ: el modelo 3D para abrir en Blender, SketchUp, etc.<br>KML: abre el archivo en Google Earth Pro o súbelo a Google Earth Web para verlo a tamaño real en su ubicación.';
     body.appendChild(hint);
