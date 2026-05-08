@@ -1190,7 +1190,7 @@ function applySectionCut3D(){
         _clearSectionCutHelper();
         sectionCutPlane3D=null;
         scene3d.traverse(o=>{
-            if(o && o.isMesh && o.material){
+            if(o && (o.isMesh || o.isLine || o.isLineSegments) && o.material){
                 const mats=Array.isArray(o.material)?o.material:[o.material];
                 mats.forEach(m=>{
                     if(!m) return;
@@ -1202,7 +1202,7 @@ function applySectionCut3D(){
     }
     const plane=_updateSectionCutPlaneFromState(); if(!plane) return;
     scene3d.traverse(o=>{
-        if(o && o.isMesh && o.material){
+        if(o && (o.isMesh || o.isLine || o.isLineSegments) && o.material){
             const mats=Array.isArray(o.material)?o.material:[o.material];
             mats.forEach(m=>{
                 if(!m) return;
