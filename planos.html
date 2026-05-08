@@ -423,7 +423,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <div id="mob-close-bar" onclick="closePanel()"><div class="mcb-line"></div><span class="mcb-btn">✕ Cerrar menú</span><div class="mcb-line"></div></div>
 <div class="acc" data-c="calib"><div class="acc-hdr open" id="acc-hdr-calib" onclick="toggleAcc('calib')"><span class="acc-icon">📐</span><span class="acc-title">Calibrar</span><span class="wb" id="calib-wb">⚠ Sin calibrar</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-calib"><div class="acc-inner"><p class="hint">Pulsa 2 puntos del plano e introduce la distancia real para escalar.</p><label>Distancia real (metros)</label><input type="number" id="cdist" value="2.30" step="0.01" min="0.1"><button class="btn" style="background:var(--cc);color:#1a0e00;margin-top:7px" id="bcalib" onclick="startCalib()">⊕ Activar calibración</button><div id="cst">— Pulsa para calibrar —</div></div></div></div>
 <div class="acc" data-c="ruler"><div class="acc-hdr" id="acc-hdr-ruler" onclick="toggleAcc('ruler')"><span class="acc-icon">📏</span><span class="acc-title">Medir & Áreas</span><span class="acc-badge" id="meas-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-ruler"><div class="acc-inner"><div class="tabs" style="margin-bottom:6px"><div class="tab on" id="rtab-medir" onclick="setRulerTab('medir')">📏 Medidas</div><div class="tab" id="rtab-area" onclick="setRulerTab('area')">⬡ Áreas</div></div><p class="hint" id="ruler-hint">Añade puntos para medir distancias entre ellos.</p><div class="g2"><button class="btn" id="btn-ruler" onclick="toggleRuler()" style="margin-top:0;background:var(--cr)">📏 Activar</button><button class="btn s" onclick="clearAllMeasures()" style="margin-top:0">🗑 Borrar todo</button></div><div id="meas-vis-bar"><button id="btn-vis-all" class="btn sm s" onclick="toggleAllMeasVis()" style="margin-top:0;width:100%">👁 Mostrar / Ocultar todas</button></div><button id="btn-freeprobe" onclick="toggleFreeProbe()" style="margin-top:5px;width:100%;background:var(--p2);border:1px solid #a78bfa;color:#a78bfa;border-radius:6px;padding:6px 8px;font-size:.76rem;font-family:'Outfit',sans-serif;cursor:pointer;">🎯 Sonda libre</button><div id="fp-hint" style="display:none;font-size:.65rem;color:#a78bfa;margin-top:3px;font-family:'Space Mono',monospace">Toca o haz clic para colocar · arrastra para mover</div><label style="margin-top:7px">Etiqueta (opcional)</label><input type="text" id="ruler-label" placeholder="ej: salón, cocina..."><div id="area-color-row" style="display:none;flex-direction:column;gap:5px;margin-top:5px"><div style="display:flex;align-items:center;gap:6px"><label style="font-size:.72rem;color:var(--t2);min-width:52px">Color:</label><input type="color" id="ruler-area-color" value="#7ec8e3" style="width:26px;height:22px;border:none;background:none;cursor:pointer;padding:0;border-radius:3px"></div><div style="display:flex;align-items:center;gap:6px"><label for="ruler-area-opa" style="font-size:.72rem;color:var(--t2);min-width:52px">Opacidad:</label><input type="range" id="ruler-area-opa" min="0.05" max="1" step="0.05" value="0.6" style="flex:1;height:3px;cursor:pointer"></div></div><div id="ruler-active-box"><div id="ruler-pts-info">Sin puntos</div><div class="g3" style="margin-bottom:5px"><button class="btn sm s" onclick="rulerUndo()">↩ Deshacer</button><button class="btn sm g" id="btn-save-meas" onclick="rulerFinishAuto()" style="margin-top:0">✓ Guardar</button><button class="btn sm d" onclick="rulerCancel()" style="margin-top:0">✕</button></div><button class="btn sm" id="btn-close-poly" style="background:rgba(126,200,227,.12);border:1px solid var(--area);color:var(--area);display:none;width:100%;margin-top:0" onclick="rulerFinish(true)">⬡ Cerrar → Área</button></div><input type="text" id="meas-search" placeholder="🔍 Buscar etiqueta..." oninput="filterMeasList(this.value)" style="margin-top:4px;margin-bottom:5px;display:none"><div id="angle-result"></div><div id="ruler-list" style="margin-top:7px"></div><div style="border-top:1px dashed var(--brd);padding-top:7px;margin-top:6px"><p class="glbl" style="color:var(--cc);margin-bottom:3px">📍 Cota de referencia</p><p class="hint" id="refpt-hint" style="margin-bottom:4px">Sin cota fijada en este plano</p><div class="g2"><button class="btn sm s" id="btn-refpt" onclick="startRefPt()" style="margin-top:0">⊕ Fijar cota</button><button class="btn sm s" onclick="clearRefPt()" style="margin-top:0">✕ Limpiar</button></div></div><button class="btn sm s" onclick="exportMeasText()" style="margin-top:7px;width:100%">📋 Copiar resumen</button><button id="btn-fix-sonda" class="btn sm s" style="margin-top:5px;display:none" onclick="fixSondaMeasure()">📏 Fijar distancia desde sonda</button></div></div></div>
-<div class="acc" data-c="wall"><div class="acc-hdr" id="acc-hdr-wall" onclick="toggleAcc('wall')"><span class="acc-icon">🧱</span><span class="acc-title">Muros & 3D</span><span class="acc-badge" id="wall-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-wall"><div class="acc-inner"><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('wall-add')"><span>➕ Añadir muro</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-wall-add"><p class="hint">Haz clic en el plano para trazar los muros de cada estancia.</p><div class="g3" style="grid-template-columns:1fr 1fr 1fr"><div><label>Grosor</label><input type="number" id="wall-thick" value="0.15" step="0.05" min="0.01"></div><div><label>Altura (Z)</label><input type="number" id="wall-hz" value="2.50" step="0.1" min="0.1"></div><div><label>Color</label><input type="color" id="wall-color" value="#94a3b8" style="width:100%;height:32px;padding:0;border:none;background:none;cursor:pointer"></div></div><label>Nombre (opcional)</label><input type="text" id="wall-name-draft" placeholder="ej: Salón Norte..." style="margin-bottom:6px"><div class="g2"><button class="btn" id="btn-wall" onclick="toggleDrawWall()" style="margin-top:7px;background:var(--cw);color:#07111d;font-weight:600">🧱 Dibujar muro</button><button class="btn s" onclick="clearAllWalls()" style="margin-top:7px">🗑 Borrar todos</button></div><button class="btn sm s" onclick="detectRooms()" style="margin-top:5px;width:100%;border-color:var(--area);color:var(--area)">🏠 Detectar habitaciones</button></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('wall-list')"><span>📋 Listado de muros</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-wall-list"><div id="wall-sel-edit" style="display:none;background:rgba(148,163,184,0.08);padding:8px;border-radius:6px;margin-top:8px;border:1px dashed var(--cw)"><button id="btn-wall-edit-mode" class="btn sm s" onclick="toggleWallEditMode()" style="width:100%;margin-bottom:6px">✏ Mover / Editar vértices</button><input type="text" id="wall-sel-name" placeholder="Nombre del muro" oninput="updWallSel('name',this.value)" style="font-size:0.75rem;font-weight:600;margin-bottom:6px;width:100%;box-sizing:border-box;background:rgba(148,163,184,0.1);border:1px solid var(--cw);border-radius:4px;padding:4px 6px;color:var(--cw)"><div class="g2" style="margin-bottom:6px"><div><label>Grosor (m)</label><input type="number" id="wedit-thick" step="0.05" min="0.01" onchange="updWallSel('thick',this.value)"></div><div><label>Alto Z (m)</label><input type="number" id="wedit-hz" step="0.1" min="0.1" onchange="updWallSel('hZ',this.value)"></div></div><div class="g2" style="margin-bottom:6px"><div><label>Girar (º)</label><input type="number" id="wedit-rot" value="0" step="1" onchange="updWallSel('rot',this.value)"></div><div><label>Color</label><input type="color" id="wedit-color" style="width:100%;height:32px;padding:0;border:none;background:none;cursor:pointer" oninput="updWallSel('color',this.value)"></div></div><div style="margin-top:8px;font-size:.75rem;color:var(--t2)"><div style="margin-bottom:4px">Asignar a</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label style="font-size:.72rem;line-height:1.2"><input type="checkbox" id="wall-slab-floor" onchange="updWallSel('slabFloor',this.checked)"> Suelo</label><label style="font-size:.72rem;line-height:1.2"><input type="checkbox" id="wall-slab-ceiling" onchange="updWallSel('slabCeiling',this.checked)"> Techo</label></div></div><div style="font-size:0.65rem;color:var(--t2)" id="wedit-len">Longitud: --</div><button class="btn sm d" onclick="delSel()" style="margin-top:6px">✕ Borrar este muro</button></div><input type="text" id="wall-search" placeholder="🔍 Buscar muro..." oninput="filterWallList(this.value)" style="margin-top:6px;display:none"><div id="wall-list" style="margin-top:7px"></div></div></div></div></div></div>
+<div class="acc" data-c="wall"><div class="acc-hdr" id="acc-hdr-wall" onclick="toggleAcc('wall')"><span class="acc-icon">🧱</span><span class="acc-title">Muros & 3D</span><span class="acc-badge" id="wall-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-wall"><div class="acc-inner"><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('wall-add')"><span>➕ Añadir muro</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-wall-add"><p class="hint">Haz clic en el plano para trazar los muros de cada estancia.</p><div class="g3" style="grid-template-columns:1fr 1fr 1fr"><div><label>Grosor</label><input type="number" id="wall-thick" value="0.15" step="0.05" min="0.01"></div><div><label>Altura (Z)</label><input type="number" id="wall-hz" value="2.50" step="0.1" min="0.1"></div><div><label>Color</label><input type="color" id="wall-color" value="#94a3b8" style="width:100%;height:32px;padding:0;border:none;background:none;cursor:pointer"></div></div><label>Nombre (opcional)</label><input type="text" id="wall-name-draft" placeholder="ej: Salón Norte..." style="margin-bottom:6px"><div class="togrow" style="margin-bottom:6px"><label for="wall-negative" style="font-size:.72rem">Negativo (sótano / piscina)</label><label class="tog"><input type="checkbox" id="wall-negative"><span class="togsl"></span></label></div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px;font-size:.72rem;color:var(--t2)"><span>Asignar a:</span><label style="line-height:1.2;display:flex;align-items:center;gap:3px"><input type="checkbox" id="wall-slab-floor-new"> Suelo</label><label style="line-height:1.2;display:flex;align-items:center;gap:3px"><input type="checkbox" id="wall-slab-ceiling-new"> Techo</label></div><div class="g2"><button class="btn" id="btn-wall" onclick="toggleDrawWall()" style="margin-top:7px;background:var(--cw);color:#07111d;font-weight:600">🧱 Dibujar muro</button><button class="btn s" onclick="clearAllWalls()" style="margin-top:7px">🗑 Borrar todos</button></div><button class="btn sm s" onclick="detectRooms()" style="margin-top:5px;width:100%;border-color:var(--area);color:var(--area)">🏠 Detectar habitaciones</button></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('wall-list')"><span>📋 Listado de muros</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-wall-list"><div id="wall-sel-edit" style="display:none;background:rgba(148,163,184,0.08);padding:8px;border-radius:6px;margin-top:8px;border:1px dashed var(--cw)"><button id="btn-wall-edit-mode" class="btn sm s" onclick="toggleWallEditMode()" style="width:100%;margin-bottom:6px">✏ Mover / Editar vértices</button><input type="text" id="wall-sel-name" placeholder="Nombre del muro" oninput="updWallSel('name',this.value)" style="font-size:0.75rem;font-weight:600;margin-bottom:6px;width:100%;box-sizing:border-box;background:rgba(148,163,184,0.1);border:1px solid var(--cw);border-radius:4px;padding:4px 6px;color:var(--cw)"><div class="g2" style="margin-bottom:6px"><div><label>Grosor (m)</label><input type="number" id="wedit-thick" step="0.05" min="0.01" onchange="updWallSel('thick',this.value)"></div><div><label>Alto Z (m)</label><input type="number" id="wedit-hz" step="0.1" min="0.1" onchange="updWallSel('hZ',this.value)"></div></div><div class="g2" style="margin-bottom:6px"><div><label>Girar (º)</label><input type="number" id="wedit-rot" value="0" step="1" onchange="updWallSel('rot',this.value)"></div><div><label>Color</label><input type="color" id="wedit-color" style="width:100%;height:32px;padding:0;border:none;background:none;cursor:pointer" oninput="updWallSel('color',this.value)"></div></div><div style="margin-top:8px;font-size:.75rem;color:var(--t2)"><div style="margin-bottom:4px">Asignar a</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><label style="font-size:.72rem;line-height:1.2"><input type="checkbox" id="wall-slab-floor" onchange="updWallSel('slabFloor',this.checked)"> Suelo</label><label style="font-size:.72rem;line-height:1.2"><input type="checkbox" id="wall-slab-ceiling" onchange="updWallSel('slabCeiling',this.checked)"> Techo</label></div></div><div class="togrow" style="margin-top:6px;margin-bottom:6px"><label for="wall-sel-negative" style="font-size:.72rem">Negativo (sótano / piscina)</label><label class="tog"><input type="checkbox" id="wall-sel-negative" onchange="updWallSel('negative',this.checked)"><span class="togsl"></span></label></div><div style="font-size:0.65rem;color:var(--t2)" id="wedit-len">Longitud: --</div><button class="btn sm d" onclick="delSel()" style="margin-top:6px">✕ Borrar este muro</button></div><input type="text" id="wall-search" placeholder="🔍 Buscar muro..." oninput="filterWallList(this.value)" style="margin-top:6px;display:none"><div id="wall-list" style="margin-top:7px"></div></div></div></div></div></div>
 <div class="acc" data-c="window"><div class="acc-hdr" id="acc-hdr-window" onclick="toggleAcc('window')"><span class="acc-icon">🪟</span><span class="acc-title">Ventanas & Puertas</span><span class="acc-badge" id="window-badge" style="display:none">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-window"><div class="acc-inner"><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('win-add')"><span>🪟 Ventanas</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-win-add"><p class="hint" id="win-hint">Selecciona un muro en el plano para colocar ventanas o puertas.</p><p class="glbl" style="color:var(--cwin);margin-top:4px;margin-bottom:4px">Nueva ventana / hueco</p><div class="g2"><div><label>Ancho (m)</label><input type="number" id="win-w" value="1.00" step="0.05" min="0.1"></div><div><label>Alto (m)</label><input type="number" id="win-h" value="1.20" step="0.05" min="0.1"></div></div><label>Elevación desde suelo (m)</label><input type="number" id="win-elev" value="0.90" step="0.05" min="0"><button class="btn" id="btn-place-win" onclick="startPlaceWindow()" style="margin-top:7px;background:var(--cwin);color:#07111d;font-weight:600">🪟 Clic en muro para colocar</button><button class="btn sm s" onclick="addHoleToSel()" style="margin-top:5px">+ Añadir al inicio del muro</button></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('door-add')"><span>🚪 Puertas</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-door-add"><p class="glbl" style="color:var(--cf);margin-top:0;margin-bottom:4px">Nueva puerta</p><div class="g2"><div><label>Ancho (m)</label><input type="number" id="door-w" value="0.90" step="0.05" min="0.1"></div><div><label>Alto (m)</label><input type="number" id="door-h" value="2.10" step="0.05" min="0.1"></div></div><p class="hint" style="margin-top:4px;margin-bottom:5px;font-size:.64rem">Elevación desde suelo: 0 m (siempre)</p><button class="btn" id="btn-place-door" onclick="startPlaceDoor()" style="margin-top:0;background:var(--cf);color:#fff;font-weight:600">🚪 Clic en muro para colocar</button><button class="btn sm s" onclick="addDoorToSel()" style="margin-top:5px">+ Añadir al inicio del muro</button></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('win-list')"><span>📋 Listado de huecos</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-win-list"><div id="window-sel-edit" style="display:none;margin-top:10px;border-top:1px dashed var(--brd);padding-top:8px"><div id="window-sel-name" style="font-size:.75rem;font-weight:600;color:var(--cwin);margin-bottom:6px"></div><p class="glbl" style="color:var(--cwin);margin-top:0;margin-bottom:4px">Huecos en este muro</p><div id="wedit-holes"></div></div><div id="all-holes-list" style="margin-top:6px"></div></div></div></div></div></div>
 <div class="acc" data-c="list"><div class="acc-hdr" id="acc-hdr-list" onclick="toggleAcc('list')"><span class="acc-icon">🛋</span><span class="acc-title">Muebles y Escaleras</span><span class="acc-badge" id="furn-badge">0</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-list"><div class="acc-inner"><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('add-furn')"><span>➕ Añadir mueble</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-add-furn"><div id="add-furn-details" style="margin-top:0;border-bottom:1px dashed var(--brd);padding-bottom:8px;margin-bottom:4px"><p class="glbl" style="color:var(--ca);margin-top:0;margin-bottom:6px">➕ Añadir nuevo mueble</p><label>Nombre</label><input type="text" id="fname" value="Sofá"><label>Habitación</label><input type="text" id="froom" placeholder="ej: salón, dormitorio..."><div class="tabs"><div class="tab on" id="trect" onclick="setShape('rect')">▭ Rect.</div><div class="tab" id="tL" onclick="setShape('L')">⌐ Forma L</div><div class="tab" id="tcircle" onclick="setShape('circle')">○ Círculo</div><div class="tab" id="tfree" onclick="setShape('free')">✎ Libre</div></div><div id="rex"><div id="rpw"><svg id="rpsvg" width="148" height="108" viewBox="0 0 148 108"></svg></div><div class="g2"><div><label>Ancho (m)</label><input type="number" id="fw" value="2.00" step="0.05" min="0.05" oninput="updRP()"></div><div><label>Fondo (m)</label><input type="number" id="fh" value="0.90" step="0.05" min="0.05" oninput="updRP()"></div></div></div><div id="lex"><div id="lpw"><svg id="lpsvg" width="148" height="108" viewBox="0 0 148 108"></svg></div><div class="glbl">Brazo vertical (↕)</div><div class="g2"><div><label>Largo</label><input type="number" id="ll2" value="2.20" step="0.05" min="0.1" oninput="updLP()"></div><div><label>Ancho</label><input type="number" id="la2" value="0.90" step="0.05" min="0.1" oninput="updLP()"></div></div><hr class="divl"><div class="glbl">Brazo horizontal (↔)</div><div class="g2"><div><label>Largo</label><input type="number" id="ll1" value="2.50" step="0.05" min="0.1" oninput="updLP()"></div><div><label>Ancho</label><input type="number" id="la1" value="0.90" step="0.05" min="0.1" oninput="updLP()"></div></div></div><div id="cex"><div id="cpw"><svg id="cpsvg" width="118" height="96" viewBox="0 0 118 96"></svg></div><label>Diámetro (m)</label><input type="number" id="fcd" value="1.20" step="0.05" min="0.1" oninput="updCP()"></div><label>Color</label><div class="swatches" id="swatches"></div><label style="margin-top:7px">Opacidad</label><div class="orow"><input type="range" id="fopa" min="20" max="100" value="70" oninput="document.getElementById('opav').textContent=this.value+'%'"><span id="opav">70%</span></div><button class="btn" id="btn-add-furn" onclick="addFurn()" style="background:var(--ca)">Añadir al plano</button></div></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('add-stair')"><span>🪜 Añadir escalera</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-add-stair"></div></div><div class="subacc"><div class="subacc-hdr" onclick="toggleSubAcc('furn-list')"><span>📋 Listado de muebles</span><span class="subacc-arr">▾</span></div><div class="subacc-body closed" id="subacc-body-furn-list"><div id="sel-ctrl"><div id="sel-ctrl-nm"></div><input type="text" id="sel-name-input" placeholder="Nombre del mueble" oninput="updateSelName(this.value)" style="margin-bottom:7px"><div id="sel-dim-edit"></div><div class="g3"><button class="btn sm s" onclick="rotateSel()">↻ Rotar</button><button class="btn sm g" onclick="dupSel()">⧉ Copiar</button><button class="btn sm d" onclick="delSel()">✕ Borrar</button></div><button class="btn sm s" id="btn-qm" onclick="startQM()" style="margin-top:5px;width:100%;border-color:var(--acc2);color:var(--acc2)">⟷ Medir distancia a otro mueble</button><p id="qm-hint" class="hint">Ahora haz clic en otro mueble del plano</p><div id="qm-result"></div><button id="btn-qm-clear" onclick="clearQMResult()" style="display:none;margin-top:4px;width:100%;background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:4px 8px;font-size:.7rem;font-family:'Outfit',sans-serif;cursor:pointer;">❌ Borrar resultado</button><button id="btn-probe" onclick="startProbe()" style="display:none;margin-top:5px;width:100%;background:var(--p2);border:1px solid #4d9eff;color:#4d9eff;border-radius:6px;padding:6px 8px;font-size:.76rem;font-family:'Outfit',sans-serif;cursor:pointer;">🔍 Sonda perimetral</button></div><div id="group-panel" class=""><button class="btn sm s" onclick="createGroupFromSel()">📦 Crear grupo</button><button class="btn sm s" onclick="clearGroupSel()">✕ Limpiar grupo</button></div><div id="multi-align-bar" class=""><button class="aln-btn" onclick="alignSel('left')">⬅ Izquierda</button><button class="aln-btn" onclick="alignSel('right')">➡ Derecha</button><button class="aln-btn" onclick="alignSel('top')">⬆ Arriba</button><button class="aln-btn" onclick="alignSel('bottom')">⬇ Abajo</button><button class="aln-btn" onclick="alignSel('cx')">↕ Centrar X</button><button class="aln-btn" onclick="alignSel('cy')">↔ Centrar Y</button></div><input type="text" id="furn-search" placeholder="🔍 Buscar mueble..." oninput="filterFurnList(this.value)" style="margin-bottom:5px;margin-top:4px"><div id="flist"><div class="empty">Sin muebles todavía</div></div></div></div></div></div></div>
 <div class="acc" data-c="zoom"><div class="acc-hdr open" id="acc-hdr-zoom" onclick="toggleAcc('zoom')"><span class="acc-icon">🔍</span><span class="acc-title">Vista & Zoom</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-zoom"><div class="acc-inner"><label>Zoom: <span id="zlbl" style="color:var(--cz);font-family:'Space Mono',monospace">100%</span></label><input type="range" id="zoom-slider" min="15" max="400" value="100" oninput="setZoom(this.value/100)" style="margin-top:4px"><div class="g2"><button class="btn sm s" onclick="zBy(-.1)">− Alejar</button><button class="btn sm s" onclick="zBy(.1)">+ Acercar</button></div><button class="btn sm s" style="margin-top:5px;width:100%" onclick="setZoom(1)">↺ 100%</button><div class="togrow"><label for="snapTog">Snap cuadrícula 10cm</label><label class="tog"><input type="checkbox" id="snapTog"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="mmTog">Minimapa</label><label class="tog"><input type="checkbox" id="mmTog" onchange="toggleMinimap(this.checked)"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="lockFurnTog">Bloquear muebles</label><label class="tog"><input type="checkbox" id="lockFurnTog" onchange="toggleLockFurn(this.checked)"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="lockWallTog">Bloquear muros</label><label class="tog"><input type="checkbox" id="lockWallTog" onchange="toggleLockWall(this.checked)"><span class="togsl"></span></label></div><div class="glbl" style="margin-top:8px;margin-bottom:4px">Capas visibles</div><div style="display:flex;gap:4px;margin-top:0"><button id="lay-furn" class="lay-btn on" style="color:var(--ca)" onclick="toggleLayer('furn')">🛋 Muebles</button><button id="lay-wall" class="lay-btn on" style="color:var(--cw)" onclick="toggleLayer('wall')">🧱 Muros</button><button id="lay-meas" class="lay-btn on" style="color:var(--cr)" onclick="toggleLayer('meas')">📏 Medidas</button><button id="lay-grid" class="lay-btn on" style="color:var(--cz)" onclick="toggleLayer('grid')">⊞ Grid</button></div></div></div></div>
@@ -844,7 +844,7 @@ function wallFinish(){
   const pts=wallPts.map(p=>({x:(p.x-ox)/pm,y:(p.y-oy)/pm}));
   const thick=parseFloat(document.getElementById('wall-thick').value)||0.15;
   const hZ=parseFloat(document.getElementById('wall-hz')?.value)||2.50;
-  const f={id:Date.now()+Math.random(),name:(document.getElementById('wall-name-draft')?.value.trim())||'Muro',room:'',type:'wall',w:(Math.max(...xs)-ox)/pm,h:(Math.max(...ys)-oy)/pm,hZ,thick,x:ox,y:oy,rot:0,color:document.getElementById('wall-color').value,opa:1.0,floor:curFloor,pts,closed:isClosed,slabFloor:false,slabCeiling:false};
+  const f={id:Date.now()+Math.random(),name:(document.getElementById('wall-name-draft')?.value.trim())||'Muro',room:'',type:'wall',w:(Math.max(...xs)-ox)/pm,h:(Math.max(...ys)-oy)/pm,hZ,thick,x:ox,y:oy,rot:0,color:document.getElementById('wall-color').value,opa:1.0,floor:curFloor,pts,closed:isClosed,slabFloor:document.getElementById('wall-slab-floor-new')?.checked||false,slabCeiling:document.getElementById('wall-slab-ceiling-new')?.checked||false,negative:document.getElementById('wall-negative')?.checked||false};
   furniture.push(f);const _wnd=document.getElementById('wall-name-draft');if(_wnd)_wnd.value='';wallPts=[];wallGhost=null;saveLS();updateList();render();showToast('✓ Muro guardado');showBanner('🧱 Haz clic para iniciar otro muro','drawzone');
 }
 function drawWallActive(){if(mode!=='drawWall')return;const pm=pxM();const h=parseFloat(document.getElementById('wall-thick')?.value)||0.15;const W=h*pm;const col=document.getElementById('wall-color')?.value||'#94a3b8';ctx.save();ctx.strokeStyle=col;ctx.globalAlpha=0.6;ctx.lineWidth=W;ctx.lineCap='round';ctx.lineJoin='round';if(wallPts.length>0){ctx.beginPath();ctx.moveTo(wallPts[0].x,wallPts[0].y);for(let i=1;i<wallPts.length;i++)ctx.lineTo(wallPts[i].x,wallPts[i].y);if(wallGhost)ctx.lineTo(wallGhost.x,wallGhost.y);ctx.stroke();if(wallGhost){const last=wallPts[wallPts.length-1];const d=d2(last,wallGhost)/pm;const ang=Math.atan2(wallGhost.y-last.y,wallGhost.x-last.x);pill(ctx,d.toFixed(2)+'m',(last.x+wallGhost.x)/2,(last.y+wallGhost.y)/2,ang,col);}}ctx.restore();}
@@ -852,6 +852,7 @@ function updWallSel(prop,val){const f=furniture.find(x=>x.id===selId);if(!f||f.t
 if(prop==='name'){f.name=val;saveLS();updateList();render();return;}
 if(prop==='color'){f.color=val;saveLS();render();updateList();return;}
 if(prop==='slabFloor' || prop==='slabCeiling'){f[prop]=!!val;saveLS();render();refresh3D();updateSelDimensions();return;}
+if(prop==='negative'){f[prop]=!!val;saveLS();render();refresh3D();return;}
 const v=parseFloat(val);if(isNaN(v))return;if(prop==='thick')f.thick=Math.max(0.01,v);if(prop==='hZ')f.hZ=Math.max(0.1,v);if(prop==='rot'){if(f.pts&&f.pts.length>0){const cx=f.pts.reduce((s,p)=>s+p.x,0)/f.pts.length;const cy=f.pts.reduce((s,p)=>s+p.y,0)/f.pts.length;const rad=v*Math.PI/180;f.pts=f.pts.map(p=>{const dx=p.x-cx,dy=p.y-cy;return{x:cx+dx*Math.cos(rad)-dy*Math.sin(rad),y:cy+dx*Math.sin(rad)+dy*Math.cos(rad)};});const xs=f.pts.map(p=>p.x),ys=f.pts.map(p=>p.y);const minX=Math.min(...xs),minY=Math.min(...ys);const pm=pxM();f.x+=minX*pm;f.y+=minY*pm;f.pts=f.pts.map(p=>({x:p.x-minX,y:p.y-minY}));f.w=Math.max(...xs)-minX;f.h=Math.max(...ys)-minY;}const elR=document.getElementById('wedit-rot');if(elR)elR.value=0;}saveLS();render();updateList();updateSelDimensions();}
 
 function toggleWallEditMode(){wallEditMode=!wallEditMode;const btn=document.getElementById('btn-wall-edit-mode');if(btn){if(wallEditMode){btn.textContent='🔒 Bloquear muro';btn.style.background='rgba(245,158,11,0.15)';btn.style.borderColor='var(--warn)';btn.style.color='var(--warn)';btn.classList.remove('hint-glow');}else{btn.textContent='✏ Mover / Editar vértices';btn.style.background='';btn.style.borderColor='';btn.style.color='';btn.classList.add('hint-glow');}}updateCursor();}
@@ -1303,9 +1304,100 @@ function build3DScene(){
         build3DFloorSlab(fIdx,'ceiling');
     });
     build3DStairOpenings();
+    _cutNegativeHolesInFloor();
     applySectionCut3D();
     setup3DInteractions();
 }
+function _cutNegativeHolesInFloor(){
+		if(!scene3d) return;
+		const oldFloor = scene3d.getObjectByName('floor');
+		const floorY = oldFloor ? oldFloor.position.y : 0;
+		const SIZE = 500, HALF = SIZE/2;
+		const allHoles = [];
+		visibleFloors3D.forEach(fIdx => {
+			const negWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && !f.hidden && f.negative && f.pts && f.pts.length>=2);
+			if(!negWalls.length) return;
+			const pm = FLOORS[fIdx]?.px || 50;
+			const pc = {x:(FLOORS[fIdx].imgWidth||canvas.width)/2, y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
+			const fOff = FLOORS[fIdx]?.off3d || {x:0, y:fIdx*2.5, z:0};
+			const SNAP = pm * 0.35;
+			const _wpt = (w, s) => { const p = s===0?w.pts[0]:w.pts[w.pts.length-1]; return {x:w.x+p.x*pm, y:w.y+p.y*pm}; };
+			const _near = (a, b) => Math.hypot(a.x-b.x, a.y-b.y) < SNAP;
+			const allWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && !f.hidden);
+			const traceLoop = (sw) => {
+				const poly = [];
+				const used = new Set([sw.id]);
+				const s0 = _wpt(sw,0), e0 = _wpt(sw,1);
+				if (sw.pts.length >= 3 && _near(s0, e0)) {
+					sw.pts.slice(0,-1).forEach(p => poly.push({x:sw.x+p.x*pm, y:sw.y+p.y*pm}));
+					return poly.length >= 3 ? poly : null;
+				}
+				sw.pts.forEach(p => poly.push({x:sw.x+p.x*pm, y:sw.y+p.y*pm}));
+				let exit = _wpt(sw,1);
+				const sp = _wpt(sw,0);
+				for (let it = 0; it < 40; it++) {
+					if (poly.length >= 4 && _near(exit, sp)) return poly;
+					let nw = null, rev = false;
+					for (const w of allWalls) {
+						if (used.has(w.id)) continue;
+						if (_near(exit, _wpt(w,0))) { nw=w; rev=false; break; }
+						if (_near(exit, _wpt(w,1))) { nw=w; rev=true; break; }
+					}
+					if (!nw) break;
+					used.add(nw.id);
+					const pts = rev ? [...nw.pts].reverse() : nw.pts;
+					pts.slice(1).forEach(p => poly.push({x:nw.x+p.x*pm, y:nw.y+p.y*pm}));
+					exit = rev ? _wpt(nw,0) : _wpt(nw,1);
+				}
+				if (poly.length >= 4 && _near(exit, sp)) return poly;
+				return null;
+			};
+			const seen = [];
+			negWalls.forEach(sw => {
+				const loop = traceLoop(sw);
+				if (!loop || loop.length < 3) return;
+				const key = loop.map(p => Math.round(p.x/4)+'_'+Math.round(p.y/4)).sort().join('|');
+				if (seen.includes(key)) return;
+				seen.push(key);
+				const hole3D = loop.map(p => new THREE.Vector2((p.x - pc.x)/pm + fOff.x, (p.y - pc.y)/pm + fOff.z));
+				if (hole3D.length >= 3) allHoles.push(hole3D);
+			});
+		});
+		if(oldFloor){
+			oldFloor.geometry.dispose();
+			scene3d.remove(oldFloor);
+		}
+		let newFloor;
+		if(allHoles.length){
+			const shape = new THREE.Shape();
+			shape.moveTo(-HALF, -HALF);
+			shape.lineTo( HALF, -HALF);
+			shape.lineTo( HALF,  HALF);
+			shape.lineTo(-HALF,  HALF);
+			shape.lineTo(-HALF, -HALF);
+			allHoles.forEach(holePts => {
+				const holePath = new THREE.Path();
+				holePath.moveTo(holePts[0].x, holePts[0].y);
+				for(let i=1; i<holePts.length; i++) holePath.lineTo(holePts[i].x, holePts[i].y);
+				holePath.lineTo(holePts[0].x, holePts[0].y);
+				shape.holes.push(holePath);
+			});
+			newFloor = new THREE.Mesh(
+				new THREE.ShapeGeometry(shape),
+				new THREE.MeshStandardMaterial({color:0xeeeeee, side:THREE.DoubleSide})
+			);
+		} else {
+			newFloor = new THREE.Mesh(
+				new THREE.PlaneGeometry(SIZE,SIZE),
+				new THREE.MeshStandardMaterial({color:0xeeeeee})
+			);
+		}
+		newFloor.rotation.x = -Math.PI/2;
+		newFloor.position.y = floorY;
+		newFloor.receiveShadow = true;
+		newFloor.name = 'floor';
+		scene3d.add(newFloor);
+	}
 let dragControls3d, _mousedown3dHandler;
 function setup3DInteractions() {
     const isMultiFloor = visibleFloors3D.length > 1;
@@ -1404,96 +1496,88 @@ function build3DFloorSlab(fIdx, kind) {
         if (poly.length >= 4 && _near(exit, sp)) return poly;
         return null;
     }
-    const seen = [], polys = [];
-    slabWalls.forEach(sw => {
+    const normalSlabWalls = slabWalls.filter(w => !w.negative);
+    const negativeSlabWalls = slabWalls.filter(w => w.negative);
+    const _buildSlabGroup = (walls, planeY, stairsForCutout) => {
+      const seen = [], polys = [];
+      walls.forEach(sw => {
         const loop = traceLoop(sw);
         if (!loop || loop.length < 3) return;
         const key = loop.map(p => Math.round(p.x/4)+'_'+Math.round(p.y/4)).sort().join('|');
         if (seen.includes(key)) return;
         seen.push(key); polys.push(loop);
-    });
-    const maxHz = Math.max(...slabWalls.map(w => w.hZ||2.5));
-    const planeY = kind==='floor' ? fOff.y-0.01 : fOff.y+maxHz;
-    const color = kind==='floor' ? 0xffffff : 0x8fb3ff;
-    const opacity = kind==='floor' ? floorOpacity3D : ceilingOpacity3D;
-
-    const stairsForCutout = (kind==='floor' && fIdx>0)
-      ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx-1)
-      : (kind==='ceiling')
-      ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx)
-      : [];
-
-    const holePolysForSlab = ()=>{
-      if(!stairsForCutout.length) return [];
-      const holes=[];
-      stairsForCutout.forEach(s=>{
-        const srcFloor = s.floor ?? (fIdx-1);
-        const pmSrc = FLOORS[srcFloor]?.px || pm;
-        const pcSrc = {x:(FLOORS[srcFloor]?.imgWidth||canvas.width)/2, y:(FLOORS[srcFloor]?.imgHeight||canvas.height)/2};
-        const fOffSrc = FLOORS[srcFloor]?.off3d || {x:0, y:srcFloor*2.5, z:0};
-        const wM=Math.max(0.2,parseFloat(s.w)||1);
-        const hM=Math.max(0.2,parseFloat(s.h)||1);
-        const wPx=wM*pmSrc, hPx=hM*pmSrc;
-        const cxW = (s.x + wPx/2 - pcSrc.x)/pmSrc + fOffSrc.x;
-        const czW = (s.y + hPx/2 - pcSrc.y)/pmSrc + fOffSrc.z;
-        const rot = -((s.rot||0) * Math.PI/180);
-        const cosR=Math.cos(rot), sinR=Math.sin(rot);
-        const localToSlab = (p)=>{
-          const xW = cxW + (p.x*cosR + p.z*sinR);
-          const zW = czW + (-p.x*sinR + p.z*cosR);
-          return {x: xW - fOff.x, z: zW - fOff.z};
-        };
-        const addRect=(rw,rd,rx,rz)=>{
-          const hw=rw/2, hh=rd/2;
-          const pts=[{x:rx-hw,z:rz-hh},{x:rx+hw,z:rz-hh},{x:rx+hw,z:rz+hh},{x:rx-hw,z:rz+hh}];
-          holes.push(pts.map(localToSlab));
-        };
-        const addPoly=(localPts)=>{
-          if(!localPts || localPts.length<3) return;
-          holes.push(localPts.map(localToSlab));
-        };
-        const gp=_stairGeomParams(s);
-        if(gp.kind==='u'){
-          const w1=gp.w1, w2=gp.w2, r1=gp.run1, r2=gp.run2, land=gp.land;
-          const dz=Math.max(0, r2-r1);
-          const landZ0=dz+r1;
-          const landZ1=landZ0+land;
-          const flightBz0=Math.max(0, landZ0-r2);
-          const xLmin=-wM/2,  xLmax=wM/2;
-          const zLmin=landZ0  - hM/2;
-          const zLmax=landZ1  - hM/2;
-          const zBmin=flightBz0 - hM/2;
-          if(w1 <= w2 + 1e-6){
-            const zCenter = ((zBmin+zLmax)/2);
-            const zDepth  = (zLmax - zBmin);
-            addRect(wM, zDepth, 0, zCenter);
-          }else{
-            const xLeftLegMax  = xLmin + w2;
-            const xRightLegMin = xLmax - w2;
-            addPoly([
-              {x:xLmin,        z:zBmin},
-              {x:xLeftLegMax,  z:zBmin},
-              {x:xLeftLegMax,  z:zLmin},
-              {x:xRightLegMin, z:zLmin},
-              {x:xRightLegMin, z:zBmin},
-              {x:xLmax,        z:zBmin},
-              {x:xLmax,        z:zLmax},
-              {x:xLmin,        z:zLmax}
-            ]);
-          }
-        }else if(gp.kind==='landing'){
-          addRect(wM,hM,0,0);
-        }else{
-          addRect(wM,hM,0,0);
-        }
       });
-      return holes;
-    };
-    polys.forEach(poly => {
+      const holePolys = ()=>{
+        if(!stairsForCutout.length) return [];
+        const holes=[];
+        stairsForCutout.forEach(s=>{
+          const srcFloor = s.floor ?? (fIdx-1);
+          const pmSrc = FLOORS[srcFloor]?.px || pm;
+          const pcSrc = {x:(FLOORS[srcFloor]?.imgWidth||canvas.width)/2, y:(FLOORS[srcFloor]?.imgHeight||canvas.height)/2};
+          const fOffSrc = FLOORS[srcFloor]?.off3d || {x:0, y:srcFloor*2.5, z:0};
+          const wM=Math.max(0.2,parseFloat(s.w)||1);
+          const hM=Math.max(0.2,parseFloat(s.h)||1);
+          const wPx=wM*pmSrc, hPx=hM*pmSrc;
+          const cxW = (s.x + wPx/2 - pcSrc.x)/pmSrc + fOffSrc.x;
+          const czW = (s.y + hPx/2 - pcSrc.y)/pmSrc + fOffSrc.z;
+          const rot = -((s.rot||0) * Math.PI/180);
+          const cosR=Math.cos(rot), sinR=Math.sin(rot);
+          const localToSlab = (p)=>{
+            const xW = cxW + (p.x*cosR + p.z*sinR);
+            const zW = czW + (-p.x*sinR + p.z*cosR);
+            return {x: xW - fOff.x, z: zW - fOff.z};
+          };
+          const addRect=(rw,rd,rx,rz)=>{
+            const hw=rw/2, hh=rd/2;
+            const pts=[{x:rx-hw,z:rz-hh},{x:rx+hw,z:rz-hh},{x:rx+hw,z:rz+hh},{x:rx-hw,z:rz+hh}];
+            holes.push(pts.map(localToSlab));
+          };
+          const addPoly=(localPts)=>{
+            if(!localPts || localPts.length<3) return;
+            holes.push(localPts.map(localToSlab));
+          };
+          const gp=_stairGeomParams(s);
+          if(gp.kind==='u'){
+            const w1=gp.w1, w2=gp.w2, r1=gp.run1, r2=gp.run2, land=gp.land;
+            const dz=Math.max(0, r2-r1);
+            const landZ0=dz+r1;
+            const landZ1=landZ0+land;
+            const flightBz0=Math.max(0, landZ0-r2);
+            const xLmin=-wM/2,  xLmax=wM/2;
+            const zLmin=landZ0  - hM/2;
+            const zLmax=landZ1  - hM/2;
+            const zBmin=flightBz0 - hM/2;
+            if(w1 <= w2 + 1e-6){
+              const zCenter = ((zBmin+zLmax)/2);
+              const zDepth  = (zLmax - zBmin);
+              addRect(wM, zDepth, 0, zCenter);
+            }else{
+              const xLeftLegMax  = xLmin + w2;
+              const xRightLegMin = xLmax - w2;
+              addPoly([
+                {x:xLmin,        z:zBmin},
+                {x:xLeftLegMax,  z:zBmin},
+                {x:xLeftLegMax,  z:zLmin},
+                {x:xRightLegMin, z:zLmin},
+                {x:xRightLegMin, z:zBmin},
+                {x:xLmax,        z:zBmin},
+                {x:xLmax,        z:zLmax},
+                {x:xLmin,        z:zLmax}
+              ]);
+            }
+          }else if(gp.kind==='landing'){
+            addRect(wM,hM,0,0);
+          }else{
+            addRect(wM,hM,0,0);
+          }
+        });
+        return holes;
+      };
+      polys.forEach(poly => {
         const v2 = [];
         const holeIdx = [];
         poly.forEach(p => v2.push((p.x-pc.x)/pm, (p.y-pc.y)/pm));
-        const holes = holePolysForSlab();
+        const holes = holePolys();
         holes.forEach(hp=>{
           holeIdx.push(v2.length/2);
           hp.forEach(p=>v2.push(p.x, p.z));
@@ -1528,7 +1612,25 @@ function build3DFloorSlab(fIdx, kind) {
             scene3d.add(line); objects3d.push(line);
           });
         }
-    });
+      });
+    };
+    const color = kind==='floor' ? 0xffffff : 0x8fb3ff;
+    const opacity = kind==='floor' ? floorOpacity3D : ceilingOpacity3D;
+    if(normalSlabWalls.length){
+      const maxHz = Math.max(...normalSlabWalls.map(w => w.hZ||2.5));
+      const planeY = kind==='floor' ? fOff.y-0.01 : fOff.y+maxHz;
+      const stairsForCutout = (kind==='floor' && fIdx>0)
+        ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx-1)
+        : (kind==='ceiling')
+        ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx)
+        : [];
+      _buildSlabGroup(normalSlabWalls, planeY, stairsForCutout);
+    }
+    if(negativeSlabWalls.length){
+      const maxHzNeg = Math.max(...negativeSlabWalls.map(w => w.hZ||2.5));
+      const planeYNeg = kind==='floor' ? fOff.y - maxHzNeg : fOff.y;
+      _buildSlabGroup(negativeSlabWalls, planeYNeg, []);
+    }
 }
 function change3DFloor(fIdx, axis, delta) {
     const current = (FLOORS[fIdx].off3d && FLOORS[fIdx].off3d[axis]) || 0;
@@ -1647,7 +1749,8 @@ function exportScene3DKML(){
     const pmm=FLOORS[fi].px||50;
     walls.forEach((w,wi)=>{
       const wallH=w.hZ||2.5;
-      const yTop=yBase+wallH;
+      const yBottom=w.negative?yBase-wallH:yBase;
+      const yTop=w.negative?yBase:yBase+wallH;
       const col=(w.color||'#94a3b8').replace('#','');
       const r=col.substring(0,2),g=col.substring(2,2),b=col.substring(4,2);
       const abgr='cc'+b+g+r;
@@ -1656,11 +1759,11 @@ function exportScene3DKML(){
         const A=offToLatLon(w.x+p1.x*pmm, w.y+p1.y*pmm, fi);
         const B=offToLatLon(w.x+p2.x*pmm, w.y+p2.y*pmm, fi);
         const coords=[
-          `${A[0]},${A[1]},${yBase}`,
-          `${B[0]},${B[1]},${yBase}`,
+          `${A[0]},${A[1]},${yBottom}`,
+          `${B[0]},${B[1]},${yBottom}`,
           `${B[0]},${B[1]},${yTop}`,
           `${A[0]},${A[1]},${yTop}`,
-          `${A[0]},${A[1]},${yBase}`
+          `${A[0]},${A[1]},${yBottom}`
         ].join(' ');
         kmlPolys.push(`<Placemark><name>${xmlEsc(fName)} · ${xmlEsc(w.name||'Muro '+(wi+1))}</name><Style><PolyStyle><color>${abgr}</color><fill>1</fill><outline>1</outline></PolyStyle><LineStyle><color>ff000000</color><width>1</width></LineStyle></Style><Polygon><altitudeMode>relativeToGround</altitudeMode><outerBoundaryIs><LinearRing><coordinates>${coords}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`);
       }
@@ -2573,11 +2676,19 @@ function build3DWalls(fIdx){
             const makeSeg = (xStart, segLen, mat)=>{
               if(segLen<=0.01) return;
               const shape = new THREE.Shape();
-              shape.moveTo(0, 0);
-              shape.lineTo(segLen, 0);
-              shape.lineTo(segLen, segHeight);
-              shape.lineTo(0, segHeight);
-              shape.lineTo(0, 0);
+              if(wall.negative){
+                shape.moveTo(0, -segHeight);
+                shape.lineTo(segLen, -segHeight);
+                shape.lineTo(segLen, 0);
+                shape.lineTo(0, 0);
+                shape.lineTo(0, -segHeight);
+              } else {
+                shape.moveTo(0, 0);
+                shape.lineTo(segLen, 0);
+                shape.lineTo(segLen, segHeight);
+                shape.lineTo(0, segHeight);
+                shape.lineTo(0, 0);
+              }
               if(wall.holes && wall.holes.length > 0) {
                 wall.holes.forEach(hole => {
                   const hStart = hole.offset;
@@ -2585,18 +2696,21 @@ function build3DWalls(fIdx){
                   const segStart = currentWallLen + xStart;
                   const segEnd = segStart + segLen;
                   if(hEnd > segStart && hStart < segEnd) {
+                    const _yBottom = wall.negative ? -segHeight : 0;
+                    const _yTop = wall.negative ? 0 : segHeight;
                     const localX0 = Math.max(0, hStart - segStart);
                     const localX1 = Math.min(segLen, hEnd - segStart);
-                    const localY0 = hole.elev;
-                    const localY1 = hole.elev + hole.h;
-                    if (localX1 > localX0 && localY1 > localY0 && localY0 < segHeight) {
-                      const actualY1 = Math.min(localY1, segHeight);
+                    const localY0 = wall.negative ? -(hole.elev + hole.h) : hole.elev;
+                    const localY1 = wall.negative ? -hole.elev : hole.elev + hole.h;
+                    if (localX1 > localX0 && localY1 > localY0 && localY0 < _yTop && localY1 > _yBottom) {
+                      const actualY0 = Math.max(localY0, _yBottom);
+                      const actualY1 = Math.min(localY1, _yTop);
                       const holePath = new THREE.Path();
-                      holePath.moveTo(localX0, localY0);
-                      holePath.lineTo(localX1, localY0);
+                      holePath.moveTo(localX0, actualY0);
+                      holePath.lineTo(localX1, actualY0);
                       holePath.lineTo(localX1, actualY1);
                       holePath.lineTo(localX0, actualY1);
-                      holePath.lineTo(localX0, localY0);
+                      holePath.lineTo(localX0, actualY0);
                       shape.holes.push(holePath);
                     }
                   }
@@ -3244,7 +3358,8 @@ furniture.filter(f=>f.floor===curFloor).forEach(f=>{if(!FLOORS[curFloor]?.cal)re
 }else{const _czx=f.pts.reduce((s,p)=>s+p.x,0)/f.pts.length;const _czy=f.pts.reduce((s,p)=>s+p.y,0)/f.pts.length;const _pm=pxM();const _aM=shoelace(f.pts.map(p=>({x:ox+p.x,y:oy+p.y})))/(_pm*_pm);const _fs=Math.max(9,Math.min(13,_pm*.18));ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+_fs+'px Outfit,sans-serif';ctx.fillText(f.name||'Zona',ox+_czx,oy+_czy-_fs*.65);ctx.font=(_fs*.75)+'px Space Mono,monospace';ctx.fillStyle=f.color||'#10b981';ctx.fillText('▣ '+_aM.toFixed(2)+'m²',ox+_czx,oy+_czy+_fs*.65);ctx.shadowBlur=0;}ctx.restore();return;}
 if(f.type==='circle'){const r=f.d/2*pm,cx=f.x+r,cy=f.y+r;ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=f.color+op;ctx.fill();ctx.save();ctx.clip();ctx.strokeStyle=f.color+'55';ctx.lineWidth=.7;for(let dd=-r*2;dd<r*2;dd+=13){ctx.beginPath();ctx.moveTo(cx-r+dd,cy-r);ctx.lineTo(cx-r+dd+r*2,cy+r);ctx.stroke();}ctx.restore();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=isSel?'#fff':f.color;ctx.lineWidth=isSel?2.5:1.5;ctx.stroke();if(isSel){ctx.fillStyle='#fff';[[cx,cy-r],[cx+r,cy],[cx,cy+r],[cx-r,cy]].forEach(([hx,hy])=>{ctx.beginPath();ctx.arc(hx,hy,4,0,Math.PI*2);ctx.fill();});}const fs=Math.max(9,Math.min(14,r*.4));ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+fs+'px Outfit,sans-serif';ctx.fillText(f.name,cx,cy-fs*.6);ctx.font=(fs*.7)+'px Space Mono,monospace';ctx.fillText('⌀'+fmtDim(f.d)+'m',cx,cy+fs*.6);ctx.shadowBlur=0;ctx.restore();return;}
 if(f.type==='stair'){const W=f.w*pm,H=f.h*pm,cx=f.x+W/2,cy=f.y+H/2;ctx.save();ctx.translate(cx,cy);ctx.rotate((f.rot||0)*Math.PI/180);ctx.translate(-W/2,-H/2);ctx.beginPath();ctx.rect(0,0,W,H);ctx.fillStyle=(f.color||'#94a3b8')+op;ctx.fill();ctx.strokeStyle=isSel?'#fff':(f.color||'#94a3b8');ctx.lineWidth=isSel?2.5:1.6;ctx.stroke();const fs=Math.max(9,Math.min(13,pm*.18));ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+fs+'px Outfit,sans-serif';ctx.fillText('🪜 '+(f.name||'Escalera'),W/2,H/2-fs*.55);ctx.font=(fs*.75)+'px Space Mono,monospace';ctx.fillStyle=(f.color||'#94a3b8');ctx.fillText(fmtDim(f.w)+'×'+fmtDim(f.h)+'m',W/2,H/2+fs*.55);ctx.shadowBlur=0;ctx.restore();return;}
-if(f.type==='wall'){const W=(f.thick||0.15)*pm;ctx.save();ctx.translate(f.x,f.y);ctx.strokeStyle=f.color||'#94a3b8';ctx.globalAlpha=ho(f.opa)/255;ctx.lineWidth=W;ctx.lineCap='round';ctx.lineJoin='round';if(f.pts&&f.pts.length>0){ctx.beginPath();ctx.moveTo(f.pts[0].x*pm,f.pts[0].y*pm);for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i].x*pm,f.pts[i].y*pm);ctx.stroke();}if(isSel){ctx.fillStyle='#fff';ctx.strokeStyle=f.color||'#94a3b8';ctx.lineWidth=2;ctx.globalAlpha=1.0;f.pts.forEach((p)=>{ctx.beginPath();ctx.arc(p.x*pm,p.y*pm,W/2+2,0,Math.PI*2);ctx.fill();ctx.stroke();});}if(f.pts&&f.pts.length>0){const _czx=f.pts.reduce((s,p)=>s+p.x,0)/f.pts.length*pm;const _czy=f.pts.reduce((s,p)=>s+p.y,0)/f.pts.length*pm;const _fs=Math.max(9,Math.min(13,pm*.18));ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.globalAlpha=1.0;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+_fs+'px Outfit,sans-serif';ctx.fillText(f.name||'Muro',_czx,_czy-_fs*.65);ctx.font=(_fs*.75)+'px Space Mono,monospace';ctx.fillStyle=f.color||'#94a3b8';ctx.fillText('A:'+fmtDim(f.hZ||2.5)+'m',_czx,_czy+_fs*.65);ctx.shadowBlur=0;}
+if(f.type==='wall'){const W=(f.thick||0.15)*pm;ctx.save();ctx.translate(f.x,f.y);ctx.strokeStyle=f.color||'#94a3b8';ctx.globalAlpha=ho(f.opa)/255;ctx.lineWidth=W;ctx.lineCap='round';ctx.lineJoin='round';if(f.pts&&f.pts.length>0){ctx.beginPath();ctx.moveTo(f.pts[0].x*pm,f.pts[0].y*pm);for(let i=1;i<f.pts.length;i++)ctx.lineTo(f.pts[i].x*pm,f.pts[i].y*pm);ctx.stroke();}if(isSel){ctx.fillStyle='#fff';ctx.strokeStyle=f.color||'#94a3b8';ctx.lineWidth=2;ctx.globalAlpha=1.0;f.pts.forEach((p)=>{ctx.beginPath();ctx.arc(p.x*pm,p.y*pm,W/2+2,0,Math.PI*2);ctx.fill();ctx.stroke();});}if(f.pts&&f.pts.length>0){const _czx=f.pts.reduce((s,p)=>s+p.x,0)/f.pts.length*pm;const _czy=f.pts.reduce((s,p)=>s+p.y,0)/f.pts.length*pm;const _fs=Math.max(9,Math.min(13,pm*.18));ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillStyle='#fff';ctx.globalAlpha=1.0;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+_fs+'px Outfit,sans-serif';ctx.fillText(f.name||'Muro',_czx,_czy-_fs*.65);ctx.font=(_fs*.75)+'px Space Mono,monospace';ctx.fillStyle=f.color||'#94a3b8';ctx.fillText((f.negative?'▼ ':'A:')+fmtDim(f.hZ||2.5)+'m',_czx,_czy+_fs*.65);ctx.shadowBlur=0;}
+	if(f.negative&&f.pts&&f.pts.length>1){ctx.save();ctx.globalAlpha=0.35;ctx.strokeStyle=f.color||'#94a3b8';ctx.lineWidth=1;const _step=Math.max(20,pm*0.6);for(let i=0;i<f.pts.length-1;i++){const sx=f.pts[i].x*pm,sy=f.pts[i].y*pm;const ex=f.pts[i+1].x*pm,ey=f.pts[i+1].y*pm;const segLen=Math.hypot(ex-sx,ey-sy);const nx=-(ey-sy)/segLen,ny=(ex-sx)/segLen;const tickLen=W*0.45;let t=_step/2;while(t<segLen){const tx=sx+(ex-sx)*t/segLen,ty=sy+(ey-sy)*t/segLen;ctx.beginPath();ctx.moveTo(tx-nx*tickLen,ty-ny*tickLen);ctx.lineTo(tx+nx*tickLen,ty+ny*tickLen);ctx.stroke();t+=_step;}}ctx.restore();}
 if(f.holes && f.holes.length > 0) {
     ctx.lineCap = 'butt';
     let currentLen = 0;
@@ -3313,7 +3428,7 @@ if(layerWall&&FLOORS[curFloor]?.cal)drawWallJoints();
 if(layerMeas&&FLOORS[curFloor]?.cal)measures.filter(m=>m.floor===curFloor).forEach(m=>drawMeas(m,m.id===selMeasId||m.id===editMeasId));if(mode==='ruler')drawActiveRuler();if(mode==='drawZone')drawZoneActive();if(mode==='drawWall')drawWallActive();drawFurnTooltip();if(qmLastResult)drawQMResult();if(qmProbeMode)drawProbe();if(freeProbeMode&&freeProbePos)drawFreeProbe();if(mode==='calib'&&calibPt1){ctx.save();ctx.strokeStyle='#e8a020';ctx.lineWidth=2;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(calibPt1.x-24,calibPt1.y);ctx.lineTo(calibPt1.x+24,calibPt1.y);ctx.stroke();ctx.beginPath();ctx.moveTo(calibPt1.x,calibPt1.y-24);ctx.lineTo(calibPt1.x,calibPt1.y+24);ctx.stroke();ctx.beginPath();ctx.arc(calibPt1.x,calibPt1.y,4,0,Math.PI*2);ctx.fillStyle='#e8a020aa';ctx.fill();ctx.setLineDash([]);ctx.restore();}const rp=refPts[curFloor];if(rp){ctx.save();const rpx=rp.x,rpy=rp.y,rps=16;ctx.strokeStyle='#e8a020';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(rpx-rps,rpy);ctx.lineTo(rpx+rps,rpy);ctx.moveTo(rpx,rpy-rps);ctx.lineTo(rpx,rpy+rps);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(rpx,rpy,4,0,Math.PI*2);ctx.strokeStyle='#e8a020';ctx.lineWidth=2;ctx.stroke();ctx.font='bold 10px Space Mono,monospace';ctx.fillStyle='#e8a020';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=4;ctx.fillText('▣ cota',rpx+7,rpy-5);ctx.shadowBlur=0;ctx.restore();}if(showMinimap)renderMinimap();if(mode==='placeWindow'||mode==='placeDoor')drawPlaceWindowGhost();if(angle3PtMode&&angle3PtPts.length){ctx.save();ctx.strokeStyle='#a78bfa';ctx.lineWidth=2;angle3PtPts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.stroke();});if(angle3PtPts.length===2){ctx.beginPath();ctx.moveTo(angle3PtPts[0].x,angle3PtPts[0].y);ctx.lineTo(angle3PtPts[1].x,angle3PtPts[1].y);ctx.stroke();}ctx.restore();}}
 function drawWallJoints(){const pm=pxM();const walls=furniture.filter(f=>f.floor===curFloor&&f.type==='wall'&&!f.hidden&&f.pts&&f.pts.length>0);if(walls.length<2)return;const SNAP=18;const allPts=[];walls.forEach(w=>{w.pts.forEach(p=>allPts.push({x:w.x+p.x*pm,y:w.y+p.y*pm,thick:w.thick||0.15,color:w.color||'#94a3b8'}));});const drawn=new Set();allPts.forEach((a,ai)=>{if(drawn.has(ai))return;const group=[ai];allPts.forEach((b,bi)=>{if(bi!==ai&&!drawn.has(bi)&&Math.hypot(b.x-a.x,b.y-a.y)<SNAP)group.push(bi);});if(group.length<2)return;const avgX=group.reduce((s,i)=>s+allPts[i].x,0)/group.length;const avgY=group.reduce((s,i)=>s+allPts[i].y,0)/group.length;const maxT=Math.max(...group.map(i=>allPts[i].thick));const col=allPts[group[0]].color;ctx.save();ctx.globalAlpha=1.0;ctx.fillStyle=col;ctx.beginPath();ctx.arc(avgX,avgY,maxT*pm/2+0.5,0,Math.PI*2);ctx.fill();ctx.restore();group.forEach(i=>drawn.add(i));});}
 function detectRooms(){const pm=pxM();if(!pm||!FLOORS[curFloor]?.cal){showToast('⚠ Calibra primero esta planta');return;}const walls=furniture.filter(f=>f.floor===curFloor&&f.type==='wall'&&!f.hidden&&f.pts&&f.pts.length>=2);if(!walls.length){showToast('No hay muros en esta planta');return;}const SNAP=22;const rawNodes=[];walls.forEach(w=>{w.pts.forEach(p=>rawNodes.push({x:w.x+p.x*pm,y:w.y+p.y*pm}));});const nodes=[];const ptToNode=rawNodes.map(rn=>{for(let ni=0;ni<nodes.length;ni++)if(Math.hypot(nodes[ni].x-rn.x,nodes[ni].y-rn.y)<SNAP)return ni;nodes.push({x:rn.x,y:rn.y});return nodes.length-1;});const adj=Array.from({length:nodes.length},()=>[]);let ri=0;walls.forEach(w=>{for(let pi=0;pi<w.pts.length-1;pi++){const n1=ptToNode[ri+pi],n2=ptToNode[ri+pi+1];if(n1!==n2&&!adj[n1].includes(n2)){adj[n1].push(n2);adj[n2].push(n1);}}ri+=w.pts.length;});const foundKeys=new Set();const cycles=[];function dfs(start,cur,path,vis){if(path.length>12)return;for(const nb of adj[cur]){if(nb===start&&path.length>=3){const mn=Math.min(...path);const mi=path.indexOf(mn);const norm=[...path.slice(mi),...path.slice(0,mi)];if(norm[1]>norm[norm.length-1])norm.reverse();const key=norm.join(',');if(!foundKeys.has(key)){foundKeys.add(key);cycles.push(path.map(ni=>({x:nodes[ni].x,y:nodes[ni].y})));}}else if(!vis.has(nb)){vis.add(nb);path.push(nb);dfs(start,cur,path,vis);path.pop();vis.delete(nb);}}}for(let i=0;i<nodes.length;i++)dfs(i,i,[i],new Set([i]));if(!cycles.length){showToast('⚠ No se detectaron habitaciones — conecta los extremos de los muros');return;}pushHistory();furniture=furniture.filter(f=>!(f.floor===curFloor&&f.type==='zona'&&f.autoDetected));const colors=['#3b82f6','#10b981','#a855f7','#f59e0b','#ef4444','#06b6d4','#84cc16'];let cnt=0;cycles.forEach((pts,ci)=>{const area=shoelace(pts)/(pm*pm);if(area<0.2)return;furniture.push({id:Date.now()+ci*1000+Math.random(),floor:curFloor,type:'zona',name:'Hab. '+(cnt+1),x:0,y:0,pts,color:colors[cnt%colors.length],opa:0.5,autoDetected:true});cnt++;});if(!cnt){showToast('⚠ Muros no conectados — acerca los extremos');return;}saveLS();render();updateList();showToast('✓ '+cnt+' habitación'+(cnt!==1?'es':'')+' detectada'+(cnt!==1?'s':''));}
-function updateSelDimensions(){const selDiv=document.getElementById('sel-dim-edit');const wSelEdit=document.getElementById('wall-sel-edit');const winSelEdit=document.getElementById('window-sel-edit');const winHint=document.getElementById('win-hint');if(!selId){wallEditMode=false;if(selDiv)selDiv.innerHTML='';if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';return;}const f=furniture.find(x=>x.id===selId);if(!f)return;if(f.type==='wall'){if(selDiv)selDiv.innerHTML='';if(wSelEdit){wSelEdit.style.display='block';const _wmb=document.getElementById('btn-wall-edit-mode');if(_wmb){if(wallEditMode){_wmb.textContent='🔒 Bloquear muro';_wmb.style.background='rgba(245,158,11,0.15)';_wmb.style.borderColor='var(--warn)';_wmb.style.color='var(--warn)';_wmb.classList.remove('hint-glow');}else{_wmb.textContent='✏ Mover / Editar vértices';_wmb.style.background='';_wmb.style.borderColor='';_wmb.style.color='';_wmb.classList.add('hint-glow');}}document.getElementById('wall-sel-name').value=f.name||'';document.getElementById('wedit-thick').value=fmtDim(f.thick||0.15);document.getElementById('wedit-hz').value=fmtDim(f.hZ||2.5);document.getElementById('wedit-color').value=f.color||'#94a3b8';let len=0;if(f.pts)for(let i=1;i<f.pts.length;i++)len+=d2(f.pts[i-1],f.pts[i]);document.getElementById('wedit-len').textContent='Longitud total: '+len.toFixed(2)+'m';document.getElementById('wall-slab-floor').checked=!!f.slabFloor;document.getElementById('wall-slab-ceiling').checked=!!f.slabCeiling;const slabKind=f.slabKind||'none';Array.from(document.getElementsByName('wall-slab-kind')).forEach(el=>{el.checked=el.value===slabKind;});}if(winSelEdit){winSelEdit.style.display='block';if(winHint)winHint.style.display='none';document.getElementById('window-sel-name').textContent='Muro: '+(f.name||'Sin nombre');let holesHTML='';if(f.holes&&f.holes.length>0){f.holes.forEach((h,i)=>{const isSH=i===selHoleIdx;const hCol=h.type==='door'?'#ec4899':'#0ea5e9';const hIcon=h.type==='door'?'🚪':'🪟';const hBrd=isSH?hCol:'var(--brd)';const hBg=isSH?'rgba(14,165,233,0.08)':'var(--inp)';holesHTML+='<div style="background:'+hBg+';padding:6px;border-radius:4px;margin-bottom:6px;border:1px solid '+hBrd+';cursor:pointer" onclick="selHoleIdx='+i+';render();updateSelDimensions()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:0.65rem;color:'+hCol+'">'+hIcon+' '+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'</span><button class="fi-del" style="font-size:0.75rem;padding:0;background:none;border:none;color:var(--red);cursor:pointer" onclick="event.stopPropagation();delHole('+i+')">🗑</button></div>'+'<input type="text" placeholder="'+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'" value="'+(h.name||'')+'" onclick="event.stopPropagation()" oninput="event.stopPropagation();updHole('+i+',\'name\',this.value)" style="font-size:.64rem;margin-bottom:4px;width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:3px;padding:2px 4px;color:var(--fg)">'+'<div class="g2" style="margin-bottom:4px"><div><label style="font-size:0.6rem">Posición (m)</label><input type="number" step="0.1" value="'+h.offset.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'offset\',this.value)"></div><div><label style="font-size:0.6rem">Ancho (m)</label><input type="number" step="0.1" min="0.1" value="'+h.w.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'w\',this.value)"></div></div><div class="g2"><div><label style="font-size:0.6rem">Alto Z (m)</label><input type="number" step="0.1" min="0.1" value="'+h.h.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'h\',this.value)"></div><div><label style="font-size:0.6rem">Elev. (m)</label><input type="number" step="0.1" min="0" value="'+h.elev.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'elev\',this.value)"></div></div></div>';});}document.getElementById('wedit-holes').innerHTML=holesHTML;updateAllHolesList();}return;}wallEditMode=false;if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';if(f.type==='rect'){selDiv.innerHTML='<div class="g2" style="margin-top:6px"><div><label>Ancho (m)</label><input type="number" id="edit-w" value="'+fmtDim(f.w)+'" step="0.05" min="0.05" onchange="updateDim(\'w\',this.value)"></div><div><label>Fondo (m)</label><input type="number" id="edit-h" value="'+fmtDim(f.h)+'" step="0.05" min="0.05" onchange="updateDim(\'h\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='L'){selDiv.innerHTML='<div class="glbl">Brazo vertical (↕)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll2" value="'+fmtDim(f.h)+'" step="0.05" min="0.1" onchange="updateDim(\'h\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la2" value="'+fmtDim(f.a2)+'" step="0.05" min="0.05" onchange="updateDim(\'a2\',this.value)"></div></div><hr class="divl"><div class="glbl">Brazo horizontal (↔)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll1" value="'+fmtDim(f.w)+'" step="0.05" min="0.1" onchange="updateDim(\'w\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la1" value="'+fmtDim(f.a1)+'" step="0.05" min="0.05" onchange="updateDim(\'a1\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='zona'){selDiv.innerHTML='<p style="font-size:.65rem;color:'+_ZONA_SEL_COL+';margin-bottom:5px">✎ Arrastra los vértices naranjas para editar la forma</p><label>Nombre</label><input type="text" value="'+f.name+'" style="width:100%" onchange="const _z=furniture.find(x=>x.id===selId);if(_z){_z.name=this.value.trim()||\'Mueble\';saveLS();render();updateList();}"><label style="margin-top:6px">Color</label><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input type="color" value="'+(f.color||'#10b981')+'" oninput="const _z=furniture.find(x=>x.id===selId);if(_z){_z.color=this.value;render();}" onchange="const _z=furniture.find(x=>x.id===selId);if(_z)saveLS();" style="width:38px;height:28px;border:none;background:none;cursor:pointer;padding:0"><span style="font-size:.7rem;color:var(--t2)">'+(f.pts?f.pts.length+' vértices':'')+'</span></div>';}else if(f.type==='circle'){selDiv.innerHTML='<label>Diámetro (m)</label><input type="number" id="edit-d" value="'+fmtDim(f.d)+'" step="0.05" min="0.1" onchange="updateDim(\'d\',this.value)"><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}}
+function updateSelDimensions(){const selDiv=document.getElementById('sel-dim-edit');const wSelEdit=document.getElementById('wall-sel-edit');const winSelEdit=document.getElementById('window-sel-edit');const winHint=document.getElementById('win-hint');if(!selId){wallEditMode=false;if(selDiv)selDiv.innerHTML='';if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';return;}const f=furniture.find(x=>x.id===selId);if(!f)return;if(f.type==='wall'){if(selDiv)selDiv.innerHTML='';if(wSelEdit){wSelEdit.style.display='block';const _wmb=document.getElementById('btn-wall-edit-mode');if(_wmb){if(wallEditMode){_wmb.textContent='🔒 Bloquear muro';_wmb.style.background='rgba(245,158,11,0.15)';_wmb.style.borderColor='var(--warn)';_wmb.style.color='var(--warn)';_wmb.classList.remove('hint-glow');}else{_wmb.textContent='✏ Mover / Editar vértices';_wmb.style.background='';_wmb.style.borderColor='';_wmb.style.color='';_wmb.classList.add('hint-glow');}}document.getElementById('wall-sel-name').value=f.name||'';document.getElementById('wedit-thick').value=fmtDim(f.thick||0.15);document.getElementById('wedit-hz').value=fmtDim(f.hZ||2.5);document.getElementById('wedit-color').value=f.color||'#94a3b8';let len=0;if(f.pts)for(let i=1;i<f.pts.length;i++)len+=d2(f.pts[i-1],f.pts[i]);document.getElementById('wedit-len').textContent='Longitud total: '+len.toFixed(2)+'m';document.getElementById('wall-slab-floor').checked=!!f.slabFloor;document.getElementById('wall-slab-ceiling').checked=!!f.slabCeiling;document.getElementById('wall-sel-negative').checked=!!f.negative;const slabKind=f.slabKind||'none';Array.from(document.getElementsByName('wall-slab-kind')).forEach(el=>{el.checked=el.value===slabKind;});}if(winSelEdit){winSelEdit.style.display='block';if(winHint)winHint.style.display='none';document.getElementById('window-sel-name').textContent='Muro: '+(f.name||'Sin nombre');let holesHTML='';if(f.holes&&f.holes.length>0){f.holes.forEach((h,i)=>{const isSH=i===selHoleIdx;const hCol=h.type==='door'?'#ec4899':'#0ea5e9';const hIcon=h.type==='door'?'🚪':'🪟';const hBrd=isSH?hCol:'var(--brd)';const hBg=isSH?'rgba(14,165,233,0.08)':'var(--inp)';holesHTML+='<div style="background:'+hBg+';padding:6px;border-radius:4px;margin-bottom:6px;border:1px solid '+hBrd+';cursor:pointer" onclick="selHoleIdx='+i+';render();updateSelDimensions()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:0.65rem;color:'+hCol+'">'+hIcon+' '+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'</span><button class="fi-del" style="font-size:0.75rem;padding:0;background:none;border:none;color:var(--red);cursor:pointer" onclick="event.stopPropagation();delHole('+i+')">🗑</button></div>'+'<input type="text" placeholder="'+(h.type==='door'?'Puerta':'Ventana')+' '+(i+1)+'" value="'+(h.name||'')+'" onclick="event.stopPropagation()" oninput="event.stopPropagation();updHole('+i+',\'name\',this.value)" style="font-size:.64rem;margin-bottom:4px;width:100%;box-sizing:border-box;background:var(--inp);border:1px solid var(--brd);border-radius:3px;padding:2px 4px;color:var(--fg)">'+'<div class="g2" style="margin-bottom:4px"><div><label style="font-size:0.6rem">Posición (m)</label><input type="number" step="0.1" value="'+h.offset.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'offset\',this.value)"></div><div><label style="font-size:0.6rem">Ancho (m)</label><input type="number" step="0.1" min="0.1" value="'+h.w.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'w\',this.value)"></div></div><div class="g2"><div><label style="font-size:0.6rem">Alto Z (m)</label><input type="number" step="0.1" min="0.1" value="'+h.h.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'h\',this.value)"></div><div><label style="font-size:0.6rem">Elev. (m)</label><input type="number" step="0.1" min="0" value="'+h.elev.toFixed(2)+'" onclick="event.stopPropagation()" onchange="updHole('+i+',\'elev\',this.value)"></div></div></div>';});}document.getElementById('wedit-holes').innerHTML=holesHTML;updateAllHolesList();}return;}wallEditMode=false;if(wSelEdit)wSelEdit.style.display='none';if(winSelEdit)winSelEdit.style.display='none';if(winHint)winHint.style.display='block';if(f.type==='rect'){selDiv.innerHTML='<div class="g2" style="margin-top:6px"><div><label>Ancho (m)</label><input type="number" id="edit-w" value="'+fmtDim(f.w)+'" step="0.05" min="0.05" onchange="updateDim(\'w\',this.value)"></div><div><label>Fondo (m)</label><input type="number" id="edit-h" value="'+fmtDim(f.h)+'" step="0.05" min="0.05" onchange="updateDim(\'h\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='L'){selDiv.innerHTML='<div class="glbl">Brazo vertical (↕)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll2" value="'+fmtDim(f.h)+'" step="0.05" min="0.1" onchange="updateDim(\'h\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la2" value="'+fmtDim(f.a2)+'" step="0.05" min="0.05" onchange="updateDim(\'a2\',this.value)"></div></div><hr class="divl"><div class="glbl">Brazo horizontal (↔)</div><div class="g2"><div><label>Largo (m)</label><input type="number" id="edit-ll1" value="'+fmtDim(f.w)+'" step="0.05" min="0.1" onchange="updateDim(\'w\',this.value)"></div><div><label>Ancho (m)</label><input type="number" id="edit-la1" value="'+fmtDim(f.a1)+'" step="0.05" min="0.05" onchange="updateDim(\'a1\',this.value)"></div></div><div style="margin-top:5px"><label>Ángulo (°)</label><input type="number" id="edit-rot" value="'+(f.rot||0)+'" step="1" min="-180" max="360" onchange="updateRot(this.value)" style="width:100%"></div><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}else if(f.type==='zona'){selDiv.innerHTML='<p style="font-size:.65rem;color:'+_ZONA_SEL_COL+';margin-bottom:5px">✎ Arrastra los vértices naranjas para editar la forma</p><label>Nombre</label><input type="text" value="'+f.name+'" style="width:100%" onchange="const _z=furniture.find(x=>x.id===selId);if(_z){_z.name=this.value.trim()||\'Mueble\';saveLS();render();updateList();}"><label style="margin-top:6px">Color</label><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input type="color" value="'+(f.color||'#10b981')+'" oninput="const _z=furniture.find(x=>x.id===selId);if(_z){_z.color=this.value;render();}" onchange="const _z=furniture.find(x=>x.id===selId);if(_z)saveLS();" style="width:38px;height:28px;border:none;background:none;cursor:pointer;padding:0"><span style="font-size:.7rem;color:var(--t2)">'+(f.pts?f.pts.length+' vértices':'')+'</span></div>';}else if(f.type==='circle'){selDiv.innerHTML='<label>Diámetro (m)</label><input type="number" id="edit-d" value="'+fmtDim(f.d)+'" step="0.05" min="0.1" onchange="updateDim(\'d\',this.value)"><div style="margin-top:5px"><label>↕ Elevación del suelo (m)</label><input type="number" id="edit-elevZ" value="'+(f.elevZ||0).toFixed(2)+'" step="0.05" min="0" onchange="updateDim(\'elevZ\',this.value)" style="width:100%"></div>';}}
 
 function updStair(prop,val){
   const f=furniture.find(x=>x.id===selId);
@@ -3408,7 +3523,7 @@ function dupSel(){pushHistory();const f=furniture.find(x=>x.id===selId);if(!f)re
 function delSel(){pushHistory();furniture=furniture.filter(x=>x.id!==selId);selId=null;selZonaPtIdx=-1;saveLS();render();updateList();updateSel();updateSelDimensions();}
 function deselect(){if(mode!=='none')cancelMode();selId=null;selMeasId=null;selZonaPtIdx=-1;selHoleIdx=-1;qmLastResult=null;render();updateSel();updateList();updateSelDimensions();}
 function updateSel(){const mob=isMob();const sc=document.getElementById('sel-ctrl');const sbar=document.getElementById('sbar');if(selId){const f=furniture.find(x=>x.id===selId);if(!f)return;const dim=f.type==='circle'?'⌀'+fmtDim(f.d)+'m':f.type==='zona'?'✎ libre':f.type==='wall'?'Muro':fmtDim(f.w)+'×'+fmtDim(f.h)+'m'+(f.type==='L'?' (L)':'');if(!mob){if(f.type==='wall'){sc.style.display='none';updateSelDimensions();if(selHoleIdx>=0){openAcc('window');openSubAcc('win-list');}else{openAcc('wall');openSubAcc('wall-list');}}else{sc.style.display='block';document.getElementById('sel-name-input').value=f.name;updateSelDimensions();openAcc('list');openSubAcc('furn-list');}}if(mob){sbar.style.display='flex';document.getElementById('sbar-nm').textContent=f.name+' · '+dim;const _sr=document.getElementById('sbar-rot');if(_sr)_sr.style.display=(f.type==='circle'||f.type==='zona'||f.type==='wall')?'none':'';if(f.type==='wall')sc.style.display='none';else{sc.style.display='block';document.getElementById('sel-name-input').value=f.name;}updateSelDimensions();}}else{sc.style.display='none';sbar.style.display='none';}}
-function updateList(){document.getElementById('multi-align-bar')?.classList.toggle('show',multiSel.length>1);const list=document.getElementById('flist');const wlist=document.getElementById('wall-list');const f_all=furniture.filter(f=>f.floor===curFloor);const ff=f_all.filter(f=>f.type!=='wall');const ww=f_all.filter(f=>f.type==='wall');let totArea=0;ff.forEach(f=>{if(f.type==='rect')totArea+=f.w*f.h;else if(f.type==='circle')totArea+=Math.PI*(f.d/2)*(f.d/2);else if(f.type==='L')totArea+=f.w*f.h-(f.w-(f.a2||0))*(f.h-(f.a1||0));else if(f.type==='zona'&&f.pts)totArea+=shoelace(f.pts.map(p=>({x:f.x+p.x,y:f.y+p.y})))/(pxM()*pxM());});const badge=document.getElementById('furn-badge');badge.textContent=ff.length;badge.title=ff.length+' muebles · '+totArea.toFixed(2)+'m² ocupado';const wbadge=document.getElementById('wall-badge');if(wbadge){wbadge.style.display=ww.length?'':'none';wbadge.textContent=ww.length;}const winbadge=document.getElementById('window-badge');if(winbadge){const _wh=ww.reduce((s,w)=>s+(w.holes?.length||0),0);winbadge.style.display=_wh?'':'none';winbadge.textContent=_wh;}const _btnWVis=document.getElementById('btn-vis-wall');if(_btnWVis){const _anyWHid=ww.some(w=>w.hidden);_btnWVis.innerHTML=(_anyWHid?_EYE_BTN+' Mostrar muros':_EYE_BTN_OFF+' Ocultar muros');}const _ws=document.getElementById('wall-search');if(_ws)_ws.style.display=ww.length>2?'block':'none';if(!ff.length){list.innerHTML='<div class="empty">Sin muebles todavía</div>';}else{const rooms={};[...ff].reverse().forEach(f=>{const rk=f.room||'';if(!rooms[rk])rooms[rk]=[];rooms[rk].push(f);});list.innerHTML='';Object.entries(rooms).forEach(([rk,items])=>{if(rk){const hdr=document.createElement('div');hdr.className='room-hdr';hdr.textContent='🏠 '+rk;list.appendChild(hdr);}items.forEach(f=>{const el=document.createElement('div');el.className='fi'+(f.id===selId?' on':'')+(f.hidden?' hidden-meas':'');const dim=f.type==='zona'?('▣ '+(f.pts?shoelace(f.pts.map(p=>({x:f.x+p.x,y:f.y+p.y})))/(pxM()*pxM()):0).toFixed(2)+'m²'):f.type==='circle'?'⌀'+fmtDim(f.d)+'m':fmtDim(f.w)+'×'+fmtDim(f.h)+'m'+(f.type==='L'?' · L':'');const icon=f.type==='zona'?'✎':f.type==='circle'?'○':f.type==='L'?'⌌':'▭';el.innerHTML=(f.type==='zona'?'<span style="font-size:.6rem;color:var(--t2);margin-right:3px">Color:</span><input type="color" value="'+(f.color||'#10b981')+'" title="Color" onclick="event.stopPropagation()" oninput="event.stopPropagation();var _zz=furniture.find(x=>x.id===selId);if(_zz){_zz.color=this.value;render();}" onchange="event.stopPropagation();var _zz=furniture.find(x=>x.id===selId);if(_zz){_zz.color=this.value;saveLS();render();updateList();}" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0;border-radius:3px">':`<div class="dot" style="background:${f.color}"></div>`)+'<div class="inf" style="padding-right:40px"><div class="nm">'+icon+' '+f.name+'</div><div class="dm">'+dim+'</div></div><div class="ri-acts"><button class="eye-btn" onclick="event.stopPropagation();toggleFurnVis('+JSON.stringify(f.id)+')" title="'+(f.hidden?'Mostrar':'Ocultar')+'">'+(f.hidden?_EYE_CLOSED:_EYE_OPEN)+'</button><button class="rxx-abs" onclick="event.stopPropagation();delFurn('+JSON.stringify(f.id)+')">'+_TRASH_SVG+'</button></div>';el.addEventListener('click',()=>{selId=f.id;selZonaPtIdx=-1;if(isMob())closePanel();render();updateSel();updateList();updateSelDimensions();});list.appendChild(el);});});if(FLOORS[curFloor]?.cal&&ff.length){const ta=document.createElement('div');ta.className='furn-total';ta.textContent='Área total: '+totArea.toFixed(2)+' m²';list.appendChild(ta);}}if(!wlist)return;if(!ww.length){wlist.innerHTML='<div class="empty">Sin muros todavía</div>';return;}wlist.innerHTML='';ww.forEach(f=>{const el=document.createElement('div');el.className='fi'+(f.id===selId?' on':'')+(f.hidden?' hidden-meas':'');el.innerHTML='<div class="dot" style="background:'+f.color+'"></div><div class="inf" style="padding-right:40px"><div class="nm">🧱 '+(f.name||'Muro')+'</div><div class="dm">L:'+fmtDim(f.w)+'m / G:'+fmtDim(f.h)+'m / A:'+fmtDim(f.hZ||2.5)+'m</div></div><div class="ri-acts"><button class="eye-btn" onclick="event.stopPropagation();toggleFurnVis('+JSON.stringify(f.id)+')" title="'+(f.hidden?'Mostrar':'Ocultar')+'">'+(f.hidden?_EYE_CLOSED:_EYE_OPEN)+'</button><button class="rxx-abs" onclick="event.stopPropagation();delFurn('+JSON.stringify(f.id)+')">'+_TRASH_SVG+'</button></div>';el.addEventListener('click',()=>{selId=f.id;selZonaPtIdx=-1;if(isMob())closePanel();render();updateSel();updateList();updateSelDimensions();});wlist.appendChild(el);});updateAllHolesList();}
+function updateList(){document.getElementById('multi-align-bar')?.classList.toggle('show',multiSel.length>1);const list=document.getElementById('flist');const wlist=document.getElementById('wall-list');const f_all=furniture.filter(f=>f.floor===curFloor);const ff=f_all.filter(f=>f.type!=='wall');const ww=f_all.filter(f=>f.type==='wall');let totArea=0;ff.forEach(f=>{if(f.type==='rect')totArea+=f.w*f.h;else if(f.type==='circle')totArea+=Math.PI*(f.d/2)*(f.d/2);else if(f.type==='L')totArea+=f.w*f.h-(f.w-(f.a2||0))*(f.h-(f.a1||0));else if(f.type==='zona'&&f.pts)totArea+=shoelace(f.pts.map(p=>({x:f.x+p.x,y:f.y+p.y})))/(pxM()*pxM());});const badge=document.getElementById('furn-badge');badge.textContent=ff.length;badge.title=ff.length+' muebles · '+totArea.toFixed(2)+'m² ocupado';const wbadge=document.getElementById('wall-badge');if(wbadge){wbadge.style.display=ww.length?'':'none';wbadge.textContent=ww.length;}const winbadge=document.getElementById('window-badge');if(winbadge){const _wh=ww.reduce((s,w)=>s+(w.holes?.length||0),0);winbadge.style.display=_wh?'':'none';winbadge.textContent=_wh;}const _btnWVis=document.getElementById('btn-vis-wall');if(_btnWVis){const _anyWHid=ww.some(w=>w.hidden);_btnWVis.innerHTML=(_anyWHid?_EYE_BTN+' Mostrar muros':_EYE_BTN_OFF+' Ocultar muros');}const _ws=document.getElementById('wall-search');if(_ws)_ws.style.display=ww.length>2?'block':'none';if(!ff.length){list.innerHTML='<div class="empty">Sin muebles todavía</div>';}else{const rooms={};[...ff].reverse().forEach(f=>{const rk=f.room||'';if(!rooms[rk])rooms[rk]=[];rooms[rk].push(f);});list.innerHTML='';Object.entries(rooms).forEach(([rk,items])=>{if(rk){const hdr=document.createElement('div');hdr.className='room-hdr';hdr.textContent='🏠 '+rk;list.appendChild(hdr);}items.forEach(f=>{const el=document.createElement('div');el.className='fi'+(f.id===selId?' on':'')+(f.hidden?' hidden-meas':'');const dim=f.type==='zona'?('▣ '+(f.pts?shoelace(f.pts.map(p=>({x:f.x+p.x,y:f.y+p.y})))/(pxM()*pxM()):0).toFixed(2)+'m²'):f.type==='circle'?'⌀'+fmtDim(f.d)+'m':fmtDim(f.w)+'×'+fmtDim(f.h)+'m'+(f.type==='L'?' · L':'');const icon=f.type==='zona'?'✎':f.type==='circle'?'○':f.type==='L'?'⌌':'▭';el.innerHTML=(f.type==='zona'?'<span style="font-size:.6rem;color:var(--t2);margin-right:3px">Color:</span><input type="color" value="'+(f.color||'#10b981')+'" title="Color" onclick="event.stopPropagation()" oninput="event.stopPropagation();var _zz=furniture.find(x=>x.id===selId);if(_zz){_zz.color=this.value;render();}" onchange="event.stopPropagation();var _zz=furniture.find(x=>x.id===selId);if(_zz){_zz.color=this.value;saveLS();render();updateList();}" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0;flex-shrink:0;border-radius:3px">':`<div class="dot" style="background:${f.color}"></div>`)+'<div class="inf" style="padding-right:40px"><div class="nm">'+icon+' '+f.name+'</div><div class="dm">'+dim+'</div></div><div class="ri-acts"><button class="eye-btn" onclick="event.stopPropagation();toggleFurnVis('+JSON.stringify(f.id)+')" title="'+(f.hidden?'Mostrar':'Ocultar')+'">'+(f.hidden?_EYE_CLOSED:_EYE_OPEN)+'</button><button class="rxx-abs" onclick="event.stopPropagation();delFurn('+JSON.stringify(f.id)+')">'+_TRASH_SVG+'</button></div>';el.addEventListener('click',()=>{selId=f.id;selZonaPtIdx=-1;if(isMob())closePanel();render();updateSel();updateList();updateSelDimensions();});list.appendChild(el);});});if(FLOORS[curFloor]?.cal&&ff.length){const ta=document.createElement('div');ta.className='furn-total';ta.textContent='Área total: '+totArea.toFixed(2)+' m²';list.appendChild(ta);}}if(!wlist)return;if(!ww.length){wlist.innerHTML='<div class="empty">Sin muros todavía</div>';return;}wlist.innerHTML='';ww.forEach(f=>{const el=document.createElement('div');el.className='fi'+(f.id===selId?' on':'')+(f.hidden?' hidden-meas':'');el.innerHTML='<div class="dot" style="background:'+f.color+'"></div><div class="inf" style="padding-right:40px"><div class="nm">'+(f.negative?'▼ ':'🧱 ')+(f.name||'Muro')+'</div><div class="dm">L:'+fmtDim(f.w)+'m / G:'+fmtDim(f.h)+'m / '+(f.negative?'▼:':'A:')+fmtDim(f.hZ||2.5)+'m</div></div><div class="ri-acts"><button class="eye-btn" onclick="event.stopPropagation();toggleFurnVis('+JSON.stringify(f.id)+')" title="'+(f.hidden?'Mostrar':'Ocultar')+'">'+(f.hidden?_EYE_CLOSED:_EYE_OPEN)+'</button><button class="rxx-abs" onclick="event.stopPropagation();delFurn('+JSON.stringify(f.id)+')">'+_TRASH_SVG+'</button></div>';el.addEventListener('click',()=>{selId=f.id;selZonaPtIdx=-1;if(isMob())closePanel();render();updateSel();updateList();updateSelDimensions();});wlist.appendChild(el);});updateAllHolesList();}
 function toggleFurnVis(id){const f=furniture.find(x=>x.id===id);if(!f)return;f.hidden=!f.hidden;if(f.hidden&&selId===id){selId=null;updateSel();updateSelDimensions();}saveLS();render();updateList();}
 function toggleAllWallVis(){const ww=furniture.filter(f=>f.floor===curFloor&&f.type==='wall');const anyVis=ww.some(w=>!w.hidden);ww.forEach(w=>w.hidden=anyVis);saveLS();render();updateList();}
 function clearAllWalls(){if(!confirm('¿Borrar todos los muros?'))return;pushHistory();furniture=furniture.filter(f=>!(f.floor===curFloor&&f.type==='wall'));if(selId){const _sf=furniture.find(x=>x.id===selId);if(!_sf){selId=null;selZonaPtIdx=-1;}}saveLS();render();updateList();updateSel();updateSelDimensions();}
