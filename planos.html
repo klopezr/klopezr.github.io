@@ -263,6 +263,10 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 #cm-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--brd);border-radius:8px;padding:14px 16px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;min-width:200px}
 #cm-popup.show{display:block}
 #cm-popup select{width:100%;margin-bottom:8px}
+#mini-prompt{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--brd);border-radius:8px;padding:14px 16px;z-index:310;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;min-width:230px;max-width:320px}
+#mini-prompt.show{display:block}
+#mini-prompt-backdrop{display:none;position:fixed;inset:0;z-index:309;background:rgba(0,0,0,.35)}
+#mini-prompt-backdrop.show{display:block}
 .furn-total{font-size:.61rem;color:var(--t2);text-align:right;margin-top:4px;font-family:'Space Mono',monospace;padding-top:4px;border-top:1px dashed var(--brd)}
 #furn-tooltip{position:absolute;pointer-events:none;background:rgba(0,0,0,.92);border:1px solid rgba(255,255,255,.15);border-radius:5px;padding:4px 8px;font-family:'Space Mono',monospace;font-size:.62rem;color:#fff;white-space:nowrap;z-index:30;display:none;transform:translate(10px,-50%)}
 #carea.probe-mode{cursor:crosshair!important}
@@ -324,7 +328,9 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <button class="btn sm d" onclick="cancelMode()" style="width:auto;margin:0;padding:6px 14px">✕ Cancelar</button>
 </div>
 <div id="sbar"><span id="sbar-nm"></span><button class="sbbtn" id="sbar-rot" onclick="rotateSel()">↻</button><button class="sbbtn" onclick="dupSel()">⧉</button><button class="sbbtn" style="color:var(--acc2)" onclick="mobileEdit()">✎</button><button class="sbbtn d" onclick="delSel()">✕</button><button class="sbbtn ok" onclick="deselect()">✓</button></div>
-<div id="lp-ring"></div><div id="toast"></div><div id="calib-reminder"><span class="cr-title">📐 Sin calibrar — el contenido no se muestra</span><span class="cr-hint">1. Abre Calibración · 2. Pulsa en 2 puntos · 3. Escribe la distancia real</span></div><div id="furn-tooltip"></div><div id="minimap" onclick="jumpToMinimap(event)"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div><div style="margin-top:8px"><label><input type="checkbox" id="cm-scale"> Mantener distancia real (escalar)</label></div></div>
+<div id="lp-ring"></div><div id="toast"></div><div id="calib-reminder"><span class="cr-title">📐 Sin calibrar — el contenido no se muestra</span><span class="cr-hint">1. Abre Calibración · 2. Pulsa en 2 puntos · 3. Escribe la distancia real</span></div><div id="furn-tooltip"></div><div id="minimap" onclick="jumpToMinimap(event)"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="mini-prompt-backdrop" onclick="_miniPromptCancel()"></div>
+<div id="mini-prompt"><p id="mini-prompt-title" style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px"></p><input id="mini-prompt-input" style="margin-bottom:8px"><div class="g2"><button class="btn sm g" onclick="_miniPromptConfirm()" style="margin-top:0">✓ Aceptar</button><button class="btn sm s" onclick="_miniPromptCancel()" style="margin-top:0">Cancelar</button></div></div>
+<div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div><div style="margin-top:8px"><label><input type="checkbox" id="cm-scale"> Mantener distancia real (escalar)</label></div></div>
 <div id="view3d-container" style="display: none; position: fixed; inset: 0; z-index: 250;">
     <div id="menu3d" style="position:absolute; top: 10px; right: 10px; z-index:251; background:rgba(7,17,29,0.95); backdrop-filter:blur(10px); border-radius:8px; border:1px solid #1e293b; max-height:90vh; width:260px; color:#fff; font-family:Outfit,sans-serif; display:flex; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
         <div style="padding:10px 12px 8px; flex-shrink:0; border-bottom:1px solid #1e3050; display:flex; gap:6px; align-items:center;">
@@ -456,7 +462,6 @@ const _tooltips=[
   {s:'#acc-hdr-ruler',t:'📏 Medir & Áreas',d:'Mide distancias haciendo clic. Une el último punto con el primero para calcular áreas.'},
   {s:'#acc-hdr-wall',t:'🧱 Muros & 3D',d:'Dibuja muros para delimitar estancias y visualiza el plano en 3D.'},
   {s:'#acc-hdr-window',t:'🪟 Ventanas & Puertas',d:'Añade huecos, ventanas y puertas a los muros seleccionados.'},
-  {s:'#acc-hdr-add',t:'➕ Añadir Mueble',d:'Configura forma y medidas de un mueble para colocarlo en el plano.'},
   {s:'#acc-hdr-list',t:'🛋 Muebles',d:'Añade muebles al plano y gestiona los existentes: editar, alinear, agrupar o eliminar.'},
   {s:'#acc-hdr-zoom',t:'🔍 Vista & Zoom',d:'Controla el zoom, activa el snap a cuadrícula y oculta capas del plano.'},
   {s:'#acc-hdr-io',t:'💾 Guardar & Exportar',d:'Exporta PDF, PNG o JSON del proyecto, e importa proyectos guardados.'},
@@ -488,6 +493,34 @@ const LS='plan_v11', LSI='plan_v11_imgs';
 const _ZONA_SEL_COL='#f59e0b';
 function fmtDim(v){return v.toFixed(2);}
 function showToast(msg,ms=1900){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms);}
+let _miniPromptCb=null;
+function showMiniPrompt(title,defaultVal,inputType,onConfirm){
+  const popup=document.getElementById('mini-prompt');
+  const inp=document.getElementById('mini-prompt-input');
+  const bd=document.getElementById('mini-prompt-backdrop');
+  document.getElementById('mini-prompt-title').textContent=title;
+  inp.type=inputType||'text';
+  inp.value=defaultVal!=null?defaultVal:'';
+  if(inputType==='number'){inp.step='0.01';inp.min='0.01';}
+  else{inp.removeAttribute('step');inp.removeAttribute('min');}
+  _miniPromptCb=onConfirm;
+  popup.classList.add('show');
+  bd.classList.add('show');
+  setTimeout(()=>{inp.focus();inp.select();},50);
+  inp.onkeydown=(e)=>{if(e.key==='Enter'){e.preventDefault();_miniPromptConfirm();}else if(e.key==='Escape'){_miniPromptCancel();}};
+}
+function _miniPromptConfirm(){
+  const val=document.getElementById('mini-prompt-input').value;
+  document.getElementById('mini-prompt').classList.remove('show');
+  document.getElementById('mini-prompt-backdrop').classList.remove('show');
+  const cb=_miniPromptCb; _miniPromptCb=null;
+  if(cb)cb(val);
+}
+function _miniPromptCancel(){
+  document.getElementById('mini-prompt').classList.remove('show');
+  document.getElementById('mini-prompt-backdrop').classList.remove('show');
+  _miniPromptCb=null;
+}
 function saveLS(){try{
   const meas3d=(typeof measure3DSaved!=='undefined'&&Array.isArray(measure3DSaved))
     ? measure3DSaved.map(m=>({id:m.id,name:m.name||null,segs:Array.isArray(m.segs)?m.segs:[],dist:m.dist,pts:(m.pts||[]).map(p=>({x:p.x,y:p.y,z:p.z}))}))
@@ -706,11 +739,11 @@ function drawFreeProbe(){if(!freeProbePos)return;const pm=pxM(),px=freeProbePos.
 function filterMeasList(q){q=(q||'').toLowerCase().trim();document.querySelectorAll('#ruler-list .ri').forEach(el=>{const txt=(el.querySelector('.rtot')?.textContent||'').toLowerCase();const lbl=(el.querySelector('input[placeholder="Etiqueta…"]')?.value||'').toLowerCase();el.style.display=(!q||txt.includes(q)||lbl.includes(q))?'':'none';});}
 function clearMultiSel(){multiSel=[];multiDragging=false;document.getElementById('multi-align-bar')?.classList.remove('show');document.getElementById('group-panel')?.classList.remove('show');render();updateList();}
 function alignSel(dir){if(multiSel.length<2)return;pushHistory();const pm=pxM();const ffs=furniture.filter(f=>multiSel.includes(f.id));if(dir==='left'){const v=Math.min(...ffs.map(f=>f.x));ffs.forEach(f=>f.x=v);}else if(dir==='right'){const v=Math.max(...ffs.map(f=>f.x+f.w*pm));ffs.forEach(f=>f.x=v-f.w*pm);}else if(dir==='top'){const v=Math.min(...ffs.map(f=>f.y));ffs.forEach(f=>f.y=v);}else if(dir==='bottom'){const v=Math.max(...ffs.map(f=>f.y+f.h*pm));ffs.forEach(f=>f.y=v-f.h*pm);}else if(dir==='cx'){const v=ffs.reduce((s,f)=>s+f.x+f.w*pm/2,0)/ffs.length;ffs.forEach(f=>f.x=v-f.w*pm/2);}else if(dir==='cy'){const v=ffs.reduce((s,f)=>s+f.y+f.h*pm/2,0)/ffs.length;ffs.forEach(f=>f.y=v-f.h*pm/2);}saveLS();render();updateList();}
-function startParallel(id){const m=measures.find(x=>x.id===id);if(!m||m.points.length<2)return;const dStr=window.prompt('Distancia de la paralela (metros):','1.00');if(dStr===null)return;const d=parseFloat(dStr);if(isNaN(d)||d===0)return;const pm=pxM(),offset=d*pm;pushHistory();const pts=m.points;const newPts=pts.map((p,i)=>{const seg=i<pts.length-1?[pts[i],pts[i+1]]:[pts[i-1],pts[i]];const dx=seg[1].x-seg[0].x,dy=seg[1].y-seg[0].y,len=Math.hypot(dx,dy)||1;const nx=-dy/len,ny=dx/len;return{x:p.x+nx*offset,y:p.y+ny*offset};});const{segs,total,area}=calcStats(newPts,false);const nm={id:Date.now()+Math.random(),floor:curFloor,points:newPts,segs,total,area:null,closed:false,label:'∥ '+(m.label||'')+' '+d.toFixed(2)+'m'};measures.push(nm);saveLS();render();updateMeasList();showToast('∥ Paralela a '+d.toFixed(2)+'m');}
+function startParallel(id){const m=measures.find(x=>x.id===id);if(!m||m.points.length<2)return;showMiniPrompt('∥ Distancia de la paralela (metros):','1.00','number',(dStr)=>{const d=parseFloat(dStr);if(isNaN(d)||d===0)return;const pm=pxM(),offset=d*pm;pushHistory();const pts=m.points;const newPts=pts.map((p,i)=>{const seg=i<pts.length-1?[pts[i],pts[i+1]]:[pts[i-1],pts[i]];const dx=seg[1].x-seg[0].x,dy=seg[1].y-seg[0].y,len=Math.hypot(dx,dy)||1;const nx=-dy/len,ny=dx/len;return{x:p.x+nx*offset,y:p.y+ny*offset};});const{segs,total,area}=calcStats(newPts,false);const nm={id:Date.now()+Math.random(),floor:curFloor,points:newPts,segs,total,area:null,closed:false,label:'∥ '+(m.label||'')+' '+d.toFixed(2)+'m'};measures.push(nm);saveLS();render();updateMeasList();showToast('∥ Paralela a '+d.toFixed(2)+'m');});}
 function addToAngleSel(id){if(angleSelIds.includes(id)){angleSelIds=angleSelIds.filter(x=>x!==id);}else{angleSelIds.push(id);}const res=document.getElementById('angle-result');if(angleSelIds.length===2){const m1=measures.find(x=>x.id===angleSelIds[0]);const m2=measures.find(x=>x.id===angleSelIds[1]);if(m1&&m2&&m1.points.length>=2&&m2.points.length>=2){const d1=[m1.points[1].x-m1.points[0].x,m1.points[1].y-m1.points[0].y];const d2=[m2.points[1].x-m2.points[0].x,m2.points[1].y-m2.points[0].y];const dot=d1[0]*d2[0]+d1[1]*d2[1];const mag=Math.hypot(d1[0],d1[1])*Math.hypot(d2[0],d2[1])||1;let ang=Math.acos(Math.max(-1,Math.min(1,dot/mag)))*180/Math.PI;if(ang>90)ang=180-ang;if(res){res.style.display='block';res.textContent='∠ '+(m1.label||'M1')+' ↔ '+(m2.label||'M2')+': '+ang.toFixed(2)+'°';}showToast('∠ '+ang.toFixed(2)+'° entre medidas',4000);}angleSelIds=[];}else if(res){res.style.display='block';res.textContent='∠ Selecciona una segunda medida…';}}
 function startAngle3Pt(){cancelMode();angle3PtMode=true;angle3PtPts=[];carea.classList.add('ruler-mode');updateCursor();showBanner('∠ Haz clic en 3 puntos para medir el ángulo','ruler',()=>{angle3PtMode=false;angle3PtPts=[];cancelMode();});}
 function addAngle3Pt(pos){angle3PtPts.push(pos);if(angle3PtPts.length===3){const a=angle3PtPts[0],b=angle3PtPts[1],c=angle3PtPts[2];const ang=angleBetweenSegments(a,b,c);showToast('∠ Ángulo: '+ang.toFixed(2)+'°',4000);const res=document.getElementById('angle-result');if(res){res.style.display='block';res.textContent='∠ '+ang.toFixed(2)+'° (puntos 1-2-3)';setTimeout(()=>res.style.display='none',5000);}angle3PtPts=[];angle3PtMode=false;cancelMode();}else{showBanner('∠ Punto '+(angle3PtPts.length+1)+'/3 - haz clic','ruler');}render();}
-function promoteToZona(measId){const m=measures.find(x=>x.id===measId);if(!m||!m.closed||m.points.length<3){showToast('Solo áreas cerradas');return;}const lbl=window.prompt('Nombre de la zona:',m.label||'Zona');if(lbl===null)return;const xs=m.points.map(p=>p.x),ys=m.points.map(p=>p.y);const ox=Math.min(...xs),oy=Math.min(...ys);const pts=m.points.map(p=>({x:p.x-ox,y:p.y-oy}));pushHistory();const zona={id:Date.now()+Math.random(),name:lbl.trim()||'Zona',type:'zona',pts,x:ox,y:oy,w:Math.max(...xs)-ox,h:Math.max(...ys)-oy,rot:0,color:'#10b981',opa:.7,room:'',floor:curFloor};furniture.push(zona);selId=zona.id;saveLS();render();updateList();showToast('▣ Zona creada: '+zona.name);}
+function promoteToZona(measId){const m=measures.find(x=>x.id===measId);if(!m||!m.closed||m.points.length<3){showToast('Solo áreas cerradas');return;}showMiniPrompt('▣ Nombre de la zona:',m.label||'Zona','text',(lbl)=>{const xs=m.points.map(p=>p.x),ys=m.points.map(p=>p.y);const ox=Math.min(...xs),oy=Math.min(...ys);const pts=m.points.map(p=>({x:p.x-ox,y:p.y-oy}));pushHistory();const zona={id:Date.now()+Math.random(),name:(lbl||'').trim()||'Zona',type:'zona',pts,x:ox,y:oy,w:Math.max(...xs)-ox,h:Math.max(...ys)-oy,rot:0,color:'#10b981',opa:.7,room:'',floor:curFloor};furniture.push(zona);selId=zona.id;saveLS();render();updateList();showToast('▣ Zona creada: '+zona.name);});}
 function toggleAllMeasVis(){const mm=measures.filter(m=>m.floor===curFloor);const anyVis=mm.some(m=>!m.hidden);mm.forEach(m=>m.hidden=anyVis);saveLS();render();updateMeasList();}
 function toggleMeasVis(id){const m=measures.find(x=>x.id===id);if(!m)return;m.hidden=!m.hidden;saveLS();render();updateMeasList();}
 function confirmDelMeasure(id,isClosed){const t=isClosed?'area':'medida';if(!confirm('¿Borrar esta '+t+'? No se puede deshacer.'))return;delMeasure(id);}
@@ -1116,6 +1149,10 @@ let measure3DMode=false, measure3DPts=[], measure3DSaved=[], measure3DVisObjs=[]
 let _click3dMeasHandler=null, _meas3DMouseDown=null, _meas3DMouseDownHandler=null;
 let paintWall3DMode=false, paintWall3DColor='#f97316';
 let _click3dPaintHandler=null;
+// Raycaster y Vector2 compartidos para todos los eventos de clic 3D (evita instanciar en cada evento)
+let _raycaster3d=null, _mouse3d=null;
+function _get3DRaycaster(){if(!_raycaster3d){_raycaster3d=new THREE.Raycaster();_mouse3d=new THREE.Vector2();}return _raycaster3d;}
+function _set3DMouse(e,rect){_mouse3d.set(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);}
 
 let sectionCut3D={enabled:false,orientation:'horizontal',axis:'x',value:0,invert:false,showPlane:false};
 let sectionCutPlane3D=null, sectionCutHelper3D=null;
@@ -1314,9 +1351,9 @@ function setup3DInteractions() {
     _mousedown3dHandler = (e) => {
         if(measure3DMode || paintWall3DMode) return;
         const rect = renderer3d.domElement.getBoundingClientRect();
-        const mouse = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, camera3d);
+        _set3DMouse(e, rect);
+        const raycaster = _get3DRaycaster();
+        raycaster.setFromCamera(_mouse3d, camera3d);
         const intersects = raycaster.intersectObjects(objects3d, true);
         if (intersects.length > 0) {
             let obj = intersects[0].object;
@@ -3071,8 +3108,8 @@ function _paintWall3DClick(e){
     if(!paintWall3DMode||!renderer3d||!camera3d)return;
     if(_meas3DMouseDown&&Math.hypot(e.clientX-_meas3DMouseDown.x,e.clientY-_meas3DMouseDown.y)>8)return;
     const rect=renderer3d.domElement.getBoundingClientRect();
-    const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
-    const raycaster=new THREE.Raycaster();raycaster.setFromCamera(mouse,camera3d);
+    _set3DMouse(e,rect);
+    const raycaster=_get3DRaycaster();raycaster.setFromCamera(_mouse3d,camera3d);
     const wallMeshes=[];
     scene3d.traverse(o=>{if(o.isMesh&&o.userData.wallId)wallMeshes.push(o);});
     const intersects=raycaster.intersectObjects(wallMeshes,false);
@@ -3115,8 +3152,8 @@ function measure3DClick(e){
     if(!measure3DMode||!renderer3d||!camera3d||!scene3d)return;
     if(_meas3DMouseDown&&Math.hypot(e.clientX-_meas3DMouseDown.x,e.clientY-_meas3DMouseDown.y)>8)return;
     const rect=renderer3d.domElement.getBoundingClientRect();
-    const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
-    const raycaster=new THREE.Raycaster();raycaster.setFromCamera(mouse,camera3d);
+    _set3DMouse(e,rect);
+    const raycaster=_get3DRaycaster();raycaster.setFromCamera(_mouse3d,camera3d);
     const allMeshes=[];
     scene3d.traverse(o=>{if(o.isMesh&&o.parent?.userData?.type!=='measure3d'&&o.parent?.userData?.type!=='measure3d_temp')allMeshes.push(o);});
     const intersects=raycaster.intersectObjects(allMeshes,false);
@@ -3365,7 +3402,7 @@ const hid=hitFurn(pos.x,pos.y);if(hid&&e.ctrlKey){const _mi=multiSel.indexOf(hid
 canvas.addEventListener('mousemove',e=>{if(freeProbeMode&&freeProbeDragging){const _fp=getCP(e.clientX,e.clientY);freeProbePos={x:_fp.x-freeProbeDragOff.x,y:_fp.y-freeProbeDragOff.y};render();return;}if(qmProbeMode){const _pp=getCP(e.clientX,e.clientY);const _f1=furniture.find(x=>x.id===qmLastResult?.id1);if(_f1){qmProbePos=projectOnPerimeter(_pp,getCorners(_f1));render();}return;}if(zonaPtDragging&&selId&&selZonaPtIdx>=0){const pos=getCP(e.clientX,e.clientY);const _sf=furniture.find(x=>x.id===selId);if(_sf&&_sf.pts){if(_sf.type==='wall'){const pm=pxM();_sf.pts[selZonaPtIdx]={x:(pos.x-_sf.x)/pm,y:(pos.y-_sf.y)/pm};const _xs=_sf.pts.map(p=>p.x*pm),_ys=_sf.pts.map(p=>p.y*pm);_sf.w=(Math.max(..._xs)-Math.min(..._xs))/pm;_sf.h=(Math.max(..._ys)-Math.min(..._ys))/pm;}else{_sf.pts[selZonaPtIdx]={x:pos.x-_sf.x,y:pos.y-_sf.y};const _xs=_sf.pts.map(p=>p.x),_ys=_sf.pts.map(p=>p.y);_sf.w=Math.max(..._xs)-Math.min(..._xs);_sf.h=Math.max(..._ys)-Math.min(..._ys);}}render();return;}if(holeCornerDragging&&selId&&selHoleIdx>=0){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f&&f.holes&&f.holes[selHoleIdx]){const hole=f.holes[selHoleIdx];const raw=getOffsetOnWall(pos,0,selId);const MIN_W=0.1;if(holeCornerSide===0){const endOff=hole.offset+hole.w;const nOff=Math.min(raw,endOff-MIN_W);hole.w=endOff-nOff;hole.offset=Math.max(0,nOff);}else{hole.w=Math.max(MIN_W,raw-hole.offset);}render();updateSelDimensions();}return;}
 if(holeRepoDragging&&selId&&selHoleIdx>=0){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f&&f.holes&&f.holes[selHoleIdx]){const hole=f.holes[selHoleIdx];hole.offset=getOffsetOnWall(pos,hole.w,selId);render();}return;}if(rulerPanPending){const _dx=e.clientX-rulerPanStart.x,_dy=e.clientY-rulerPanStart.y;if(Math.hypot(_dx,_dy)>8){rulerPanPending=false;panActive=true;}else{const _r=getCP(e.clientX,e.clientY);const _s=snapToPoint(_r);rulerGhostSnapped=(_s.x!==_r.x||_s.y!==_r.y);rulerGhost=rulerGhostSnapped?_s:applyShiftAngle(_r);render();return;}}if(mode==='ruler'&&!panActive){const _r=getCP(e.clientX,e.clientY);const _s=snapToPoint(_r);rulerGhostSnapped=(_s.x!==_r.x||_s.y!==_r.y);rulerGhost=rulerGhostSnapped?_s:applyShiftAngle(_r);render();return;}if(mode==='drawZone'){drawZoneGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='drawWall'){wallGhost=snapToPoint(getCP(e.clientX,e.clientY));render();return;}if(mode==='placeWindow'||mode==='placeDoor'){placeWindowGhost=_getWallGhost(getCP(e.clientX,e.clientY));render();return;}if(mode==='editPt'&&editDragging){const pos=getCP(e.clientX,e.clientY);const m=measures.find(x=>x.id===editMeasId);if(m){if(measDragAll){const dx=pos.x-measDragSx,dy=pos.y-measDragSy;m.points=measDragOrigPts.map(p=>({x:p.x+dx,y:p.y+dy}));}else if(editPtIdx>=0)m.points[editPtIdx]=pos;recalcM(m);render();}return;}if(multiDragging){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-multiDragStart.x,dy=pos.y-multiDragStart.y;multiDragBase.forEach(b=>{const f=furniture.find(x=>x.id===b.id);if(f){f.x=b.x+dx;f.y=b.y+dy;}});render();return;}if(dragPending&&multiSel.length>0){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;multiDragging=true;}else{return;}}if(dragPending){const pos=getCP(e.clientX,e.clientY);const dx=pos.x-dragPendStart.x,dy=pos.y-dragPendStart.y;if(Math.hypot(dx,dy)>8){dragPending=false;dragging=true;}else{return;}}if(dragging&&selId){const pos=getCP(e.clientX,e.clientY);const f=furniture.find(x=>x.id===selId);if(f){let nx=pos.x-dox,ny=pos.y-doy;if(snapOn&&FLOORS[curFloor]?.cal){const pm2=pxM(),sn=.10;nx=Math.round(nx/sn/pm2)*sn*pm2;ny=Math.round(ny/sn/pm2)*sn*pm2;}f.x=nx;f.y=ny;render();}return;}if(panActive){carea.scrollLeft=panScrollX-(e.clientX-panStartX);carea.scrollTop=panScrollY-(e.clientY-panStartY);}});
 canvas.addEventListener('mouseup',()=>{if(rulerPanPending){rulerPanPending=false;if(mode==='ruler')rulerAddPoint(rulerPanClickPos);panActive=false;updateCursor();return;}if(freeProbeDragging){freeProbeDragging=false;return;}if(qmProbeDragging){qmProbeDragging=false;return;}if(holeCornerDragging){holeCornerDragging=false;saveLS();render();updateSelDimensions();refresh3D();return;}if(holeRepoDragging){holeRepoDragging=false;saveLS();render();updateSelDimensions();return;}if(zonaPtDragging){zonaPtDragging=false;selZonaPtIdx=-1;saveLS();updateList();render();return;}if(editDragging){editDragging=false;measDragAll=false;saveLS();updateMeasList();return;}if(multiDragging){multiDragging=false;saveLS();updateList();return;}if(dragging)saveLS();dragPending=false;multiDragging=false;dragging=false;if(panActive){panActive=false;updateCursor();}});
-canvas.addEventListener('dblclick',e=>{if(isMob())return;const pos=getCP(e.clientX,e.clientY);const pm=pxM();const mm=measures.filter(m=>m.floor===curFloor);for(let i=mm.length-1;i>=0;i--){const m=mm[i];if(!m.points||m.points.length<2)continue;const lp=m.points[m.points.length-1];const lbl=m.total.toFixed(2)+'m'+(m.area!=null?'  ▣ '+m.area.toFixed(2)+'m²':'')+(m.label?'  '+m.label:'');const fs2=Math.max(10,Math.min(14,pm*.15));const tw2=lbl.length*fs2*.62+12;if(pos.x>=lp.x+10&&pos.x<=lp.x+10+tw2+12&&pos.y>=lp.y-8&&pos.y<=lp.y+8){const cur=m.label||'';const nv=window.prompt('Etiqueta de la medida:',cur);if(nv!==null){m.label=nv.trim();saveLS();render();updateMeasList();}return;}}});
+canvas.addEventListener('dblclick',e=>{if(isMob())return;const pos=getCP(e.clientX,e.clientY);const pm=pxM();const mm=measures.filter(m=>m.floor===curFloor);for(let i=mm.length-1;i>=0;i--){const m=mm[i];if(!m.points||m.points.length<2)continue;const lp=m.points[m.points.length-1];const lbl=m.total.toFixed(2)+'m'+(m.area!=null?'  ▣ '+m.area.toFixed(2)+'m²':'')+(m.label?'  '+m.label:'');const fs2=Math.max(10,Math.min(14,pm*.15));const tw2=lbl.length*fs2*.62+12;if(pos.x>=lp.x+10&&pos.x<=lp.x+10+tw2+12&&pos.y>=lp.y-8&&pos.y<=lp.y+8){showMiniPrompt('✏ Etiqueta de la medida:',m.label||'','text',(nv)=>{m.label=nv.trim();saveLS();render();updateMeasList();});return;}}});
 canvas.addEventListener('mouseleave',()=>{dragging=false;dragPending=false;editDragging=false;measDragAll=false;panActive=false;rulerPanPending=false;updateCursor();rulerGhost=null;if(mode==='ruler')render();});
 carea.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();const delta=e.deltaY>0?-0.05:0.05;setZoom(zoom+delta);}});
 function lpStart(src){lpPos=getCP(src.clientX,src.clientY);lpClientX=src.clientX;lpClientY=src.clientY;lpActive=true;showLpRing(src.clientX,src.clientY);lpTimer=setTimeout(()=>{if(!lpActive)return;lpActive=false;hideLpRing();if(navigator.vibrate)navigator.vibrate(40);if(mode==='calib'){doCalib(lpPos);showToast('📍 Punto colocado');}else if(mode==='ruler'){rulerAddPoint(lpPos);showToast('📍 Punto añadido ('+rulerPts.length+')');}else if(mode==='refpt'){refPts[curFloor]={x:lpPos.x,y:lpPos.y};document.getElementById('refpt-hint').textContent='Cota fijada ✓';cancelMode();render();showToast('📍 Cota fijada');}else if(angle3PtMode){addAngle3Pt(lpPos);showToast('∠ Punto '+angle3PtPts.length+'/3');}else if(mode==='drawZone'){drawZoneAddPoint(lpPos);showToast('📍 Punto añadido');}else if(mode==='drawWall'){handleDrawWall(lpPos);}},LP_MS);}
