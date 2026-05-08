@@ -1456,7 +1456,7 @@ function setup3DInteractions() {
 function enable3DFurnDrag(id){furn3DEditId=id;setup3DInteractions();build3DMenu();showToast('✏ Arrastra para mover — pulsa 🔒 para terminar');}
 function disable3DFurnDrag(){furn3DEditId=null;setup3DInteractions();build3DMenu();}
 function build3DFloorSlab(fIdx, kind) {
-    if (fIdx === 0 && visibleFloors3D.length === 1 && layout3DMode === 'vertical' && kind === 'floor') return;
+    const skipNormalFloor = (fIdx === 0 && visibleFloors3D.length === 1 && layout3DMode === 'vertical' && kind === 'floor');
     if (!scene3d) return;
     const enabled = kind === 'floor' ? showFloorSlab3D : showCeilingSlab3D;
     if (!enabled) return;
@@ -1618,7 +1618,7 @@ function build3DFloorSlab(fIdx, kind) {
     };
     const color = kind==='floor' ? 0xffffff : 0x8fb3ff;
     const opacity = kind==='floor' ? floorOpacity3D : ceilingOpacity3D;
-    if(normalSlabWalls.length){
+    if(normalSlabWalls.length && !skipNormalFloor){
       const maxHz = Math.max(...normalSlabWalls.map(w => w.hZ||2.5));
       const planeY = kind==='floor' ? fOff.y-0.01 : fOff.y+maxHz;
       const stairsForCutout = (kind==='floor' && fIdx>0)
@@ -1628,9 +1628,9 @@ function build3DFloorSlab(fIdx, kind) {
         : [];
       _buildSlabGroup(normalSlabWalls, planeY, stairsForCutout);
     }
-    if(negativeSlabWalls.length){
+    if(negativeSlabWalls.length && kind==='floor'){
       const maxHzNeg = Math.max(...negativeSlabWalls.map(w => w.hZ||2.5));
-      const planeYNeg = kind==='floor' ? fOff.y - maxHzNeg : fOff.y;
+      const planeYNeg = fOff.y - maxHzNeg;
       _buildSlabGroup(negativeSlabWalls, planeYNeg, []);
     }
 }
