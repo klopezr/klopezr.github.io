@@ -1323,7 +1323,6 @@ function _cutNegativeHolesInFloor(){
 			const SNAP = pm * 0.35;
 			const _wpt = (w, s) => { const p = s===0?w.pts[0]:w.pts[w.pts.length-1]; return {x:w.x+p.x*pm, y:w.y+p.y*pm}; };
 			const _near = (a, b) => Math.hypot(a.x-b.x, a.y-b.y) < SNAP;
-			const allWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && !f.hidden);
 			const traceLoop = (sw) => {
 				const poly = [];
 				const used = new Set([sw.id]);
@@ -1338,7 +1337,7 @@ function _cutNegativeHolesInFloor(){
 				for (let it = 0; it < 40; it++) {
 					if (poly.length >= 4 && _near(exit, sp)) return poly;
 					let nw = null, rev = false;
-					for (const w of allWalls) {
+					for (const w of negWalls) {
 						if (used.has(w.id)) continue;
 						if (_near(exit, _wpt(w,0))) { nw=w; rev=false; break; }
 						if (_near(exit, _wpt(w,1))) { nw=w; rev=true; break; }
@@ -1369,30 +1368,33 @@ function _cutNegativeHolesInFloor(){
 		}
 		let newFloor;
 		if(allHoles.length){
-			const shape = new THREE.Shape();
-			shape.moveTo(-HALF, -HALF);
-			shape.lineTo( HALF, -HALF);
-			shape.lineTo( HALF,  HALF);
-			shape.lineTo(-HALF,  HALF);
-			shape.lineTo(-HALF, -HALF);
+			const v2 = [];
+			const holeIdx = [];
+			v2.push(-HALF, -HALF,  HALF, -HALF,  HALF,  HALF, -HALF,  HALF);
 			allHoles.forEach(holePts => {
-				const holePath = new THREE.Path();
-				holePath.moveTo(holePts[0].x, holePts[0].y);
-				for(let i=1; i<holePts.length; i++) holePath.lineTo(holePts[i].x, holePts[i].y);
-				holePath.lineTo(holePts[0].x, holePts[0].y);
-				shape.holes.push(holePath);
+				holeIdx.push(v2.length/2);
+				for(let i=holePts.length-1; i>=0; i--) v2.push(holePts[i].x, holePts[i].y);
 			});
-			newFloor = new THREE.Mesh(
-				new THREE.ShapeGeometry(shape),
-				new THREE.MeshStandardMaterial({color:0xeeeeee, side:THREE.DoubleSide})
-			);
+			const idx = earcut(v2, holeIdx.length ? holeIdx : [], 2);
+			if(idx.length){
+				const v3 = [];
+				for(let i=0; i<v2.length; i+=2) v3.push(v2[i], 0, v2[i+1]);
+				const geo = new THREE.BufferGeometry();
+				geo.setAttribute('position', new THREE.Float32BufferAttribute(v3, 3));
+				geo.setIndex(idx);
+				geo.computeVertexNormals();
+				newFloor = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xeeeeee, side:THREE.DoubleSide}));
+			} else {
+				newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial({color:0xeeeeee}));
+					newFloor.rotation.x = -Math.PI/2;
+			}
 		} else {
 			newFloor = new THREE.Mesh(
 				new THREE.PlaneGeometry(SIZE,SIZE),
 				new THREE.MeshStandardMaterial({color:0xeeeeee})
 			);
+			newFloor.rotation.x = -Math.PI/2;
 		}
-		newFloor.rotation.x = -Math.PI/2;
 		newFloor.position.y = floorY;
 		newFloor.receiveShadow = true;
 		newFloor.name = 'floor';
