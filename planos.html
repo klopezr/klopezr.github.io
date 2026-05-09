@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#07111d"><link rel="manifest" href="manifest.json">
 <title>Planos - Distribuidor de muebles</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -3766,5 +3766,5 @@ function startPlanAnim(){
 }
 window.addEventListener('load',startPlanAnim);
 </script>
-</body>
+<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js")</script></body>
 </html>
