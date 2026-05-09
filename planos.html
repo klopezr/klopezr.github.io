@@ -429,9 +429,8 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <div class="acc" data-c="zoom"><div class="acc-hdr open" id="acc-hdr-zoom" onclick="toggleAcc('zoom')"><span class="acc-icon">🔍</span><span class="acc-title">Vista & Zoom</span><span class="acc-arr">▾</span></div><div class="acc-body" id="acc-body-zoom"><div class="acc-inner"><label>Zoom: <span id="zlbl" style="color:var(--cz);font-family:'Space Mono',monospace">100%</span></label><input type="range" id="zoom-slider" min="15" max="400" value="100" oninput="setZoom(this.value/100)" style="margin-top:4px"><div class="g2"><button class="btn sm s" onclick="zBy(-.1)">− Alejar</button><button class="btn sm s" onclick="zBy(.1)">+ Acercar</button></div><button class="btn sm s" style="margin-top:5px;width:100%" onclick="setZoom(1)">↺ 100%</button><div class="togrow"><label for="snapTog">Snap cuadrícula 10cm</label><label class="tog"><input type="checkbox" id="snapTog"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="mmTog">Minimapa</label><label class="tog"><input type="checkbox" id="mmTog" onchange="toggleMinimap(this.checked)"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="lockFurnTog">Bloquear muebles</label><label class="tog"><input type="checkbox" id="lockFurnTog" onchange="toggleLockFurn(this.checked)"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="lockWallTog">Bloquear muros</label><label class="tog"><input type="checkbox" id="lockWallTog" onchange="toggleLockWall(this.checked)"><span class="togsl"></span></label></div><div class="togrow" style="margin-top:6px"><label for="lockHolesTog">Bloquear huecos</label><label class="tog"><input type="checkbox" id="lockHolesTog" onchange="toggleLockHoles(this.checked)"><span class="togsl"></span></label></div><div class="glbl" style="margin-top:8px;margin-bottom:4px">Capas visibles</div><div style="display:flex;gap:4px;margin-top:0"><button id="lay-furn" class="lay-btn on" style="color:var(--ca)" onclick="toggleLayer('furn')">🛋 Muebles</button><button id="lay-wall" class="lay-btn on" style="color:var(--cw)" onclick="toggleLayer('wall')">🧱 Muros</button><button id="lay-meas" class="lay-btn on" style="color:var(--cr)" onclick="toggleLayer('meas')">📏 Medidas</button><button id="lay-holes" class="lay-btn on" style="color:var(--cwin)" onclick="toggleLayer('holes')">🪟 Huecos</button></div></div></div></div>
 <div class="acc" data-c="io"><div class="acc-hdr" id="acc-hdr-io" onclick="toggleAcc('io')"><span class="acc-icon">💾</span><span class="acc-title">Guardar & Exportar</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-io"><div class="acc-inner"><div class="io-card"><div class="io-card-title" style="color:var(--cp)">📄 Exportar PDF / PNG</div><div class="io-card-hint">Genera un PDF o imagen del plano con todos los elementos.</div><label>Tamaño de página</label><select id="pdf-size"><option value="a4" selected>A4 (210×297 mm)</option><option value="a3">A3 (297×420 mm)</option><option value="a2">A2 (420×594 mm)</option></select><label style="margin-top:7px">Orientación</label><select id="pdf-orient"><option value="auto" selected>Automática</option><option value="portrait">Vertical (Portrait)</option><option value="landscape">Horizontal (Landscape)</option></select><div class="togrow" style="margin-top:6px;margin-bottom:7px"><label for="pdf-legend">Incluir leyenda</label><label class="tog"><input type="checkbox" id="pdf-legend" checked><span class="togsl"></span></label></div><div class="g2"><button class="btn io-btn pdfex-btn" onclick="exportPDF()" style="margin-top:0">⬇ PDF</button><button class="btn io-btn" onclick="exportPNGWithOptions()" style="margin-top:0;background:linear-gradient(135deg,#065f46,#10b981);color:#fff">🖼 PNG</button></div><div id="pdf-status"></div></div><div class="io-card"><div class="io-card-title" style="color:var(--ci)">📤 Exportar proyecto (JSON)</div><div class="io-card-hint">Guarda muebles, medidas y calibraciones.</div><button class="btn io-btn exp" onclick="exportJSON()">⬇ Descargar JSON</button></div><div class="io-card"><div class="io-card-title" style="color:var(--area)">📥 Importar proyecto (JSON)</div><div class="io-card-hint">Restaura desde un archivo JSON guardado.</div><button class="btn io-btn imp" onclick="document.getElementById('fi-import').click()">⬆ Cargar JSON</button><input type="file" id="fi-import" accept=".json" onchange="importJSON(this)"></div><div class="io-card"><div class="io-card-title">↩️ Deshacer / Rehacer</div><div class="g2"><button class="btn sm" onclick="undoGlobal()">↩ Deshacer</button><button class="btn sm" onclick="redoGlobal()">↪ Rehacer</button></div></div></div></div></div>
 <div class="acc" data-c="floor"><div class="acc-hdr" id="acc-hdr-floor" onclick="toggleAcc('floor')"><span class="acc-icon">🗺️</span><span class="acc-title">Plantas</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-floor"><div class="acc-inner"><p class="hint">Gestiona las plantas del proyecto: renombra, elimina o cambia la imagen.</p><div id="floor-manage-list"></div><div class="add-floor-form" id="add-floor-form" style="display:none"><label>Nombre de la nueva planta</label><input type="text" id="new-floor-name" placeholder="ej: Planta Segunda" style="margin-bottom:6px"><div class="g2"><button class="btn io-btn img-btn sm" onclick="document.getElementById('fi-new-img').click()" style="min-height:36px">🖼 Imagen</button><button class="btn io-btn pdf-btn sm" onclick="document.getElementById('fi-new-pdf').click()" style="min-height:36px">📄 PDF</button></div><input type="file" id="fi-new-img" accept="image/*" onchange="newFloorFromFile(this,'img')"><input type="file" id="fi-new-pdf" accept="application/pdf" onchange="newFloorFromFile(this,'pdf')"><div id="new-floor-status" style="font-family:'Space Mono',monospace;font-size:.6rem;margin-top:5px;color:var(--cf)"></div><button class="btn sm s" onclick="closeAddFloor()" style="margin-top:6px;width:100%">Cancelar</button></div><button class="btn sm" onclick="openAddFloor()" id="btn-open-add-floor" style="background:rgba(236,72,153,.15);border:1px solid rgba(236,72,153,.4);color:var(--cf);margin-top:5px;width:100%">+ Añadir nueva planta</button></div></div></div>
-<div class="acc" data-c="share"><div class="acc-hdr" id="acc-hdr-share" onclick="toggleAcc('share')"><span class="acc-icon">🔗</span><span class="acc-title">Compartir</span><span class="acc-arr">▾</span></div><div class="acc-body closed" id="acc-body-share"><div class="acc-inner"><p class="hint" style="margin-bottom:8px">Genera un enlace para compartir tu proyecto. Quien lo abra podrá verlo en <strong>modo solo lectura</strong>: no podrá editar muebles, muros ni medidas.</p><div class="io-card" style="border-color:rgba(34,211,238,0.25)"><div class="io-card-title" style="color:#22d3ee">🔗 Compartir por enlace</div><div class="io-card-hint">El enlace contiene todo el proyecto comprimido en la URL. No se sube nada a ningún servidor — todo viaja en el propio enlace.</div><div class="togrow" style="margin-bottom:6px"><label for="share-include-img" style="font-size:.72rem">Incluir imagen del plano</label><label class="tog"><input type="checkbox" id="share-include-img"><span class="togsl"></span></label></div><p class="hint" style="font-size:.6rem;margin-bottom:8px;color:var(--t2)">Sin imagen: enlace corto, solo vista 3D. Con imagen: enlace largo, vista 2D + 3D.</p><button class="btn io-btn" onclick="shareProjectLink()" style="margin-top:0;background:linear-gradient(135deg,#0e7490,#22d3ee);color:#07111d;font-weight:600">🔗 Generar enlace</button><div id="share-result" style="display:none;margin-top:7px"><label style="font-size:.65rem;color:#22d3ee">Enlace generado:</label><div style="display:flex;gap:4px;margin-top:3px"><input type="text" id="share-url" readonly style="flex:1;font-size:.65rem;font-family:'Space Mono',monospace;cursor:text"><button class="btn sm" onclick="copyShareLink()" style="width:auto;flex-shrink:0;padding:6px 10px;background:#22d3ee;color:#07111d">📋 Copiar</button></div><div id="share-status" style="font-family:'Space Mono',monospace;font-size:.58rem;margin-top:3px;color:var(--t2)"></div></div></div><div style="margin-top:10px;padding:8px;border-radius:6px;background:rgba(34,211,238,0.06);border:1px dashed rgba(34,211,238,0.2)"><p class="hint" style="font-size:.62rem;color:#22d3ee;margin:0 0 4px 0;font-weight:600">Quien reciba el enlace:</p><p class="hint" style="font-size:.6rem;margin:0;line-height:1.5;color:var(--t2)">- Ve el plano en modo solo lectura (no puede editar nada)<br>- Puede ver la vista 3D y navegar por ella<br>- No necesita instalar ni registrarse en nada<br>- El proyecto no se sube a internet, viaja dentro del enlace</p></div></div></div></div>
 <div style="height:10px"></div></aside><div id="carea"><div id="pwrap"><img id="pimg" src="" alt="Plano" draggable="false"><canvas id="ov"></canvas></div></div></div>
-<div id="mobnav"><button class="mnb" id="mn-calib" data-section="calib" onclick="mobToggle('calib')"><span class="ic">📐</span>Calibrar</button><button class="mnb" id="mn-ruler" data-section="ruler" onclick="mobToggle('ruler')"><span class="ic">📏</span>Medir</button><button class="mnb" id="mn-wall" data-section="wall" onclick="mobToggle('wall')"><span class="ic">🧱</span>Muros</button><button class="mnb" id="mn-window" data-section="window" onclick="mobToggle('window')"><span class="ic">🪟</span>Huecos</button><button class="mnb" id="mn-list" data-section="list" onclick="mobToggle('list')"><span class="ic">🛋</span>Muebles</button><button class="mnb" id="mn-zoom" data-section="zoom" onclick="mobToggle('zoom')"><span class="ic">🔍</span>Vista</button><button class="mnb" id="mn-io" data-section="io" onclick="mobToggle('io')"><span class="ic">💾</span>Guardar</button><button class="mnb" id="mn-floor" data-section="floor" onclick="mobToggle('floor')"><span class="ic">🗺️</span>Plantas</button><button class="mnb" id="mn-share" data-section="share" onclick="mobToggle('share')"><span class="ic">🔗</span>Compartir</button></div>
+<div id="mobnav"><button class="mnb" id="mn-calib" data-section="calib" onclick="mobToggle('calib')"><span class="ic">📐</span>Calibrar</button><button class="mnb" id="mn-ruler" data-section="ruler" onclick="mobToggle('ruler')"><span class="ic">📏</span>Medir</button><button class="mnb" id="mn-wall" data-section="wall" onclick="mobToggle('wall')"><span class="ic">🧱</span>Muros</button><button class="mnb" id="mn-window" data-section="window" onclick="mobToggle('window')"><span class="ic">🪟</span>Huecos</button><button class="mnb" id="mn-list" data-section="list" onclick="mobToggle('list')"><span class="ic">🛋</span>Muebles</button><button class="mnb" id="mn-zoom" data-section="zoom" onclick="mobToggle('zoom')"><span class="ic">🔍</span>Vista</button><button class="mnb" id="mn-io" data-section="io" onclick="mobToggle('io')"><span class="ic">💾</span>Guardar</button><button class="mnb" id="mn-floor" data-section="floor" onclick="mobToggle('floor')"><span class="ic">🗺️</span>Plantas</button></div>
 <div id="spinner" class="spinner"></div>
 <div id="sun-map-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(7,17,29,0.92);align-items:center;justify-content:center;padding:18px;font-family:'Outfit',sans-serif">
   <div style="background:#0e1a2c;border:1px solid #334155;border-radius:12px;width:min(960px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.7)">
@@ -3749,108 +3748,6 @@ function startPlanAnim(){
   animate();
 }
 window.addEventListener('load',startPlanAnim);
-
-/* ── Compartir proyecto por enlace ── */
-async function shareProjectLink(){
-  const statusEl=document.getElementById('share-status');
-  const resultEl=document.getElementById('share-result');
-  const urlEl=document.getElementById('share-url');
-  statusEl.textContent='Generando…';statusEl.style.color='var(--t2)';resultEl.style.display='block';
-  try{
-    const includeImg=document.getElementById('share-include-img')?.checked;
-    const d={version:4,furniture,measures,floors:FLOORS.map(f=>({idx:f.idx,name:f.name,px:f.px,cal:f.cal,embedded:f.embedded,imgWidth:f.imgWidth,imgHeight:f.imgHeight,off3d:f.off3d,img:includeImg?f.img:undefined})),floorCnt,groups,sun:(typeof sunCfg!=='undefined'?sunCfg:null),lockFurn:!!lockFurn,lockWall:!!lockWall,lockHoles:!!lockHoles};
-    const jsonStr=JSON.stringify(d);
-    const bytes=new TextEncoder().encode(jsonStr);
-    const cs=new CompressionStream('deflate');
-    const writer=cs.writable.getWriter();
-    writer.write(bytes);writer.close();
-    const reader=cs.readable.getReader();
-    const chunks=[];
-    while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
-    const totalLen=chunks.reduce((s,c)=>s+c.length,0);
-    const compressed=new Uint8Array(totalLen);
-    let offset=0;chunks.forEach(c=>{compressed.set(c,offset);offset+=c.length;});
-    let b64='';const CHUNK=8192;
-    for(let i=0;i<compressed.length;i+=CHUNK){b64+=String.fromCharCode.apply(null,compressed.subarray(i,i+CHUNK));}
-    b64=btoa(b64).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const base=window.location.href.split('#')[0].split('?')[0];
-    const shareUrl=base+'#share='+b64;
-    if(shareUrl.length>2000000){statusEl.textContent='⚠ Proyecto demasiado grande para compartir por enlace. Prueba sin incluir la imagen.';statusEl.style.color='var(--red)';return;}
-    urlEl.value=shareUrl;
-    statusEl.textContent='✓ Enlace generado ('+Math.round(b64.length/1024)+' KB comprimido)';statusEl.style.color='var(--grn)';
-  }catch(err){statusEl.textContent='Error: '+err.message;statusEl.style.color='var(--red)';}
-}
-function copyShareLink(){
-  const urlEl=document.getElementById('share-url');
-  if(!urlEl||!urlEl.value)return;
-  navigator.clipboard.writeText(urlEl.value).then(()=>{
-    showToast('📋 Enlace copiado al portapapeles');
-    const st=document.getElementById('share-status');if(st){st.textContent='✓ Copiado';st.style.color='var(--grn)';}
-  }).catch(()=>{
-    urlEl.select();document.execCommand('copy');showToast('📋 Enlace copiado');
-  });
-}
-async function _loadSharedProject(){
-  const hash=window.location.hash;
-  if(!hash||!hash.startsWith('#share='))return false;
-  const b64url=hash.slice(7);
-  if(!b64url)return false;
-  try{
-    const b64=b64url.replace(/-/g,'+').replace(/_/g,'/');
-    const pad=b64.length%4;const b64pad=pad?b64+'='.repeat(4-pad):b64;
-    const binStr=atob(b64pad);
-    const compressed=new Uint8Array(binStr.length);
-    for(let i=0;i<binStr.length;i++)compressed[i]=binStr.charCodeAt(i);
-    const ds=new DecompressionStream('deflate');
-    const writer=ds.writable.getWriter();
-    writer.write(compressed);writer.close();
-    const reader=ds.readable.getReader();
-    const chunks=[];
-    while(true){const{done,value}=await reader.read();if(done)break;chunks.push(value);}
-    const totalLen=chunks.reduce((s,c)=>s+c.length,0);
-    const decompressed=new Uint8Array(totalLen);
-    let offset=0;chunks.forEach(c=>{decompressed.set(c,offset);offset+=c.length;});
-    const jsonStr=new TextDecoder().decode(decompressed);
-    const d=JSON.parse(jsonStr);
-    /* cargar datos */
-    if(d.furniture)furniture=d.furniture;
-    if(d.measures)measures=d.measures;
-    if(d.groups)groups=d.groups;
-    if(typeof d.floorCnt==='number')floorCnt=d.floorCnt;
-    if(d.floors&&d.floors.length){
-      FLOORS=d.floors.map(fd=>({idx:fd.idx,name:fd.name,px:fd.px,cal:fd.cal,embedded:fd.embedded,imgWidth:fd.imgWidth,imgHeight:fd.imgHeight,img:fd.img||null,off3d:fd.off3d||null}));
-    }
-    if(d.sun&&typeof d.sun==='object')Object.assign(sunCfg,d.sun);
-    /* bloquear toda edición */
-    lockFurn=true;lockWall=true;lockHoles=true;
-    /* modo solo lectura — UI */
-    document.title='Planos — Vista compartida';
-    const wlc=document.getElementById('welcome');if(wlc)wlc.classList.add('hidden');
-    const panel=document.getElementById('panel');if(panel)panel.style.display='none';
-    const mobnav=document.getElementById('mobnav');if(mobnav)mobnav.style.display='none';
-    /* cargar imagen y mostrar canvas */
-    curFloor=0;
-    renderFloorTabs();
-    /* reemplazar header DESPUÉS de renderFloorTabs para no borrar #floor-tabs antes */
-    const hdr=document.querySelector('header');
-    if(hdr)hdr.innerHTML='<div style="display:flex;align-items:center;gap:12px;padding:0 16px;width:100%;justify-content:space-between"><span style="font-family:Outfit,sans-serif;font-weight:700;font-size:1.1rem;color:#22d3ee">📐 Planos — Vista compartida (solo lectura)</span><button onclick="toggle3DMode(true)" style="background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;border:none;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600">🧊 Ver en 3D</button></div>';
-    if(FLOORS.length>0&&FLOORS[0]&&FLOORS[0].img){
-      imgEl.onload=function(){canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();};
-      imgEl.src=FLOORS[0].img;
-      if(imgEl.complete&&imgEl.naturalWidth){canvas.width=imgEl.naturalWidth;canvas.height=imgEl.naturalHeight;autoZoom();render();}
-    }else if(FLOORS.length>0&&FLOORS[0]&&FLOORS[0].cal){
-      setTimeout(function(){toggle3DMode(true);},500);
-    }
-    showToast('👁 Proyecto compartido — solo lectura',4000);
-    return true;
-  }catch(err){console.error('Error cargando proyecto compartido:',err);showToast('⚠ Error al cargar proyecto compartido: '+err.message,5000);return false;}
-}
-/* detectar share en URL al cargar — esperar a que el DOM esté listo */
-window.addEventListener('load',function(){
-  if(window.location.hash&&window.location.hash.startsWith('#share=')){
-    _loadSharedProject();
-  }
-});
 </script>
 </body>
 </html>
