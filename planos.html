@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#07111d"><link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#07111d"><link rel="manifest" href="" id="pwa-manifest">
 <title>Planos - Distribuidor de muebles</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -3766,5 +3766,33 @@ function startPlanAnim(){
 }
 window.addEventListener('load',startPlanAnim);
 </script>
-<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js")</script></body>
+<script>
+(function(){
+  var m=document.getElementById("pwa-manifest");
+  if(m){
+    var blob=new Blob(['{"name":"Planos - Distribuidor de muebles","short_name":"Planos","start_url":"./","display":"standalone","orientation":"any","theme_color":"#07111d","background_color":"#07111d","lang":"es"}'],{type:"application/json"});
+    m.href=URL.createObjectURL(blob);
+  }
+  var CDN=[
+    "https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+    "https://unpkg.com/three@0.128.0/build/three.min.js",
+    "https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js",
+    "https://unpkg.com/three@0.128.0/examples/js/controls/DragControls.js",
+    "https://unpkg.com/three@0.128.0/examples/js/exporters/GLTFExporter.js",
+    "https://unpkg.com/three@0.128.0/examples/js/exporters/OBJExporter.js",
+    "https://unpkg.com/earcut@2.2.4/dist/earcut.min.js"
+  ];
+  if("caches"in window){
+    caches.open("planos-v5").then(function(c){
+      CDN.forEach(function(u){c.match(u).then(function(r){if(!r)c.add(u).catch(function(){})})});
+      c.match(location.href.split("?")[0]).then(function(r){if(!r)c.add(location.href.split("?")[0]).catch(function(){})});
+    });
+  }
+})();
+</script></body>
 </html>
