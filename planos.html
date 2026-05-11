@@ -2484,10 +2484,104 @@ function build3DAreas(fIdx) {
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
 function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
+function _fpGetFloorHeight(wx,wz){
+  let stairH=null;
+  let floorH=0;
+  const footY=camera3d?camera3d.position.y-1.6:0;
+  visibleFloors3D.forEach(fIdx=>{
+    if(!FLOORS[fIdx])return;
+    const fOff=FLOORS[fIdx].off3d||{x:0,y:fIdx*2.5,z:0};
+    const pm=FLOORS[fIdx].px||50;
+    const pc={x:(FLOORS[fIdx].imgWidth||canvas.width)/2,y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
+    const stairs=furniture.filter(f=>f.floor===fIdx&&f.type==='stair'&&!f.hidden);
+    stairs.forEach(s=>{
+      const wM=Math.max(0.2,s.w||1),hM=Math.max(0.2,s.h||1);
+      const wPx=wM*pm,hPx=hM*pm;
+      const cx=(s.x+wPx/2-pc.x)/pm+fOff.x;
+      const cz=(s.y+hPx/2-pc.y)/pm+fOff.z;
+      const rot=-((s.rot||0)*Math.PI/180);
+      const cosR=Math.cos(rot),sinR=Math.sin(rot);
+      const dx=wx-cx,dz=wz-cz;
+      const lx=dx*cosR-dz*sinR;
+      const lz=dx*sinR+dz*cosR;
+      if(Math.abs(lx)>wM/2||Math.abs(lz)>hM/2)return;
+      const xPre=lx+wM/2;
+      const zPre=lz+hM/2;
+      const z0=(s.elevZ||0)+fOff.y;
+      const z1=(s.stairZ1!=null?s.stairZ1:(z0-fOff.y+(s.stairRise||2.5)))+fOff.y;
+      const rise=Math.max(0.1,z1-z0);
+      const gp=_stairGeomParams(s);
+      const kind=gp.kind,run1=gp.run1,run2=gp.run2,land=gp.land,w1=gp.w1,w2=gp.w2;
+      let h=null;
+      if(kind==='landing'){
+        if(zPre<=run1)h=z0+rise*Math.max(0,Math.min(1,zPre/Math.max(0.01,run1)));
+        else h=z0+rise;
+      }else if(kind==='u'){
+        const dzFix=Math.max(0,run2-run1);
+        const zA0=dzFix,zA1=zA0+run1;
+        const zLand1=zA1+land;
+        const totalRun=Math.max(0.01,run1+run2);
+        const riseA=rise*(run1/totalRun);
+        const riseB=rise-riseA;
+        const side=(s.stairStartSide||'right')==='left'?'left':'right';
+        const W=w1+w2;
+        const xA0=side==='right'?(W-w1):0,xA1=xA0+w1;
+        const xB0=side==='right'?0:(W-w2),xB1=xB0+w2;
+        if(zPre>=zA0&&zPre<=zA1&&xPre>=xA0&&xPre<=xA1){
+          h=z0+riseA*Math.max(0,Math.min(1,(zPre-zA0)/Math.max(0.01,run1)));
+        }else if(zPre>=zA1&&zPre<=zLand1){
+          h=z0+riseA;
+        }else if(zPre<=zA1&&zPre>=Math.max(0,zA1-run2)&&xPre>=xB0&&xPre<=xB1){
+          h=z0+riseA+riseB*Math.max(0,Math.min(1,(zA1-zPre)/Math.max(0.01,run2)));
+        }
+      }else{
+        h=z0+rise*Math.max(0,Math.min(1,zPre/Math.max(0.01,run1)));
+      }
+      if(h!=null&&(stairH===null||h>stairH))stairH=h;
+    });
+  });
+  if(stairH!==null)return stairH;
+  let negDepth=0;
+  visibleFloors3D.forEach(fIdx=>{
+    if(!FLOORS[fIdx])return;
+    const fOff=FLOORS[fIdx].off3d||{x:0,y:fIdx*2.5,z:0};
+    const pm=FLOORS[fIdx].px||50;
+    const pc={x:(FLOORS[fIdx].imgWidth||canvas.width)/2,y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
+    if(fOff.y<=footY+0.5){
+      const walls=furniture.filter(f=>f.floor===fIdx&&f.type==='wall'&&!f.hidden&&f.pts&&f.pts.length>=2&&!f.negative);
+      let onFloor=false;
+      if(walls.length){
+        let bxMin=Infinity,bxMax=-Infinity,bzMin=Infinity,bzMax=-Infinity;
+        walls.forEach(w=>{
+          w.pts.forEach(p=>{
+            const wx3=(w.x+p.x*pm-pc.x)/pm+fOff.x;
+            const wz3=(w.y+p.y*pm-pc.y)/pm+fOff.z;
+            if(wx3<bxMin)bxMin=wx3;if(wx3>bxMax)bxMax=wx3;
+            if(wz3<bzMin)bzMin=wz3;if(wz3>bzMax)bzMax=wz3;
+          });
+        });
+        const margin=1.0;
+        if(wx>=bxMin-margin&&wx<=bxMax+margin&&wz>=bzMin-margin&&wz<=bzMax+margin)onFloor=true;
+      }else{
+        onFloor=true;
+      }
+      if(onFloor&&fOff.y>floorH)floorH=fOff.y;
+    }
+    const negWalls=furniture.filter(f=>f.floor===fIdx&&f.type==='wall'&&!f.hidden&&f.negative&&f.pts&&f.pts.length>=3);
+    negWalls.forEach(nw=>{
+      const poly3d=nw.pts.map(p=>({x:(nw.x+p.x*pm-pc.x)/pm+fOff.x,y:(nw.y+p.y*pm-pc.y)/pm+fOff.z}));
+      if(ptInPoly(wx,wz,poly3d)){
+        const depth=nw.hZ||2.5;
+        if(depth>negDepth)negDepth=depth;
+      }
+    });
+  });
+  return floorH-negDepth;
+}
 function updateFPMovement(){
   if(!fpMode3D||!camera3d)return;
-  const spd=0.08;
-  const turnSpd=0.035;
+  const spd=0.035;
+  const turnSpd=0.025;
   const fwd=new THREE.Vector3(Math.sin(fpYaw),0,Math.cos(fpYaw));
   const rgt=new THREE.Vector3(Math.cos(fpYaw),0,-Math.sin(fpYaw));
   if(fpKeys['w']||fpKeys['W']||fpKeys['__up'])    camera3d.position.addScaledVector(fwd, spd);
@@ -2499,13 +2593,16 @@ function updateFPMovement(){
   if(fpKeys['ArrowRight']){ fpYaw  -= turnSpd; turned=true; }
   if(fpKeys['ArrowUp'])   { fpPitch=Math.min(Math.PI/2-0.05, fpPitch+turnSpd); turned=true; }
   if(fpKeys['ArrowDown']) { fpPitch=Math.max(-Math.PI/2+0.05, fpPitch-turnSpd); turned=true; }
-  camera3d.position.y=1.7;
+  const floorH=_fpGetFloorHeight(camera3d.position.x,camera3d.position.z);
+  const targetY=floorH+1.6;
+  camera3d.position.y+=(targetY-camera3d.position.y)*0.25;
   if(turned) updateFPCamera(); else updateFPCamera();
 }
 function enterFP3D(){
   if(!scene3d||!camera3d||!renderer3d)return;
   fpMode3D=true;if(controls3d)controls3d.enabled=false;
-  camera3d.position.set(0,1.7,0);fpYaw=0;fpPitch=0;updateFPCamera();
+  camera3d.fov=75;camera3d.updateProjectionMatrix();
+  camera3d.position.set(0,1.6,0);fpYaw=0;fpPitch=0;updateFPCamera();
   const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='flex';
   const dpad=document.getElementById('fp3d-dpad');
   const touchOK=(typeof hasTouch==='function')&&hasTouch();
@@ -2535,6 +2632,7 @@ function exitFP3D(){
   const dpad=document.getElementById('fp3d-dpad');if(dpad)dpad.style.display='none';
   if(document.pointerLockElement)document.exitPointerLock();
   if(controls3d)controls3d.enabled=true;
+  if(camera3d){camera3d.fov=60;camera3d.updateProjectionMatrix();}
   if(camera3d&&controls3d&&in3DMode){camera3d.position.set(10,15,20);camera3d.lookAt(0,0,0);controls3d.update();}
   if(renderer3d&&renderer3d.domElement){
     renderer3d.domElement.removeEventListener('mousedown',_fpRequestLock);
@@ -2560,8 +2658,8 @@ function _fpMM(e){
   if(!fpMode3D)return;
   if(!fpMouseDown)return;
   const dx=e.movementX||0, dy=e.movementY||0;
-  fpYaw -= dx*0.003;
-  fpPitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,fpPitch-dy*0.003));
+  fpYaw += dx*0.003;
+  fpPitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,fpPitch+dy*0.003));
   updateFPCamera();
 }
 function _fpTS(e){
@@ -2577,8 +2675,8 @@ function _fpTM(e){
   e.preventDefault();
   const t=e.touches[0]; if(!t) return;
   const dx=t.clientX-fpTouchLastX, dy=t.clientY-fpTouchLastY;
-  fpYaw -= dx*0.005;
-  fpPitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,fpPitch-dy*0.005));
+  fpYaw += dx*0.005;
+  fpPitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,fpPitch+dy*0.005));
   fpTouchLastX=t.clientX; fpTouchLastY=t.clientY;
   updateFPCamera();
 }
