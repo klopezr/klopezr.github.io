@@ -2580,7 +2580,7 @@ function _fpGetFloorHeight(wx,wz){
 }
 function updateFPMovement(){
   if(!fpMode3D||!camera3d)return;
-  const spd=0.035;
+  const spd=0.023;
   const turnSpd=0.025;
   const fwd=new THREE.Vector3(Math.sin(fpYaw),0,Math.cos(fpYaw));
   const rgt=new THREE.Vector3(Math.cos(fpYaw),0,-Math.sin(fpYaw));
@@ -2594,15 +2594,15 @@ function updateFPMovement(){
   if(fpKeys['ArrowUp'])   { fpPitch=Math.min(Math.PI/2-0.05, fpPitch+turnSpd); turned=true; }
   if(fpKeys['ArrowDown']) { fpPitch=Math.max(-Math.PI/2+0.05, fpPitch-turnSpd); turned=true; }
   const floorH=_fpGetFloorHeight(camera3d.position.x,camera3d.position.z);
-  const targetY=floorH+1.6;
+  const targetY=floorH+1.5;
   camera3d.position.y+=(targetY-camera3d.position.y)*0.25;
   if(turned) updateFPCamera(); else updateFPCamera();
 }
 function enterFP3D(){
   if(!scene3d||!camera3d||!renderer3d)return;
   fpMode3D=true;if(controls3d)controls3d.enabled=false;
-  camera3d.fov=60;camera3d.updateProjectionMatrix();
-  camera3d.position.set(0,1.6,0);fpYaw=0;fpPitch=0;updateFPCamera();
+  camera3d.fov=88;camera3d.updateProjectionMatrix();
+  camera3d.position.set(0,1.5,0);fpYaw=0;fpPitch=0;updateFPCamera();
   const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='flex';
   const dpad=document.getElementById('fp3d-dpad');
   const touchOK=(typeof hasTouch==='function')&&hasTouch();
