@@ -1364,7 +1364,7 @@ function _cutNegativeHolesInFloor(){
 		const SIZE = 500, HALF = SIZE/2;
 		const allHoles = [];
 		visibleFloors3D.forEach(fIdx => {
-			const negWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && !f.hidden && f.negative && f.pts && f.pts.length>=2);
+			const negWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && f.negative && f.pts && f.pts.length>=2);
 			if(!negWalls.length) return;
 			const pm = FLOORS[fIdx]?.px || 50;
 			const pc = {x:(FLOORS[fIdx].imgWidth||canvas.width)/2, y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
@@ -1509,7 +1509,7 @@ function build3DFloorSlab(fIdx, kind) {
     if (!scene3d) return;
     const enabled = kind === 'floor' ? showFloorSlab3D : showCeilingSlab3D;
     if (!enabled) return;
-    const allWalls = furniture.filter(f => f.floor === fIdx && f.type === 'wall' && !f.hidden);
+    const allWalls = furniture.filter(f => f.floor === fIdx && f.type === 'wall');
     const slabKey = 'slab' + kind.charAt(0).toUpperCase() + kind.slice(1);
     const slabWalls = allWalls.filter(w => w[slabKey]);
     if (!slabWalls.length) return;
@@ -2594,8 +2594,8 @@ function updateFPMovement(){
   if(fpKeys['a']||fpKeys['A']||fpKeys['__left'])  camera3d.position.addScaledVector(rgt, spd);
   if(fpKeys['d']||fpKeys['D']||fpKeys['__right']) camera3d.position.addScaledVector(rgt,-spd);
   let turned=false;
-  if(fpKeys['ArrowLeft']) { fpYaw  += turnSpd; turned=true; }
-  if(fpKeys['ArrowRight']){ fpYaw  -= turnSpd; turned=true; }
+  if(fpKeys['ArrowLeft']) { fpYaw  -= turnSpd; turned=true; }
+  if(fpKeys['ArrowRight']){ fpYaw  += turnSpd; turned=true; }
   if(fpKeys['ArrowUp'])   { fpPitch=Math.min(Math.PI/2-0.05, fpPitch+turnSpd); turned=true; }
   if(fpKeys['ArrowDown']) { fpPitch=Math.max(-Math.PI/2+0.05, fpPitch-turnSpd); turned=true; }
   const floorH=_fpGetFloorHeight(camera3d.position.x,camera3d.position.z);
@@ -3358,7 +3358,7 @@ function createExportSection(){
     body.appendChild(hint);
     det.appendChild(body);list.appendChild(det);
 }
-if(!objects3d.length){list.innerHTML='<span style="font-size:0.75rem;color:rgba(255,255,255,0.5)">No hay elementos visibles</span>';}}
+}
 function togglePaintWall3D(){
     paintWall3DMode=!paintWall3DMode;
     if(paintWall3DMode&&measure3DMode){measure3DMode=false;cancelMeasure3D();}
