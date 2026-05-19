@@ -337,6 +337,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 <div id="sbar"><span id="sbar-nm"></span><button class="sbbtn" id="sbar-rot" onclick="rotateSel()">↻</button><button class="sbbtn" onclick="dupSel()">⧉</button><button class="sbbtn" style="color:var(--acc2)" onclick="mobileEdit()">✎</button><button class="sbbtn d" onclick="delSel()">✕</button><button class="sbbtn ok" onclick="deselect()">✓</button></div>
 <div id="lp-ring"></div><div id="toast"></div><div id="calib-reminder"><span class="cr-title">📐 Sin calibrar — el contenido no se muestra</span><span class="cr-hint">1. Abre Calibración · 2. Pulsa en 2 puntos · 3. Escribe la distancia real</span></div><div id="furn-tooltip"></div><div id="minimap" onclick="jumpToMinimap(event)"><canvas id="mm-canvas" width="154" height="100"></canvas></div><div id="cm-popup"><p style="font-size:.71rem;font-weight:600;color:var(--acc2);margin-bottom:8px">↗ Copiar medida a planta:</p><select id="cm-sel" class="select" style="margin-bottom:8px"></select><div class="g2"><button class="btn sm g" onclick="_doCopyMeas()" style="margin-top:0">✓ Copiar</button><button class="btn sm s" onclick="hideCopyMeas()" style="margin-top:0">Cancelar</button></div><div style="margin-top:8px"><label><input type="checkbox" id="cm-scale"> Mantener distancia real (escalar)</label></div></div>
 <div id="view3d-container" style="display: none; position: fixed; inset: 0; z-index: 250;">
+    <div id="dome-labels-layer" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:252;overflow:hidden"></div>
     <div id="menu3d" style="position:absolute; top: 10px; right: 10px; z-index:251; background:rgba(7,17,29,0.95); backdrop-filter:blur(10px); border-radius:8px; border:1px solid #1e293b; max-height:90vh; width:260px; color:#fff; font-family:Outfit,sans-serif; display:flex; flex-direction:column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
         <div style="padding:10px 12px 8px; flex-shrink:0; border-bottom:1px solid #1e3050; display:flex; gap:6px; align-items:center;">
             <button onclick="toggle3DView(false)" class="btn d sm" style="flex:1; margin:0;">✕ Salir de 3D</button>
@@ -353,6 +354,12 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
                         <div style="display:flex;align-items:center;gap:6px;font-size:0.62rem;color:#94a3b8;"><span style="flex:1">Intensidad</span><span id="sun-int-val" style="color:#fbbf24;font-family:'Space Mono',monospace">0.85</span></div>
                         <input type="range" id="sun-int" min="0" max="2" step="0.05" value="0.85" oninput="updateSun3D('int',this.value)" style="width:100%">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.7rem;color:#e2e8f0;margin-top:4px;padding:5px 8px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:5px"><span style="font-weight:600">🌑 Sombras realistas</span><label class="tog"><input type="checkbox" id="sun-shadow" onchange="updateSun3D('shadow',this.checked)"><span class="togsl"></span></label></div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.7rem;color:#e2e8f0;margin-top:2px;padding:5px 8px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.35);border-radius:5px"><span style="font-weight:600">🌐 Cúpula celeste</span><label class="tog"><input type="checkbox" id="sun-dome" onchange="toggleSkyDome(this.checked)"><span class="togsl"></span></label></div>
+                        <div id="dome-options" style="display:none;flex-direction:column;gap:5px;padding:5px 8px;background:rgba(15,23,42,0.5);border:1px dashed #334155;border-radius:5px;font-size:0.6rem;color:#94a3b8">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span>🌘 Eclipse solar (demo)</span><label class="tog"><input type="checkbox" id="sun-eclipse" onchange="updateSun3D('eclipse',this.checked)"><span class="togsl"></span></label></div>
+                            <span style="font-size:0.55rem;color:#64748b;line-height:1.35">La Luna tapa el Sol en la cúpula y baja la luz (simulación, no eclipse real automático).</span>
+                            <span id="dome-moon-phase" style="font-family:'Space Mono',monospace;color:#cbd5e1;font-size:0.58rem"></span>
+                        </div>
                         <div id="sun-rest-wrap" style="display:flex;flex-direction:column;gap:6px;transition:opacity .2s">
                           <details data-sec="sun-astro" style="margin-top:6px;border-top:1px dashed #334155;padding-top:6px">
                             <summary style="font-size:0.62rem;color:#a78bfa;cursor:pointer;list-style:none;display:flex;align-items:center;gap:4px"><span class="s-arr">▶</span>📅 Calcular del momento (lat/lon/orientación)</summary>
@@ -393,6 +400,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
                                         <option value="year">Año</option>
                                     </select>
                                 </div>
+                                <div id="sun-stars-hint" style="display:none;font-size:0.58rem;color:#94a3b8;font-family:'Space Mono',monospace;line-height:1.45"></div>
                             </div>
                           </details>
                         </div>
@@ -1205,7 +1213,9 @@ function toggle3DView(force){
     }
 }
 let objects3d=[];
-let dirLight3d;
+let dirLight3d, ambientLight3d=null, stars3dGroup=null, _starsLastKey='', _starsVisibleCount=0;
+let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, eclipseDisc3d=null, constellationLines3d=null, floorMesh3d=null;
+let _domeLabelItems=[], _domeConstLabelItems=[], _domeMoonTexCache={}, _domePathKey='', _moonPathKey='', _domeLabelsKey='', _domeConstKey='', _DOME_R=26, _domeStarSpriteTex=null;
 let fpMode3D=false,fpYaw=0,fpPitch=0,fpKeys={},fpMouseDown=false,fpLastMouseX=null,fpLastMouseY=null,fpTouchLastX=null,fpTouchLastY=null;
 let furn3DEditId=null;
 let measure3DMode=false, measure3DPts=[], measure3DSaved=[], measure3DVisObjs=[], measure3DTempObjs=[], _measure3DId=1;
@@ -1328,7 +1338,7 @@ function init3D(){
   renderer3d=new THREE.WebGLRenderer({antialias:true});renderer3d.setSize(W,H);renderer3d.shadowMap.enabled=true;renderer3d.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer3d.localClippingEnabled=true;
   container.appendChild(renderer3d.domElement);controls3d=new THREE.OrbitControls(camera3d,renderer3d.domElement);
-  scene3d.add(new THREE.AmbientLight(0xffffff,0.5));
+  ambientLight3d=new THREE.AmbientLight(0xffffff,0.5);scene3d.add(ambientLight3d);
   dirLight3d=new THREE.DirectionalLight(0xffffff,0.85);dirLight3d.position.set(15,25,10);dirLight3d.castShadow=true;
   dirLight3d.shadow.mapSize.width=2048;dirLight3d.shadow.mapSize.height=2048;
   dirLight3d.shadow.bias=-0.0005;
@@ -1351,9 +1361,13 @@ function init3D(){
   if(sunCfg.shadow===undefined) sunCfg.shadow=false;
   if(!sunCfg.dt){const _dEl=document.getElementById('sun-dt'); if(_dEl){const _now=new Date(),_tz=_now.getTimezoneOffset(); _dEl.value=new Date(_now.getTime()-_tz*60000).toISOString().slice(0,16); _sunSyncSlidersFromDt(_now);}}
   _sunUpdateGreyState();
+  _initDome3D();
+  const _dm=document.getElementById('sun-dome');if(_dm)_dm.checked=!!sunCfg.dome;
+  const _ec=document.getElementById('sun-eclipse');if(_ec)_ec.checked=!!sunCfg.eclipse;
+  _syncDomeOptionsUI();
   _applySunPosition();
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
-  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.name='floor';scene3d.add(floor);
+  floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
+  floorMesh3d.rotation.x=-Math.PI/2;floorMesh3d.receiveShadow=true;floorMesh3d.name='floor';scene3d.add(floorMesh3d);
   if(!visibleFloors3D.length) visibleFloors3D = [curFloor]; else visibleFloors3D = visibleFloors3D.filter(i=>i>=0&&i<FLOORS.length);
   build3DScene(); build3DMenu();
   applySectionCut3D();
@@ -1916,7 +1930,7 @@ function updatePositionFrom3D(mesh) {
     }
     saveLS(); render();
 }
-let sunCfg={az:180,alt:45,intensity:0.85,shadow:false,lat:40.4168,lon:-3.7038,dt:null,houseHeading:0,locked:false};
+let sunCfg={az:180,alt:45,intensity:0.85,shadow:false,lat:40.4168,lon:-3.7038,dt:null,houseHeading:0,locked:false,dome:false,eclipse:false};
 function _sunUpdateGreyState(){
   const wrap=document.getElementById('sun-rest-wrap');
   if(wrap){
@@ -1957,13 +1971,572 @@ function _applySunPosition(){
   const z=-Math.cos(az)*Math.cos(alt)*D;
   dirLight3d.position.set(x,y,z);
   dirLight3d.target?.position?.set?.(0,0,0);
-  dirLight3d.intensity=Math.max(0,sunCfg.intensity)*(sunCfg.alt<=0?0.15:1);
-  dirLight3d.castShadow=!!sunCfg.shadow;
+  let li=Math.max(0,sunCfg.intensity)*(sunCfg.alt<=0?0.15:1);
+  if(sunCfg.dome&&sunCfg.eclipse&&sunCfg.alt>2)li*=0.2;
+  dirLight3d.intensity=li;
+  dirLight3d.castShadow=!!sunCfg.shadow&&sunCfg.alt>0;
   if(dirLight3d.shadow&&dirLight3d.shadow.camera){
     const sc=dirLight3d.shadow.camera;
     sc.left=-30; sc.right=30; sc.top=30; sc.bottom=-30;
     sc.near=0.5; sc.far=120;
     sc.updateProjectionMatrix();
+  }
+  _updateNightSky();
+}
+const _STAR_NAMES=['Sirio','Canopo','Arturo','Vega','Capella','Rigel','Próximo','Betelgeuse','Achernar','Hadar','Altair','Aldebarán','Espiga','Antares','Pólux','Fomalhaut','Deneb','Regulo','Adhara','Wezen','Alcor','Peacock','Shaula','Bellatrix','Elnath','Miaplacidus','Alnilam','Alnair','Alioth','Alkaid','Mirfak','Dubhe','Sargas','Kaus Austr.','Avior','Algieba','Menkent','Atria','Alhena','Pavo','Alsephina','Mirzam','Alphard','Polaris','Hamal','Schedar','Diphda','Nunki','Menkar','Alféraz','Mirach','Kochab','Saiph','Rasalhague','Eltanin','Kaus Med.','Alfeca','Denebola','Gienah','Enif','Scheat','Markab','Sadalsuud','Algedi','Ankaa','Phact','Alnath','Sadr','Rukbat','Ascella','Zubenelgenubi','Vindemiatrix','Alkes','Zubeneschamali'];
+const _CONSTELLATIONS=[{n:'Orión',p:[[7,30],[30,54],[54,5],[7,54],[30,5]]},{n:'Osa Mayor',p:[[32,57],[57,25],[25,27],[32,25]]},{n:'Cruz del Sur',p:[[24,17],[17,9],[9,24]]},{n:'Cisne',p:[[16,59],[59,10],[16,3]]},{n:'Escorpio',p:[[12,39],[39,19],[12,19]]},{n:'Tauro',p:[[11,4]]},{n:'Géminis',p:[[14,6]]},{n:'Can Mayor',p:[[0,19]]},{n:'Centauro',p:[[9,24]]},{n:'Leo',p:[[18,11]]},{n:'Lira',p:[[3,16]]}];
+function _domeStarsR(){return _DOME_R-0.6;}
+function _domeBodyR(){return _DOME_R-0.5;}
+function _getStarSpriteTex(){
+  if(_domeStarSpriteTex)return _domeStarSpriteTex;
+  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const g=c.getContext('2d');
+  const gr=g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)');
+  gr.addColorStop(0.15,'rgba(255,255,255,0.95)');
+  gr.addColorStop(0.45,'rgba(220,235,255,0.35)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=gr;g.fillRect(0,0,64,64);
+  _domeStarSpriteTex=new THREE.CanvasTexture(c);
+  return _domeStarSpriteTex;
+}
+function _domeBillboardLook(obj){
+  if(!obj||!camera3d)return;
+  obj.lookAt(camera3d.position);
+}
+function _updateDomeSkyView(){
+  if(!sunCfg.dome||!camera3d){
+    if(floorMesh3d)floorMesh3d.visible=true;
+    if(domeWire3d)domeWire3d.visible=true;
+    return;
+  }
+  const p=camera3d.position;
+  const rHoriz=Math.sqrt(p.x*p.x+p.z*p.z);
+  const insideDome=p.y>-0.3&&p.y<_DOME_R*0.88&&rHoriz<_DOME_R*0.88;
+  const vd=new THREE.Vector3();
+  camera3d.getWorldDirection(vd);
+  const skyView=insideDome&&vd.y>0.22;
+  if(floorMesh3d)floorMesh3d.visible=!skyView;
+  if(domeWire3d)domeWire3d.visible=!skyView;
+}
+function toggleSkyDome(on){
+  sunCfg.dome=!!on;
+  const ck=document.getElementById('sun-dome');if(ck)ck.checked=sunCfg.dome;
+  _syncDomeOptionsUI();
+  if(sunCfg.dome&&!dome3dGroup&&scene3d)_initDome3D();
+  if(dome3dGroup)dome3dGroup.visible=!!sunCfg.dome;
+  if(!sunCfg.dome)_hideDomeLabels();
+  _applySunPosition();
+  try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
+  showToast(sunCfg.dome?'🌐 Cúpula celeste activada':'Cúpula desactivada — solo sombras');
+}
+function _syncDomeOptionsUI(){
+  const opt=document.getElementById('dome-options');
+  if(opt)opt.style.display=sunCfg.dome?'flex':'none';
+}
+function _domeAzAltToXYZ(az,alt,heading,R){
+  const azRel=((az-(heading||0)+360)%360)*Math.PI/180;
+  const altR=Math.max(-5,alt)*Math.PI/180;
+  return{x:Math.sin(azRel)*Math.cos(altR)*R,y:Math.sin(altR)*R,z:-Math.cos(azRel)*Math.cos(altR)*R};
+}
+function _moonPhase01(date){
+  const jd=date.getTime()/86400000+2440587.5;
+  return((jd-2451550.1)%29.530588853)/29.530588853;
+}
+function _moonPhaseLabel(p){
+  const x=((p%1)+1)%1;
+  if(x<0.03||x>0.97)return'Luna nueva';
+  if(x<0.22)return'Creciente';
+  if(x<0.28)return'Cuarto creciente';
+  if(x<0.47)return'Gibosa creciente';
+  if(x<0.53)return'Luna llena';
+  if(x<0.72)return'Gibosa menguante';
+  if(x<0.78)return'Cuarto menguante';
+  return'Menguante';
+}
+function _moonRaDec(date){
+  const jd=date.getTime()/86400000+2440587.5;
+  const T=(jd-2451545)/36525;
+  const rad=Math.PI/180;
+  const L0=218.316+481267.881*T;
+  const Mm=134.963+477198.868*T;
+  const D=297.850+445267.111*T;
+  const F=93.272+483202.017*T;
+  let L=L0+6.289*Math.sin(Mm*rad)+1.274*Math.sin((2*D-Mm)*rad)+0.658*Math.sin(2*D*rad)+0.214*Math.sin(2*Mm*rad)-0.186*Math.sin(Mm*rad);
+  L=((L%360)+360)%360;
+  const B=5.128*Math.sin(F*rad)+0.281*Math.sin((Mm+F)*rad);
+  const eps=(23.439291-0.0130042*T)*rad;
+  const lam=L*rad,beta=B*rad;
+  const ra=Math.atan2(Math.sin(lam)*Math.cos(eps)-Math.tan(beta)*Math.sin(eps),Math.cos(lam));
+  const dec=Math.asin(Math.sin(beta)*Math.cos(eps)+Math.cos(beta)*Math.sin(eps)*Math.sin(lam));
+  return{ra:((ra/rad/15)%24+24)%24,dec:dec/rad};
+}
+function _moonPhaseTexture(phase){
+  const k=Math.round(phase*48)/48;
+  if(_domeMoonTexCache[k])return _domeMoonTexCache[k];
+  const c=document.createElement('canvas');c.width=256;c.height=256;
+  const g=c.getContext('2d');
+  const cx=128,cy=128,R=112;
+  g.fillStyle='#0a0a14';g.fillRect(0,0,256,256);
+  const gr=g.createRadialGradient(cx,cy,R*0.2,cx,cy,R);
+  gr.addColorStop(0,'#e8e8f4');
+  gr.addColorStop(0.55,'#c8cad8');
+  gr.addColorStop(0.88,'#9898a8');
+  gr.addColorStop(1,'#686878');
+  g.fillStyle=gr;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fill();
+  const seed=Math.floor(k*1000);
+  for(let i=0;i<28;i++){
+    const a=(seed*17+i*47)%360,r=18+((seed+i*13)%55);
+    const mx=cx+Math.cos(a*Math.PI/180)*r,my=cy+Math.sin(a*Math.PI/180)*r*0.85;
+    g.fillStyle='rgba(70,72,90,'+(0.06+((seed+i*7)%10)/100)+')';
+    g.beginPath();g.arc(mx,my,6+((seed+i)%14),0,Math.PI*2);g.fill();
+  }
+  const p=((phase%1)+1)%1;
+  if(p>0.02&&p<0.98){
+    g.fillStyle='#141420';
+    g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);
+    if(p<=0.5)g.arc(cx+R*(1-2*p),cy,R,0,Math.PI*2,true);
+    else g.arc(cx-R*(2*p-1),cy,R,0,Math.PI*2,false);
+    g.fill('evenodd');
+  }
+  g.strokeStyle='rgba(240,245,255,0.75)';
+  g.lineWidth=1.5;
+  g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.stroke();
+  g.strokeStyle='rgba(200,210,240,0.25)';
+  g.lineWidth=3;
+  g.beginPath();g.arc(cx,cy,R+1,0,Math.PI*2);g.stroke();
+  const tex=new THREE.CanvasTexture(c);
+  _domeMoonTexCache[k]=tex;
+  return tex;
+}
+function _disposeDome3D(){
+  _hideDomeLabels();
+  _disposeStars3D();
+  if(dome3dGroup&&scene3d){
+    try{scene3d.remove(dome3dGroup);}catch(_){}
+    dome3dGroup.traverse(o=>{
+      if(o.geometry)o.geometry.dispose();
+      if(o.material){
+        if(o.material.map)o.material.map.dispose();
+        if(Array.isArray(o.material))o.material.forEach(m=>{if(m.map)m.map.dispose();m.dispose();});
+        else o.material.dispose();
+      }
+    });
+  }
+  dome3dGroup=null;domeMesh3d=null;domeWire3d=null;skyDomeInner3d=null;sunPath3d=null;moonPath3d=null;sunDisc3d=null;moonDisc3d=null;moonRing3d=null;eclipseDisc3d=null;constellationLines3d=null;
+  _domePathKey='';_moonPathKey='';_domeConstKey='';
+  Object.values(_domeMoonTexCache).forEach(t=>t.dispose());
+  _domeMoonTexCache={};
+}
+function _initDome3D(){
+  if(typeof THREE==='undefined'||!scene3d)return;
+  _disposeDome3D();
+  dome3dGroup=new THREE.Group();
+  dome3dGroup.name='skyDome';
+  const hem=new THREE.SphereGeometry(_DOME_R,72,36,0,Math.PI*2,0,Math.PI/2);
+  skyDomeInner3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({color:0x1a4a7a,transparent:true,opacity:0.88,side:THREE.BackSide,depthWrite:false}));
+  skyDomeInner3d.renderOrder=-7;
+  dome3dGroup.add(skyDomeInner3d);
+  domeMesh3d=new THREE.Mesh(hem,new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.05,side:THREE.FrontSide,depthWrite:false}));
+  domeMesh3d.renderOrder=-6;
+  dome3dGroup.add(domeMesh3d);
+  domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(hem),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.1}));
+  domeWire3d.renderOrder=-6;
+  dome3dGroup.add(domeWire3d);
+  sunPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffd54a,transparent:true,opacity:0.75,linewidth:1}));
+  sunPath3d.frustumCulled=false;
+  sunPath3d.renderOrder=-4;
+  dome3dGroup.add(sunPath3d);
+  moonPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x9ec8ff,transparent:true,opacity:0.55}));
+  moonPath3d.frustumCulled=false;
+  moonPath3d.renderOrder=-4;
+  dome3dGroup.add(moonPath3d);
+  sunDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),new THREE.MeshBasicMaterial({color:0xfff4c8,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  sunDisc3d.renderOrder=-3;
+  dome3dGroup.add(sunDisc3d);
+  moonDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.25,1.25),new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  moonDisc3d.renderOrder=-3;
+  dome3dGroup.add(moonDisc3d);
+  moonRing3d=new THREE.Mesh(new THREE.RingGeometry(0.64,0.72,48),new THREE.MeshBasicMaterial({color:0xe8eeff,transparent:true,opacity:0.7,side:THREE.DoubleSide,depthWrite:false}));
+  moonRing3d.renderOrder=-2;
+  dome3dGroup.add(moonRing3d);
+  constellationLines3d=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x6b8cff,transparent:true,opacity:0.42,depthWrite:false}));
+  constellationLines3d.frustumCulled=false;
+  constellationLines3d.renderOrder=-4;
+  dome3dGroup.add(constellationLines3d);
+  eclipseDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshBasicMaterial({color:0x0a0a10,transparent:true,opacity:0.94,depthWrite:false,side:THREE.DoubleSide}));
+  eclipseDisc3d.visible=false;
+  eclipseDisc3d.renderOrder=-2;
+  dome3dGroup.add(eclipseDisc3d);
+  scene3d.add(dome3dGroup);
+  dome3dGroup.visible=!!sunCfg.dome;
+  _initStars3D();
+}
+function _updateDomeSunPath(){
+  if(!sunPath3d||!sunCfg.dome)return;
+  const lat=parseFloat(sunCfg.lat),lon=parseFloat(sunCfg.lon);
+  if(!isFinite(lat)||!isFinite(lon))return;
+  const date=_sunReadDt();
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const day=date.getFullYear()+'-'+date.getMonth()+'-'+date.getDate();
+  const key=lat+'|'+lon+'|'+day+'|'+Math.round(heading);
+  if(key===_domePathKey)return;
+  _domePathKey=key;
+  const pts=[];
+  const base=new Date(date);base.setHours(0,0,0,0);
+  for(let m=0;m<=1440;m+=20){
+    const t=new Date(base.getTime()+m*60000);
+    const s=_solarAzAlt(t,lat,lon);
+    if(s.alt>-2){
+      const p=_domeAzAltToXYZ(s.az,s.alt,heading,_domeBodyR());
+      pts.push(p.x,p.y,p.z);
+    }
+  }
+  sunPath3d.geometry.dispose();
+  sunPath3d.geometry=new THREE.BufferGeometry();
+  sunPath3d.geometry.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+}
+function _updateDomeMoonPath(){
+  if(!moonPath3d||!sunCfg.dome)return;
+  const lat=parseFloat(sunCfg.lat),lon=parseFloat(sunCfg.lon);
+  if(!isFinite(lat)||!isFinite(lon))return;
+  const date=_sunReadDt();
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const key=lat+'|'+lon+'|'+date.getMonth()+'|'+date.getDate()+'|'+date.getHours()+':'+date.getMinutes()+'|'+Math.round(heading);
+  if(key===_moonPathKey)return;
+  _moonPathKey=key;
+  const pts=[];
+  const h=date.getHours(),mi=date.getMinutes();
+  for(let d=-14;d<=14;d+=0.35){
+    const t=new Date(date);
+    t.setDate(t.getDate()+d);
+    t.setHours(h,mi,0,0);
+    const md=_moonRaDec(t);
+    const m=_radecToAltAz(md.ra,md.dec,lat,lon,t);
+    if(m.alt>-3){
+      const p=_domeAzAltToXYZ(m.az,m.alt,heading,_domeBodyR());
+      pts.push(p.x,p.y,p.z);
+    }
+  }
+  moonPath3d.geometry.dispose();
+  moonPath3d.geometry=new THREE.BufferGeometry();
+  moonPath3d.geometry.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
+  moonPath3d.visible=pts.length>6;
+}
+function _updateDomeCelestial(){
+  if(!sunCfg.dome||!dome3dGroup)return;
+  _updateDomeSunPath();
+  _updateDomeMoonPath();
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const lat=parseFloat(sunCfg.lat),lon=parseFloat(sunCfg.lon);
+  const date=_sunReadDt();
+  const R=_domeBodyR();
+  const sunAlt=parseFloat(sunCfg.alt),sunAz=parseFloat(sunCfg.az);
+  if(sunDisc3d&&isFinite(sunAlt)&&isFinite(sunAz)){
+    const sp=_domeAzAltToXYZ(sunAz,sunAlt,heading,R);
+    sunDisc3d.position.set(sp.x,sp.y,sp.z);
+    sunDisc3d.visible=sunAlt>-8;
+    if(sunAlt>0)sunDisc3d.material.opacity=Math.min(1,0.55+sunAlt/80);
+    else sunDisc3d.material.opacity=Math.max(0.2,0.45+sunAlt/35);
+    _domeBillboardLook(sunDisc3d);
+  }
+  let moonVis=false,moonAlt=0,moonAz=0,phase=0;
+  if(isFinite(lat)&&isFinite(lon)){
+    phase=_moonPhase01(date);
+    if(sunCfg.eclipse&&sunAlt>0){
+      moonAz=sunAz;moonAlt=sunAlt;
+    }else{
+      const md=_moonRaDec(date);
+      const m=_radecToAltAz(md.ra,md.dec,lat,lon,date);
+      moonAz=m.az;moonAlt=m.alt;
+    }
+    if(moonDisc3d){
+      const mp=_domeAzAltToXYZ(moonAz,moonAlt,heading,R);
+      moonDisc3d.position.set(mp.x,mp.y,mp.z);
+      moonVis=moonAlt>-5;
+      moonDisc3d.visible=moonVis&&!sunCfg.eclipse;
+      const tex=_moonPhaseTexture(phase);
+      if(moonDisc3d.material.map!==tex){moonDisc3d.material.map=tex;moonDisc3d.material.needsUpdate=true;}
+      moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):0.5;
+      _domeBillboardLook(moonDisc3d);
+    }
+    if(moonRing3d){
+      if(moonVis&&!sunCfg.eclipse){
+        moonRing3d.position.copy(moonDisc3d.position);
+        moonRing3d.visible=true;
+        _domeBillboardLook(moonRing3d);
+        moonRing3d.material.opacity=moonAlt>0?0.85:0.55;
+      }else moonRing3d.visible=false;
+    }
+    if(eclipseDisc3d){
+      if(sunCfg.eclipse&&sunAlt>2&&sunDisc3d){
+        eclipseDisc3d.position.copy(sunDisc3d.position);
+        eclipseDisc3d.visible=true;
+        _domeBillboardLook(eclipseDisc3d);
+      }else eclipseDisc3d.visible=false;
+    }
+    const mph=document.getElementById('dome-moon-phase');
+    if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round(phase*100)+'%)'+(sunCfg.eclipse?' · Eclipse demo activo':'');
+  }
+  const twi=-6,altSun=parseFloat(sunCfg.alt);
+  let nf=0;if(altSun<=twi)nf=1;else if(altSun<0)nf=(-altSun)/(-twi);
+  _updateConstellationLines(lat,lon,date,heading,nf);
+  _domeRebuildStarLabels(lat,lon,date,heading);
+}
+function _updateConstellationLines(lat,lon,date,heading,nightFactor){
+  if(!constellationLines3d||!sunCfg.dome||nightFactor<0.06)return;
+  const key=lat+'|'+lon+'|'+Math.floor(date.getTime()/60000)+'|'+Math.round(heading)+'|'+nightFactor.toFixed(2);
+  if(key===_domeConstKey)return;
+  _domeConstKey=key;
+  const R=_domeStarsR();
+  const posMap={};
+  for(let i=0;i<_BRIGHT_STARS.length;i++){
+    const s=_BRIGHT_STARS[i];
+    const h=_radecToAltAz(s[0],s[1],lat,lon,date);
+    if(h.alt>1)posMap[i]=_domeAzAltToXYZ(h.az,h.alt,heading,R);
+  }
+  const segs=[];
+  _CONSTELLATIONS.forEach(c=>{
+    c.p.forEach(pair=>{
+      const a=posMap[pair[0]],b=posMap[pair[1]];
+      if(a&&b){segs.push(a.x,a.y,a.z,b.x,b.y,b.z);}
+    });
+  });
+  constellationLines3d.geometry.dispose();
+  constellationLines3d.geometry=new THREE.BufferGeometry();
+  constellationLines3d.geometry.setAttribute('position',new THREE.Float32BufferAttribute(segs,3));
+  constellationLines3d.visible=segs.length>0;
+  constellationLines3d.material.opacity=Math.min(0.55,0.2+nightFactor*0.35);
+  _domeRebuildConstLabels(lat,lon,date,heading,nightFactor,posMap);
+}
+function _domeRebuildConstLabels(lat,lon,date,heading,nightFactor,posMap){
+  const layer=document.getElementById('dome-labels-layer');
+  if(!layer)return;
+  _domeConstLabelItems.forEach(it=>{try{it.el.remove();}catch(_){}});
+  _domeConstLabelItems=[];
+  if(nightFactor<0.08)return;
+  _CONSTELLATIONS.forEach(c=>{
+    let sx=0,sy=0,sz=0,n=0;
+    c.p.forEach(pair=>{
+      const a=posMap[pair[0]],b=posMap[pair[1]];
+      if(a){sx+=a.x;sy+=a.y;sz+=a.z;n++;}
+      if(b){sx+=b.x;sy+=b.y;sz+=b.z;n++;}
+    });
+    if(n<2)return;
+    const v=new THREE.Vector3(sx/n,sy/n,sz/n);
+    const el=document.createElement('span');
+    el.textContent=c.n;
+    el.style.cssText='position:absolute;font-size:10px;color:rgba(130,170,255,'+Math.min(0.85,0.25+nightFactor*0.55)+');font-family:Outfit,sans-serif;font-weight:600;letter-spacing:.04em;text-shadow:0 0 6px #000;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none';
+    layer.appendChild(el);
+    _domeConstLabelItems.push({el,v});
+  });
+}
+function _domeRebuildStarLabels(lat,lon,date,heading){
+  if(!sunCfg.dome)return;
+  const layer=document.getElementById('dome-labels-layer');
+  if(!layer)return;
+  const twi=-6,altSun=parseFloat(sunCfg.alt);
+  let nf=0;if(altSun<=twi)nf=1;else if(altSun<0)nf=(-altSun)/(-twi);
+  const key=lat+'|'+lon+'|'+Math.floor(date.getTime()/60000)+'|'+Math.round(heading)+'|'+nf.toFixed(2);
+  if(key===_domeLabelsKey)return;
+  _domeLabelsKey=key;
+  _domeLabelItems.forEach(it=>{try{it.el.remove();}catch(_){}});
+  _domeLabelItems=[];
+  layer.style.display='block';
+  if(nf<0.08)return;
+  const R=_domeStarsR();
+  for(let i=0;i<_BRIGHT_STARS.length;i++){
+    const s=_BRIGHT_STARS[i];
+    if(s[2]>1.5)continue;
+    const h=_radecToAltAz(s[0],s[1],lat,lon,date);
+    if(h.alt<4)continue;
+    const p=_domeAzAltToXYZ(h.az,h.alt,heading,R);
+    const v=new THREE.Vector3(p.x,p.y,p.z);
+    const el=document.createElement('span');
+    el.className='dome-lbl';
+    el.textContent=_STAR_NAMES[i]||('★'+i);
+    el.style.cssText='position:absolute;font-size:9px;color:rgba(210,225,255,'+Math.min(0.95,0.35+nf*0.6)+');font-family:Space Mono,monospace;text-shadow:0 0 5px #000;transform:translate(-50%,-130%);white-space:nowrap;pointer-events:none';
+    layer.appendChild(el);
+    _domeLabelItems.push({el,v});
+  }
+}
+function _updateDomeLabels(){
+  if(!sunCfg.dome||!camera3d||!renderer3d)return;
+  const w=renderer3d.domElement.clientWidth,h=renderer3d.domElement.clientHeight;
+  const v=new THREE.Vector3();
+  const all=_domeLabelItems.concat(_domeConstLabelItems);
+  if(!all.length)return;
+  all.forEach(it=>{
+    v.copy(it.v).project(camera3d);
+    if(v.z>1){it.el.style.display='none';return;}
+    it.el.style.display='block';
+    it.el.style.left=(v.x*0.5+0.5)*w+'px';
+    it.el.style.top=(-v.y*0.5+0.5)*h+'px';
+  });
+}
+function _hideDomeLabels(){
+  _domeLabelItems.forEach(it=>{try{it.el.remove();}catch(_){}});
+  _domeLabelItems=[];
+  _domeConstLabelItems.forEach(it=>{try{it.el.remove();}catch(_){}});
+  _domeConstLabelItems=[];
+  _domeLabelsKey='';
+  _domeConstKey='';
+  if(constellationLines3d)constellationLines3d.visible=false;
+  if(moonRing3d)moonRing3d.visible=false;
+  const layer=document.getElementById('dome-labels-layer');
+  if(layer){layer.style.display='none';layer.innerHTML='';}
+}
+const _BRIGHT_STARS=[[6.7525,-16.7161,-1.46],[6.3992,-52.6956,-0.72],[14.2611,19.1824,-0.05],[18.6156,38.7837,0.03],[5.2782,45.998,0.08],[5.2423,-8.2016,0.13],[7.655,5.2249,0.34],[5.9195,7.4071,0.42],[1.6286,-57.2367,0.46],[14.0637,-60.3731,0.61],[19.8464,8.8683,0.76],[4.5987,16.5095,0.85],[16.4901,-26.432,0.96],[13.4199,-11.1613,0.98],[7.7553,28.0262,1.14],[22.9608,-29.6217,1.16],[20.6905,45.2803,1.25],[12.7954,-59.6888,1.25],[10.1395,11.9672,1.35],[6.9779,-28.9721,1.5],[1.1629,61.751,1.79],[8.9852,-42.9978,1.86],[15.9192,54.9254,1.9],[7.1149,-26.3932,1.98],[12.4433,-63.0991,2.01],[13.0362,47.2873,2.07],[15.5875,-26.2977,2.07],[12.9004,55.9598,2.1],[2.5303,89.2641,2.02],[6.2487,-17.4636,2.07],[5.4173,-1.3887,2.07],[4.5922,64.3758,2.07],[11.8177,14.5933,2.07],[12.0909,-39.0298,2.21],[6.8998,-50.7224,2.23],[4.4767,33.9622,2.23],[3.4056,-62.4686,2.25],[8.1581,59.1498,2.25],[12.0953,-40.0037,2.3],[17.5604,12.5143,2.3],[20.0063,6.4072,2.4],[6.5708,-42.306,2.4],[7.8821,-46.9612,2.4],[9.4598,17.2324,2.4],[12.2639,-57.1134,2.4],[13.7916,-49.4202,2.4],[16.2392,-19.8055,2.4],[16.8111,-34.3846,2.4],[21.7364,19.1824,2.4],[22.7112,-9.6692,2.4],[23.0794,15.3953,2.4],[0.1398,29.0904,2.5],[0.8444,35.7933,2.5],[3.0345,53.5069,2.5],[5.6019,-1.3887,2.5],[8.3084,-36.2619,2.5],[10.8972,-37.2958,2.5],[11.0307,56.3824,2.5],[17.1935,-56.7351,2.5],[20.4275,40.2567,2.5],[22.1374,-46.9612,2.5],[23.6558,2.4303,2.5],[1.6743,-57.2367,2.55],[3.7932,-42.9978,2.55],[8.3752,-59.5095,2.55],[10.1268,56.5373,2.55],[11.1614,-60.3731,2.55],[14.5236,46.9612,2.55],[18.4373,24.4983,2.55],[19.1824,2.5143,2.55]];
+function _starLstDeg(date,lonDeg){
+  const jd=date.getTime()/86400000+2440587.5;
+  const n=jd-2451545.0;
+  const gmst=((18.697374558+24.06570982441908*n)%24+24)%24;
+  return (gmst*15+lonDeg)%360;
+}
+function _radecToAltAz(raHours,decDeg,latDeg,lonDeg,date){
+  const rad=Math.PI/180;
+  const lstDeg=_starLstDeg(date,lonDeg);
+  const haDeg=((lstDeg-raHours*15+360)%360);
+  const ha=haDeg*rad;
+  const dec=decDeg*rad;
+  const lat=latDeg*rad;
+  const alt=Math.asin(Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(ha));
+  let az=Math.atan2(-Math.cos(dec)*Math.sin(ha),Math.sin(dec)*Math.cos(lat)-Math.cos(dec)*Math.sin(lat)*Math.cos(ha));
+  return {alt:alt/rad,az:(az/rad+360)%360};
+}
+function _disposeStars3D(){
+  if(stars3dGroup&&scene3d){
+    try{scene3d.remove(stars3dGroup);}catch(_){}
+    if(stars3dGroup.geometry)stars3dGroup.geometry.dispose();
+    if(stars3dGroup.material)stars3dGroup.material.dispose();
+  }
+  stars3dGroup=null;
+  _starsLastKey='';
+  _starsVisibleCount=0;
+}
+function _initStars3D(){
+  if(typeof THREE==='undefined'||!scene3d)return;
+  _disposeStars3D();
+  const n=_BRIGHT_STARS.length;
+  const pos=new Float32Array(n*3);
+  const col=new Float32Array(n*3);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  geo.setDrawRange(0,0);
+  const mat=new THREE.PointsMaterial({size:2.2,map:_getStarSpriteTex(),sizeAttenuation:true,transparent:true,opacity:0,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending,alphaTest:0.08});
+  stars3dGroup=new THREE.Points(geo,mat);
+  stars3dGroup.frustumCulled=false;
+  stars3dGroup.visible=false;
+  stars3dGroup.renderOrder=-2;
+  (dome3dGroup||scene3d).add(stars3dGroup);
+}
+function _updateStars3D(nightFactor){
+  if(!stars3dGroup||typeof THREE==='undefined')return;
+  if(!sunCfg.dome){
+    stars3dGroup.visible=false;
+    if(stars3dGroup.material)stars3dGroup.material.opacity=0;
+    _starsVisibleCount=0;
+    return;
+  }
+  const lat=parseFloat(sunCfg.lat);
+  const lon=parseFloat(sunCfg.lon);
+  if(!isFinite(lat)||!isFinite(lon)||nightFactor<=0.02){
+    stars3dGroup.visible=false;
+    if(stars3dGroup.material)stars3dGroup.material.opacity=0;
+    _starsVisibleCount=0;
+    return;
+  }
+  const date=_sunReadDt();
+  const heading=parseFloat(sunCfg.houseHeading)||0;
+  const key=lat+'|'+lon+'|'+Math.floor(date.getTime()/60000)+'|'+Math.round(heading);
+  if(key!==_starsLastKey){
+    const R=_domeStarsR();
+    const pos=stars3dGroup.geometry.attributes.position.array;
+    const col=stars3dGroup.geometry.attributes.color.array;
+    let vi=0;
+    for(let i=0;i<_BRIGHT_STARS.length;i++){
+      const s=_BRIGHT_STARS[i];
+      const h=_radecToAltAz(s[0],s[1],lat,lon,date);
+      if(h.alt<0.5)continue;
+      const p=_domeAzAltToXYZ(h.az,h.alt,heading,R);
+      const i3=vi*3;
+      pos[i3]=p.x;pos[i3+1]=p.y;pos[i3+2]=p.z;
+      const br=Math.min(1,Math.pow(2.512,-(s[2]+1.5))*0.55+0.12);
+      const tint=0.85+0.15*br;
+      col[i3]=0.72*tint+0.28*br;
+      col[i3+1]=0.82*tint+0.18*br;
+      col[i3+2]=1;
+      vi++;
+    }
+    _starsLastKey=key;
+    _starsVisibleCount=vi;
+    stars3dGroup.geometry.attributes.position.needsUpdate=true;
+    stars3dGroup.geometry.attributes.color.needsUpdate=true;
+    stars3dGroup.geometry.setDrawRange(0,vi);
+  }
+  stars3dGroup.visible=_starsVisibleCount>0;
+  if(stars3dGroup.material)stars3dGroup.material.opacity=Math.min(0.98,nightFactor*0.95);
+}
+function _updateNightSky(){
+  if(!scene3d)return;
+  const alt=parseFloat(sunCfg.alt);
+  if(!isFinite(alt))return;
+  if(!sunCfg.dome){
+    scene3d.background=new THREE.Color(0x07111d);
+    if(ambientLight3d){ambientLight3d.intensity=0.5;ambientLight3d.color.setHex(0xffffff);}
+    if(dome3dGroup)dome3dGroup.visible=false;
+    if(stars3dGroup){stars3dGroup.visible=false;if(stars3dGroup.material)stars3dGroup.material.opacity=0;}
+    if(floorMesh3d)floorMesh3d.visible=true;
+    _hideDomeLabels();
+    const hint=document.getElementById('sun-stars-hint');if(hint){hint.style.display='none';hint.textContent='';}
+    return;
+  }
+  if(dome3dGroup)dome3dGroup.visible=true;
+  const twi=-6;
+  let nightFactor=0;
+  if(alt<=twi)nightFactor=1;
+  else if(alt<0)nightFactor=(-alt)/(-twi);
+  const dayZenith=new THREE.Color(0x3d8fd9);
+  const dayHoriz=new THREE.Color(0x87b8e8);
+  const twiZenith=new THREE.Color(0x1a2848);
+  const twiHoriz=new THREE.Color(0xc45c3a);
+  const nightZenith=new THREE.Color(0x030612);
+  const nightHoriz=new THREE.Color(0x0c1428);
+  let sky;
+  if(alt>5){
+    const t=Math.min(1,alt/35);
+    sky=dayHoriz.clone().lerp(dayZenith,t);
+  }else if(alt>0){
+    const t=Math.min(1,(5-alt)/8);
+    sky=dayHoriz.clone().lerp(twiHoriz,t*0.6).lerp(twiZenith,t*0.35);
+  }else if(alt>twi){
+    const t=(-alt)/(-twi);
+    sky=twiHoriz.clone().lerp(twiZenith,0.45).lerp(nightHoriz,t*0.5).lerp(nightZenith,t);
+  }else{
+    sky=nightHoriz.clone().lerp(nightZenith,0.55);
+  }
+  scene3d.background=sky;
+  if(skyDomeInner3d&&skyDomeInner3d.material){
+    const inner=sky.clone();
+    inner.lerp(new THREE.Color(0x000000),0.15);
+    skyDomeInner3d.material.color.copy(inner);
+    skyDomeInner3d.material.opacity=0.82+nightFactor*0.14;
+  }
+  if(ambientLight3d){
+    const amb=0.12+0.38*Math.max(0,Math.min(1,(alt+8)/28));
+    ambientLight3d.intensity=amb*(1-nightFactor*0.55);
+    if(nightFactor>0.5)ambientLight3d.color.setHex(0x8fa4c8);
+    else ambientLight3d.color.setHex(0xffffff);
+  }
+  _updateStars3D(nightFactor);
+  _updateDomeCelestial();
+  const hint=document.getElementById('sun-stars-hint');
+  if(hint){
+    if(nightFactor>0.05&&_starsVisibleCount>0){
+      hint.style.display='block';
+      hint.textContent='✦ Cúpula: '+_starsVisibleCount+' estrellas visibles (magnitud < ~2.6)';
+    }else{hint.style.display='none';hint.textContent='';}
   }
 }
 function updateSun3D(prop,val){
@@ -1972,6 +2545,7 @@ function updateSun3D(prop,val){
   else if(prop==='int'){sunCfg.intensity=parseFloat(val)||0; const e=document.getElementById('sun-int-val'); if(e) e.textContent=Number(sunCfg.intensity).toFixed(2);}
   else if(prop==='shadow'){sunCfg.shadow=!!val; _sunUpdateGreyState(); if(sunCfg.shadow){const det=document.querySelector('#menu3d-lights details[data-sec="sun-astro"]'); if(det&&!sunCfg.dt&&!sunCfg.locked) det.open=true;}}
   else if(prop==='heading'){sunCfg.houseHeading=((parseFloat(val)||0)%360+360)%360; const e=document.getElementById('sun-heading-val'); if(e) e.textContent=Math.round(sunCfg.houseHeading)+'°';}
+  else if(prop==='eclipse'){sunCfg.eclipse=!!val;}
   _applySunPosition();
   try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
 }
@@ -2015,8 +2589,13 @@ function applySunFromDateTime(silent, overrideDate){
   const alV=document.getElementById('sun-alt-val'); if(alV) alV.textContent=Math.round(r.alt)+'°';
   _sunSyncSlidersFromDt(d);
   const info=document.getElementById('sun-astro-info');
-  if(info) info.textContent=`Az ${r.az.toFixed(1)}° · Alt ${r.alt.toFixed(1)}° · ${d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
   _applySunPosition();
+  if(info){
+    let txt=`Az ${r.az.toFixed(1)}° · Alt ${r.alt.toFixed(1)}° · ${d.toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}`;
+    if(sunCfg.dome&&r.alt<0&&_starsVisibleCount>0)txt+=` · ✦ ${_starsVisibleCount} estrellas en cúpula`;
+    if(sunCfg.dome){const ph=_moonPhase01(d);txt+=` · 🌙 ${_moonPhaseLabel(ph)}`;}
+    info.textContent=txt;
+  }
   try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
   if(!silent&&!_sunAnimRunning) showToast(r.alt<0?'🌙 Sol bajo el horizonte':'☀ Sol calculado');
 }
@@ -2337,6 +2916,8 @@ function destroy3D(){
         scene3d=null;
     }
     dirLight3d=null;
+    ambientLight3d=null;
+    _disposeDome3D();
     objects3d=[];
     measure3DMode=false;measure3DPts=[];measure3DTempObjs=[];measure3DVisObjs=[];
     _click3dMeasHandler=null;_meas3DMouseDown=null;_meas3DMouseDownHandler=null;
@@ -2521,7 +3102,7 @@ function build3DAreas(fIdx) {
     });
 }
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
-function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
+function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);if(eclipseDisc3d&&eclipseDisc3d.visible)_domeBillboardLook(eclipseDisc3d);_updateDomeLabels();}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
 function _fpGetFloorHeight(wx,wz){
   let stairH=null;
