@@ -356,8 +356,6 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.7rem;color:#e2e8f0;margin-top:4px;padding:5px 8px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:5px"><span style="font-weight:600">🌑 Sombras realistas</span><label class="tog"><input type="checkbox" id="sun-shadow" onchange="updateSun3D('shadow',this.checked)"><span class="togsl"></span></label></div>
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:0.7rem;color:#e2e8f0;margin-top:2px;padding:5px 8px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.35);border-radius:5px"><span style="font-weight:600">🌐 Cúpula celeste</span><label class="tog"><input type="checkbox" id="sun-dome" onchange="toggleSkyDome(this.checked)"><span class="togsl"></span></label></div>
                         <div id="dome-options" style="display:none;flex-direction:column;gap:5px;padding:5px 8px;background:rgba(15,23,42,0.5);border:1px dashed #334155;border-radius:5px;font-size:0.6rem;color:#94a3b8">
-                            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><span>🌘 Eclipse solar (demo)</span><label class="tog"><input type="checkbox" id="sun-eclipse" onchange="updateSun3D('eclipse',this.checked)"><span class="togsl"></span></label></div>
-                            <span style="font-size:0.55rem;color:#64748b;line-height:1.35">La Luna tapa el Sol en la cúpula y baja la luz (simulación, no eclipse real automático).</span>
                             <span id="dome-moon-phase" style="font-family:'Space Mono',monospace;color:#cbd5e1;font-size:0.58rem"></span>
                         </div>
                         <div id="sun-rest-wrap" style="display:flex;flex-direction:column;gap:6px;transition:opacity .2s">
@@ -1214,7 +1212,8 @@ function toggle3DView(force){
 }
 let objects3d=[];
 let dirLight3d, ambientLight3d=null, stars3dGroup=null, _starsLastKey='', _starsVisibleCount=0;
-let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, eclipseDisc3d=null, constellationLines3d=null, floorMesh3d=null;
+let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, constellationLines3d=null, floorMesh3d=null;
+let sunGlow3d=null, sunCorona3d=null;
 let _domeLabelItems=[], _domeConstLabelItems=[], _domeMoonTexCache={}, _domePathKey='', _moonPathKey='', _domeLabelsKey='', _domeConstKey='', _DOME_R=26, _domeStarSpriteTex=null;
 let fpMode3D=false,fpYaw=0,fpPitch=0,fpKeys={},fpMouseDown=false,fpLastMouseX=null,fpLastMouseY=null,fpTouchLastX=null,fpTouchLastY=null;
 let furn3DEditId=null;
@@ -1363,7 +1362,6 @@ function init3D(){
   _sunUpdateGreyState();
   _initDome3D();
   const _dm=document.getElementById('sun-dome');if(_dm)_dm.checked=!!sunCfg.dome;
-  const _ec=document.getElementById('sun-eclipse');if(_ec)_ec.checked=!!sunCfg.eclipse;
   _syncDomeOptionsUI();
   _applySunPosition();
   floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
@@ -1930,7 +1928,7 @@ function updatePositionFrom3D(mesh) {
     }
     saveLS(); render();
 }
-let sunCfg={az:180,alt:45,intensity:0.85,shadow:false,lat:40.4168,lon:-3.7038,dt:null,houseHeading:0,locked:false,dome:false,eclipse:false};
+let sunCfg={az:180,alt:45,intensity:0.85,shadow:false,lat:40.4168,lon:-3.7038,dt:null,houseHeading:0,locked:false,dome:false};
 function _sunUpdateGreyState(){
   const wrap=document.getElementById('sun-rest-wrap');
   if(wrap){
@@ -1972,7 +1970,6 @@ function _applySunPosition(){
   dirLight3d.position.set(x,y,z);
   dirLight3d.target?.position?.set?.(0,0,0);
   let li=Math.max(0,sunCfg.intensity)*(sunCfg.alt<=0?0.15:1);
-  if(sunCfg.dome&&sunCfg.eclipse&&sunCfg.alt>2)li*=0.2;
   dirLight3d.intensity=li;
   dirLight3d.castShadow=!!sunCfg.shadow&&sunCfg.alt>0;
   if(dirLight3d.shadow&&dirLight3d.shadow.camera){
@@ -1989,14 +1986,25 @@ function _domeStarsR(){return _DOME_R-0.6;}
 function _domeBodyR(){return _DOME_R-0.5;}
 function _getStarSpriteTex(){
   if(_domeStarSpriteTex)return _domeStarSpriteTex;
-  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const c=document.createElement('canvas');c.width=128;c.height=128;
   const g=c.getContext('2d');
-  const gr=g.createRadialGradient(32,32,0,32,32,32);
+  const cx=64,cy=64;
+  /* Soft outer halo */
+  const gr=g.createRadialGradient(cx,cy,0,cx,cy,64);
   gr.addColorStop(0,'rgba(255,255,255,1)');
-  gr.addColorStop(0.15,'rgba(255,255,255,0.95)');
-  gr.addColorStop(0.45,'rgba(220,235,255,0.35)');
+  gr.addColorStop(0.04,'rgba(255,252,248,0.98)');
+  gr.addColorStop(0.10,'rgba(240,245,255,0.85)');
+  gr.addColorStop(0.22,'rgba(200,220,255,0.45)');
+  gr.addColorStop(0.45,'rgba(150,180,255,0.12)');
+  gr.addColorStop(0.7,'rgba(100,140,255,0.03)');
   gr.addColorStop(1,'rgba(0,0,0,0)');
-  g.fillStyle=gr;g.fillRect(0,0,64,64);
+  g.fillStyle=gr;g.fillRect(0,0,128,128);
+  /* Cross-shaped diffraction spikes */
+  g.globalCompositeOperation='screen';
+  g.strokeStyle='rgba(200,220,255,0.25)';g.lineWidth=1;
+  g.beginPath();g.moveTo(cx-38,cy);g.lineTo(cx+38,cy);g.stroke();
+  g.beginPath();g.moveTo(cx,cy-38);g.lineTo(cx,cy+38);g.stroke();
+  g.globalCompositeOperation='source-over';
   _domeStarSpriteTex=new THREE.CanvasTexture(c);
   return _domeStarSpriteTex;
 }
@@ -2006,18 +2014,18 @@ function _domeBillboardLook(obj){
 }
 function _updateDomeSkyView(){
   if(!sunCfg.dome||!camera3d){
-    if(floorMesh3d)floorMesh3d.visible=true;
+    /* Cúpula desactivada — suelo gigante visible y opaco */
+    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;floorMesh3d.material.needsUpdate=true;}
     if(domeWire3d)domeWire3d.visible=true;
+    if(domeMesh3d)domeMesh3d.visible=true;
     return;
   }
-  const p=camera3d.position;
-  const rHoriz=Math.sqrt(p.x*p.x+p.z*p.z);
-  const insideDome=p.y>-0.3&&p.y<_DOME_R*0.88&&rHoriz<_DOME_R*0.88;
-  const vd=new THREE.Vector3();
-  camera3d.getWorldDirection(vd);
-  const skyView=insideDome&&vd.y>0.22;
-  if(floorMesh3d)floorMesh3d.visible=!skyView;
-  if(domeWire3d)domeWire3d.visible=!skyView;
+  /* Cúpula activa — OCULTAR el suelo gigante 500×500 siempre.
+     La casa conserva sus propias losas (build3DFloorSlab). */
+  if(floorMesh3d)floorMesh3d.visible=false;
+  /* Wireframe y dome mesh siempre visibles cuando la cúpula está activa */
+  if(domeWire3d)domeWire3d.visible=true;
+  if(domeMesh3d)domeMesh3d.visible=true;
 }
 function toggleSkyDome(on){
   sunCfg.dome=!!on;
@@ -2074,37 +2082,97 @@ function _moonRaDec(date){
 function _moonPhaseTexture(phase){
   const k=Math.round(phase*48)/48;
   if(_domeMoonTexCache[k])return _domeMoonTexCache[k];
-  const c=document.createElement('canvas');c.width=256;c.height=256;
+  const c=document.createElement('canvas');c.width=512;c.height=512;
   const g=c.getContext('2d');
-  const cx=128,cy=128,R=112;
-  g.fillStyle='#0a0a14';g.fillRect(0,0,256,256);
-  const gr=g.createRadialGradient(cx,cy,R*0.2,cx,cy,R);
-  gr.addColorStop(0,'#e8e8f4');
-  gr.addColorStop(0.55,'#c8cad8');
-  gr.addColorStop(0.88,'#9898a8');
-  gr.addColorStop(1,'#686878');
+  const cx=256,cy=256,R=224;
+  g.clearRect(0,0,512,512);
+  /* Base lunar surface with realistic gradient */
+  const gr=g.createRadialGradient(cx-30,cy-20,R*0.05,cx,cy,R);
+  gr.addColorStop(0,'#e0ddd8');gr.addColorStop(0.3,'#d0ccc4');
+  gr.addColorStop(0.55,'#b8b4ac');gr.addColorStop(0.78,'#989490');
+  gr.addColorStop(0.92,'#787470');gr.addColorStop(1,'#585450');
   g.fillStyle=gr;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fill();
-  const seed=Math.floor(k*1000);
-  for(let i=0;i<28;i++){
-    const a=(seed*17+i*47)%360,r=18+((seed+i*13)%55);
-    const mx=cx+Math.cos(a*Math.PI/180)*r,my=cy+Math.sin(a*Math.PI/180)*r*0.85;
-    g.fillStyle='rgba(70,72,90,'+(0.06+((seed+i*7)%10)/100)+')';
-    g.beginPath();g.arc(mx,my,6+((seed+i)%14),0,Math.PI*2);g.fill();
+  /* Mare (dark seas) */
+  const mares=[
+    {x:-35,y:-55,rx:75,ry:60,a:0.12,rot:-0.2},
+    {x:30,y:-20,rx:55,ry:48,a:0.1,rot:0.3},
+    {x:40,y:35,rx:65,ry:55,a:0.11,rot:-0.1},
+    {x:-10,y:55,rx:50,ry:35,a:0.09,rot:0.15},
+    {x:-60,y:15,rx:45,ry:40,a:0.1,rot:-0.4},
+    {x:10,y:-75,rx:35,ry:28,a:0.08,rot:0.1},
+    {x:-30,y:10,rx:38,ry:32,a:0.07,rot:0.2},
+  ];
+  mares.forEach(m=>{
+    g.save();g.translate(cx+m.x,cy+m.y);g.rotate(m.rot);
+    const mgr=g.createRadialGradient(0,0,0,0,0,m.rx);
+    mgr.addColorStop(0,'rgba(60,58,65,'+m.a+')');
+    mgr.addColorStop(0.6,'rgba(70,68,75,'+(m.a*0.7)+')');
+    mgr.addColorStop(1,'rgba(80,78,85,0)');
+    g.fillStyle=mgr;g.beginPath();g.ellipse(0,0,m.rx,m.ry,0,0,Math.PI*2);g.fill();
+    g.restore();
+  });
+  /* Large craters with rims */
+  const craters=[
+    {x:-60,y:-80,r:22},{x:70,y:-50,r:18},{x:-80,y:40,r:20},
+    {x:50,y:70,r:16},{x:-20,y:90,r:14},{x:90,y:10,r:12},
+    {x:-90,y:-30,r:15},{x:30,y:-90,r:13},{x:-50,y:60,r:17},
+    {x:80,y:-80,r:11},{x:-70,y:80,r:13},{x:10,y:-30,r:10},
+  ];
+  craters.forEach(cr=>{
+    const mx=cx+cr.x,my=cy+cr.y;
+    if(Math.sqrt(cr.x*cr.x+cr.y*cr.y)+cr.r>R-4)return;
+    const cg=g.createRadialGradient(mx+1,my+1,0,mx,my,cr.r);
+    cg.addColorStop(0,'rgba(50,48,55,0.22)');cg.addColorStop(0.6,'rgba(60,58,65,0.15)');
+    cg.addColorStop(0.85,'rgba(90,88,95,0.06)');cg.addColorStop(1,'rgba(100,98,105,0)');
+    g.fillStyle=cg;g.beginPath();g.arc(mx,my,cr.r,0,Math.PI*2);g.fill();
+    g.strokeStyle='rgba(200,198,190,0.12)';g.lineWidth=1.2;
+    g.beginPath();g.arc(mx,my,cr.r*0.85,Math.PI*0.8,Math.PI*1.8);g.stroke();
+  });
+  /* Small surface craters */
+  const seed=42;
+  for(let i=0;i<80;i++){
+    const a=(seed*17+i*67)%360,r=15+((seed+i*23)%170);
+    const mx=cx+Math.cos(a*Math.PI/180)*r,my=cy+Math.sin(a*Math.PI/180)*r*0.92;
+    if(Math.sqrt((mx-cx)*(mx-cx)+(my-cy)*(my-cy))>R-6)continue;
+    const sz=1.5+((seed+i*7)%5);
+    g.fillStyle='rgba(55,53,60,'+(0.04+((seed+i*3)%6)/100)+')';
+    g.beginPath();g.arc(mx,my,sz,0,Math.PI*2);g.fill();
   }
+  /* Phase shadow (terminator) with soft edge */
   const p=((phase%1)+1)%1;
   if(p>0.02&&p<0.98){
-    g.fillStyle='#141420';
-    g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);
-    if(p<=0.5)g.arc(cx+R*(1-2*p),cy,R,0,Math.PI*2,true);
-    else g.arc(cx-R*(2*p-1),cy,R,0,Math.PI*2,false);
+    g.save();g.globalCompositeOperation='source-atop';
+    g.fillStyle='rgba(6,6,14,0.93)';
+    g.beginPath();g.arc(cx,cy,R+2,0,Math.PI*2);
+    if(p<=0.5){
+      const eW=Math.abs(R*(1-2*p));
+      g.ellipse(cx,cy,eW,R+2,0,0,Math.PI*2,true);
+      /* Shadow is left side for waxing */
+      g.rect(cx,cy-R-4,-R-4,2*R+8);
+      if(p>0.25){g.rect(cx,cy-R-4,R+4,2*R+8);}
+    } else {
+      const eW=Math.abs(R*(2*p-1));
+      g.ellipse(cx,cy,eW,R+2,0,0,Math.PI*2,false);
+      g.rect(cx,cy-R-4,R+4,2*R+8);
+      if(p<0.75){g.rect(cx,cy-R-4,-R-4,2*R+8);}
+    }
     g.fill('evenodd');
+    g.restore();
   }
-  g.strokeStyle='rgba(240,245,255,0.75)';
-  g.lineWidth=1.5;
-  g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.stroke();
-  g.strokeStyle='rgba(200,210,240,0.25)';
-  g.lineWidth=3;
-  g.beginPath();g.arc(cx,cy,R+1,0,Math.PI*2);g.stroke();
+  /* Limb darkening */
+  g.save();g.globalCompositeOperation='multiply';
+  const limbGr=g.createRadialGradient(cx,cy,R*0.5,cx,cy,R);
+  limbGr.addColorStop(0,'rgba(255,255,255,1)');limbGr.addColorStop(0.7,'rgba(240,238,235,1)');
+  limbGr.addColorStop(0.9,'rgba(180,178,175,1)');limbGr.addColorStop(1,'rgba(120,118,115,1)');
+  g.fillStyle=limbGr;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fill();
+  g.restore();
+  /* Subtle atmospheric glow */
+  g.save();g.globalCompositeOperation='screen';
+  const glowGr=g.createRadialGradient(cx,cy,R*0.9,cx,cy,R*1.08);
+  glowGr.addColorStop(0,'rgba(180,200,240,0)');glowGr.addColorStop(0.5,'rgba(160,180,220,0.06)');
+  glowGr.addColorStop(1,'rgba(140,160,200,0)');
+  g.fillStyle=glowGr;g.beginPath();g.arc(cx,cy,R*1.08,0,Math.PI*2);g.fill();
+  g.restore();
   const tex=new THREE.CanvasTexture(c);
   _domeMoonTexCache[k]=tex;
   return tex;
@@ -2123,51 +2191,115 @@ function _disposeDome3D(){
       }
     });
   }
-  dome3dGroup=null;domeMesh3d=null;domeWire3d=null;skyDomeInner3d=null;sunPath3d=null;moonPath3d=null;sunDisc3d=null;moonDisc3d=null;moonRing3d=null;eclipseDisc3d=null;constellationLines3d=null;
+  dome3dGroup=null;domeMesh3d=null;domeWire3d=null;skyDomeInner3d=null;sunPath3d=null;moonPath3d=null;sunDisc3d=null;moonDisc3d=null;moonRing3d=null;constellationLines3d=null;sunGlow3d=null;sunCorona3d=null;
   _domePathKey='';_moonPathKey='';_domeConstKey='';
   Object.values(_domeMoonTexCache).forEach(t=>t.dispose());
   _domeMoonTexCache={};
+}
+function _createSkyDomeGradientTex(){
+  const c=document.createElement('canvas');c.width=1;c.height=512;
+  const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0,'#0a1628');   /* zenith — deep night blue */
+  gr.addColorStop(0.25,'#122648');
+  gr.addColorStop(0.5,'#1a4a7a');
+  gr.addColorStop(0.75,'#2a6aaa');
+  gr.addColorStop(1,'#4a90c8');   /* horizon — lighter */
+  g.fillStyle=gr;g.fillRect(0,0,1,512);
+  const tex=new THREE.CanvasTexture(c);
+  tex.needsUpdate=true;
+  return tex;
+}
+function _createSunTexture(){
+  const c=document.createElement('canvas');c.width=256;c.height=256;
+  const g=c.getContext('2d');
+  const cx=128,cy=128;
+  /* Outer corona glow */
+  const gr0=g.createRadialGradient(cx,cy,0,cx,cy,128);
+  gr0.addColorStop(0,'rgba(255,255,240,1)');
+  gr0.addColorStop(0.08,'rgba(255,250,220,0.98)');
+  gr0.addColorStop(0.15,'rgba(255,240,180,0.85)');
+  gr0.addColorStop(0.28,'rgba(255,200,80,0.55)');
+  gr0.addColorStop(0.45,'rgba(255,160,40,0.25)');
+  gr0.addColorStop(0.65,'rgba(255,120,20,0.08)');
+  gr0.addColorStop(0.85,'rgba(255,80,10,0.02)');
+  gr0.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=gr0;g.fillRect(0,0,256,256);
+  /* Bright core */
+  const gr1=g.createRadialGradient(cx,cy,0,cx,cy,30);
+  gr1.addColorStop(0,'rgba(255,255,255,1)');
+  gr1.addColorStop(0.5,'rgba(255,255,230,0.95)');
+  gr1.addColorStop(1,'rgba(255,245,200,0)');
+  g.globalCompositeOperation='screen';
+  g.fillStyle=gr1;g.fillRect(0,0,256,256);
+  g.globalCompositeOperation='source-over';
+  const tex=new THREE.CanvasTexture(c);
+  tex.needsUpdate=true;
+  return tex;
+}
+function _createSunGlowTexture(){
+  const c=document.createElement('canvas');c.width=512;c.height=512;
+  const g=c.getContext('2d');
+  const cx=256,cy=256;
+  const gr=g.createRadialGradient(cx,cy,0,cx,cy,256);
+  gr.addColorStop(0,'rgba(255,220,120,0.4)');
+  gr.addColorStop(0.15,'rgba(255,180,60,0.2)');
+  gr.addColorStop(0.35,'rgba(255,140,30,0.08)');
+  gr.addColorStop(0.6,'rgba(255,100,10,0.02)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=gr;g.fillRect(0,0,512,512);
+  const tex=new THREE.CanvasTexture(c);
+  tex.needsUpdate=true;
+  return tex;
 }
 function _initDome3D(){
   if(typeof THREE==='undefined'||!scene3d)return;
   _disposeDome3D();
   dome3dGroup=new THREE.Group();
   dome3dGroup.name='skyDome';
-  const hem=new THREE.SphereGeometry(_DOME_R,72,36,0,Math.PI*2,0,Math.PI/2);
-  skyDomeInner3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({color:0x1a4a7a,transparent:true,opacity:0.88,side:THREE.BackSide,depthWrite:false}));
+  /* Hemisphere only — covers sky above, no dark floor below */
+  const hem=new THREE.SphereGeometry(_DOME_R,96,48,0,Math.PI*2,0,Math.PI/2);
+  const skyGradTex=_createSkyDomeGradientTex();
+  skyDomeInner3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({
+    map:skyGradTex,transparent:true,opacity:0.92,side:THREE.BackSide,depthWrite:false,fog:false
+  }));
   skyDomeInner3d.renderOrder=-7;
   dome3dGroup.add(skyDomeInner3d);
-  domeMesh3d=new THREE.Mesh(hem,new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.05,side:THREE.FrontSide,depthWrite:false}));
+  /* Thin outer shell for external view */
+  domeMesh3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.04,side:THREE.FrontSide,depthWrite:false}));
   domeMesh3d.renderOrder=-6;
   dome3dGroup.add(domeMesh3d);
-  domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(hem),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.1}));
-  domeWire3d.renderOrder=-6;
+  /* Wireframe — always visible when dome is on */
+  domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(hem),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.12}));
+  domeWire3d.renderOrder=-5;
   dome3dGroup.add(domeWire3d);
-  sunPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffd54a,transparent:true,opacity:0.75,linewidth:1}));
-  sunPath3d.frustumCulled=false;
-  sunPath3d.renderOrder=-4;
+  /* Sun/moon paths */
+  sunPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffd54a,transparent:true,opacity:0.6,linewidth:1}));
+  sunPath3d.frustumCulled=false;sunPath3d.renderOrder=-4;
   dome3dGroup.add(sunPath3d);
-  moonPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x9ec8ff,transparent:true,opacity:0.55}));
-  moonPath3d.frustumCulled=false;
-  moonPath3d.renderOrder=-4;
+  moonPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x9ec8ff,transparent:true,opacity:0.45}));
+  moonPath3d.frustumCulled=false;moonPath3d.renderOrder=-4;
   dome3dGroup.add(moonPath3d);
-  sunDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),new THREE.MeshBasicMaterial({color:0xfff4c8,transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  /* Realistic sun — textured disc + corona glow */
+  const sunTex=_createSunTexture();
+  sunDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(2.2,2.2),new THREE.MeshBasicMaterial({map:sunTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
   sunDisc3d.renderOrder=-3;
   dome3dGroup.add(sunDisc3d);
-  moonDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.25,1.25),new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  const glowTex=_createSunGlowTexture();
+  sunGlow3d=new THREE.Mesh(new THREE.PlaneGeometry(7,7),new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,opacity:0.7}));
+  sunGlow3d.renderOrder=-3.5;
+  dome3dGroup.add(sunGlow3d);
+  /* Realistic moon */
+  moonDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
   moonDisc3d.renderOrder=-3;
   dome3dGroup.add(moonDisc3d);
-  moonRing3d=new THREE.Mesh(new THREE.RingGeometry(0.64,0.72,48),new THREE.MeshBasicMaterial({color:0xe8eeff,transparent:true,opacity:0.7,side:THREE.DoubleSide,depthWrite:false}));
+  moonRing3d=new THREE.Mesh(new THREE.RingGeometry(0.82,0.92,64),new THREE.MeshBasicMaterial({color:0xd8e4ff,transparent:true,opacity:0.35,side:THREE.DoubleSide,depthWrite:false}));
   moonRing3d.renderOrder=-2;
   dome3dGroup.add(moonRing3d);
+  /* Constellations */
   constellationLines3d=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x6b8cff,transparent:true,opacity:0.42,depthWrite:false}));
-  constellationLines3d.frustumCulled=false;
-  constellationLines3d.renderOrder=-4;
+  constellationLines3d.frustumCulled=false;constellationLines3d.renderOrder=-4;
   dome3dGroup.add(constellationLines3d);
-  eclipseDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshBasicMaterial({color:0x0a0a10,transparent:true,opacity:0.94,depthWrite:false,side:THREE.DoubleSide}));
-  eclipseDisc3d.visible=false;
-  eclipseDisc3d.renderOrder=-2;
-  dome3dGroup.add(eclipseDisc3d);
   scene3d.add(dome3dGroup);
   dome3dGroup.visible=!!sunCfg.dome;
   _initStars3D();
@@ -2236,47 +2368,43 @@ function _updateDomeCelestial(){
     const sp=_domeAzAltToXYZ(sunAz,sunAlt,heading,R);
     sunDisc3d.position.set(sp.x,sp.y,sp.z);
     sunDisc3d.visible=sunAlt>-8;
-    if(sunAlt>0)sunDisc3d.material.opacity=Math.min(1,0.55+sunAlt/80);
-    else sunDisc3d.material.opacity=Math.max(0.2,0.45+sunAlt/35);
+    if(sunAlt>0)sunDisc3d.material.opacity=Math.min(1,0.6+sunAlt/60);
+    else sunDisc3d.material.opacity=Math.max(0.15,0.4+sunAlt/30);
     _domeBillboardLook(sunDisc3d);
+    /* Sun glow follows the disc */
+    if(sunGlow3d){
+      sunGlow3d.position.copy(sunDisc3d.position);
+      sunGlow3d.visible=sunAlt>-4;
+      sunGlow3d.material.opacity=sunAlt>0?Math.min(0.7,0.25+sunAlt/45):Math.max(0,0.15+sunAlt/25);
+      _domeBillboardLook(sunGlow3d);
+    }
   }
   let moonVis=false,moonAlt=0,moonAz=0,phase=0;
   if(isFinite(lat)&&isFinite(lon)){
     phase=_moonPhase01(date);
-    if(sunCfg.eclipse&&sunAlt>0){
-      moonAz=sunAz;moonAlt=sunAlt;
-    }else{
-      const md=_moonRaDec(date);
-      const m=_radecToAltAz(md.ra,md.dec,lat,lon,date);
-      moonAz=m.az;moonAlt=m.alt;
-    }
+    const md=_moonRaDec(date);
+    const m=_radecToAltAz(md.ra,md.dec,lat,lon,date);
+    moonAz=m.az;moonAlt=m.alt;
     if(moonDisc3d){
       const mp=_domeAzAltToXYZ(moonAz,moonAlt,heading,R);
       moonDisc3d.position.set(mp.x,mp.y,mp.z);
       moonVis=moonAlt>-5;
-      moonDisc3d.visible=moonVis&&!sunCfg.eclipse;
+      moonDisc3d.visible=moonVis;
       const tex=_moonPhaseTexture(phase);
       if(moonDisc3d.material.map!==tex){moonDisc3d.material.map=tex;moonDisc3d.material.needsUpdate=true;}
       moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):0.5;
       _domeBillboardLook(moonDisc3d);
     }
     if(moonRing3d){
-      if(moonVis&&!sunCfg.eclipse){
+      if(moonVis){
         moonRing3d.position.copy(moonDisc3d.position);
         moonRing3d.visible=true;
         _domeBillboardLook(moonRing3d);
         moonRing3d.material.opacity=moonAlt>0?0.85:0.55;
       }else moonRing3d.visible=false;
     }
-    if(eclipseDisc3d){
-      if(sunCfg.eclipse&&sunAlt>2&&sunDisc3d){
-        eclipseDisc3d.position.copy(sunDisc3d.position);
-        eclipseDisc3d.visible=true;
-        _domeBillboardLook(eclipseDisc3d);
-      }else eclipseDisc3d.visible=false;
-    }
     const mph=document.getElementById('dome-moon-phase');
-    if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round(phase*100)+'%)'+(sunCfg.eclipse?' · Eclipse demo activo':'');
+    if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round(phase*100)+'%)';
   }
   const twi=-6,altSun=parseFloat(sunCfg.alt);
   let nf=0;if(altSun<=twi)nf=1;else if(altSun<0)nf=(-altSun)/(-twi);
@@ -2420,16 +2548,36 @@ function _initStars3D(){
   const n=_BRIGHT_STARS.length;
   const pos=new Float32Array(n*3);
   const col=new Float32Array(n*3);
+  const sizes=new Float32Array(n);
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  geo.setAttribute('size',new THREE.BufferAttribute(sizes,1));
   geo.setDrawRange(0,0);
-  const mat=new THREE.PointsMaterial({size:2.2,map:_getStarSpriteTex(),sizeAttenuation:true,transparent:true,opacity:0,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending,alphaTest:0.08});
+  const mat=new THREE.PointsMaterial({size:3.0,map:_getStarSpriteTex(),sizeAttenuation:true,transparent:true,opacity:0,vertexColors:true,depthWrite:false,blending:THREE.AdditiveBlending,alphaTest:0.05});
   stars3dGroup=new THREE.Points(geo,mat);
   stars3dGroup.frustumCulled=false;
   stars3dGroup.visible=false;
   stars3dGroup.renderOrder=-2;
   (dome3dGroup||scene3d).add(stars3dGroup);
+}
+/* Stellar color by spectral type — maps star index to approximate B-V color */
+function _starColor(mag,idx){
+  /* Approximate spectral colors: hot blue-white → warm orange-red */
+  const palette=[
+    [0.65,0.75,1.0],  /* O/B — blue-white (Rigel, Spica) */
+    [0.82,0.88,1.0],  /* A — white (Vega, Sirio) */
+    [1.0,0.98,0.90],  /* F — yellow-white (Canopus, Polaris) */
+    [1.0,0.92,0.70],  /* G — yellow (Sol-like) */
+    [1.0,0.78,0.50],  /* K — orange (Arturo, Aldebarán) */
+    [1.0,0.55,0.35],  /* M — red-orange (Betelgeuse, Antares) */
+  ];
+  /* Use a deterministic hash based on star index for spectral type assignment */
+  const knownColors={0:1,1:3,2:4,3:1,4:3,5:0,6:4,7:5,8:0,9:0,10:1,11:4,12:0,13:5,14:3,15:1,16:1,17:0,18:0,19:3};
+  const ci=knownColors[idx]!=null?knownColors[idx]:((idx*7+3)%6);
+  const c=palette[ci];
+  const br=Math.min(1,Math.pow(2.512,-(mag+1.5))*0.6+0.15);
+  return{r:c[0]*br+0.15*(1-br),g:c[1]*br+0.12*(1-br),b:c[2]*br+0.10*(1-br)};
 }
 function _updateStars3D(nightFactor){
   if(!stars3dGroup||typeof THREE==='undefined')return;
@@ -2462,11 +2610,11 @@ function _updateStars3D(nightFactor){
       const p=_domeAzAltToXYZ(h.az,h.alt,heading,R);
       const i3=vi*3;
       pos[i3]=p.x;pos[i3+1]=p.y;pos[i3+2]=p.z;
-      const br=Math.min(1,Math.pow(2.512,-(s[2]+1.5))*0.55+0.12);
-      const tint=0.85+0.15*br;
-      col[i3]=0.72*tint+0.28*br;
-      col[i3+1]=0.82*tint+0.18*br;
-      col[i3+2]=1;
+      /* Realistic spectral color */
+      const sc=_starColor(s[2],i);
+      col[i3]=sc.r;
+      col[i3+1]=sc.g;
+      col[i3+2]=sc.b;
       vi++;
     }
     _starsLastKey=key;
@@ -2476,7 +2624,66 @@ function _updateStars3D(nightFactor){
     stars3dGroup.geometry.setDrawRange(0,vi);
   }
   stars3dGroup.visible=_starsVisibleCount>0;
-  if(stars3dGroup.material)stars3dGroup.material.opacity=Math.min(0.98,nightFactor*0.95);
+  /* Brighter stars are more visible — scale with night factor */
+  if(stars3dGroup.material){
+    stars3dGroup.material.opacity=Math.min(0.98,nightFactor*1.05);
+    /* Larger point size at night for more prominent stars */
+    stars3dGroup.material.size=2.2+nightFactor*1.2;
+  }
+}
+function _updateSkyDomeGradient(alt,nightFactor){
+  /* Dynamically rebuild the 1px-wide gradient texture on the full-sphere dome */
+  if(!skyDomeInner3d||!skyDomeInner3d.material)return;
+  const c=document.createElement('canvas');c.width=1;c.height=256;
+  const g=c.getContext('2d');
+  const gr=g.createLinearGradient(0,0,0,256);
+  if(alt>5){
+    /* Daytime — deep blue zenith to lighter horizon */
+    const t=Math.min(1,alt/50);
+    gr.addColorStop(0,_lerpHex('#1a5eaa','#2878cc',t));
+    gr.addColorStop(0.3,_lerpHex('#2a70c0','#3d8fd9',t));
+    gr.addColorStop(0.6,_lerpHex('#5a9ad8','#6ab0e8',t));
+    gr.addColorStop(0.85,_lerpHex('#7ab5e0','#9acaee',t));
+    gr.addColorStop(1,_lerpHex('#a0ccee','#c0e0f8',t));
+  }else if(alt>0){
+    /* Golden hour/sunrise */
+    const t=Math.min(1,(5-alt)/5);
+    gr.addColorStop(0,_lerpHex('#1a5eaa','#1a2848',t));
+    gr.addColorStop(0.3,_lerpHex('#2a70c0','#3a4868',t));
+    gr.addColorStop(0.6,_lerpHex('#5a9ad8','#886848',t));
+    gr.addColorStop(0.85,_lerpHex('#9ab8d0','#c47838',t));
+    gr.addColorStop(1,_lerpHex('#b8d0e0','#e08830',t));
+  }else if(alt>-6){
+    /* Twilight */
+    const t=Math.min(1,(-alt)/6);
+    gr.addColorStop(0,_lerpHex('#1a2848','#050810',t));
+    gr.addColorStop(0.3,_lerpHex('#2a3858','#0a1018',t));
+    gr.addColorStop(0.6,_lerpHex('#5a4848','#0c1220',t));
+    gr.addColorStop(0.85,_lerpHex('#9a5838','#101828',t));
+    gr.addColorStop(1,_lerpHex('#c46030','#141e30',t));
+  }else{
+    /* Night — very dark blue/black */
+    gr.addColorStop(0,'#020408');
+    gr.addColorStop(0.3,'#040810');
+    gr.addColorStop(0.6,'#080e1a');
+    gr.addColorStop(0.85,'#0c1428');
+    gr.addColorStop(1,'#101a30');
+  }
+  g.fillStyle=gr;g.fillRect(0,0,1,256);
+  if(skyDomeInner3d.material.map)skyDomeInner3d.material.map.dispose();
+  skyDomeInner3d.material.map=new THREE.CanvasTexture(c);
+  skyDomeInner3d.material.map.needsUpdate=true;
+  skyDomeInner3d.material.needsUpdate=true;
+  /* Remove the flat color tint so the gradient texture shines through */
+  skyDomeInner3d.material.color.setHex(0xffffff);
+}
+function _lerpHex(a,b,t){
+  const p=s=>{const v=parseInt(s.slice(1),16);return[(v>>16)&255,(v>>8)&255,v&255];};
+  const ca=p(a),cb=p(b);
+  const r=Math.round(ca[0]+(cb[0]-ca[0])*t);
+  const g=Math.round(ca[1]+(cb[1]-ca[1])*t);
+  const bl=Math.round(ca[2]+(cb[2]-ca[2])*t);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+bl).toString(16).slice(1);
 }
 function _updateNightSky(){
   if(!scene3d)return;
@@ -2487,7 +2694,7 @@ function _updateNightSky(){
     if(ambientLight3d){ambientLight3d.intensity=0.5;ambientLight3d.color.setHex(0xffffff);}
     if(dome3dGroup)dome3dGroup.visible=false;
     if(stars3dGroup){stars3dGroup.visible=false;if(stars3dGroup.material)stars3dGroup.material.opacity=0;}
-    if(floorMesh3d)floorMesh3d.visible=true;
+    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
     _hideDomeLabels();
     const hint=document.getElementById('sun-stars-hint');if(hint){hint.style.display='none';hint.textContent='';}
     return;
@@ -2497,6 +2704,7 @@ function _updateNightSky(){
   let nightFactor=0;
   if(alt<=twi)nightFactor=1;
   else if(alt<0)nightFactor=(-alt)/(-twi);
+  /* Compute scene background color */
   const dayZenith=new THREE.Color(0x3d8fd9);
   const dayHoriz=new THREE.Color(0x87b8e8);
   const twiZenith=new THREE.Color(0x1a2848);
@@ -2517,11 +2725,10 @@ function _updateNightSky(){
     sky=nightHoriz.clone().lerp(nightZenith,0.55);
   }
   scene3d.background=sky;
+  /* Update the full-sphere dome with a dynamic gradient texture */
+  _updateSkyDomeGradient(alt,nightFactor);
   if(skyDomeInner3d&&skyDomeInner3d.material){
-    const inner=sky.clone();
-    inner.lerp(new THREE.Color(0x000000),0.15);
-    skyDomeInner3d.material.color.copy(inner);
-    skyDomeInner3d.material.opacity=0.82+nightFactor*0.14;
+    skyDomeInner3d.material.opacity=0.88+nightFactor*0.10;
   }
   if(ambientLight3d){
     const amb=0.12+0.38*Math.max(0,Math.min(1,(alt+8)/28));
@@ -2545,7 +2752,6 @@ function updateSun3D(prop,val){
   else if(prop==='int'){sunCfg.intensity=parseFloat(val)||0; const e=document.getElementById('sun-int-val'); if(e) e.textContent=Number(sunCfg.intensity).toFixed(2);}
   else if(prop==='shadow'){sunCfg.shadow=!!val; _sunUpdateGreyState(); if(sunCfg.shadow){const det=document.querySelector('#menu3d-lights details[data-sec="sun-astro"]'); if(det&&!sunCfg.dt&&!sunCfg.locked) det.open=true;}}
   else if(prop==='heading'){sunCfg.houseHeading=((parseFloat(val)||0)%360+360)%360; const e=document.getElementById('sun-heading-val'); if(e) e.textContent=Math.round(sunCfg.houseHeading)+'°';}
-  else if(prop==='eclipse'){sunCfg.eclipse=!!val;}
   _applySunPosition();
   try{localStorage.setItem('planos_sun',JSON.stringify(sunCfg));}catch(_){}
 }
@@ -3102,7 +3308,7 @@ function build3DAreas(fIdx) {
     });
 }
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
-function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);if(eclipseDisc3d&&eclipseDisc3d.visible)_domeBillboardLook(eclipseDisc3d);_updateDomeLabels();}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
+function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(sunGlow3d&&sunGlow3d.visible)_domeBillboardLook(sunGlow3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);_updateDomeLabels();/* Subtle star twinkle */if(stars3dGroup&&stars3dGroup.visible&&stars3dGroup.material){const t=performance.now()*0.001;stars3dGroup.material.opacity=Math.min(0.98,stars3dGroup.material.opacity*(0.97+0.03*Math.sin(t*1.7)));}}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
 function _fpGetFloorHeight(wx,wz){
   let stairH=null;
