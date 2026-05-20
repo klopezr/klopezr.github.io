@@ -1366,8 +1366,7 @@ function init3D(){
   _applySunPosition();
   floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
   floorMesh3d.rotation.x=-Math.PI/2;floorMesh3d.receiveShadow=true;floorMesh3d.name='floor';scene3d.add(floorMesh3d);
-  /* Shadow-catching floor: semi-transparent surface that receives and shows shadows.
-     Uses a light-colored MeshStandardMaterial so shadows are clearly visible as dark patches. */
+  
   shadowFloor3d=new THREE.Mesh(
     new THREE.PlaneGeometry(120,120),
     new THREE.MeshStandardMaterial({color:0xbbbbbb,transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide})
@@ -1883,8 +1882,7 @@ function exportScene3DKML(){
       }
     });
   });
-  const kml=`<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Planos — ${xmlEsc(FLOORS[curFloor]?.name||'Casa')}</name><description>Modelo georreferenciado generado por Planos · heading ${heading.toFixed(1)}° · ${new Date().toLocaleString('es-ES')}</description><LookAt><longitude>${lon}</longitude><latitude>${lat}</latitude><altitude>0</altitude><heading>${heading}</heading><tilt>55</tilt><range>80</range><altitudeMode>relativeToGround</altitudeMode></LookAt>${kmlPolys.join('')}</Document></kml>`;
+  const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n<name>'+xmlEsc(curProj||'Planos')+'</name>\n'+kmlPolys.join('\n')+'\n</Document>\n</kml>';
   const blob=new Blob([kml],{type:'application/vnd.google-earth.kml+xml'});
   const stamp=new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
   _downloadBlob(blob,`planos-${stamp}.kml`);
@@ -1998,7 +1996,7 @@ function _getStarSpriteTex(){
   const c=document.createElement('canvas');c.width=128;c.height=128;
   const g=c.getContext('2d');
   const cx=64,cy=64;
-  /* Soft outer halo */
+  
   const gr=g.createRadialGradient(cx,cy,0,cx,cy,64);
   gr.addColorStop(0,'rgba(255,255,255,1)');
   gr.addColorStop(0.04,'rgba(255,252,248,0.98)');
@@ -2008,7 +2006,7 @@ function _getStarSpriteTex(){
   gr.addColorStop(0.7,'rgba(100,140,255,0.03)');
   gr.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=gr;g.fillRect(0,0,128,128);
-  /* Cross-shaped diffraction spikes */
+  
   g.globalCompositeOperation='screen';
   g.strokeStyle='rgba(200,220,255,0.25)';g.lineWidth=1;
   g.beginPath();g.moveTo(cx-38,cy);g.lineTo(cx+38,cy);g.stroke();
@@ -2023,16 +2021,16 @@ function _domeBillboardLook(obj){
 }
 function _updateDomeSkyView(){
   if(!sunCfg.dome||!camera3d){
-    /* Cúpula desactivada — restaurar TODOS los suelos */
+    
     if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
     if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
-    /* Restaurar suelos con name='floor' creados por _cutNegativeHolesInFloor */
+    
     scene3d.traverse(o=>{
       if(o.isMesh&&o.name==='floor'&&o.material){
         o.visible=true;o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;
       }
     });
-    /* Restaurar losas del suelo a opacidad original */
+    
     objects3d.forEach(o=>{
       if(o.userData&&o.userData.type==='floor_slab_floor'&&o.material){
         o.material.transparent=(floorOpacity3D<0.95);
@@ -2040,14 +2038,13 @@ function _updateDomeSkyView(){
         o.material.depthWrite=true;
       }
     });
-    /* Ocultar el suelo de sombras cuando no hay cúpula */
+    
     if(shadowFloor3d)shadowFloor3d.visible=false;
     return;
   }
-  /* Cúpula activa — OCULTAR todos los suelos gigantes 500×500.
-     Incluye floorMesh3d Y los suelos creados por _cutNegativeHolesInFloor (name='floor'). */
+  
   if(floorMesh3d&&floorMesh3d.parent){floorMesh3d.parent.remove(floorMesh3d);}
-  /* Ocultar TODOS los meshes con name='floor' en la escena */
+  
   const floorsToHide=[];
   scene3d.traverse(o=>{
     if(o.isMesh&&o.name==='floor') floorsToHide.push(o);
@@ -2056,21 +2053,20 @@ function _updateDomeSkyView(){
     o.visible=false;
     if(o.material){o.material.transparent=true;o.material.opacity=0;o.material.depthWrite=false;}
   });
-  /* Mostrar el suelo de sombras transparente — recibe sombras sin bloquear la vista.
-     Opacidad variable según altitud solar: más sol = sombras más visibles. */
+  
   if(shadowFloor3d){
     shadowFloor3d.visible=true;shadowFloor3d.position.y=0.01;
     const sAlt=parseFloat(sunCfg.alt)||0;
     if(sAlt>0&&sunCfg.shadow){
       shadowFloor3d.material.opacity=Math.min(0.30,0.12+sAlt/120);
     }else{
-      shadowFloor3d.material.opacity=0.06; /* casi invisible de noche */
+      shadowFloor3d.material.opacity=0.06; 
     }
   }
-  /* Wireframe y dome mesh siempre visibles */
+  
   if(domeWire3d)domeWire3d.visible=true;
   if(domeMesh3d)domeMesh3d.visible=true;
-  /* Hacer las losas del suelo de la casa transparentes cuando la cámara está debajo */
+  
   const camY=camera3d.position.y;
   objects3d.forEach(o=>{
     if(o.userData&&o.userData.type==='floor_slab_floor'&&o.material){
@@ -2140,23 +2136,19 @@ function _moonRaDec(date){
   return{ra:((ra/rad/15)%24+24)%24,dec:dec/rad};
 }
 function _moonPhaseTexture(phase){
-  /* Texture designed for SphereGeometry UV mapping.
-     Fills the ENTIRE canvas — the sphere geometry provides the round shape.
-     UV: u=0..1 wraps horizontally (longitude), v=0..1 goes top-to-bottom (latitude).
-     We paint only the front-facing hemisphere (u≈0.25..0.75) with detail,
-     and the rest as dark back side. */
+  
   const k=Math.round(phase*48)/48;
   if(_domeMoonTexCache[k])return _domeMoonTexCache[k];
   const W=512,H=512;
   const c=document.createElement('canvas');c.width=W;c.height=H;
   const g=c.getContext('2d');
-  /* Fill entire canvas with base gray lunar surface */
+  
   const gr=g.createRadialGradient(W*0.47,H*0.45,W*0.02,W*0.5,H*0.5,W*0.5);
   gr.addColorStop(0,'#d8d5d0');gr.addColorStop(0.25,'#ccc8c0');
   gr.addColorStop(0.5,'#b0aca5');gr.addColorStop(0.75,'#908c88');
   gr.addColorStop(1,'#706c68');
   g.fillStyle=gr;g.fillRect(0,0,W,H);
-  /* Mare (dark seas) — positions scaled to full canvas */
+  
   const mares=[
     {x:0.43,y:0.39,rx:0.15,ry:0.12,a:0.13,rot:-0.2},
     {x:0.56,y:0.46,rx:0.11,ry:0.09,a:0.11,rot:0.3},
@@ -2176,7 +2168,7 @@ function _moonPhaseTexture(phase){
     g.fillStyle=mgr;g.beginPath();g.ellipse(0,0,rx,ry,0,0,Math.PI*2);g.fill();
     g.restore();
   });
-  /* Large craters */
+  
   const craters=[
     {x:0.38,y:0.34,r:0.044},{x:0.64,y:0.40,r:0.036},{x:0.34,y:0.58,r:0.040},
     {x:0.60,y:0.64,r:0.032},{x:0.46,y:0.68,r:0.028},{x:0.68,y:0.52,r:0.024},
@@ -2192,7 +2184,7 @@ function _moonPhaseTexture(phase){
     g.strokeStyle='rgba(200,198,190,0.10)';g.lineWidth=1;
     g.beginPath();g.arc(mx,my,r*0.85,Math.PI*0.8,Math.PI*1.8);g.stroke();
   });
-  /* Small surface craters */
+  
   const seed=42;
   for(let i=0;i<100;i++){
     const a=(seed*17+i*67)%360,rr=0.04+((seed+i*23)%33)/100;
@@ -2203,18 +2195,16 @@ function _moonPhaseTexture(phase){
     g.fillStyle='rgba(50,48,55,'+(0.04+((seed+i*3)%5)/100)+')';
     g.beginPath();g.arc(mx,my,sz,0,Math.PI*2);g.fill();
   }
-  /* Phase shadow — covers the entire canvas, not clipped to a circle.
-     Phase 0=new moon (all dark), 0.5=full moon (all lit), 1=new moon.
-     Waxing: shadow on left (west) → shrinking. Waning: shadow on right (east). */
+  
   const p=((phase%1)+1)%1;
   if(p>0.02&&p<0.98){
     g.save();g.globalCompositeOperation='source-atop';
     g.fillStyle='rgba(6,6,14,0.93)';
     if(p<=0.5){
-      /* Waxing: illumination grows from right side */
-      const frac=p*2; /* 0→1 as waxing crescent→full */
-      const shadowX=W*(1-frac); /* shadow covers left portion */
-      /* Soft terminator using gradient */
+      
+      const frac=p*2; 
+      const shadowX=W*(1-frac); 
+      
       const tGr=g.createLinearGradient(shadowX-W*0.06,0,shadowX+W*0.06,0);
       tGr.addColorStop(0,'rgba(6,6,14,0.93)');
       tGr.addColorStop(1,'rgba(6,6,14,0)');
@@ -2223,9 +2213,9 @@ function _moonPhaseTexture(phase){
       g.fillStyle=tGr;
       g.fillRect(Math.max(0,shadowX-W*0.06),0,W*0.12,H);
     }else{
-      /* Waning: shadow grows from right side */
-      const frac=(p-0.5)*2; /* 0→1 as full→waning crescent */
-      const shadowX=W*(1-frac); /* lit portion shrinks from left */
+      
+      const frac=(p-0.5)*2; 
+      const shadowX=W*(1-frac); 
       const tGr=g.createLinearGradient(shadowX-W*0.06,0,shadowX+W*0.06,0);
       tGr.addColorStop(0,'rgba(6,6,14,0)');
       tGr.addColorStop(1,'rgba(6,6,14,0.93)');
@@ -2236,12 +2226,12 @@ function _moonPhaseTexture(phase){
     }
     g.restore();
   }else if(p<=0.02||p>=0.98){
-    /* New moon — almost entirely dark */
+    
     g.save();g.globalCompositeOperation='source-atop';
     g.fillStyle='rgba(6,6,14,0.93)';g.fillRect(0,0,W,H);
     g.restore();
   }
-  /* Limb darkening — full canvas radial */
+  
   g.save();g.globalCompositeOperation='multiply';
   const limbGr=g.createRadialGradient(W*0.5,H*0.5,W*0.2,W*0.5,H*0.5,W*0.5);
   limbGr.addColorStop(0,'rgba(255,255,255,1)');limbGr.addColorStop(0.6,'rgba(245,243,240,1)');
@@ -2272,24 +2262,22 @@ function _disposeDome3D(){
   _domeMoonTexCache={};
 }
 function _createSkyDomeGradientTex(){
-  /* Full sphere texture: sky on top half, TRANSPARENT on bottom half.
-     UV: v=0 top (zenith), v=0.5 equator, v=1 bottom (nadir).
-     Bottom half is transparent so you can see through the dome from below. */
+  
   const c=document.createElement('canvas');c.width=4;c.height=512;
   const g=c.getContext('2d');
-  g.clearRect(0,0,4,512); /* start fully transparent */
-  /* Upper hemisphere: opaque sky gradient (0–256 px = zenith–equator) */
+  g.clearRect(0,0,4,512); 
+  
   const gr=g.createLinearGradient(0,0,0,512);
-  gr.addColorStop(0,'rgba(10,22,40,1)');        /* zenith */
+  gr.addColorStop(0,'rgba(10,22,40,1)');        
   gr.addColorStop(0.15,'rgba(18,38,72,1)');
   gr.addColorStop(0.3,'rgba(26,74,122,1)');
   gr.addColorStop(0.42,'rgba(42,106,170,1)');
-  gr.addColorStop(0.48,'rgba(58,128,187,1)');    /* near equator */
-  gr.addColorStop(0.5,'rgba(58,128,187,0.7)');   /* equator — start fading */
-  gr.addColorStop(0.55,'rgba(30,60,100,0.25)');  /* quick fade */
+  gr.addColorStop(0.48,'rgba(58,128,187,1)');    
+  gr.addColorStop(0.5,'rgba(58,128,187,0.7)');   
+  gr.addColorStop(0.55,'rgba(30,60,100,0.25)');  
   gr.addColorStop(0.6,'rgba(10,24,40,0.05)');
-  gr.addColorStop(0.65,'rgba(0,0,0,0)');         /* fully transparent */
-  gr.addColorStop(1,'rgba(0,0,0,0)');            /* nadir — transparent */
+  gr.addColorStop(0.65,'rgba(0,0,0,0)');         
+  gr.addColorStop(1,'rgba(0,0,0,0)');            
   g.fillStyle=gr;g.fillRect(0,0,4,512);
   const tex=new THREE.CanvasTexture(c);
   tex.needsUpdate=true;
@@ -2299,7 +2287,7 @@ function _createSunTexture(){
   const c=document.createElement('canvas');c.width=256;c.height=256;
   const g=c.getContext('2d');
   const cx=128,cy=128;
-  /* Outer corona glow */
+  
   const gr0=g.createRadialGradient(cx,cy,0,cx,cy,128);
   gr0.addColorStop(0,'rgba(255,255,240,1)');
   gr0.addColorStop(0.08,'rgba(255,250,220,0.98)');
@@ -2310,7 +2298,7 @@ function _createSunTexture(){
   gr0.addColorStop(0.85,'rgba(255,80,10,0.02)');
   gr0.addColorStop(1,'rgba(0,0,0,0)');
   g.fillStyle=gr0;g.fillRect(0,0,256,256);
-  /* Bright core */
+  
   const gr1=g.createRadialGradient(cx,cy,0,cx,cy,30);
   gr1.addColorStop(0,'rgba(255,255,255,1)');
   gr1.addColorStop(0.5,'rgba(255,255,230,0.95)');
@@ -2349,7 +2337,7 @@ function _initDome3D(){
   }));
   skyDomeInner3d.renderOrder=-7;
   dome3dGroup.add(skyDomeInner3d);
-  /* Full sphere wireframe + outer mesh — visible from every angle */
+  
   const fullSphere=new THREE.SphereGeometry(_DOME_R,72,36);
   domeMesh3d=new THREE.Mesh(fullSphere.clone(),new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.03,side:THREE.DoubleSide,depthWrite:false}));
   domeMesh3d.renderOrder=-6;
@@ -2357,14 +2345,14 @@ function _initDome3D(){
   domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(fullSphere),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.12}));
   domeWire3d.renderOrder=-5;
   dome3dGroup.add(domeWire3d);
-  /* Sun/moon paths */
+  
   sunPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0xffd54a,transparent:true,opacity:0.6,linewidth:1}));
   sunPath3d.frustumCulled=false;sunPath3d.renderOrder=-4;
   dome3dGroup.add(sunPath3d);
   moonPath3d=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x9ec8ff,transparent:true,opacity:0.45}));
   moonPath3d.frustumCulled=false;moonPath3d.renderOrder=-4;
   dome3dGroup.add(moonPath3d);
-  /* Realistic sun — textured disc + corona glow */
+  
   const sunTex=_createSunTexture();
   sunDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(2.2,2.2),new THREE.MeshBasicMaterial({map:sunTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
   sunDisc3d.renderOrder=-3;
@@ -2373,14 +2361,14 @@ function _initDome3D(){
   sunGlow3d=new THREE.Mesh(new THREE.PlaneGeometry(7,7),new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,opacity:0.7}));
   sunGlow3d.renderOrder=-3.5;
   dome3dGroup.add(sunGlow3d);
-  /* Realistic moon — 3D SPHERE so the phase is visible from every angle */
+  
   moonDisc3d=new THREE.Mesh(
     new THREE.SphereGeometry(0.8,48,32),
     new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false})
   );
   moonDisc3d.renderOrder=-3;
   dome3dGroup.add(moonDisc3d);
-  /* Subtle glow ring around the moon (billboard sprite) */
+  
   (function(){
     const rc=document.createElement('canvas');rc.width=128;rc.height=128;
     const rg=rc.getContext('2d');rg.clearRect(0,0,128,128);
@@ -2395,7 +2383,7 @@ function _initDome3D(){
     moonRing3d.renderOrder=-3.1;
     dome3dGroup.add(moonRing3d);
   })();
-  /* === HORIZON LINE — circle at equator with label === */
+  
   (function(){
     const segs=128, pts=[];
     for(let i=0;i<=segs;i++){
@@ -2406,7 +2394,7 @@ function _initDome3D(){
     const horizonLine=new THREE.Line(hGeo,new THREE.LineBasicMaterial({color:0xffaa44,transparent:true,opacity:0.55,depthWrite:false}));
     horizonLine.renderOrder=-4;
     dome3dGroup.add(horizonLine);
-    /* "Horizonte" label as a small canvas sprite */
+    
     const lc=document.createElement('canvas');lc.width=256;lc.height=64;
     const lg=lc.getContext('2d');
     lg.clearRect(0,0,256,64);
@@ -2419,12 +2407,12 @@ function _initDome3D(){
     lSpr.position.set(0,0.6,_DOME_R-1.5);
     lSpr.renderOrder=-3;
     dome3dGroup.add(lSpr);
-    /* Second label on opposite side */
+    
     const lSpr2=lSpr.clone();
     lSpr2.position.set(0,0.6,-(_DOME_R-1.5));
     dome3dGroup.add(lSpr2);
   })();
-  /* Constellations */
+  
   constellationLines3d=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x6b8cff,transparent:true,opacity:0.42,depthWrite:false}));
   constellationLines3d.frustumCulled=false;constellationLines3d.renderOrder=-4;
   dome3dGroup.add(constellationLines3d);
@@ -2447,7 +2435,7 @@ function _updateDomeSunPath(){
   for(let m=0;m<=1440;m+=10){
     const t=new Date(base.getTime()+m*60000);
     const s=_solarAzAlt(t,lat,lon);
-    /* Draw full 24h path including below horizon (negative altitudes) */
+    
     const p=_domeAzAltToXYZ(s.az,s.alt,heading,_domeBodyR());
     pts.push(p.x,p.y,p.z);
   }
@@ -2472,7 +2460,7 @@ function _updateDomeMoonPath(){
     t.setHours(h,mi,0,0);
     const md=_moonRaDec(t);
     const m=_radecToAltAz(md.ra,md.dec,lat,lon,t);
-    /* Draw full path including below horizon */
+    
     const p=_domeAzAltToXYZ(m.az,m.alt,heading,_domeBodyR());
     pts.push(p.x,p.y,p.z);
   }
@@ -2493,16 +2481,16 @@ function _updateDomeCelestial(){
   if(sunDisc3d&&isFinite(sunAlt)&&isFinite(sunAz)){
     const sp=_domeAzAltToXYZ(sunAz,sunAlt,heading,R);
     sunDisc3d.position.set(sp.x,sp.y,sp.z);
-    sunDisc3d.visible=true; /* Always visible — even below horizon */
+    sunDisc3d.visible=true; 
     if(sunAlt>0)sunDisc3d.material.opacity=Math.min(1,0.6+sunAlt/60);
-    else sunDisc3d.material.opacity=Math.max(0.12,0.35+sunAlt/50); /* dim below horizon */
+    else sunDisc3d.material.opacity=Math.max(0.12,0.35+sunAlt/50); 
     _domeBillboardLook(sunDisc3d);
-    /* Sun glow follows the disc */
+    
     if(sunGlow3d){
       sunGlow3d.position.copy(sunDisc3d.position);
       sunGlow3d.visible=true;
       if(sunAlt>0)sunGlow3d.material.opacity=Math.min(0.7,0.25+sunAlt/45);
-      else sunGlow3d.material.opacity=Math.max(0.05,0.2+sunAlt/40); /* faint glow below */
+      else sunGlow3d.material.opacity=Math.max(0.05,0.2+sunAlt/40); 
       _domeBillboardLook(sunGlow3d);
     }
   }
@@ -2515,12 +2503,12 @@ function _updateDomeCelestial(){
     if(moonDisc3d){
       const mp=_domeAzAltToXYZ(moonAz,moonAlt,heading,R);
       moonDisc3d.position.set(mp.x,mp.y,mp.z);
-      moonVis=true; /* Always visible — even below horizon */
+      moonVis=true; 
       moonDisc3d.visible=true;
       const tex=_moonPhaseTexture(phase);
       if(moonDisc3d.material.map!==tex){moonDisc3d.material.map=tex;moonDisc3d.material.needsUpdate=true;}
       moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):Math.max(0.15,0.4+moonAlt/40);
-      /* No billboard needed — moon is a sphere, visible from every angle */
+      
     }
     if(moonRing3d){
       moonRing3d.position.copy(moonDisc3d.position);
@@ -2685,18 +2673,18 @@ function _initStars3D(){
   stars3dGroup.renderOrder=-2;
   (dome3dGroup||scene3d).add(stars3dGroup);
 }
-/* Stellar color by spectral type — maps star index to approximate B-V color */
+
 function _starColor(mag,idx){
-  /* Approximate spectral colors: hot blue-white → warm orange-red */
+  
   const palette=[
-    [0.65,0.75,1.0],  /* O/B — blue-white (Rigel, Spica) */
-    [0.82,0.88,1.0],  /* A — white (Vega, Sirio) */
-    [1.0,0.98,0.90],  /* F — yellow-white (Canopus, Polaris) */
-    [1.0,0.92,0.70],  /* G — yellow (Sol-like) */
-    [1.0,0.78,0.50],  /* K — orange (Arturo, Aldebarán) */
-    [1.0,0.55,0.35],  /* M — red-orange (Betelgeuse, Antares) */
+    [0.65,0.75,1.0],  
+    [0.82,0.88,1.0],  
+    [1.0,0.98,0.90],  
+    [1.0,0.92,0.70],  
+    [1.0,0.78,0.50],  
+    [1.0,0.55,0.35],  
   ];
-  /* Use a deterministic hash based on star index for spectral type assignment */
+  
   const knownColors={0:1,1:3,2:4,3:1,4:3,5:0,6:4,7:5,8:0,9:0,10:1,11:4,12:0,13:5,14:3,15:1,16:1,17:0,18:0,19:3};
   const ci=knownColors[idx]!=null?knownColors[idx]:((idx*7+3)%6);
   const c=palette[ci];
@@ -2734,7 +2722,7 @@ function _updateStars3D(nightFactor){
       const p=_domeAzAltToXYZ(h.az,h.alt,heading,R);
       const i3=vi*3;
       pos[i3]=p.x;pos[i3+1]=p.y;pos[i3+2]=p.z;
-      /* Realistic spectral color */
+      
       const sc=_starColor(s[2],i);
       col[i3]=sc.r;
       col[i3+1]=sc.g;
@@ -2748,23 +2736,21 @@ function _updateStars3D(nightFactor){
     stars3dGroup.geometry.setDrawRange(0,vi);
   }
   stars3dGroup.visible=_starsVisibleCount>0;
-  /* Brighter stars are more visible — scale with night factor */
+  
   if(stars3dGroup.material){
     stars3dGroup.material.opacity=Math.min(0.98,nightFactor*1.05);
-    /* Larger point size at night for more prominent stars */
+    
     stars3dGroup.material.size=2.2+nightFactor*1.2;
   }
 }
 function _updateSkyDomeGradient(alt,nightFactor){
-  /* Sky gradient on UPPER hemisphere only; lower hemisphere is TRANSPARENT.
-     Canvas 512px: 0=zenith, 256=equator, 512=nadir.
-     Below the equator we fade to alpha=0 so the dome is see-through from below. */
+  
   if(!skyDomeInner3d||!skyDomeInner3d.material)return;
   const c=document.createElement('canvas');c.width=4;c.height=512;
   const g=c.getContext('2d');
-  g.clearRect(0,0,4,512); /* start fully transparent */
-  /* Compute sky colors for upper hemisphere based on sun altitude */
-  let z0,z1,z2,z3,z4; /* zenith to horizon (RGBA strings) */
+  g.clearRect(0,0,4,512); 
+  
+  let z0,z1,z2,z3,z4; 
   const _h2r=function(hex,a){
     const v=parseInt(hex.slice(1),16);
     return 'rgba('+((v>>16)&255)+','+((v>>8)&255)+','+(v&255)+','+a+')';
@@ -2788,17 +2774,17 @@ function _updateSkyDomeGradient(alt,nightFactor){
     z0='rgba(2,4,8,1)';z1='rgba(4,8,16,1)';z2='rgba(8,14,26,1)';z3='rgba(12,20,40,1)';z4='rgba(16,26,48,1)';
   }
   const gr=g.createLinearGradient(0,0,0,512);
-  gr.addColorStop(0,z0);              /* zenith — fully opaque */
+  gr.addColorStop(0,z0);              
   gr.addColorStop(0.15,z1);
   gr.addColorStop(0.3,z2);
   gr.addColorStop(0.42,z3);
-  gr.addColorStop(0.48,z4);           /* near equator — still opaque */
-  /* Fade to transparent across the equator */
-  gr.addColorStop(0.5,z4.replace(',1)',',0.7)'));  /* equator — start fading */
+  gr.addColorStop(0.48,z4);           
+  
+  gr.addColorStop(0.5,z4.replace(',1)',',0.7)'));  
   gr.addColorStop(0.55,'rgba(20,40,60,0.25)');
   gr.addColorStop(0.6,'rgba(10,20,30,0.05)');
-  gr.addColorStop(0.65,'rgba(0,0,0,0)');           /* fully transparent */
-  gr.addColorStop(1,'rgba(0,0,0,0)');              /* nadir — transparent */
+  gr.addColorStop(0.65,'rgba(0,0,0,0)');           
+  gr.addColorStop(1,'rgba(0,0,0,0)');              
   g.fillStyle=gr;g.fillRect(0,0,4,512);
   if(skyDomeInner3d.material.map)skyDomeInner3d.material.map.dispose();
   skyDomeInner3d.material.map=new THREE.CanvasTexture(c);
@@ -2834,7 +2820,7 @@ function _updateNightSky(){
   let nightFactor=0;
   if(alt<=twi)nightFactor=1;
   else if(alt<0)nightFactor=(-alt)/(-twi);
-  /* Compute scene background color */
+  
   const dayZenith=new THREE.Color(0x3d8fd9);
   const dayHoriz=new THREE.Color(0x87b8e8);
   const twiZenith=new THREE.Color(0x1a2848);
@@ -2854,10 +2840,9 @@ function _updateNightSky(){
   }else{
     sky=nightHoriz.clone().lerp(nightZenith,0.55);
   }
-  /* No scene background when dome is on — the dome sphere itself IS the sky.
-     This prevents a solid color "floor" from appearing below the equator. */
+  
   scene3d.background=null;
-  /* Update the full-sphere dome with a dynamic gradient texture */
+  
   _updateSkyDomeGradient(alt,nightFactor);
   if(skyDomeInner3d&&skyDomeInner3d.material){
     skyDomeInner3d.material.opacity=0.88+nightFactor*0.10;
@@ -3440,7 +3425,7 @@ function build3DAreas(fIdx) {
     });
 }
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
-function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(sunGlow3d&&sunGlow3d.visible)_domeBillboardLook(sunGlow3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);_updateDomeLabels();/* Subtle star twinkle */if(stars3dGroup&&stars3dGroup.visible&&stars3dGroup.material){const t=performance.now()*0.001;stars3dGroup.material.opacity=Math.min(0.98,stars3dGroup.material.opacity*(0.97+0.03*Math.sin(t*1.7)));}}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
+function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(sunGlow3d&&sunGlow3d.visible)_domeBillboardLook(sunGlow3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);_updateDomeLabels();if(stars3dGroup&&stars3dGroup.visible&&stars3dGroup.material){const t=performance.now()*0.001;stars3dGroup.material.opacity=Math.min(0.98,stars3dGroup.material.opacity*(0.97+0.03*Math.sin(t*1.7)));}}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
 function _fpGetFloorHeight(wx,wz){
   let stairH=null;
