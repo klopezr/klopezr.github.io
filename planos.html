@@ -2014,18 +2014,56 @@ function _domeBillboardLook(obj){
 }
 function _updateDomeSkyView(){
   if(!sunCfg.dome||!camera3d){
-    /* Cúpula desactivada — suelo gigante visible y opaco */
-    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;floorMesh3d.material.needsUpdate=true;}
-    if(domeWire3d)domeWire3d.visible=true;
-    if(domeMesh3d)domeMesh3d.visible=true;
+    /* Cúpula desactivada — restaurar TODOS los suelos */
+    if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
+    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
+    /* Restaurar suelos con name='floor' creados por _cutNegativeHolesInFloor */
+    scene3d.traverse(o=>{
+      if(o.isMesh&&o.name==='floor'&&o.material){
+        o.visible=true;o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;
+      }
+    });
+    /* Restaurar losas del suelo a opacidad original */
+    objects3d.forEach(o=>{
+      if(o.userData&&o.userData.type==='floor_slab_floor'&&o.material){
+        o.material.transparent=(floorOpacity3D<0.95);
+        o.material.opacity=floorOpacity3D;
+        o.material.depthWrite=true;
+      }
+    });
     return;
   }
-  /* Cúpula activa — OCULTAR el suelo gigante 500×500 siempre.
-     La casa conserva sus propias losas (build3DFloorSlab). */
-  if(floorMesh3d)floorMesh3d.visible=false;
-  /* Wireframe y dome mesh siempre visibles cuando la cúpula está activa */
+  /* Cúpula activa — OCULTAR todos los suelos gigantes 500×500.
+     Incluye floorMesh3d Y los suelos creados por _cutNegativeHolesInFloor (name='floor'). */
+  if(floorMesh3d&&floorMesh3d.parent){floorMesh3d.parent.remove(floorMesh3d);}
+  /* Ocultar TODOS los meshes con name='floor' en la escena */
+  const floorsToHide=[];
+  scene3d.traverse(o=>{
+    if(o.isMesh&&o.name==='floor') floorsToHide.push(o);
+  });
+  floorsToHide.forEach(o=>{
+    o.visible=false;
+    if(o.material){o.material.transparent=true;o.material.opacity=0;o.material.depthWrite=false;}
+  });
+  /* Wireframe y dome mesh siempre visibles */
   if(domeWire3d)domeWire3d.visible=true;
   if(domeMesh3d)domeMesh3d.visible=true;
+  /* Hacer las losas del suelo de la casa transparentes cuando la cámara está debajo */
+  const camY=camera3d.position.y;
+  objects3d.forEach(o=>{
+    if(o.userData&&o.userData.type==='floor_slab_floor'&&o.material){
+      const slabY=o.position.y;
+      if(camY<slabY-0.1){
+        o.material.transparent=true;
+        o.material.opacity=0.08;
+        o.material.depthWrite=false;
+      }else{
+        o.material.transparent=(floorOpacity3D<0.95);
+        o.material.opacity=floorOpacity3D;
+        o.material.depthWrite=true;
+      }
+    }
+  });
 }
 function toggleSkyDome(on){
   sunCfg.dome=!!on;
@@ -2044,7 +2082,7 @@ function _syncDomeOptionsUI(){
 }
 function _domeAzAltToXYZ(az,alt,heading,R){
   const azRel=((az-(heading||0)+360)%360)*Math.PI/180;
-  const altR=Math.max(-5,alt)*Math.PI/180;
+  const altR=Math.max(-90,Math.min(90,alt))*Math.PI/180;
   return{x:Math.sin(azRel)*Math.cos(altR)*R,y:Math.sin(altR)*R,z:-Math.cos(azRel)*Math.cos(altR)*R};
 }
 function _moonPhase01(date){
@@ -2080,98 +2118,113 @@ function _moonRaDec(date){
   return{ra:((ra/rad/15)%24+24)%24,dec:dec/rad};
 }
 function _moonPhaseTexture(phase){
+  /* Texture designed for SphereGeometry UV mapping.
+     Fills the ENTIRE canvas — the sphere geometry provides the round shape.
+     UV: u=0..1 wraps horizontally (longitude), v=0..1 goes top-to-bottom (latitude).
+     We paint only the front-facing hemisphere (u≈0.25..0.75) with detail,
+     and the rest as dark back side. */
   const k=Math.round(phase*48)/48;
   if(_domeMoonTexCache[k])return _domeMoonTexCache[k];
-  const c=document.createElement('canvas');c.width=512;c.height=512;
+  const W=512,H=512;
+  const c=document.createElement('canvas');c.width=W;c.height=H;
   const g=c.getContext('2d');
-  const cx=256,cy=256,R=224;
-  g.clearRect(0,0,512,512);
-  /* Base lunar surface with realistic gradient */
-  const gr=g.createRadialGradient(cx-30,cy-20,R*0.05,cx,cy,R);
-  gr.addColorStop(0,'#e0ddd8');gr.addColorStop(0.3,'#d0ccc4');
-  gr.addColorStop(0.55,'#b8b4ac');gr.addColorStop(0.78,'#989490');
-  gr.addColorStop(0.92,'#787470');gr.addColorStop(1,'#585450');
-  g.fillStyle=gr;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fill();
-  /* Mare (dark seas) */
+  /* Fill entire canvas with base gray lunar surface */
+  const gr=g.createRadialGradient(W*0.47,H*0.45,W*0.02,W*0.5,H*0.5,W*0.5);
+  gr.addColorStop(0,'#d8d5d0');gr.addColorStop(0.25,'#ccc8c0');
+  gr.addColorStop(0.5,'#b0aca5');gr.addColorStop(0.75,'#908c88');
+  gr.addColorStop(1,'#706c68');
+  g.fillStyle=gr;g.fillRect(0,0,W,H);
+  /* Mare (dark seas) — positions scaled to full canvas */
   const mares=[
-    {x:-35,y:-55,rx:75,ry:60,a:0.12,rot:-0.2},
-    {x:30,y:-20,rx:55,ry:48,a:0.1,rot:0.3},
-    {x:40,y:35,rx:65,ry:55,a:0.11,rot:-0.1},
-    {x:-10,y:55,rx:50,ry:35,a:0.09,rot:0.15},
-    {x:-60,y:15,rx:45,ry:40,a:0.1,rot:-0.4},
-    {x:10,y:-75,rx:35,ry:28,a:0.08,rot:0.1},
-    {x:-30,y:10,rx:38,ry:32,a:0.07,rot:0.2},
+    {x:0.43,y:0.39,rx:0.15,ry:0.12,a:0.13,rot:-0.2},
+    {x:0.56,y:0.46,rx:0.11,ry:0.09,a:0.11,rot:0.3},
+    {x:0.58,y:0.57,rx:0.13,ry:0.11,a:0.12,rot:-0.1},
+    {x:0.48,y:0.61,rx:0.10,ry:0.07,a:0.10,rot:0.15},
+    {x:0.38,y:0.53,rx:0.09,ry:0.08,a:0.11,rot:-0.4},
+    {x:0.52,y:0.35,rx:0.07,ry:0.055,a:0.09,rot:0.1},
+    {x:0.44,y:0.52,rx:0.075,ry:0.063,a:0.08,rot:0.2},
   ];
   mares.forEach(m=>{
-    g.save();g.translate(cx+m.x,cy+m.y);g.rotate(m.rot);
-    const mgr=g.createRadialGradient(0,0,0,0,0,m.rx);
-    mgr.addColorStop(0,'rgba(60,58,65,'+m.a+')');
-    mgr.addColorStop(0.6,'rgba(70,68,75,'+(m.a*0.7)+')');
-    mgr.addColorStop(1,'rgba(80,78,85,0)');
-    g.fillStyle=mgr;g.beginPath();g.ellipse(0,0,m.rx,m.ry,0,0,Math.PI*2);g.fill();
+    g.save();g.translate(m.x*W,m.y*H);g.rotate(m.rot);
+    const rx=m.rx*W,ry=m.ry*H;
+    const mgr=g.createRadialGradient(0,0,0,0,0,rx);
+    mgr.addColorStop(0,'rgba(55,53,60,'+m.a+')');
+    mgr.addColorStop(0.6,'rgba(65,63,70,'+(m.a*0.7)+')');
+    mgr.addColorStop(1,'rgba(75,73,80,0)');
+    g.fillStyle=mgr;g.beginPath();g.ellipse(0,0,rx,ry,0,0,Math.PI*2);g.fill();
     g.restore();
   });
-  /* Large craters with rims */
+  /* Large craters */
   const craters=[
-    {x:-60,y:-80,r:22},{x:70,y:-50,r:18},{x:-80,y:40,r:20},
-    {x:50,y:70,r:16},{x:-20,y:90,r:14},{x:90,y:10,r:12},
-    {x:-90,y:-30,r:15},{x:30,y:-90,r:13},{x:-50,y:60,r:17},
-    {x:80,y:-80,r:11},{x:-70,y:80,r:13},{x:10,y:-30,r:10},
+    {x:0.38,y:0.34,r:0.044},{x:0.64,y:0.40,r:0.036},{x:0.34,y:0.58,r:0.040},
+    {x:0.60,y:0.64,r:0.032},{x:0.46,y:0.68,r:0.028},{x:0.68,y:0.52,r:0.024},
+    {x:0.32,y:0.44,r:0.030},{x:0.56,y:0.32,r:0.026},{x:0.40,y:0.62,r:0.034},
+    {x:0.66,y:0.34,r:0.022},{x:0.36,y:0.66,r:0.026},{x:0.52,y:0.44,r:0.020},
   ];
   craters.forEach(cr=>{
-    const mx=cx+cr.x,my=cy+cr.y;
-    if(Math.sqrt(cr.x*cr.x+cr.y*cr.y)+cr.r>R-4)return;
-    const cg=g.createRadialGradient(mx+1,my+1,0,mx,my,cr.r);
-    cg.addColorStop(0,'rgba(50,48,55,0.22)');cg.addColorStop(0.6,'rgba(60,58,65,0.15)');
-    cg.addColorStop(0.85,'rgba(90,88,95,0.06)');cg.addColorStop(1,'rgba(100,98,105,0)');
-    g.fillStyle=cg;g.beginPath();g.arc(mx,my,cr.r,0,Math.PI*2);g.fill();
-    g.strokeStyle='rgba(200,198,190,0.12)';g.lineWidth=1.2;
-    g.beginPath();g.arc(mx,my,cr.r*0.85,Math.PI*0.8,Math.PI*1.8);g.stroke();
+    const mx=cr.x*W,my=cr.y*H,r=cr.r*W;
+    const cg=g.createRadialGradient(mx+1,my+1,0,mx,my,r);
+    cg.addColorStop(0,'rgba(45,43,50,0.22)');cg.addColorStop(0.6,'rgba(55,53,60,0.15)');
+    cg.addColorStop(0.85,'rgba(85,83,90,0.06)');cg.addColorStop(1,'rgba(95,93,100,0)');
+    g.fillStyle=cg;g.beginPath();g.arc(mx,my,r,0,Math.PI*2);g.fill();
+    g.strokeStyle='rgba(200,198,190,0.10)';g.lineWidth=1;
+    g.beginPath();g.arc(mx,my,r*0.85,Math.PI*0.8,Math.PI*1.8);g.stroke();
   });
   /* Small surface craters */
   const seed=42;
-  for(let i=0;i<80;i++){
-    const a=(seed*17+i*67)%360,r=15+((seed+i*23)%170);
-    const mx=cx+Math.cos(a*Math.PI/180)*r,my=cy+Math.sin(a*Math.PI/180)*r*0.92;
-    if(Math.sqrt((mx-cx)*(mx-cx)+(my-cy)*(my-cy))>R-6)continue;
-    const sz=1.5+((seed+i*7)%5);
-    g.fillStyle='rgba(55,53,60,'+(0.04+((seed+i*3)%6)/100)+')';
+  for(let i=0;i<100;i++){
+    const a=(seed*17+i*67)%360,rr=0.04+((seed+i*23)%33)/100;
+    const mx=(0.3+rr*Math.cos(a*Math.PI/180)*0.4)*W;
+    const my=(0.3+rr*Math.sin(a*Math.PI/180)*0.4)*H;
+    if(mx<0||mx>W||my<0||my>H)continue;
+    const sz=1.5+((seed+i*7)%4);
+    g.fillStyle='rgba(50,48,55,'+(0.04+((seed+i*3)%5)/100)+')';
     g.beginPath();g.arc(mx,my,sz,0,Math.PI*2);g.fill();
   }
-  /* Phase shadow (terminator) with soft edge */
+  /* Phase shadow — covers the entire canvas, not clipped to a circle.
+     Phase 0=new moon (all dark), 0.5=full moon (all lit), 1=new moon.
+     Waxing: shadow on left (west) → shrinking. Waning: shadow on right (east). */
   const p=((phase%1)+1)%1;
   if(p>0.02&&p<0.98){
     g.save();g.globalCompositeOperation='source-atop';
     g.fillStyle='rgba(6,6,14,0.93)';
-    g.beginPath();g.arc(cx,cy,R+2,0,Math.PI*2);
     if(p<=0.5){
-      const eW=Math.abs(R*(1-2*p));
-      g.ellipse(cx,cy,eW,R+2,0,0,Math.PI*2,true);
-      /* Shadow is left side for waxing */
-      g.rect(cx,cy-R-4,-R-4,2*R+8);
-      if(p>0.25){g.rect(cx,cy-R-4,R+4,2*R+8);}
-    } else {
-      const eW=Math.abs(R*(2*p-1));
-      g.ellipse(cx,cy,eW,R+2,0,0,Math.PI*2,false);
-      g.rect(cx,cy-R-4,R+4,2*R+8);
-      if(p<0.75){g.rect(cx,cy-R-4,-R-4,2*R+8);}
+      /* Waxing: illumination grows from right side */
+      const frac=p*2; /* 0→1 as waxing crescent→full */
+      const shadowX=W*(1-frac); /* shadow covers left portion */
+      /* Soft terminator using gradient */
+      const tGr=g.createLinearGradient(shadowX-W*0.06,0,shadowX+W*0.06,0);
+      tGr.addColorStop(0,'rgba(6,6,14,0.93)');
+      tGr.addColorStop(1,'rgba(6,6,14,0)');
+      g.fillStyle='rgba(6,6,14,0.93)';
+      g.fillRect(0,0,Math.max(0,shadowX-W*0.04),H);
+      g.fillStyle=tGr;
+      g.fillRect(Math.max(0,shadowX-W*0.06),0,W*0.12,H);
+    }else{
+      /* Waning: shadow grows from right side */
+      const frac=(p-0.5)*2; /* 0→1 as full→waning crescent */
+      const shadowX=W*(1-frac); /* lit portion shrinks from left */
+      const tGr=g.createLinearGradient(shadowX-W*0.06,0,shadowX+W*0.06,0);
+      tGr.addColorStop(0,'rgba(6,6,14,0)');
+      tGr.addColorStop(1,'rgba(6,6,14,0.93)');
+      g.fillStyle='rgba(6,6,14,0.93)';
+      g.fillRect(shadowX+W*0.04,0,W,H);
+      g.fillStyle=tGr;
+      g.fillRect(shadowX-W*0.06,0,W*0.12,H);
     }
-    g.fill('evenodd');
+    g.restore();
+  }else if(p<=0.02||p>=0.98){
+    /* New moon — almost entirely dark */
+    g.save();g.globalCompositeOperation='source-atop';
+    g.fillStyle='rgba(6,6,14,0.93)';g.fillRect(0,0,W,H);
     g.restore();
   }
-  /* Limb darkening */
+  /* Limb darkening — full canvas radial */
   g.save();g.globalCompositeOperation='multiply';
-  const limbGr=g.createRadialGradient(cx,cy,R*0.5,cx,cy,R);
-  limbGr.addColorStop(0,'rgba(255,255,255,1)');limbGr.addColorStop(0.7,'rgba(240,238,235,1)');
-  limbGr.addColorStop(0.9,'rgba(180,178,175,1)');limbGr.addColorStop(1,'rgba(120,118,115,1)');
-  g.fillStyle=limbGr;g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.fill();
-  g.restore();
-  /* Subtle atmospheric glow */
-  g.save();g.globalCompositeOperation='screen';
-  const glowGr=g.createRadialGradient(cx,cy,R*0.9,cx,cy,R*1.08);
-  glowGr.addColorStop(0,'rgba(180,200,240,0)');glowGr.addColorStop(0.5,'rgba(160,180,220,0.06)');
-  glowGr.addColorStop(1,'rgba(140,160,200,0)');
-  g.fillStyle=glowGr;g.beginPath();g.arc(cx,cy,R*1.08,0,Math.PI*2);g.fill();
+  const limbGr=g.createRadialGradient(W*0.5,H*0.5,W*0.2,W*0.5,H*0.5,W*0.5);
+  limbGr.addColorStop(0,'rgba(255,255,255,1)');limbGr.addColorStop(0.6,'rgba(245,243,240,1)');
+  limbGr.addColorStop(0.85,'rgba(200,198,195,1)');limbGr.addColorStop(1,'rgba(140,138,135,1)');
+  g.fillStyle=limbGr;g.fillRect(0,0,W,H);
   g.restore();
   const tex=new THREE.CanvasTexture(c);
   _domeMoonTexCache[k]=tex;
@@ -2197,15 +2250,25 @@ function _disposeDome3D(){
   _domeMoonTexCache={};
 }
 function _createSkyDomeGradientTex(){
-  const c=document.createElement('canvas');c.width=1;c.height=512;
+  /* Full sphere texture: sky on top half, TRANSPARENT on bottom half.
+     UV: v=0 top (zenith), v=0.5 equator, v=1 bottom (nadir).
+     Bottom half is transparent so you can see through the dome from below. */
+  const c=document.createElement('canvas');c.width=4;c.height=512;
   const g=c.getContext('2d');
+  g.clearRect(0,0,4,512); /* start fully transparent */
+  /* Upper hemisphere: opaque sky gradient (0–256 px = zenith–equator) */
   const gr=g.createLinearGradient(0,0,0,512);
-  gr.addColorStop(0,'#0a1628');   /* zenith — deep night blue */
-  gr.addColorStop(0.25,'#122648');
-  gr.addColorStop(0.5,'#1a4a7a');
-  gr.addColorStop(0.75,'#2a6aaa');
-  gr.addColorStop(1,'#4a90c8');   /* horizon — lighter */
-  g.fillStyle=gr;g.fillRect(0,0,1,512);
+  gr.addColorStop(0,'rgba(10,22,40,1)');        /* zenith */
+  gr.addColorStop(0.15,'rgba(18,38,72,1)');
+  gr.addColorStop(0.3,'rgba(26,74,122,1)');
+  gr.addColorStop(0.42,'rgba(42,106,170,1)');
+  gr.addColorStop(0.48,'rgba(58,128,187,1)');    /* near equator */
+  gr.addColorStop(0.5,'rgba(58,128,187,0.7)');   /* equator — start fading */
+  gr.addColorStop(0.55,'rgba(30,60,100,0.25)');  /* quick fade */
+  gr.addColorStop(0.6,'rgba(10,24,40,0.05)');
+  gr.addColorStop(0.65,'rgba(0,0,0,0)');         /* fully transparent */
+  gr.addColorStop(1,'rgba(0,0,0,0)');            /* nadir — transparent */
+  g.fillStyle=gr;g.fillRect(0,0,4,512);
   const tex=new THREE.CanvasTexture(c);
   tex.needsUpdate=true;
   return tex;
@@ -2257,20 +2320,19 @@ function _initDome3D(){
   _disposeDome3D();
   dome3dGroup=new THREE.Group();
   dome3dGroup.name='skyDome';
-  /* Hemisphere only — covers sky above, no dark floor below */
-  const hem=new THREE.SphereGeometry(_DOME_R,96,48,0,Math.PI*2,0,Math.PI/2);
+  const hem=new THREE.SphereGeometry(_DOME_R,96,48);
   const skyGradTex=_createSkyDomeGradientTex();
   skyDomeInner3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({
-    map:skyGradTex,transparent:true,opacity:0.92,side:THREE.BackSide,depthWrite:false,fog:false
+    map:skyGradTex,transparent:true,side:THREE.BackSide,depthWrite:false,fog:false
   }));
   skyDomeInner3d.renderOrder=-7;
   dome3dGroup.add(skyDomeInner3d);
-  /* Thin outer shell for external view */
-  domeMesh3d=new THREE.Mesh(hem.clone(),new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.04,side:THREE.FrontSide,depthWrite:false}));
+  /* Full sphere wireframe + outer mesh — visible from every angle */
+  const fullSphere=new THREE.SphereGeometry(_DOME_R,72,36);
+  domeMesh3d=new THREE.Mesh(fullSphere.clone(),new THREE.MeshBasicMaterial({color:0x3a5a7a,transparent:true,opacity:0.03,side:THREE.DoubleSide,depthWrite:false}));
   domeMesh3d.renderOrder=-6;
   dome3dGroup.add(domeMesh3d);
-  /* Wireframe — always visible when dome is on */
-  domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(hem),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.12}));
+  domeWire3d=new THREE.LineSegments(new THREE.WireframeGeometry(fullSphere),new THREE.LineBasicMaterial({color:0x446688,transparent:true,opacity:0.12}));
   domeWire3d.renderOrder=-5;
   dome3dGroup.add(domeWire3d);
   /* Sun/moon paths */
@@ -2289,13 +2351,57 @@ function _initDome3D(){
   sunGlow3d=new THREE.Mesh(new THREE.PlaneGeometry(7,7),new THREE.MeshBasicMaterial({map:glowTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,opacity:0.7}));
   sunGlow3d.renderOrder=-3.5;
   dome3dGroup.add(sunGlow3d);
-  /* Realistic moon */
-  moonDisc3d=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false,side:THREE.DoubleSide}));
+  /* Realistic moon — 3D SPHERE so the phase is visible from every angle */
+  moonDisc3d=new THREE.Mesh(
+    new THREE.SphereGeometry(0.8,48,32),
+    new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false})
+  );
   moonDisc3d.renderOrder=-3;
   dome3dGroup.add(moonDisc3d);
-  moonRing3d=new THREE.Mesh(new THREE.RingGeometry(0.82,0.92,64),new THREE.MeshBasicMaterial({color:0xd8e4ff,transparent:true,opacity:0.35,side:THREE.DoubleSide,depthWrite:false}));
-  moonRing3d.renderOrder=-2;
-  dome3dGroup.add(moonRing3d);
+  /* Subtle glow ring around the moon (billboard sprite) */
+  (function(){
+    const rc=document.createElement('canvas');rc.width=128;rc.height=128;
+    const rg=rc.getContext('2d');rg.clearRect(0,0,128,128);
+    const rgr=rg.createRadialGradient(64,64,38,64,64,62);
+    rgr.addColorStop(0,'rgba(216,228,255,0)');rgr.addColorStop(0.5,'rgba(216,228,255,0.25)');
+    rgr.addColorStop(0.85,'rgba(200,215,255,0.08)');rgr.addColorStop(1,'rgba(180,200,255,0)');
+    rg.fillStyle=rgr;rg.fillRect(0,0,128,128);
+    const rTex=new THREE.CanvasTexture(rc);
+    const rMat=new THREE.SpriteMaterial({map:rTex,transparent:true,depthWrite:false,sizeAttenuation:true});
+    moonRing3d=new THREE.Sprite(rMat);
+    moonRing3d.scale.set(2.8,2.8,1);
+    moonRing3d.renderOrder=-3.1;
+    dome3dGroup.add(moonRing3d);
+  })();
+  /* === HORIZON LINE — circle at equator with label === */
+  (function(){
+    const segs=128, pts=[];
+    for(let i=0;i<=segs;i++){
+      const a=(i/segs)*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.cos(a)*_DOME_R, 0, Math.sin(a)*_DOME_R));
+    }
+    const hGeo=new THREE.BufferGeometry().setFromPoints(pts);
+    const horizonLine=new THREE.Line(hGeo,new THREE.LineBasicMaterial({color:0xffaa44,transparent:true,opacity:0.55,depthWrite:false}));
+    horizonLine.renderOrder=-4;
+    dome3dGroup.add(horizonLine);
+    /* "Horizonte" label as a small canvas sprite */
+    const lc=document.createElement('canvas');lc.width=256;lc.height=64;
+    const lg=lc.getContext('2d');
+    lg.clearRect(0,0,256,64);
+    lg.font='bold 36px Arial, sans-serif';lg.textAlign='center';lg.textBaseline='middle';
+    lg.fillStyle='rgba(255,170,68,0.85)';lg.fillText('— Horizonte —',128,32);
+    const lTex=new THREE.CanvasTexture(lc);
+    const lMat=new THREE.SpriteMaterial({map:lTex,transparent:true,depthWrite:false,sizeAttenuation:true});
+    const lSpr=new THREE.Sprite(lMat);
+    lSpr.scale.set(6,1.5,1);
+    lSpr.position.set(0,0.6,_DOME_R-1.5);
+    lSpr.renderOrder=-3;
+    dome3dGroup.add(lSpr);
+    /* Second label on opposite side */
+    const lSpr2=lSpr.clone();
+    lSpr2.position.set(0,0.6,-(_DOME_R-1.5));
+    dome3dGroup.add(lSpr2);
+  })();
   /* Constellations */
   constellationLines3d=new THREE.LineSegments(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:0x6b8cff,transparent:true,opacity:0.42,depthWrite:false}));
   constellationLines3d.frustumCulled=false;constellationLines3d.renderOrder=-4;
@@ -2316,13 +2422,12 @@ function _updateDomeSunPath(){
   _domePathKey=key;
   const pts=[];
   const base=new Date(date);base.setHours(0,0,0,0);
-  for(let m=0;m<=1440;m+=20){
+  for(let m=0;m<=1440;m+=10){
     const t=new Date(base.getTime()+m*60000);
     const s=_solarAzAlt(t,lat,lon);
-    if(s.alt>-2){
-      const p=_domeAzAltToXYZ(s.az,s.alt,heading,_domeBodyR());
-      pts.push(p.x,p.y,p.z);
-    }
+    /* Draw full 24h path including below horizon (negative altitudes) */
+    const p=_domeAzAltToXYZ(s.az,s.alt,heading,_domeBodyR());
+    pts.push(p.x,p.y,p.z);
   }
   sunPath3d.geometry.dispose();
   sunPath3d.geometry=new THREE.BufferGeometry();
@@ -2345,10 +2450,9 @@ function _updateDomeMoonPath(){
     t.setHours(h,mi,0,0);
     const md=_moonRaDec(t);
     const m=_radecToAltAz(md.ra,md.dec,lat,lon,t);
-    if(m.alt>-3){
-      const p=_domeAzAltToXYZ(m.az,m.alt,heading,_domeBodyR());
-      pts.push(p.x,p.y,p.z);
-    }
+    /* Draw full path including below horizon */
+    const p=_domeAzAltToXYZ(m.az,m.alt,heading,_domeBodyR());
+    pts.push(p.x,p.y,p.z);
   }
   moonPath3d.geometry.dispose();
   moonPath3d.geometry=new THREE.BufferGeometry();
@@ -2367,15 +2471,16 @@ function _updateDomeCelestial(){
   if(sunDisc3d&&isFinite(sunAlt)&&isFinite(sunAz)){
     const sp=_domeAzAltToXYZ(sunAz,sunAlt,heading,R);
     sunDisc3d.position.set(sp.x,sp.y,sp.z);
-    sunDisc3d.visible=sunAlt>-8;
+    sunDisc3d.visible=true; /* Always visible — even below horizon */
     if(sunAlt>0)sunDisc3d.material.opacity=Math.min(1,0.6+sunAlt/60);
-    else sunDisc3d.material.opacity=Math.max(0.15,0.4+sunAlt/30);
+    else sunDisc3d.material.opacity=Math.max(0.12,0.35+sunAlt/50); /* dim below horizon */
     _domeBillboardLook(sunDisc3d);
     /* Sun glow follows the disc */
     if(sunGlow3d){
       sunGlow3d.position.copy(sunDisc3d.position);
-      sunGlow3d.visible=sunAlt>-4;
-      sunGlow3d.material.opacity=sunAlt>0?Math.min(0.7,0.25+sunAlt/45):Math.max(0,0.15+sunAlt/25);
+      sunGlow3d.visible=true;
+      if(sunAlt>0)sunGlow3d.material.opacity=Math.min(0.7,0.25+sunAlt/45);
+      else sunGlow3d.material.opacity=Math.max(0.05,0.2+sunAlt/40); /* faint glow below */
       _domeBillboardLook(sunGlow3d);
     }
   }
@@ -2388,20 +2493,17 @@ function _updateDomeCelestial(){
     if(moonDisc3d){
       const mp=_domeAzAltToXYZ(moonAz,moonAlt,heading,R);
       moonDisc3d.position.set(mp.x,mp.y,mp.z);
-      moonVis=moonAlt>-5;
-      moonDisc3d.visible=moonVis;
+      moonVis=true; /* Always visible — even below horizon */
+      moonDisc3d.visible=true;
       const tex=_moonPhaseTexture(phase);
       if(moonDisc3d.material.map!==tex){moonDisc3d.material.map=tex;moonDisc3d.material.needsUpdate=true;}
-      moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):0.5;
-      _domeBillboardLook(moonDisc3d);
+      moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):Math.max(0.15,0.4+moonAlt/40);
+      /* No billboard needed — moon is a sphere, visible from every angle */
     }
     if(moonRing3d){
-      if(moonVis){
-        moonRing3d.position.copy(moonDisc3d.position);
-        moonRing3d.visible=true;
-        _domeBillboardLook(moonRing3d);
-        moonRing3d.material.opacity=moonAlt>0?0.85:0.55;
-      }else moonRing3d.visible=false;
+      moonRing3d.position.copy(moonDisc3d.position);
+      moonRing3d.visible=true;
+      moonRing3d.material.opacity=moonAlt>0?0.85:Math.max(0.1,0.4+moonAlt/35);
     }
     const mph=document.getElementById('dome-moon-phase');
     if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round(phase*100)+'%)';
@@ -2632,49 +2734,54 @@ function _updateStars3D(nightFactor){
   }
 }
 function _updateSkyDomeGradient(alt,nightFactor){
-  /* Dynamically rebuild the 1px-wide gradient texture on the full-sphere dome */
+  /* Sky gradient on UPPER hemisphere only; lower hemisphere is TRANSPARENT.
+     Canvas 512px: 0=zenith, 256=equator, 512=nadir.
+     Below the equator we fade to alpha=0 so the dome is see-through from below. */
   if(!skyDomeInner3d||!skyDomeInner3d.material)return;
-  const c=document.createElement('canvas');c.width=1;c.height=256;
+  const c=document.createElement('canvas');c.width=4;c.height=512;
   const g=c.getContext('2d');
-  const gr=g.createLinearGradient(0,0,0,256);
+  g.clearRect(0,0,4,512); /* start fully transparent */
+  /* Compute sky colors for upper hemisphere based on sun altitude */
+  let z0,z1,z2,z3,z4; /* zenith to horizon (RGBA strings) */
+  const _h2r=function(hex,a){
+    const v=parseInt(hex.slice(1),16);
+    return 'rgba('+((v>>16)&255)+','+((v>>8)&255)+','+(v&255)+','+a+')';
+  };
   if(alt>5){
-    /* Daytime — deep blue zenith to lighter horizon */
     const t=Math.min(1,alt/50);
-    gr.addColorStop(0,_lerpHex('#1a5eaa','#2878cc',t));
-    gr.addColorStop(0.3,_lerpHex('#2a70c0','#3d8fd9',t));
-    gr.addColorStop(0.6,_lerpHex('#5a9ad8','#6ab0e8',t));
-    gr.addColorStop(0.85,_lerpHex('#7ab5e0','#9acaee',t));
-    gr.addColorStop(1,_lerpHex('#a0ccee','#c0e0f8',t));
+    z0=_h2r(_lerpHex('#1a5eaa','#2878cc',t),1);z1=_h2r(_lerpHex('#2a70c0','#3d8fd9',t),1);
+    z2=_h2r(_lerpHex('#5a9ad8','#6ab0e8',t),1);z3=_h2r(_lerpHex('#7ab5e0','#9acaee',t),1);
+    z4=_h2r(_lerpHex('#a0ccee','#c0e0f8',t),1);
   }else if(alt>0){
-    /* Golden hour/sunrise */
     const t=Math.min(1,(5-alt)/5);
-    gr.addColorStop(0,_lerpHex('#1a5eaa','#1a2848',t));
-    gr.addColorStop(0.3,_lerpHex('#2a70c0','#3a4868',t));
-    gr.addColorStop(0.6,_lerpHex('#5a9ad8','#886848',t));
-    gr.addColorStop(0.85,_lerpHex('#9ab8d0','#c47838',t));
-    gr.addColorStop(1,_lerpHex('#b8d0e0','#e08830',t));
+    z0=_h2r(_lerpHex('#1a5eaa','#1a2848',t),1);z1=_h2r(_lerpHex('#2a70c0','#3a4868',t),1);
+    z2=_h2r(_lerpHex('#5a9ad8','#886848',t),1);z3=_h2r(_lerpHex('#9ab8d0','#c47838',t),1);
+    z4=_h2r(_lerpHex('#b8d0e0','#e08830',t),1);
   }else if(alt>-6){
-    /* Twilight */
     const t=Math.min(1,(-alt)/6);
-    gr.addColorStop(0,_lerpHex('#1a2848','#050810',t));
-    gr.addColorStop(0.3,_lerpHex('#2a3858','#0a1018',t));
-    gr.addColorStop(0.6,_lerpHex('#5a4848','#0c1220',t));
-    gr.addColorStop(0.85,_lerpHex('#9a5838','#101828',t));
-    gr.addColorStop(1,_lerpHex('#c46030','#141e30',t));
+    z0=_h2r(_lerpHex('#1a2848','#050810',t),1);z1=_h2r(_lerpHex('#2a3858','#0a1018',t),1);
+    z2=_h2r(_lerpHex('#5a4848','#0c1220',t),1);z3=_h2r(_lerpHex('#9a5838','#101828',t),1);
+    z4=_h2r(_lerpHex('#c46030','#141e30',t),1);
   }else{
-    /* Night — very dark blue/black */
-    gr.addColorStop(0,'#020408');
-    gr.addColorStop(0.3,'#040810');
-    gr.addColorStop(0.6,'#080e1a');
-    gr.addColorStop(0.85,'#0c1428');
-    gr.addColorStop(1,'#101a30');
+    z0='rgba(2,4,8,1)';z1='rgba(4,8,16,1)';z2='rgba(8,14,26,1)';z3='rgba(12,20,40,1)';z4='rgba(16,26,48,1)';
   }
-  g.fillStyle=gr;g.fillRect(0,0,1,256);
+  const gr=g.createLinearGradient(0,0,0,512);
+  gr.addColorStop(0,z0);              /* zenith — fully opaque */
+  gr.addColorStop(0.15,z1);
+  gr.addColorStop(0.3,z2);
+  gr.addColorStop(0.42,z3);
+  gr.addColorStop(0.48,z4);           /* near equator — still opaque */
+  /* Fade to transparent across the equator */
+  gr.addColorStop(0.5,z4.replace(',1)',',0.7)'));  /* equator — start fading */
+  gr.addColorStop(0.55,'rgba(20,40,60,0.25)');
+  gr.addColorStop(0.6,'rgba(10,20,30,0.05)');
+  gr.addColorStop(0.65,'rgba(0,0,0,0)');           /* fully transparent */
+  gr.addColorStop(1,'rgba(0,0,0,0)');              /* nadir — transparent */
+  g.fillStyle=gr;g.fillRect(0,0,4,512);
   if(skyDomeInner3d.material.map)skyDomeInner3d.material.map.dispose();
   skyDomeInner3d.material.map=new THREE.CanvasTexture(c);
   skyDomeInner3d.material.map.needsUpdate=true;
   skyDomeInner3d.material.needsUpdate=true;
-  /* Remove the flat color tint so the gradient texture shines through */
   skyDomeInner3d.material.color.setHex(0xffffff);
 }
 function _lerpHex(a,b,t){
@@ -2694,6 +2801,7 @@ function _updateNightSky(){
     if(ambientLight3d){ambientLight3d.intensity=0.5;ambientLight3d.color.setHex(0xffffff);}
     if(dome3dGroup)dome3dGroup.visible=false;
     if(stars3dGroup){stars3dGroup.visible=false;if(stars3dGroup.material)stars3dGroup.material.opacity=0;}
+    if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
     if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
     _hideDomeLabels();
     const hint=document.getElementById('sun-stars-hint');if(hint){hint.style.display='none';hint.textContent='';}
@@ -2724,7 +2832,9 @@ function _updateNightSky(){
   }else{
     sky=nightHoriz.clone().lerp(nightZenith,0.55);
   }
-  scene3d.background=sky;
+  /* No scene background when dome is on — the dome sphere itself IS the sky.
+     This prevents a solid color "floor" from appearing below the equator. */
+  scene3d.background=null;
   /* Update the full-sphere dome with a dynamic gradient texture */
   _updateSkyDomeGradient(alt,nightFactor);
   if(skyDomeInner3d&&skyDomeInner3d.material){
