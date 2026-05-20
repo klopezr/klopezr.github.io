@@ -1213,7 +1213,7 @@ function toggle3DView(force){
 let objects3d=[];
 let dirLight3d, ambientLight3d=null, stars3dGroup=null, _starsLastKey='', _starsVisibleCount=0;
 let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, constellationLines3d=null, floorMesh3d=null;
-let sunGlow3d=null, sunCorona3d=null;
+let sunGlow3d=null, sunCorona3d=null, shadowFloor3d=null;
 let _domeLabelItems=[], _domeConstLabelItems=[], _domeMoonTexCache={}, _domePathKey='', _moonPathKey='', _domeLabelsKey='', _domeConstKey='', _DOME_R=26, _domeStarSpriteTex=null;
 let fpMode3D=false,fpYaw=0,fpPitch=0,fpKeys={},fpMouseDown=false,fpLastMouseX=null,fpLastMouseY=null,fpTouchLastX=null,fpTouchLastY=null;
 let furn3DEditId=null;
@@ -1366,6 +1366,15 @@ function init3D(){
   _applySunPosition();
   floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
   floorMesh3d.rotation.x=-Math.PI/2;floorMesh3d.receiveShadow=true;floorMesh3d.name='floor';scene3d.add(floorMesh3d);
+  /* Shadow-catching floor: semi-transparent surface that receives and shows shadows.
+     Uses a light-colored MeshStandardMaterial so shadows are clearly visible as dark patches. */
+  shadowFloor3d=new THREE.Mesh(
+    new THREE.PlaneGeometry(120,120),
+    new THREE.MeshStandardMaterial({color:0xbbbbbb,transparent:true,opacity:0.18,depthWrite:false,side:THREE.DoubleSide})
+  );
+  shadowFloor3d.rotation.x=-Math.PI/2;shadowFloor3d.receiveShadow=true;shadowFloor3d.name='shadowFloor';
+  shadowFloor3d.visible=false;
+  scene3d.add(shadowFloor3d);
   if(!visibleFloors3D.length) visibleFloors3D = [curFloor]; else visibleFloors3D = visibleFloors3D.filter(i=>i>=0&&i<FLOORS.length);
   build3DScene(); build3DMenu();
   applySectionCut3D();
@@ -2031,6 +2040,8 @@ function _updateDomeSkyView(){
         o.material.depthWrite=true;
       }
     });
+    /* Ocultar el suelo de sombras cuando no hay cúpula */
+    if(shadowFloor3d)shadowFloor3d.visible=false;
     return;
   }
   /* Cúpula activa — OCULTAR todos los suelos gigantes 500×500.
@@ -2045,6 +2056,17 @@ function _updateDomeSkyView(){
     o.visible=false;
     if(o.material){o.material.transparent=true;o.material.opacity=0;o.material.depthWrite=false;}
   });
+  /* Mostrar el suelo de sombras transparente — recibe sombras sin bloquear la vista.
+     Opacidad variable según altitud solar: más sol = sombras más visibles. */
+  if(shadowFloor3d){
+    shadowFloor3d.visible=true;shadowFloor3d.position.y=0.01;
+    const sAlt=parseFloat(sunCfg.alt)||0;
+    if(sAlt>0&&sunCfg.shadow){
+      shadowFloor3d.material.opacity=Math.min(0.30,0.12+sAlt/120);
+    }else{
+      shadowFloor3d.material.opacity=0.06; /* casi invisible de noche */
+    }
+  }
   /* Wireframe y dome mesh siempre visibles */
   if(domeWire3d)domeWire3d.visible=true;
   if(domeMesh3d)domeMesh3d.visible=true;
