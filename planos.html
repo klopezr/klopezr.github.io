@@ -1332,7 +1332,7 @@ function init3D(){
   try {
   fpMode3D=false;fpKeys={};furn3DEditId=null;const hud=document.getElementById('fp3d-hud');if(hud)hud.style.display='none';const dpad=document.getElementById('fp3d-dpad');if(dpad)dpad.style.display='none';
   const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;
-  scene3d=new THREE.Scene();objects3d=[];scene3d.background=new THREE.Color('#07111d');
+  scene3d=new THREE.Scene();objects3d=[];scene3d.background=new THREE.Color('#c8d8e8');
   camera3d=new THREE.PerspectiveCamera(60,W/H,0.1,500);camera3d.position.set(10,15,20);
   renderer3d=new THREE.WebGLRenderer({antialias:true});renderer3d.setSize(W,H);renderer3d.shadowMap.enabled=true;renderer3d.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer3d.localClippingEnabled=true;
@@ -1364,7 +1364,7 @@ function init3D(){
   const _dm=document.getElementById('sun-dome');if(_dm)_dm.checked=!!sunCfg.dome;
   _syncDomeOptionsUI();
   _applySunPosition();
-  floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xeeeeee}));
+  floorMesh3d=new THREE.Mesh(new THREE.PlaneGeometry(500,500),new THREE.MeshStandardMaterial({color:0xffffff}));
   floorMesh3d.rotation.x=-Math.PI/2;floorMesh3d.receiveShadow=true;floorMesh3d.name='floor';scene3d.add(floorMesh3d);
   
   shadowFloor3d=new THREE.Mesh(
@@ -1486,15 +1486,15 @@ function _cutNegativeHolesInFloor(){
 				geo.setAttribute('position', new THREE.Float32BufferAttribute(v3, 3));
 				geo.setIndex(idx);
 				geo.computeVertexNormals();
-				newFloor = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xeeeeee, side:THREE.DoubleSide}));
+				newFloor = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xffffff, side:THREE.DoubleSide}));
 			} else {
-				newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial({color:0xeeeeee}));
+				newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial({color:0xffffff}));
 					newFloor.rotation.x = -Math.PI/2;
 			}
 		} else {
 			newFloor = new THREE.Mesh(
 				new THREE.PlaneGeometry(SIZE,SIZE),
-				new THREE.MeshStandardMaterial({color:0xeeeeee})
+				new THREE.MeshStandardMaterial({color:0xffffff})
 			);
 			newFloor.rotation.x = -Math.PI/2;
 		}
@@ -2805,8 +2805,8 @@ function _updateNightSky(){
   const alt=parseFloat(sunCfg.alt);
   if(!isFinite(alt))return;
   if(!sunCfg.dome){
-    scene3d.background=new THREE.Color(0x07111d);
-    if(ambientLight3d){ambientLight3d.intensity=0.5;ambientLight3d.color.setHex(0xffffff);}
+    scene3d.background=new THREE.Color(0xc8d8e8);
+    if(ambientLight3d){ambientLight3d.intensity=0.6;ambientLight3d.color.setHex(0xffffff);}
     if(dome3dGroup)dome3dGroup.visible=false;
     if(stars3dGroup){stars3dGroup.visible=false;if(stars3dGroup.material)stars3dGroup.material.opacity=0;}
     if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
