@@ -1214,6 +1214,100 @@ let objects3d=[];
 let dirLight3d, ambientLight3d=null, stars3dGroup=null, _starsLastKey='', _starsVisibleCount=0;
 let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, constellationLines3d=null, floorMesh3d=null;
 let sunGlow3d=null, sunCorona3d=null, shadowFloor3d=null;
+const _NEG_LOWER_ROOM_OPACITY=0.12;
+let _negLowerRoomPolys3D=[];
+function _traceWallLoop(sw,allWalls,pm,SNAP){
+  function _wpt(w,s){const p=s===0?w.pts[0]:w.pts[w.pts.length-1];return {x:w.x+p.x*pm,y:w.y+p.y*pm};}
+  function _near(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<SNAP;}
+  const poly=[],used=new Set([sw.id]),walls=[sw];
+  const s0=_wpt(sw,0),e0=_wpt(sw,1);
+  if(sw.pts.length>=3&&_near(s0,e0)){
+    sw.pts.slice(0,-1).forEach(p=>poly.push({x:sw.x+p.x*pm,y:sw.y+p.y*pm}));
+    return poly.length>=3?{poly,walls}:null;
+  }
+  sw.pts.forEach(p=>poly.push({x:sw.x+p.x*pm,y:sw.y+p.y*pm}));
+  let exit=_wpt(sw,1),sp=_wpt(sw,0);
+  for(let it=0;it<40;it++){
+    if(poly.length>=4&&_near(exit,sp))return {poly,walls};
+    let nw=null,rev=false;
+    for(const w of allWalls){
+      if(used.has(w.id))continue;
+      if(_near(exit,_wpt(w,0))){nw=w;rev=false;break;}
+      if(_near(exit,_wpt(w,1))){nw=w;rev=true;break;}
+    }
+    if(!nw)break;
+    used.add(nw.id);walls.push(nw);
+    const pts=rev?[...nw.pts].reverse():nw.pts;
+    pts.slice(1).forEach(p=>poly.push({x:nw.x+p.x*pm,y:nw.y+p.y*pm}));
+    exit=rev?_wpt(nw,0):_wpt(nw,1);
+  }
+  if(poly.length>=4&&_near(exit,sp))return {poly,walls};
+  return null;
+}
+function _collectNegLowerRoomPolys3D(){
+  _negLowerRoomPolys3D=[];
+  visibleFloors3D.forEach(fIdx=>{
+    if(!FLOORS[fIdx])return;
+    const allWalls=furniture.filter(f=>f.floor===fIdx&&f.type==='wall'&&!f.hidden&&f.pts&&f.pts.length>=2);
+    const negWalls=allWalls.filter(w=>w.negative);
+    if(!negWalls.length)return;
+    const pm=FLOORS[fIdx].px||50;
+    const pc={x:(FLOORS[fIdx].imgWidth||canvas.width)/2,y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
+    const fOff=FLOORS[fIdx].off3d||{x:0,y:fIdx*2.5,z:0};
+    const SNAP=pm*0.35,seen=[];
+    negWalls.forEach(sw=>{
+      const result=_traceWallLoop(sw,allWalls,pm,SNAP);
+      if(!result||!result.poly||result.poly.length<3)return;
+      if(!result.walls.every(w=>w.negative))return;
+      const key=result.poly.map(p=>Math.round(p.x/4)+'_'+Math.round(p.y/4)).sort().join('|');
+      if(seen.includes(key))return;
+      seen.push(key);
+      const worldPoly=result.poly.map(p=>({x:(p.x-pc.x)/pm+fOff.x,z:(p.y-pc.y)/pm+fOff.z}));
+      _negLowerRoomPolys3D.push({fIdx,fOff,worldPoly});
+    });
+  });
+}
+function _pointInNegLowerRoom(x,z){
+  for(const zn of _negLowerRoomPolys3D){if(ptInPoly(x,z,zn.worldPoly))return true;}
+  return false;
+}
+function _buildNegLowerRoomFloors(){
+  if(!scene3d)return;
+  _collectNegLowerRoomPolys3D();
+  _negLowerRoomPolys3D.forEach(({fIdx,fOff,worldPoly})=>{
+    const v2=[];
+    worldPoly.forEach(p=>{v2.push(p.x-fOff.x,p.z-fOff.z);});
+    const idx=earcut(v2,[],2);
+    if(!idx.length)return;
+    const v3=[];
+    for(let i=0;i<v2.length;i+=2)v3.push(v2[i],0,v2[i+1]);
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(v3,3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    const mat=new THREE.MeshStandardMaterial({color:0xffffff,side:THREE.DoubleSide,transparent:true,opacity:_NEG_LOWER_ROOM_OPACITY,depthWrite:false,roughness:1});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(fOff.x,fOff.y-0.012,fOff.z);
+    mesh.userData={type:'neg_lower_room_floor',floor:fIdx};
+    mesh.receiveShadow=false;
+    scene3d.add(mesh);
+    objects3d.push(mesh);
+  });
+}
+function _applyNegLowerRoomFloorStyle(){
+  _collectNegLowerRoomPolys3D();
+  objects3d.forEach(o=>{
+    if(!o.isMesh||!o.material||o.userData.type!=='floor_slab_floor')return;
+    const box=new THREE.Box3().setFromObject(o);
+    const cx=(box.min.x+box.max.x)/2,cz=(box.min.z+box.max.z)/2;
+    if(!_pointInNegLowerRoom(cx,cz))return;
+    o.material.color.setHex(0xffffff);
+    o.material.transparent=true;
+    o.material.opacity=_NEG_LOWER_ROOM_OPACITY;
+    o.material.depthWrite=false;
+    o.material.needsUpdate=true;
+  });
+}
 let _domeLabelItems=[], _domeConstLabelItems=[], _domeMoonTexCache={}, _domePathKey='', _moonPathKey='', _domeLabelsKey='', _domeConstKey='', _DOME_R=26, _domeStarSpriteTex=null;
 let fpMode3D=false,fpYaw=0,fpPitch=0,fpKeys={},fpMouseDown=false,fpLastMouseX=null,fpLastMouseY=null,fpTouchLastX=null,fpTouchLastY=null;
 let furn3DEditId=null;
@@ -1405,6 +1499,8 @@ function build3DScene(){
     });
     build3DStairOpenings();
     _cutNegativeHolesInFloor();
+    _buildNegLowerRoomFloors();
+    _applyNegLowerRoomFloorStyle();
     objects3d.filter(o=>o.userData.type==='wall').forEach(o=>{o.visible=layerWall;});
     objects3d.filter(o=>o.userData.type!=='wall'&&o.userData.type!=='measure'&&o.userData.type!=='area').forEach(o=>{o.visible=layerFurn;});
     objects3d.filter(o=>o.userData.type==='area').forEach(o=>{o.visible=showAreas3D;});
@@ -1413,62 +1509,24 @@ function build3DScene(){
 }
 function _cutNegativeHolesInFloor(){
 		if(!scene3d) return;
-		const oldFloor = scene3d.getObjectByName('floor');
-		const floorY = oldFloor ? oldFloor.position.y : 0;
+		const floorY = floorMesh3d ? floorMesh3d.position.y : 0;
 		const SIZE = 500, HALF = SIZE/2;
-		const allHoles = [];
-		visibleFloors3D.forEach(fIdx => {
-			const negWalls = furniture.filter(f => f.floor===fIdx && f.type==='wall' && f.negative && f.pts && f.pts.length>=2);
-			if(!negWalls.length) return;
-			const pm = FLOORS[fIdx]?.px || 50;
-			const pc = {x:(FLOORS[fIdx].imgWidth||canvas.width)/2, y:(FLOORS[fIdx].imgHeight||canvas.height)/2};
-			const fOff = FLOORS[fIdx]?.off3d || {x:0, y:fIdx*2.5, z:0};
-			const SNAP = pm * 0.35;
-			const _wpt = (w, s) => { const p = s===0?w.pts[0]:w.pts[w.pts.length-1]; return {x:w.x+p.x*pm, y:w.y+p.y*pm}; };
-			const _near = (a, b) => Math.hypot(a.x-b.x, a.y-b.y) < SNAP;
-			const traceLoop = (sw) => {
-				const poly = [];
-				const used = new Set([sw.id]);
-				const s0 = _wpt(sw,0), e0 = _wpt(sw,1);
-				if (sw.pts.length >= 3 && _near(s0, e0)) {
-					sw.pts.slice(0,-1).forEach(p => poly.push({x:sw.x+p.x*pm, y:sw.y+p.y*pm}));
-					return poly.length >= 3 ? poly : null;
-				}
-				sw.pts.forEach(p => poly.push({x:sw.x+p.x*pm, y:sw.y+p.y*pm}));
-				let exit = _wpt(sw,1);
-				const sp = _wpt(sw,0);
-				for (let it = 0; it < 40; it++) {
-					if (poly.length >= 4 && _near(exit, sp)) return poly;
-					let nw = null, rev = false;
-					for (const w of negWalls) {
-						if (used.has(w.id)) continue;
-						if (_near(exit, _wpt(w,0))) { nw=w; rev=false; break; }
-						if (_near(exit, _wpt(w,1))) { nw=w; rev=true; break; }
-					}
-					if (!nw) break;
-					used.add(nw.id);
-					const pts = rev ? [...nw.pts].reverse() : nw.pts;
-					pts.slice(1).forEach(p => poly.push({x:nw.x+p.x*pm, y:nw.y+p.y*pm}));
-					exit = rev ? _wpt(nw,0) : _wpt(nw,1);
-				}
-				if (poly.length >= 4 && _near(exit, sp)) return poly;
-				return null;
-			};
-			const seen = [];
-			negWalls.forEach(sw => {
-				const loop = traceLoop(sw);
-				if (!loop || loop.length < 3) return;
-				const key = loop.map(p => Math.round(p.x/4)+'_'+Math.round(p.y/4)).sort().join('|');
-				if (seen.includes(key)) return;
-				seen.push(key);
-				const hole3D = loop.map(p => new THREE.Vector2((p.x - pc.x)/pm + fOff.x, (p.y - pc.y)/pm + fOff.z));
-				if (hole3D.length >= 3) allHoles.push(hole3D);
-			});
-		});
-		if(oldFloor){
-			oldFloor.geometry.dispose();
-			scene3d.remove(oldFloor);
+		_collectNegLowerRoomPolys3D();
+		const allHoles = _negLowerRoomPolys3D.map(zn => zn.worldPoly.map(p => new THREE.Vector2(p.x, p.z)));
+		if(floorMesh3d){
+			if(floorMesh3d.parent) floorMesh3d.parent.remove(floorMesh3d);
+			floorMesh3d.geometry.dispose();
+			if(floorMesh3d.material) floorMesh3d.material.dispose();
+			floorMesh3d = null;
 		}
+		scene3d.traverse(o=>{
+			if(o.isMesh&&o.name==='floor'&&o!==floorMesh3d){
+				o.geometry.dispose();
+				if(o.material) o.material.dispose();
+				scene3d.remove(o);
+			}
+		});
+		const floorMatOpts={color:0xffffff,side:THREE.DoubleSide,transparent:false,opacity:1,depthWrite:true};
 		let newFloor;
 		if(allHoles.length){
 			const v2 = [];
@@ -1486,22 +1544,20 @@ function _cutNegativeHolesInFloor(){
 				geo.setAttribute('position', new THREE.Float32BufferAttribute(v3, 3));
 				geo.setIndex(idx);
 				geo.computeVertexNormals();
-				newFloor = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xffffff, side:THREE.DoubleSide}));
+				newFloor = new THREE.Mesh(geo, new THREE.MeshStandardMaterial(floorMatOpts));
 			} else {
-				newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial({color:0xffffff}));
-					newFloor.rotation.x = -Math.PI/2;
+				newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial(floorMatOpts));
+				newFloor.rotation.x = -Math.PI/2;
 			}
 		} else {
-			newFloor = new THREE.Mesh(
-				new THREE.PlaneGeometry(SIZE,SIZE),
-				new THREE.MeshStandardMaterial({color:0xffffff})
-			);
+			newFloor = new THREE.Mesh(new THREE.PlaneGeometry(SIZE,SIZE), new THREE.MeshStandardMaterial(floorMatOpts));
 			newFloor.rotation.x = -Math.PI/2;
 		}
 		newFloor.position.y = floorY;
 		newFloor.receiveShadow = true;
 		newFloor.name = 'floor';
 		scene3d.add(newFloor);
+		floorMesh3d = newFloor;
 	}
 let dragControls3d, _mousedown3dHandler;
 function setup3DInteractions() {
@@ -1605,7 +1661,21 @@ function build3DFloorSlab(fIdx, kind) {
     }
     const normalSlabWalls = slabWalls.filter(w => !w.negative);
     const negativeSlabWalls = slabWalls.filter(w => w.negative);
-    const _buildSlabGroup = (walls, planeY, stairsForCutout) => {
+    const _negHolePolys = [];
+    if(kind==='floor'){
+      const negWallsAll=allWalls.filter(w=>w.negative);
+      const negSeen=[];
+      negWallsAll.forEach(sw=>{
+        const result=_traceWallLoop(sw,allWalls,pm,SNAP);
+        if(!result||!result.poly||result.poly.length<3)return;
+        if(!result.walls.every(w=>w.negative))return;
+        const key=result.poly.map(p=>Math.round(p.x/4)+'_'+Math.round(p.y/4)).sort().join('|');
+        if(negSeen.includes(key))return;
+        negSeen.push(key);
+        _negHolePolys.push(result.poly.map(p=>({x:(p.x-pc.x)/pm,z:(p.y-pc.y)/pm})));
+      });
+    }
+    const _buildSlabGroup = (walls, planeY, stairsForCutout, negHoles) => {
       const seen = [], polys = [];
       walls.forEach(sw => {
         const result = traceLoop(sw);
@@ -1695,6 +1765,12 @@ function build3DFloorSlab(fIdx, kind) {
           holeIdx.push(v2.length/2);
           hp.forEach(p=>v2.push(p.x, p.z));
         });
+        if(negHoles&&negHoles.length){
+          negHoles.forEach(nh=>{
+            holeIdx.push(v2.length/2);
+            nh.forEach(p=>v2.push(p.x,p.z));
+          });
+        }
         const idx = earcut(v2, holeIdx.length?holeIdx:[], 2);
         if (!idx.length) return;
         const v3 = [];
@@ -1737,12 +1813,12 @@ function build3DFloorSlab(fIdx, kind) {
         : (kind==='ceiling')
         ? furniture.filter(f=>f.type==='stair' && !f.hidden && (f.floor??0)===fIdx)
         : [];
-      _buildSlabGroup(normalSlabWalls, planeY, stairsForCutout);
+      _buildSlabGroup(normalSlabWalls, planeY, stairsForCutout, _negHolePolys);
     }
     if(negativeSlabWalls.length && kind==='floor'){
       const maxHzNeg = Math.max(...negativeSlabWalls.map(w => w.hZ||2.5));
       const planeYNeg = fOff.y - maxHzNeg;
-      _buildSlabGroup(negativeSlabWalls, planeYNeg, []);
+      _buildSlabGroup(negativeSlabWalls, planeYNeg, [], []);
     }
 }
 function change3DFloor(fIdx, axis, delta) {
@@ -2031,8 +2107,24 @@ function _updateDomeSkyView(){
       }
     });
     
+    _collectNegLowerRoomPolys3D();
     objects3d.forEach(o=>{
-      if(o.userData&&o.userData.type==='floor_slab_floor'&&o.material){
+      if(!o.material)return;
+      if(o.userData.type==='neg_lower_room_floor'){
+        o.material.transparent=true;
+        o.material.opacity=_NEG_LOWER_ROOM_OPACITY;
+        o.material.depthWrite=false;
+        return;
+      }
+      if(o.userData.type==='floor_slab_floor'){
+        const box=new THREE.Box3().setFromObject(o);
+        const cx=(box.min.x+box.max.x)/2,cz=(box.min.z+box.max.z)/2;
+        if(_pointInNegLowerRoom(cx,cz)){
+          o.material.transparent=true;
+          o.material.opacity=_NEG_LOWER_ROOM_OPACITY;
+          o.material.depthWrite=false;
+          return;
+        }
         o.material.transparent=(floorOpacity3D<0.95);
         o.material.opacity=floorOpacity3D;
         o.material.depthWrite=true;
