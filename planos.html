@@ -1215,7 +1215,30 @@ let dirLight3d, ambientLight3d=null, stars3dGroup=null, _starsLastKey='', _stars
 let dome3dGroup=null, domeMesh3d=null, domeWire3d=null, skyDomeInner3d=null, sunPath3d=null, moonPath3d=null, sunDisc3d=null, moonDisc3d=null, moonRing3d=null, constellationLines3d=null, floorMesh3d=null;
 let sunGlow3d=null, sunCorona3d=null, shadowFloor3d=null;
 const _NEG_LOWER_ROOM_OPACITY=0.12;
+const _HORIZON_FLOOR_SEE_THROUGH_OPACITY=0.06;
 let _negLowerRoomPolys3D=[];
+function _applyHorizonFloorStyle(){
+  if(!scene3d)return;
+  const seeThrough=!showFloorSlab3D;
+  const applyMat=(m)=>{
+    if(!m)return;
+    m.color.setHex(0xffffff);
+    if(seeThrough){
+      m.transparent=true;
+      m.opacity=Math.max(_HORIZON_FLOOR_SEE_THROUGH_OPACITY,Math.min(0.22,floorOpacity3D*0.15));
+      m.depthWrite=false;
+    }else{
+      m.transparent=false;
+      m.opacity=1;
+      m.depthWrite=true;
+    }
+    m.needsUpdate=true;
+  };
+  if(floorMesh3d&&floorMesh3d.material)applyMat(floorMesh3d.material);
+  scene3d.traverse(o=>{
+    if(o.isMesh&&o.name==='floor'&&o.material)applyMat(o.material);
+  });
+}
 function _traceWallLoop(sw,allWalls,pm,SNAP){
   function _wpt(w,s){const p=s===0?w.pts[0]:w.pts[w.pts.length-1];return {x:w.x+p.x*pm,y:w.y+p.y*pm};}
   function _near(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<SNAP;}
@@ -1501,6 +1524,7 @@ function build3DScene(){
     _cutNegativeHolesInFloor();
     _buildNegLowerRoomFloors();
     _applyNegLowerRoomFloorStyle();
+    _applyHorizonFloorStyle();
     objects3d.filter(o=>o.userData.type==='wall').forEach(o=>{o.visible=layerWall;});
     objects3d.filter(o=>o.userData.type!=='wall'&&o.userData.type!=='measure'&&o.userData.type!=='area').forEach(o=>{o.visible=layerFurn;});
     objects3d.filter(o=>o.userData.type==='area').forEach(o=>{o.visible=showAreas3D;});
@@ -2099,14 +2123,8 @@ function _updateDomeSkyView(){
   if(!sunCfg.dome||!camera3d){
     
     if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
-    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
-    
-    scene3d.traverse(o=>{
-      if(o.isMesh&&o.name==='floor'&&o.material){
-        o.visible=true;o.material.transparent=false;o.material.opacity=1;o.material.depthWrite=true;
-      }
-    });
-    
+    if(floorMesh3d)floorMesh3d.visible=true;
+    _applyHorizonFloorStyle();
     _collectNegLowerRoomPolys3D();
     objects3d.forEach(o=>{
       if(!o.material)return;
@@ -2902,7 +2920,8 @@ function _updateNightSky(){
     if(dome3dGroup)dome3dGroup.visible=false;
     if(stars3dGroup){stars3dGroup.visible=false;if(stars3dGroup.material)stars3dGroup.material.opacity=0;}
     if(floorMesh3d&&!floorMesh3d.parent&&scene3d){scene3d.add(floorMesh3d);}
-    if(floorMesh3d){floorMesh3d.visible=true;floorMesh3d.material.transparent=false;floorMesh3d.material.opacity=1;}
+    if(floorMesh3d)floorMesh3d.visible=true;
+    _applyHorizonFloorStyle();
     _hideDomeLabels();
     const hint=document.getElementById('sun-stars-hint');if(hint){hint.style.display='none';hint.textContent='';}
     return;
@@ -4131,8 +4150,22 @@ function createFloorSection(){
 
     const slabRow = document.createElement('div'); slabRow.style.cssText='padding:8px 10px; font-size:0.65rem; color:#94a3b8; border-bottom:1px dashed #334155; display:grid; gap:10px;';
     slabRow.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;"><span>Suelo 3D</span><input type=\"checkbox\" id=\"floor-toggle-3d\" ${showFloorSlab3D?'checked':''}></div><div style=\"display:flex;align-items:center;gap:8px;\"><span style=\"flex:1;\">Opacidad suelo</span><input type=\"range\" min=\"0\" max=\"1\" step=\"0.05\" value=\"${floorOpacity3D}\" id=\"floor-opa-3d\" style=\"flex:1;\"></div><div style=\"display:flex;align-items:center;justify-content:space-between;\"><span>Techo 3D</span><input type=\"checkbox\" id=\"ceil-toggle-3d\" ${showCeilingSlab3D?'checked':''}></div><div style=\"display:flex;align-items:center;gap:8px;\"><span style=\"flex:1;\">Opacidad techo</span><input type=\"range\" min=\"0\" max=\"1\" step=\"0.05\" value=\"${ceilingOpacity3D}\" id=\"ceil-opa-3d\" style=\"flex:1;\"></div>`;
-    slabRow.querySelector('#floor-toggle-3d').onchange = (e)=>{ showFloorSlab3D = e.target.checked; refresh3D(); };
-    slabRow.querySelector('#floor-opa-3d').oninput = (e)=>{ floorOpacity3D = parseFloat(e.target.value); objects3d.filter(o => o.userData.type === 'floor_slab_floor').forEach(s => s.material.opacity = floorOpacity3D); };
+    slabRow.querySelector('#floor-toggle-3d').onchange = (e)=>{ showFloorSlab3D = e.target.checked; refresh3D(); saveLS(); };
+    slabRow.querySelector('#floor-opa-3d').oninput = (e)=>{
+      floorOpacity3D = parseFloat(e.target.value);
+      if(showFloorSlab3D){
+        _collectNegLowerRoomPolys3D();
+        objects3d.filter(o => o.userData.type === 'floor_slab_floor').forEach(s => {
+          const b=new THREE.Box3().setFromObject(s);
+          const cx=(b.min.x+b.max.x)/2,cz=(b.min.z+b.max.z)/2;
+          if(_pointInNegLowerRoom(cx,cz))return;
+          s.material.opacity=floorOpacity3D;
+          s.material.transparent=floorOpacity3D<0.95;
+        });
+      }else{
+        _applyHorizonFloorStyle();
+      }
+    };
     slabRow.querySelector('#ceil-toggle-3d').onchange = (e)=>{ showCeilingSlab3D = e.target.checked; refresh3D(); };
     slabRow.querySelector('#ceil-opa-3d').oninput = (e)=>{ ceilingOpacity3D = parseFloat(e.target.value); objects3d.filter(o => o.userData.type === 'floor_slab_ceiling').forEach(s => s.material.opacity = ceilingOpacity3D); };
     det.appendChild(slabRow);
