@@ -588,7 +588,7 @@ function registerNewProject(projId,name){const reg=loadRegistry();if(reg.find(p=
 function updateProjectRegistry(){if(!curProj)return;const reg=loadRegistry();const idx=reg.findIndex(p=>p.id===curProj);if(idx===-1)return;reg[idx].updatedAt=Date.now();reg[idx].floors=FLOORS.length;reg[idx].floorNames=FLOORS.map(f=>f.name);reg[idx].furnitureCount=furniture.length;reg[idx].measuresCount=measures.length;if(!reg[idx].thumbnail&&FLOORS.length>0&&FLOORS[0].img)generateProjectThumbnail(curProj);saveRegistry(reg);}
 function generateProjectThumbnail(projId){const f=FLOORS[0];if(!f||!f.img)return;const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=200;c.height=130;const ctx=c.getContext('2d');const sc=Math.min(200/img.width,130/img.height);const iw=img.width*sc,ih=img.height*sc;ctx.fillStyle='#07111d';ctx.fillRect(0,0,200,130);ctx.drawImage(img,(200-iw)/2,(130-ih)/2,iw,ih);const thumb=c.toDataURL('image/jpeg',0.7);const reg=loadRegistry();const idx=reg.findIndex(p=>p.id===projId);if(idx!==-1){reg[idx].thumbnail=thumb;saveRegistry(reg);}};img.src=f.img;}
 function escapeHtml(str){const d=document.createElement('div');d.textContent=str;return d.innerHTML;}
-function renderProjectCards(){const reg=loadRegistry();const container=document.getElementById('prj-cards');if(!container)return;const sub=document.getElementById('wlc-sub-text');if(reg.length===0){container.style.display='none';document.getElementById('wlc-new-prj-btn').style.display='none';document.getElementById('wlc-new-panel').style.display='block';if(sub)sub.textContent='Crea tu primer proyecto';return;}container.style.display='block';document.getElementById('wlc-new-prj-btn').style.display='';document.getElementById('wlc-new-panel').style.display='none';if(sub)sub.textContent='Selecciona un proyecto o crea uno nuevo';container.innerHTML='';reg.sort((a,b)=>b.updatedAt-a.updatedAt).forEach(proj=>{const card=document.createElement('div');card.className='prj-card';card.setAttribute('data-prj-id',proj.id);const dateStr=new Date(proj.updatedAt).toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'numeric'});card.style.cssText='background:var(--p3);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .2s;position:relative';card.innerHTML='<div style="width:80px;height:56px;border-radius:5px;overflow:hidden;background:var(--inp);flex-shrink:0;display:flex;align-items:center;justify-content:center">'+(proj.thumbnail?'<img src="'+proj.thumbnail+'" style="max-width:100%;max-height:100%;object-fit:cover" onerror="this.style.display=\'none\'">':'<span style="font-size:1.5rem;opacity:.3">🗺️</span>')+'</div><div style="flex:1;min-width:0;text-align:left"><div style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(proj.name)+'</div><div style="font-size:.65rem;color:var(--t2);font-family:\'Space Mono\',monospace">'+proj.floors+' planta(s) · '+proj.furnitureCount+' muebles · '+proj.measuresCount+' medidas</div><div style="font-size:.58rem;color:var(--t2);margin-top:2px">'+dateStr+'</div></div><button onclick="event.stopPropagation();renameProjectPrompt(\''+proj.id+'\')" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:.75rem;opacity:.5;padding:2px 6px" title="Renombrar">✎</button><button onclick="event.stopPropagation();deleteProjectPrompt(\''+proj.id+'\')" style="position:absolute;bottom:6px;right:6px;background:none;border:none;color:var(--red);cursor:pointer;font-size:.75rem;opacity:.5;padding:2px 6px" title="Eliminar">🗑</button>';card.addEventListener('click',()=>openProject(proj.id));container.appendChild(card);});}
+function renderProjectCards(){const reg=loadRegistry();const container=document.getElementById('prj-cards');if(!container)return;const sub=document.getElementById('wlc-sub-text');if(reg.length===0){container.style.display='none';document.getElementById('wlc-new-prj-btn').style.display='none';document.getElementById('wlc-new-panel').style.display='block';if(sub)sub.textContent='Crea tu primer proyecto';return;}container.style.display='block';document.getElementById('wlc-new-prj-btn').style.display='';document.getElementById('wlc-new-panel').style.display='none';if(sub)sub.textContent='Selecciona un proyecto o crea uno nuevo';container.innerHTML='';reg.sort((a,b)=>b.updatedAt-a.updatedAt).forEach(proj=>{const card=document.createElement('div');card.className='prj-card';card.setAttribute('data-prj-id',proj.id);const dateStr=new Date(proj.updatedAt).toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'numeric'});card.style.cssText='background:var(--p3);border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .2s;position:relative';card.innerHTML='<div style="width:80px;height:56px;border-radius:5px;overflow:hidden;background:var(--inp);flex-shrink:0;display:flex;align-items:center;justify-content:center">'+(proj.thumbnail?'<img src="'+proj.thumbnail+'" style="max-width:100%;max-height:100%;object-fit:cover" onerror="this.style.display=\'none\'">':'<span style="font-size:1.5rem;opacity:.3">🗺️</span>')+'</div><div style="flex:1;min-width:0;text-align:left"><div style="font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(proj.name)+'</div><div style="font-size:.65rem;color:var(--t2);font-family:\'Space Mono\',monospace">'+proj.floors+' planta(s) · '+proj.furnitureCount+' muebles · '+proj.measuresCount+' medidas</div><div style="font-size:.58rem;color:var(--t2);margin-top:2px">'+dateStr+'</div></div><button onclick="event.stopPropagation();renameProjectPrompt(\''+proj.id+'\')" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,.1);border:none;color:#cdd6e0;cursor:pointer;font-size:.95rem;opacity:.85;padding:4px 8px;border-radius:5px" title="Renombrar">✎</button><button onclick="event.stopPropagation();deleteProjectPrompt(\''+proj.id+'\')" style="position:absolute;bottom:6px;right:6px;background:rgba(255,80,80,.12);border:none;color:#ff6b6b;cursor:pointer;font-size:.95rem;opacity:.85;padding:4px 8px;border-radius:5px" title="Eliminar">🗑</button>';card.addEventListener('click',()=>openProject(proj.id));container.appendChild(card);});}
 function openProject(projId){imgEl.src='';if(curProj&&curProj!==projId)saveLS();if(!loadProjectData(projId,function(ok){if(!ok)return;renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();loadFloor(curFloor);})){showToast('Error al cargar el proyecto');return;}curProj=projId;hideWelcome();renderFloorTabs();renderFloorManage();updCalibBadge();updCalibWarn();const prjBtn=document.getElementById('prj-btn');if(prjBtn)prjBtn.style.display='';if(!isMob()&&FLOORS[curFloor]?.cal){setTimeout(()=>{const b=document.getElementById('acc-body-calib');if(b&&!b.classList.contains('closed'))toggleAcc('calib');},200);}}
 function returnToLauncher(){if(curProj){saveLS();}curProj=null;FLOORS=[];furniture=[];measures=[];groups=[];floorCnt=0;curFloor=0;history=[];historyRedo=[];refPts={};imgEl.src='';canvas.width=0;canvas.height=0;showWelcome();renderFloorTabs();renderFloorManage();updateList();updateMeasList();const prjBtn=document.getElementById('prj-btn');if(prjBtn)prjBtn.style.display='none';}
 function renameProjectPrompt(projId){const reg=loadRegistry();const proj=reg.find(p=>p.id===projId);if(!proj)return;const newName=prompt('Nuevo nombre del proyecto:',proj.name);if(newName!==null&&newName.trim()){proj.name=newName.trim();saveRegistry(reg);renderProjectCards();showToast('Proyecto renombrado');}}
@@ -1308,7 +1308,6 @@ function _pointInNegLowerRoom(x,z){
 }
 function _buildNegLowerRoomFloors(){
   if(!scene3d)return;
-  _collectNegLowerRoomPolys3D();
   _negLowerRoomPolys3D.forEach(({fIdx,fOff,worldPoly})=>{
     const v2=[];
     worldPoly.forEach(p=>{v2.push(p.x-fOff.x,p.z-fOff.z);});
@@ -1330,7 +1329,6 @@ function _buildNegLowerRoomFloors(){
   });
 }
 function _applyNegLowerRoomFloorStyle(){
-  _collectNegLowerRoomPolys3D();
   objects3d.forEach(o=>{
     if(!o.isMesh||!o.material||o.userData.type!=='floor_slab_floor')return;
     const box=new THREE.Box3().setFromObject(o);
@@ -1533,6 +1531,7 @@ function build3DScene(){
         build3DFloorSlab(fIdx,'ceiling');
     });
     build3DStairOpenings();
+    _collectNegLowerRoomPolys3D();
     _cutNegativeHolesInFloor();
     _buildNegLowerRoomFloors();
     _applyNegLowerRoomFloorStyle();
@@ -1547,7 +1546,6 @@ function _cutNegativeHolesInFloor(){
 		if(!scene3d) return;
 		const floorY = floorMesh3d ? floorMesh3d.position.y : 0;
 		const SIZE = 500, HALF = SIZE/2;
-		_collectNegLowerRoomPolys3D();
 		const allHoles = _negLowerRoomPolys3D.map(zn => zn.worldPoly.map(p => new THREE.Vector2(p.x, p.z)));
 		if(floorMesh3d){
 			if(floorMesh3d.parent) floorMesh3d.parent.remove(floorMesh3d);
@@ -1555,12 +1553,12 @@ function _cutNegativeHolesInFloor(){
 			if(floorMesh3d.material) floorMesh3d.material.dispose();
 			floorMesh3d = null;
 		}
-		scene3d.traverse(o=>{
-			if(o.isMesh&&o.name==='floor'&&o!==floorMesh3d){
-				o.geometry.dispose();
-				if(o.material) o.material.dispose();
-				scene3d.remove(o);
-			}
+		const _oldFloors=[];
+		scene3d.traverse(o=>{if(o.isMesh&&o.name==='floor')_oldFloors.push(o);});
+		_oldFloors.forEach(o=>{
+			o.geometry.dispose();
+			if(o.material) o.material.dispose();
+			scene3d.remove(o);
 		});
 		const floorMatOpts={color:0xffffff,side:THREE.DoubleSide,transparent:false,opacity:1,depthWrite:true};
 		let newFloor;
@@ -2638,8 +2636,12 @@ function _updateDomeMoonPath(){
   moonPath3d.geometry.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));
   moonPath3d.visible=pts.length>6;
 }
+var _domeLblTmpV=null,_domeLblTmpD=null;
 function _drawDomeLabel(spr,txt,color){
   if(!spr||!spr.userData._canvas)return;
+  var key=txt+'|'+(color||'#fff');
+  if(spr.userData._lastLabel===key)return;
+  spr.userData._lastLabel=key;
   var cv=spr.userData._canvas,g=cv.getContext('2d');
   g.clearRect(0,0,cv.width,cv.height);
   g.font='bold 34px Arial, sans-serif';g.textAlign='center';g.textBaseline='middle';
@@ -2677,11 +2679,13 @@ function _updateDomeCelestial(){
       var hh=date.getHours(),mm=date.getMinutes();
       var tStr=(hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm;
       _drawDomeLabel(sunTimeLabel3d,tStr,'#ffe066');
-      var off=sunDisc3d.position.clone();
-      var dir=off.clone().normalize();
-      off.addScaledVector(dir,-0.3);
-      off.y-=1.8;
-      sunTimeLabel3d.position.copy(off);
+      if(!_domeLblTmpV)_domeLblTmpV=new THREE.Vector3();
+      if(!_domeLblTmpD)_domeLblTmpD=new THREE.Vector3();
+      _domeLblTmpV.copy(sunDisc3d.position);
+      _domeLblTmpD.copy(_domeLblTmpV).normalize();
+      _domeLblTmpV.addScaledVector(_domeLblTmpD,-0.3);
+      _domeLblTmpV.y-=1.8;
+      sunTimeLabel3d.position.copy(_domeLblTmpV);
       sunTimeLabel3d.visible=true;
       sunTimeLabel3d.material.opacity=sunDisc3d.material.opacity;
     }
@@ -2707,11 +2711,13 @@ function _updateDomeCelestial(){
         var mTimeStr=(mhh<10?'0':'')+mhh+':'+(mmm<10?'0':'')+mmm;
         var moonTxt=sunAboveHorizon?pct:mTimeStr+' · '+pct;
         _drawDomeLabel(moonPhaseLabel3d,moonTxt,'#d8e4ff');
-        var mOff=moonDisc3d.position.clone();
-        var mDir=mOff.clone().normalize();
-        mOff.addScaledVector(mDir,-0.3);
-        mOff.y-=1.4;
-        moonPhaseLabel3d.position.copy(mOff);
+        if(!_domeLblTmpV)_domeLblTmpV=new THREE.Vector3();
+        if(!_domeLblTmpD)_domeLblTmpD=new THREE.Vector3();
+        _domeLblTmpV.copy(moonDisc3d.position);
+        _domeLblTmpD.copy(_domeLblTmpV).normalize();
+        _domeLblTmpV.addScaledVector(_domeLblTmpD,-0.3);
+        _domeLblTmpV.y-=1.4;
+        moonPhaseLabel3d.position.copy(_domeLblTmpV);
         moonPhaseLabel3d.visible=true;
         moonPhaseLabel3d.material.opacity=moonDisc3d.material.opacity;
       }
@@ -2730,7 +2736,11 @@ function _updateDomeCelestial(){
   _domeRebuildStarLabels(lat,lon,date,heading);
 }
 function _updateConstellationLines(lat,lon,date,heading,nightFactor){
-  if(!constellationLines3d||!sunCfg.dome||nightFactor<0.06)return;
+  if(!constellationLines3d||!sunCfg.dome||nightFactor<0.06){
+    if(constellationLines3d)constellationLines3d.visible=false;
+    _domeConstLabelItems.forEach(it=>{it.el.style.display='none';});
+    return;
+  }
   const key=lat+'|'+lon+'|'+Math.floor(date.getTime()/60000)+'|'+Math.round(heading)+'|'+nightFactor.toFixed(2);
   if(key===_domeConstKey)return;
   _domeConstKey=key;
@@ -3645,7 +3655,7 @@ function build3DAreas(fIdx) {
     });
 }
 function on3DWindowResize(){if(!renderer3d)return;const container=document.getElementById('view3d-container');const W=container.clientWidth;const H=container.clientHeight;camera3d.aspect=W/H;camera3d.updateProjectionMatrix();renderer3d.setSize(W,H);}
-function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(sunGlow3d&&sunGlow3d.visible)_domeBillboardLook(sunGlow3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);_updateDomeLabels();if(stars3dGroup&&stars3dGroup.visible&&stars3dGroup.material){const t=performance.now()*0.001;stars3dGroup.material.opacity=Math.min(0.98,stars3dGroup.material.opacity*(0.97+0.03*Math.sin(t*1.7)));}}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
+function animate3D(){reqFrame3d=requestAnimationFrame(animate3D);if(fpMode3D)updateFPMovement();if(controls3d&&!fpMode3D)controls3d.update();if(sunCfg.dome&&dome3dGroup&&dome3dGroup.visible){_updateDomeSkyView();if(sunDisc3d&&sunDisc3d.visible)_domeBillboardLook(sunDisc3d);if(sunGlow3d&&sunGlow3d.visible)_domeBillboardLook(sunGlow3d);if(moonDisc3d&&moonDisc3d.visible)_domeBillboardLook(moonDisc3d);if(moonRing3d&&moonRing3d.visible)_domeBillboardLook(moonRing3d);_updateDomeLabels();if(stars3dGroup&&stars3dGroup.visible&&stars3dGroup.material&&_starsVisibleCount>0){const t=performance.now()*0.001;stars3dGroup.material.opacity=Math.min(0.98,stars3dGroup.material.opacity*(0.97+0.03*Math.sin(t*1.7)));}}else _updateDomeSkyView();if(renderer3d&&scene3d&&camera3d)renderer3d.render(scene3d,camera3d);}
 function updateFPCamera(){if(!camera3d)return;const dir=new THREE.Vector3(Math.cos(fpPitch)*Math.sin(fpYaw),Math.sin(fpPitch),Math.cos(fpPitch)*Math.cos(fpYaw));camera3d.lookAt(camera3d.position.x+dir.x,camera3d.position.y+dir.y,camera3d.position.z+dir.z);}
 function _fpGetFloorHeight(wx,wz){
   let stairH=null;
