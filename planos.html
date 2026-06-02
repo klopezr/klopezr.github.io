@@ -4914,7 +4914,7 @@ function _lockHint(kind){
   const now=Date.now();
   if(now-_lockHintLast<2500) return;
   _lockHintLast=now;
-  showToast(kind==='wall'?'🔒 Muros bloqueados (Vista → Bloquear muros)':'🔒 Muebles bloqueados (Vista → Bloquear muebles)',1400);
+  showToast(kind==='wall'?'🔒 Muros bloqueados (Vista → Bloquear muros)':kind==='holes'?'🔒 Huecos bloqueados (Vista → Bloquear huecos)':'🔒 Muebles bloqueados (Vista → Bloquear muebles)',1400);
 }
 let currentMobSection=null;
 function mobToggle(sec){const panel=document.getElementById('panel');if(isMob()){if(panel.classList.contains('open')&&currentMobSection===sec){closePanel();return;}currentMobSection=sec;document.querySelectorAll('.acc').forEach(acc=>acc.classList.remove('active-mobile'));const targetAcc=document.querySelector('.acc[data-c="'+sec+'"]');if(targetAcc)targetAcc.classList.add('active-mobile');panel.classList.add('open');document.getElementById('panel-backdrop')?.classList.add('show');document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));document.getElementById('mn-'+sec)?.classList.add('on');if(sec==='calib')mobCalib();setTimeout(()=>{const activeBody=document.querySelector('.acc.active-mobile .acc-body');if(activeBody)activeBody.scrollIntoView({behavior:'smooth',block:'start'});},100);}else{if(panel.classList.contains('open')&&currentMobSection===sec){closePanel();return;}currentMobSection=sec;panel.classList.add('open');document.querySelectorAll('.mnb').forEach(b=>b.classList.remove('on'));document.getElementById('mn-'+sec)?.classList.add('on');if(sec==='calib')mobCalib();setTimeout(()=>{const target=document.getElementById('acc-body-'+sec);if(target)target.scrollIntoView({behavior:'smooth',block:'nearest'});},100);}}
