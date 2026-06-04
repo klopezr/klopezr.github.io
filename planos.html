@@ -21,6 +21,7 @@
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;flex-direction:column}
 header{background:var(--panel);border-bottom:1px solid var(--brd);height:var(--hh);padding:0 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;z-index:20}
+.prj-txt-mob{display:none}
 header h1{font-size:.78rem;font-weight:600;letter-spacing:.1em;color:var(--acc2);font-family:'Space Mono',monospace;white-space:nowrap}
 #floor-tabs{display:flex;flex:1;overflow-x:auto;gap:4px;scrollbar-width:none;min-width:0;padding:4px 0}
 #floor-tabs::-webkit-scrollbar{display:none}
@@ -257,7 +258,8 @@ select{width:100%;background:var(--inp);border:1px solid var(--brd);color:var(--
 #menu3d details[open]>summary .s-arr{transform:rotate(90deg)}
 @media(max-width:767px){
   :root{--hh:44px;--nh:60px}
-  header{padding:0 9px;gap:5px}
+  header{padding:0 9px;gap:5px;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  header::-webkit-scrollbar{display:none}
   header h1{display:none}
   .ftab{padding:4px 8px;font-size:.66rem}
   #sbadge{display:none}
@@ -284,6 +286,13 @@ select{width:100%;background:var(--inp);border:1px solid var(--brd);color:var(--
   #close-panel-btn{display:flex}
   #floor-tabs{display:none}
   #mob-floor-pill{display:inline-flex!important}
+  .prj-txt-desk{display:none}
+  .prj-txt-mob{display:inline}
+  #save-ind{cursor:pointer;padding:2px 5px;gap:4px}
+  #save-ind-txt{display:none}
+  #save-ind.saved #save-ind-txt{display:inline}
+  #save-ind-tap-tooltip{position:fixed;display:none;background:rgba(11,25,41,.97);color:var(--text);border:1px solid var(--brd);border-left:3px solid var(--acc2);padding:8px 12px;border-radius:6px;font-size:.72rem;font-family:'Outfit',sans-serif;z-index:150;max-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.6);pointer-events:none}
+  #save-ind-tap-tooltip.show{display:block}
 }
 #welcome{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 #welcome.hidden{display:none}
@@ -364,7 +373,7 @@ body.light .ri-acts .eye-btn svg{stroke:#1a2e48}
 </style>
 </head>
 <body>
-<header><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><h1>Planos</h1><div id="floor-tabs"></div><button id="mob-floor-pill" onclick="toggleMobFloorPicker()" style="display:none;background:rgba(77,158,255,0.12);border:1px solid rgba(77,158,255,0.4);color:#4d9eff;border-radius:6px;padding:4px 10px;font-size:.72rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;flex-shrink:0;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent">🗺 <span id="mob-floor-name">Planta</span> ▾</button><span id="sbadge">Sin calibrar</span><span id="save-ind" title="Estado del autoguardado" aria-live="polite"><span class="save-dot"></span><span id="save-ind-txt">Sin cambios</span></span><button id="btn-rotate-header" onclick="rotateFloor90CW()" title="Rotar planta 90°" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 8px;font-size:.82rem;cursor:pointer;flex-shrink:0">↻</button><button id="btn-3d-header" onclick="toggle3DView()" title="Ver en 3D" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:.79rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(124,58,237,0.4);letter-spacing:.01em;transition:filter .15s">👁️ Ver en 3D</button><button id="prj-btn" onclick="returnToLauncher()" title="Mis proyectos" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 10px;font-size:.82rem;cursor:pointer;flex-shrink:0;display:none">🏠 Proyectos</button><button id="theme-btn" onclick="toggleTheme()" title="Tema claro/oscuro" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 8px;font-size:.82rem;cursor:pointer;flex-shrink:0">🌙</button><button id="close-panel-btn" onclick="closePanel()">✕ Cerrar</button></header>
+<header><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><h1>Planos</h1><div id="floor-tabs"></div><button id="mob-floor-pill" onclick="toggleMobFloorPicker()" style="display:none;background:rgba(77,158,255,0.12);border:1px solid rgba(77,158,255,0.4);color:#4d9eff;border-radius:6px;padding:4px 10px;font-size:.72rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;flex-shrink:0;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent">🗺 <span id="mob-floor-name">Planta</span> ▾</button><span id="sbadge">Sin calibrar</span><span id="save-ind" title="Estado del autoguardado" aria-live="polite"><span class="save-dot"></span><span id="save-ind-txt">Sin cambios</span></span><button id="btn-rotate-header" onclick="rotateFloor90CW()" title="Rotar planta 90°" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 8px;font-size:.82rem;cursor:pointer;flex-shrink:0">↻</button><button id="btn-3d-header" onclick="toggle3DView()" title="Ver en 3D" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:.79rem;font-family:'Outfit',sans-serif;font-weight:600;cursor:pointer;flex-shrink:0;display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(124,58,237,0.4);letter-spacing:.01em;transition:filter .15s">👁️ 3D</button><button id="prj-btn" onclick="returnToLauncher()" title="Mis proyectos" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 10px;font-size:.82rem;cursor:pointer;flex-shrink:0;display:none">🏠 <span class="prj-txt-desk">Proyectos</span><span class="prj-txt-mob">Cambiar</span></button><button id="theme-btn" onclick="toggleTheme()" title="Tema claro/oscuro" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:5px;padding:3px 8px;font-size:.82rem;cursor:pointer;flex-shrink:0">🌙</button><button id="close-panel-btn" onclick="closePanel()">✕ Cerrar</button></header><div id="save-ind-tap-tooltip"></div>
 <div id="mob-floor-picker" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:195"><div onclick="closeMobFloorPicker()" style="position:absolute;inset:0;background:rgba(0,0,0,0.45)"></div><div style="position:absolute;top:var(--hh);left:0;right:0;background:var(--panel);border-bottom:1px solid var(--brd);padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,0.5)"><p style="font-size:.66rem;color:var(--t2);margin:0 0 8px 0;font-family:'Space Mono',monospace">SELECCIONAR PLANTA</p><div id="mob-floor-list" style="display:flex;flex-wrap:wrap;gap:6px"></div></div></div>
 <div id="panel-backdrop"></div>
 <div id="top-banner"></div>
@@ -591,7 +600,7 @@ const _ZONA_SEL_COL='#f59e0b';
 function fmtDim(v){return v.toFixed(2);}
 function showToast(msg,ms=1900){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms);}
 function markSaveDirty(){if(_saveDirty||_saveBusy)return;_saveDirty=true;_saveState='pending';updateSaveIndicator();}
-function updateSaveIndicator(){const el=document.getElementById('save-ind');if(!el)return;const txt=document.getElementById('save-ind-txt');if(!txt)return;el.classList.remove('saved','pending','error');if(_saveState==='saving'){el.classList.add('pending');txt.textContent='Guardando…';}else if(_saveState==='error'){el.classList.add('error');txt.textContent='Error al guardar';}else if(_saveState==='saved'&&_lastSavedAt){el.classList.add('saved');const d=new Date(_lastSavedAt);const hh=String(d.getHours()).padStart(2,'0');const mm=String(d.getMinutes()).padStart(2,'0');txt.textContent='Guardado · '+hh+':'+mm;}else if(_saveState==='pending'){el.classList.add('pending');txt.textContent='Cambios sin guardar…';}else{txt.textContent='Sin cambios';}}
+function updateSaveIndicator(){const el=document.getElementById('save-ind');if(!el)return;const txt=document.getElementById('save-ind-txt');if(!txt)return;el.classList.remove('saved','pending','error');let full='',time='';if(_saveState==='saving'){el.classList.add('pending');full='Guardando…';}else if(_saveState==='error'){el.classList.add('error');full='Error al guardar';}else if(_saveState==='saved'&&_lastSavedAt){el.classList.add('saved');const d=new Date(_lastSavedAt);const hh=String(d.getHours()).padStart(2,'0');const mm=String(d.getMinutes()).padStart(2,'0');full='Guardado · '+hh+':'+mm;time=hh+':'+mm;}else if(_saveState==='pending'){el.classList.add('pending');full='Cambios sin guardar…';}else{full='Sin cambios';}el.setAttribute('title',full);txt.textContent=(isMob()&&time)?time:(isMob()?'':full);}
 function saveLS(){if(!curProj){_saveState='idle';_saveDirty=false;updateSaveIndicator();return;}_saveState='saving';_saveDirty=false;updateSaveIndicator();try{
   const meas3d=(typeof measure3DSaved!=='undefined'&&Array.isArray(measure3DSaved))
     ? measure3DSaved.map(m=>({id:m.id,name:m.name||null,segs:Array.isArray(m.segs)?m.segs:[],dist:m.dist,pts:(m.pts||[]).map(p=>({x:p.x,y:p.y,z:p.z}))}))
@@ -5073,6 +5082,24 @@ function _vib(){if(navigator.vibrate)navigator.vibrate(20);}
     _pnl.addEventListener('touchstart',e=>{if(!isMob()||!_pnl.classList.contains('open'))return;const t=e.touches[0];if(!t)return;const r=_pnl.getBoundingClientRect();if(t.clientY-r.top>60)return;_y0=t.clientY;_swA=true;},{passive:true});
     _pnl.addEventListener('touchmove',e=>{if(!_swA||!e.touches[0])return;const dy=e.touches[0].clientY-_y0;if(dy>60){_swA=false;e.preventDefault();closePanel();}},{passive:false});
     _pnl.addEventListener('touchend',()=>{_swA=false;},{passive:true});
+  }
+  const _si=document.getElementById('save-ind');
+  if(_si){
+    let _siT;
+    _si.addEventListener('click',()=>{
+      if(!isMob())return;
+      const tip=document.getElementById('save-ind-tap-tooltip');
+      if(!tip)return;
+      tip.textContent=_si.getAttribute('title')||'';
+      const r=_si.getBoundingClientRect();
+      const tw=tip.offsetWidth||180;
+      let left=r.right-tw;if(left<8)left=8;
+      tip.style.top=(r.bottom+4)+'px';
+      tip.style.left=left+'px';tip.style.right='auto';
+      tip.classList.add('show');
+      clearTimeout(_siT);
+      _siT=setTimeout(()=>tip.classList.remove('show'),2500);
+    });
   }
 })();
 function startPlanAnim(){
