@@ -2321,9 +2321,9 @@ function _moonRaDec(date){
   const dec=Math.asin(Math.sin(beta)*Math.cos(eps)+Math.cos(beta)*Math.sin(eps)*Math.sin(lam));
   return{ra:((ra/rad/15)%24+24)%24,dec:dec/rad};
 }
-function _moonPhaseTexture(phase){
-  
-  const k=Math.round(phase*48)/48;
+function _moonPhaseTexture(phase,south){
+
+  const k=(Math.round(phase*48)/48)+(south?'s':'n');
   if(_domeMoonTexCache[k])return _domeMoonTexCache[k];
   const W=512,H=512;
   const c=document.createElement('canvas');c.width=W;c.height=H;
@@ -2424,7 +2424,14 @@ function _moonPhaseTexture(phase){
   limbGr.addColorStop(0.85,'rgba(200,198,195,1)');limbGr.addColorStop(1,'rgba(140,138,135,1)');
   g.fillStyle=limbGr;g.fillRect(0,0,W,H);
   g.restore();
-  const tex=new THREE.CanvasTexture(c);
+  let _src=c;
+  if(south){
+    const c2=document.createElement('canvas');c2.width=W;c2.height=H;
+    const g2=c2.getContext('2d');
+    g2.translate(W,H);g2.rotate(Math.PI);g2.drawImage(c,0,0);
+    _src=c2;
+  }
+  const tex=new THREE.CanvasTexture(_src);
   _domeMoonTexCache[k]=tex;
   return tex;
 }
@@ -2577,7 +2584,7 @@ function _initDome3D(){
   
   moonDisc3d=new THREE.Mesh(
     new THREE.SphereGeometry(0.8,48,32),
-    new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5),transparent:true,depthWrite:false})
+    new THREE.MeshBasicMaterial({map:_moonPhaseTexture(0.5,(parseFloat(sunCfg.lat)||0)<0),transparent:true,depthWrite:false})
   );
   moonDisc3d.renderOrder=-3;
   dome3dGroup.add(moonDisc3d);
@@ -2766,11 +2773,11 @@ function _updateDomeCelestial(){
       moonDisc3d.position.set(mp.x,mp.y,mp.z);
       moonVis=true;
       moonDisc3d.visible=true;
-      const tex=_moonPhaseTexture(phase);
+      const tex=_moonPhaseTexture(phase,lat<0);
       if(moonDisc3d.material.map!==tex){moonDisc3d.material.map=tex;moonDisc3d.material.needsUpdate=true;}
       moonDisc3d.material.opacity=moonAlt>0?Math.min(1,0.65+moonAlt/55):Math.max(0.15,0.4+moonAlt/40);
       if(moonPhaseLabel3d){
-        var pct=Math.round(phase*100)+'%';
+        var pct=Math.round((1-Math.cos(phase*2*Math.PI))/2*100)+'%';
         var mhh=date.getHours(),mmm=date.getMinutes();
         var mTimeStr=(mhh<10?'0':'')+mhh+':'+(mmm<10?'0':'')+mmm;
         var moonTxt=sunAboveHorizon?pct:mTimeStr+' · '+pct;
@@ -2792,7 +2799,7 @@ function _updateDomeCelestial(){
       moonRing3d.material.opacity=moonAlt>0?0.85:Math.max(0.1,0.4+moonAlt/35);
     }
     const mph=document.getElementById('dome-moon-phase');
-    if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round(phase*100)+'%)';
+    if(mph)mph.textContent='🌙 '+_moonPhaseLabel(phase)+' ('+Math.round((1-Math.cos(phase*2*Math.PI))/2*100)+'%)';
   }
   const twi=-6,altSun=parseFloat(sunCfg.alt);
   let nf=0;if(altSun<=twi)nf=1;else if(altSun<0)nf=(-altSun)/(-twi);
