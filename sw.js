@@ -1,4 +1,4 @@
-const CACHE = 'planos-v6';
+const CACHE = 'planos-v7';
 const PRECACHE = [
   './planos.html',
   './manifest.json',
@@ -37,8 +37,21 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  const isPage = e.request.mode === 'navigate' || e.request.destination === 'document';
+  if (isPage) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('./planos.html', copy));
+        }
+        return res;
+      }).catch(() => caches.match('./planos.html'))
+    );
+    return;
+  }
   e.respondWith(
-    caches.match(e.request, { ignoreSearch: e.request.mode === 'navigate' }).then(hit => {
+    caches.match(e.request).then(hit => {
       if (hit) return hit;
       return fetch(e.request).then(res => {
         if (res && res.ok && (res.type === 'basic' || res.type === 'cors')) {
@@ -46,8 +59,6 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, copy));
         }
         return res;
-      }).catch(() => {
-        if (e.request.mode === 'navigate') return caches.match('./planos.html');
       });
     })
   );
