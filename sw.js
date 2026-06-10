@@ -1,4 +1,4 @@
-const CACHE = 'planos-v7';
+const CACHE = 'planos-v13';
 const PRECACHE = [
   './planos.html',
   './manifest.json',
