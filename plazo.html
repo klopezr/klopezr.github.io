@@ -440,11 +440,6 @@
         });
     }
 
-    // Umbrales SARA 2026-2027: Orden HAC/1517/2025 (BOE 26/12/2025), en vigor desde 01/01/2026.
-    // 'simp' (abierto simplificado, art. 159.1.a): obras VE igual o inferior a 2.000.000 €;
-    // suministros y servicios VE inferior a los importes de los arts. 21.1.a) y 22.1.a) (140.000 €),
-    // referencia que rige para TODAS las entidades (no solo AGE).
-    // Contrato menor (art. 118.1): solo obras, suministros y servicios. No existe para concesiones (menor: 0).
     const thresholds = {
         obras: { menor: 40000, supersimp: 80000, simp: 2000000, sara: 5404000, pres: 26 },
         servicios: { menor: 15000, supersimp: 60000, simp: 140000, sara: 140000, pres: 15 },
@@ -491,8 +486,6 @@
     });
 
     document.getElementById('procManual').addEventListener('change', (e) => {
-        // El VE se mantiene visible siempre: con procedimiento manual permite validar límites legales
-        // y determinar si el contrato es susceptible de recurso especial (art. 44 LCSP).
         if (e.target.value === 'SUPERSIMPLIFICADO') {
             document.getElementById('numSobres').value = '1';
             document.getElementById('numSobres').disabled = true;
@@ -621,8 +614,6 @@
         return d;
     }
 
-    // D.A. 12ª LCSP: si el último día de un plazo en días naturales es inhábil,
-    // se entiende prorrogado al primer día hábil siguiente.
     function prorrogaInhabil(date) {
         const d = new Date(date); let guard = 0;
         while ((d.getDay()===0 || d.getDay()===6 || getHolidayInfo(d)) && guard < 60) {
@@ -631,9 +622,6 @@
         return d;
     }
 
-    // Fin de plazo cuando 'start' ya es el día 1 del cómputo (día siguiente a la
-    // publicación/notificación, conforme al art. 30 de la Ley 39/2015 y la D.A. 12ª LCSP):
-    // un plazo de N días vence el día N, no el N+1.
     function finPlazo(start, dur, isHabiles) {
         if (dur <= 0) return new Date(start);
         if (isHabiles) return dur > 1 ? addHabiles(start, dur-1) : new Date(start);
@@ -646,7 +634,6 @@
     function checkCoherencia(proc, tipo, tramitacion, nSobres, valor, tInfo) {
         const warnings = [];
         if (proc==='LICITACION_NEGOCIACION') warnings.push('La licitación con negociación solo puede utilizarse cuando concurre alguno de los supuestos tasados del art. 167 LCSP; debe justificarse en el expediente.');
-        // Validación VE ↔ procedimiento elegido a mano (límites de los arts. 118, 159 y 20-22)
         if (valor > 0 && tInfo) {
             if (proc==='MENOR' && (tInfo.menor===0 || valor>=tInfo.menor)) warnings.push('El VE indicado no permite contrato menor: límites del art. 118.1 LCSP (obras < 40.000 €; suministros y servicios < 15.000 €; no existe para concesiones).');
             if (proc==='SUPERSIMPLIFICADO' && (tInfo.supersimp===0 || valor>=tInfo.supersimp)) warnings.push('El VE indicado supera el límite del simplificado abreviado: obras < 80.000 €, suministros y servicios < 60.000 € (art. 159.6 LCSP).');
@@ -704,9 +691,6 @@
     function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj) {
         let s = [];
         valor = valor || 0;
-        // Art. 153.3 + art. 44 LCSP: el período de espera de 15 días hábiles se aplica a todo contrato
-        // susceptible de recurso especial (obras y concesiones VE > 3.000.000 €; suministros y servicios VE > 100.000 €),
-        // sea o no SARA. Si no se conoce el VE (procedimiento elegido a mano), solo se asume con SARA.
         const esObraOConc = (tipo==='obras' || tipo.includes('concesion'));
         const recursoEspecial = sara || (valor > 0 && (esObraOConc ? valor > 3000000 : valor > 100000));
 
@@ -740,7 +724,6 @@
         }
 
         if (proc === 'RESTRINGIDO' || proc === 'LICITACION_NEGOCIACION') {
-            // ── Solicitudes de participación (art. 161; en licitación con negociación vía art. 169.2) ──
             let solDays = sara ? 30 : 15;
             let solTxt;
             if (sara) {
@@ -758,11 +741,9 @@
             }
             s.push({ id:'sol', name:'Solicitudes de participación', color:'blue', art:'Art. 161', getDesc:(v)=>`Plazo de presentación de solicitudes de participación: ${v} días naturales. ${sara?'Cómputo desde el envío del anuncio al DOUE (art. 161.1).':'Cómputo desde la publicación del anuncio de licitación (art. 161.3).'} Las solicitudes van acompañadas de la documentación del art. 140, sin garantía provisional (art. 161.4).`, slider:{ id:'sl_sol', min:solDays, max:solDays+30, val:solDays, label:'Plazo solicitudes', txt:solTxt }, isHabiles:false });
 
-            // ── Selección de candidatos e invitación simultánea (arts. 162 y 163) ──
             const minCand = proc==='RESTRINGIDO' ? 5 : 3;
             s.push({ id:'sel', name:'Selección de candidatos e invitación', color:'purple', art:proc==='RESTRINGIDO'?'Arts. 162 y 163':'Arts. 162, 163 y 169.2', getDesc:(v)=>`Comprobación de solvencia, selección de candidatos e invitación simultánea y por escrito en ${v} días hábiles (estimación; la LCSP no fija plazo). Número mínimo de candidatos a invitar: ${minCand} (${proc==='RESTRINGIDO'?'art. 162.4':'art. 169.2'}).`, slider:{ id:'sl_sel', min:1, max:30, val:5, label:'Días selección/invitación', txt:'Sin plazo legal. Estimación interna del órgano de contratación.' }, isHabiles:true });
 
-            // ── Proposiciones desde el envío de la invitación (art. 164; en negociación, ofertas iniciales vía art. 169.2 → 164.1) ──
             let prDays = sara ? 30 : 10;
             let prTxt = '';
             if (sara) {
@@ -790,21 +771,16 @@
 
         if (tramitacion === 'urgente') {
             if (proc === 'SIMPLIFICADO') {
-                // Art. 159.5: en el abierto simplificado la urgencia no reduce ningún plazo.
                 pSliderTxt = `Mínimo legal ${pDays} días naturales desde el día siguiente a la publicación en el perfil (art. 159.3). La urgencia NO reduce los plazos del simplificado (art. 159.5).`;
             } else if (tipo.includes('concesion')) {
                 if (sara) {
-                    // Art. 119.2.b último párrafo: concesiones SARA sin reducción alguna en presentación.
                     pSliderTxt = 'Concesiones SARA: el plazo de presentación no admite reducción alguna por urgencia (art. 119.2.b, último párrafo). Mínimo 30 días naturales desde el envío del anuncio al DOUE (art. 156.2).';
                 } else {
-                    // La excepción del art. 119.2.b último párrafo solo alcanza a concesiones SARA;
-                    // en no SARA aplica la regla general de reducción a la mitad.
                     pDays = Math.ceil(pDaysBase/2);
                     pSliderTxt = `Urgente no SARA: ${pDays} días naturales (mitad de los 26 días del art. 156.6, conforme al art. 119.2.b; la excepción para concesiones del art. 119.2.b último párrafo solo alcanza a las SARA).`;
                 }
             } else {
                 if (sara) {
-                    // Arts. 119.2.b.2º y 156.3.b: mínimo 15 días desde el envío al DOUE. No acumulable con la reducción electrónica.
                     pDays = 15;
                     pSliderTxt = 'Urgente SARA: mínimo legal 15 días naturales desde el envío del anuncio al DOUE (arts. 119.2.b.2º y 156.3.b LCSP). No acumulable con la reducción de 5 días por ofertas electrónicas.';
                 } else {
@@ -821,8 +797,6 @@
                 pSliderTxt = `Ofertas electrónicas: el plazo general se reduce en 5 días → ${pDays} días naturales (art. 156.3.c LCSP).`;
             }
         }
-        // Nota: las reducciones del art. 156.3 (AIP, urgencia, ofertas electrónicas) solo aplican a
-        // contratos de obras, suministros y servicios; nunca a concesiones.
 
         if (!pSliderTxt) {
             if (sara) pSliderTxt = tipo.includes('concesion')
@@ -851,12 +825,8 @@
             getDesc:(v) => `Plazo de presentación: ${v} días naturales. Mínimo legal: ${pDaysFinal} días. ${dquoNote}<br><span class="text-slate-400 text-[10px]">Art. 138.3 — Solicitar info adicional: al menos 12 días antes del fin · Respuesta del órgano: al menos ${respInfoDays} días antes del fin${(tramitacion==='urgente'&&sara&&!tipo.includes('concesion'))?' (4 días por urgencia, art. 119.2.b.5º)':''}.</span>`,
             slider:{ id:'sl_pres', min:pDaysFinal, max:pMax, val:pDaysFinal, label:'Plazo Presentación', txt:pSliderTxt }, isHabiles:false, trackInfo138:true, respInfoDays });
 
-        } // fin abierto / simplificado
+        }
 
-        // Art. 157.3: la apertura de proposiciones debe efectuarse "en todo caso" dentro de los 20 días
-        // (naturales, D.A. 12ª) siguientes al fin del plazo de presentación; si hay varios sobres, basta
-        // con abrir el primero dentro de ese plazo. En el simplificado, la valoración de juicios de valor
-        // tiene un máximo de 7 días (art. 159.4.e; naturales conforme a la D.A. 12ª).
         const maxMesa1 = proc==='SIMPLIFICADO' ? 7 : 20;
         const defMesa = 3;
         const txtMesa1 = proc==='SIMPLIFICADO'
@@ -892,16 +862,11 @@
         s.push({ id:'req1', name:'Requerimiento Documentación', color:'teal', art:artReq, getDesc:(v)=>`Días hasta envío del requerimiento al licitador propuesto: ${v} día${v>1?'s':''}. La LCSP no fija plazo para este acto interno; en la práctica se tramita el mismo día o en pocos días hábiles.`, slider:{ id:'sl_req1', min:1, max:5, val:1, label:'Días gestión requerimiento', txt:'Sin plazo legal específico. Estimación interna del órgano de contratación.' }, isHabiles:true });
         s.push({ id:'req2', name:'Aporte Documentación', color:'teal', art:artReq, getDesc:(v)=>`El licitador aporta garantía definitiva y documentación justificativa en ${v} días hábiles. Plazo legal: ${pReq} días hábiles ${proc==='SIMPLIFICADO'?'desde el envío de la comunicación (art. 159.4.f.4º)':'a contar desde el siguiente a la recepción del requerimiento (art. 150.2)'}.`, slider:{ id:'sl_req2', min:pReq, max:pReq+10, val:pReq, label:'Plazo aporte documentación', txt:`Plazo legal ${pReq} días hábiles (${proc==='SIMPLIFICADO'?'art. 159.4.f.4º':'art. 150.2'} LCSP). Si no se cumplimenta, se entiende retirada la oferta con penalidad del 3% del PBL (art. 150.2).` }, isHabiles:true });
 
-        // Art. 159.5: la urgencia no reduce los plazos del abierto simplificado.
         const adjMax = (tramitacion==='urgente' && proc!=='SIMPLIFICADO') ? 3 : 5;
         const artAdj = proc==='SIMPLIFICADO' ? 'Art. 159.4.f' : ((tramitacion==='urgente'?'Art. 119 + ':'')+'Art. 150.3');
         s.push({ id:'adj', name:'Resolución Adjudicación', color:'amber', art:artAdj, getDesc:(v)=>`Resolución de adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días hábiles siguientes a la recepción de la documentación (art. 150.3).`, slider:{ id:'sl_adj', min:1, max:adjMax, val:adjMax, label:'Plazo Adjudicación', txt:`Máx. ${adjMax} días hábiles (art. 150.3${tramitacion==='urgente'?(proc==='SIMPLIFICADO'?'; sin reducción por urgencia en el simplificado, art. 159.5':' reducido a la mitad por urgencia, art. 119.2.b'):''}). Mínimo 1 día.` }, isHabiles:true });
 
         if (proc !== 'SUPERSIMPLIFICADO') {
-            // Art. 153.3, párr. 1º: período de espera de 15 días hábiles si el contrato es susceptible
-            // de recurso especial (art. 44), sea o no SARA. No reducible por urgencia (art. 119.2.b.1º).
-            // Art. 153.3, párr. 3º: en los restantes casos, formalización no más tarde de 15 días hábiles
-            // desde la notificación de la adjudicación (reducible a la mitad por urgencia, salvo simplificado).
             if (recursoEspecial) {
                 s.push({ id:'form', name:'Formalización', color:'emerald', art:'Art. 153.3 / Art. 44', getDesc:(v)=>`Período de espera: ${v} días hábiles. No puede formalizarse antes de que transcurran 15 días hábiles desde la remisión de la notificación de adjudicación, por ser el contrato susceptible de recurso especial (arts. 153.3 y 44 LCSP: obras y concesiones VE &gt; 3.000.000 €, suministros y servicios VE &gt; 100.000 €, o SARA). El plazo de interposición del recurso es de 15 días hábiles (art. 50.1). Transcurrido el período sin recurso suspensivo, se requiere al adjudicatario para firmar en un máximo de 5 días (art. 153.3, párr. 2º).${tramitacion==='urgente'?' En urgente, este período de espera NO se reduce (art. 119.2.b.1º LCSP).':''}`, slider:{ id:'sl_form', min:15, max:30, val:15, label:'Días hasta formalización', txt:'Mínimo legal 15 días hábiles (art. 153.3 LCSP). Las CCAA pueden ampliarlo hasta un mes. No reducible por urgencia (art. 119.2.b.1º).' }, isHabiles:true });
             } else {
@@ -911,7 +876,6 @@
             }
         }
 
-        // ── Fase de ejecución y post-formalización (opcional) ──
         if (posAdj) {
             s.push({ id:'anuncio_form', name:'Anuncio de formalización', color:'gray', art:'Art. 154', parallel:true, getDesc:(v)=>`Publicación del anuncio de formalización, junto con el contrato, en el perfil de contratante en un plazo no superior a 15 días desde el perfeccionamiento (art. 154.1).${entidad==='AGE'?' En la AGE y entidades vinculadas, además en el BOE (art. 154.2).':''}${sara?' En SARA: además en el DOUE; envío a más tardar 10 días después de la formalización, sin publicar antes en perfil/BOE (art. 154.3).':''} Trámite paralelo: no retrasa los siguientes.`, slider:{ id:'sl_anform', min:1, max:15, val:15, label:'Días publicación anuncio', txt:'Máximo legal: 15 días desde el perfeccionamiento (art. 154.1). En SARA, envío al DOUE en máximo 10 días (art. 154.3).' }, isHabiles:false });
             if (tramitacion==='urgente') {
@@ -1174,7 +1138,6 @@
         if (!objStr) return showToast('Selecciona primero la fecha objetivo');
         if (!globalConfig.proc || !currentSkeleton.length) return showToast('Genera primero una simulación');
         const objetivo = new Date(objStr+'T00:00:00');
-        // Snapshot del esqueleto con los valores actuales de los sliders
         const skel = currentSkeleton.map(ev => ev.slider
             ? Object.assign({}, ev, { slider: Object.assign({}, ev.slider, { val: parseInt(document.getElementById(ev.slider.id)?.value) || ev.slider.val }) })
             : ev);
@@ -1188,7 +1151,6 @@
             if (diff === 0) break;
             t0 = addDays(t0, diff);
         }
-        // Garantizar que no se supera el objetivo y que la publicación cae en día hábil (retrocediendo)
         let guard = 0;
         while (guard < 30) {
             const evs = computeEventsFromSkeleton(skel, t0);
@@ -1405,19 +1367,15 @@
         globalT0.setHours(0,0,0,0);
 
         let tInfo = JSON.parse(JSON.stringify(thresholds[tipo]));
-        // Umbral SARA subcentral (arts. 21.1.b y 22.1.b): 216.000 € desde 01/01/2026 (Orden HAC/1517/2025).
-        // El límite del simplificado NO cambia: el art. 159.1.a remite a los arts. 21.1.a) y 22.1.a) (140.000 €) para todas las entidades.
         if (entidad==='OTRAS'&&(tipo==='servicios'||tipo==='suministros')) { tInfo.sara=216000; }
 
         let proc = pMan;
         if (isAuto) {
             if (tInfo.menor>0&&valor<tInfo.menor) proc='MENOR';
             else if (tInfo.supersimp>0&&valor<tInfo.supersimp) proc='SUPERSIMPLIFICADO';
-            // Art. 159.1.a: obras "igual o inferior" a 2.000.000 €; suministros/servicios "inferior" a 140.000 €.
             else if (tInfo.simp>0&&(tipo==='obras' ? valor<=tInfo.simp : valor<tInfo.simp)) proc='SIMPLIFICADO';
             else proc=valor>=tInfo.sara?'ABIERTO_SARA':'ABIERTO_NO_SARA';
         }
-        // En restringido y licitación con negociación la condición SARA depende del VE (arts. 20-22).
         const sara = (proc==='ABIERTO_SARA')||(isAuto&&valor>=tInfo.sara)||((proc==='RESTRINGIDO'||proc==='LICITACION_NEGOCIACION')&&valor>0&&valor>=tInfo.sara);
 
         const warnings = checkCoherencia(pMan==='AUTO'?'AUTO':pMan, tipo, tramitacion, nSobres, valor, tInfo);
@@ -1433,7 +1391,6 @@
 
         let maxEnd = new Date(globalT0);
         const tempSkel = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj);
-        // Estimación del fin del cronograma (valores máximos de cada slider + margen por hábiles)
         let estDias = 30;
         for (let ev of tempSkel) {
             const d = ev.slider ? (ev.slider.max || ev.slider.val) : (ev.staticDur || 0);
