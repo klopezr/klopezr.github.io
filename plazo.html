@@ -44,6 +44,9 @@
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media print { .no-print { display: none !important; } }
+        .tab-btn { padding: 0.6rem 1.4rem; border-radius: 9999px; font-weight: 700; font-size: 0.875rem; background: white; color: #475569; border: 1px solid #e2e8f0; cursor: pointer; transition: all .2s; }
+        .tab-btn:hover { border-color: #93c5fd; color: #1d4ed8; }
+        .tab-btn.tab-active { background: #2563eb; color: white; border-color: #2563eb; box-shadow: 0 4px 10px rgba(37,99,235,.3); }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen pb-20">
@@ -104,6 +107,9 @@
                             <option value="SUPERSIMPLIFICADO">Abierto Super Simplificado</option>
                             <option value="RESTRINGIDO">Restringido</option>
                             <option value="LICITACION_NEGOCIACION">Licitación con negociación</option>
+                            <option value="NEGOCIADO_SIN_PUBLICIDAD">Negociado sin publicidad</option>
+                            <option value="DIALOGO_COMPETITIVO">Diálogo competitivo</option>
+                            <option value="SDA">Sistema dinámico de adquisición</option>
                             <option value="MENOR">Contrato Menor</option>
                         </select>
                     </div>
@@ -143,6 +149,14 @@
         <p class="text-slate-600 max-w-2xl mx-auto">Plazos según <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" class="text-blue-600 hover:underline">Ley 9/2017 de Contratos del Sector Público</a> · Umbrales SARA vigentes desde 01/01/2026 (<a href="https://www.boe.es/buscar/doc.php?id=BOE-A-2025-26605" target="_blank" class="text-blue-600 hover:underline">Orden HAC/1517/2025</a>)</p>
     </div>
 
+    <div class="flex flex-wrap justify-center gap-2 mb-8 no-print">
+        <button type="button" data-tab="tabSimulador" class="tab-btn tab-active">🗓️ Simulador</button>
+        <button type="button" data-tab="tabGarantias" class="tab-btn">🛡️ Garantías</button>
+        <button type="button" data-tab="tabHistorial" class="tab-btn">💾 Historial</button>
+    </div>
+
+    <div id="tabSimulador">
+
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-4 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
         <div class="space-y-6" id="lcspForm">
@@ -157,6 +171,9 @@
                         <option value="SUPERSIMPLIFICADO">Abierto Super Simplificado</option>
                         <option value="RESTRINGIDO">Restringido (arts. 160-165)</option>
                         <option value="LICITACION_NEGOCIACION">Licitación con negociación (arts. 166-171)</option>
+                        <option value="NEGOCIADO_SIN_PUBLICIDAD">Negociado sin publicidad (arts. 168-170)</option>
+                        <option value="DIALOGO_COMPETITIVO">Diálogo competitivo (arts. 172-177)</option>
+                        <option value="SDA">Sistema dinámico de adquisición (arts. 223-226)</option>
                         <option value="MENOR">Contrato Menor</option>
                     </select>
                 </div>
@@ -262,6 +279,10 @@
                     <input type="checkbox" id="posAdjCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm font-bold text-slate-800">Fase de ejecución y post-formalización <span class="font-normal text-xs text-slate-500">(anuncio art. 154, recepción art. 210, pago art. 198.4, garantía art. 111 — alarga el cronograma)</span></span>
                 </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="recursoCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm font-bold text-slate-800">Simular recurso especial interpuesto <span class="font-normal text-xs text-slate-500">(arts. 50-57 — solo contratos recurribles del art. 44; suspende la formalización, art. 53)</span></span>
+                </label>
             </div>
 
             <div class="border-t border-slate-100 pt-4">
@@ -351,6 +372,11 @@
             <p id="fechaInhabilText"></p>
         </div>
 
+        <div id="art158Warning" class="hidden bg-red-50 border border-red-300 rounded-xl p-4 text-sm text-red-900 fade-in">
+            <p class="font-bold mb-1">⏱️ Plazo máximo de adjudicación (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-70" target="_blank" class="underline">art. 158 LCSP</a>)</p>
+            <p id="art158Text"></p>
+        </div>
+
         <div id="hitosResumen" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
@@ -419,6 +445,53 @@
         </div>
         <p id="disclaimerText" class="text-xs text-center text-slate-500 mt-2">* Plazos orientativos calculados a partir de la configuración seleccionada. Umbrales SARA según Orden HAC/1517/2025 (vigentes desde 01/01/2026). En SARA el cómputo parte de la fecha de envío del anuncio al DOUE (art. 156.2). Verificar siempre con el órgano de contratación competente.</p>
     </div>
+    </div>
+
+    <div id="tabGarantias" class="hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
+            <h3 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-1 h-6 bg-blue-600 rounded-full"></span>Calculadora de garantías y penalidades</h3>
+            <p class="text-sm text-slate-500 mb-6">Importes según los <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-18" target="_blank" class="text-blue-600 hover:underline">arts. 106 y 107 LCSP</a>. Todos los importes se introducen y calculan IVA excluido.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Presupuesto base de licitación (€, IVA excl.)</label>
+                    <input type="number" id="gar_pbl" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Precio final ofertado / adjudicación (€, IVA excl.)</label>
+                    <input type="number" id="gar_precio" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <label class="flex items-start space-x-3 cursor-pointer">
+                    <input type="checkbox" id="gar_unitarios" class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-0.5">
+                    <span class="text-sm text-slate-700"><span class="font-bold">Precios unitarios</span> — la garantía definitiva se calcula sobre el presupuesto base de licitación (art. 107.3).</span>
+                </label>
+                <label class="flex items-start space-x-3 cursor-pointer">
+                    <input type="checkbox" id="gar_comp" class="w-5 h-5 rounded border-slate-300 text-blue-600 mt-0.5">
+                    <span class="text-sm text-slate-700"><span class="font-bold">Garantía complementaria</span> — hasta un 5% adicional en casos especiales previstos en el pliego; la garantía total puede alcanzar el 10% (art. 107.2).</span>
+                </label>
+            </div>
+            <div id="garResultados" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-800 space-y-1">
+                <p><strong>Garantía provisional:</strong> solo exigible si se justifica en el expediente; máximo 3% del PBL, IVA excluido (art. 106.1 y 106.2). En acuerdos marco y SDA, a tanto alzado sin superar el 3% del valor estimado.</p>
+                <p><strong>Garantía definitiva:</strong> 5% del precio final ofertado, IVA excluido (art. 107.1); con precios provisionales, sobre el precio máximo; con precios unitarios, sobre el PBL (art. 107.3).</p>
+                <p><strong>Penalidad del 3% del PBL:</strong> por retirada indebida de la oferta o no cumplimentar el requerimiento (art. 150.2) y por no formalizar en plazo por causa imputable al adjudicatario (art. 153.4).</p>
+                <p><strong>Exención:</strong> en el abierto simplificado abreviado no se exige garantía definitiva (art. 159.6.f).</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tabHistorial" class="hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 fade-in">
+            <h3 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2"><span class="w-1 h-6 bg-blue-600 rounded-full"></span>Historial de simulaciones</h3>
+            <p class="text-sm text-slate-500 mb-4">Guarda la simulación configurada en la pestaña Simulador (parámetros y ajustes de los sliders). Se almacena solo en este navegador.</p>
+            <div class="flex flex-wrap gap-2 mb-6">
+                <input type="text" id="simNombre" placeholder="Nombre de la simulación (ej.: Obra calle Mayor)" class="flex-1 min-w-0 px-4 py-3 rounded-xl border border-slate-300 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <button type="button" onclick="guardarSimulacion()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl text-sm transition-colors">💾 Guardar simulación actual</button>
+            </div>
+            <div id="historialLista" class="space-y-2"></div>
+        </div>
+    </div>
 </div>
 
 <div id="globalTooltip" class="custom-tooltip"></div>
@@ -463,7 +536,7 @@
 
     document.getElementById('fechaAnuncio').valueAsDate = new Date();
 
-    const watchedIds = ['procManual','tipoContrato','valorEstimado','tipoTramitacion','fechaAnuncio','numSobres','tipoEntidad','ccaa','bajaAnormal','subsanacionCheck','posAdjCheck','aipCheck','ofertasElecCheck','mixtoPrincipal'];
+    const watchedIds = ['procManual','tipoContrato','valorEstimado','tipoTramitacion','fechaAnuncio','numSobres','tipoEntidad','ccaa','bajaAnormal','subsanacionCheck','posAdjCheck','recursoCheck','aipCheck','ofertasElecCheck','mixtoPrincipal'];
     watchedIds.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -484,6 +557,126 @@
         p.classList.toggle('hidden');
         a.textContent = p.classList.contains('hidden') ? '▶' : '▼';
     });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            btn.classList.add('tab-active');
+            ['tabSimulador','tabGarantias','tabHistorial'].forEach(id => document.getElementById(id).classList.toggle('hidden', id !== btn.dataset.tab));
+            if (btn.dataset.tab === 'tabHistorial') renderHistorial();
+            if (btn.dataset.tab === 'tabGarantias') calcGarantias();
+        });
+    });
+
+    ['gar_pbl','gar_precio','gar_unitarios','gar_comp'].forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', calcGarantias);
+    });
+
+    function fmtEur(n) { return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
+
+    function calcGarantias() {
+        const pbl = parseFloat(document.getElementById('gar_pbl').value) || 0;
+        const precio = parseFloat(document.getElementById('gar_precio').value) || 0;
+        const unitarios = document.getElementById('gar_unitarios').checked;
+        const comp = document.getElementById('gar_comp').checked;
+        const el = document.getElementById('garResultados');
+        if (!pbl && !precio) { el.innerHTML = '<p class="text-sm text-slate-500 md:col-span-2">Introduce el presupuesto base de licitación y/o el precio ofertado para calcular los importes.</p>'; return; }
+        const baseDef = unitarios ? pbl : (precio || pbl);
+        const definitiva = baseDef * 0.05;
+        const complementaria = comp ? baseDef * 0.05 : 0;
+        const provisional = pbl * 0.03;
+        const penalidad = pbl * 0.03;
+        const card = (titulo, importe, detalle) => `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">${titulo}</p>
+                <p class="text-2xl font-black text-slate-900">${fmtEur(importe)}</p>
+                <p class="text-[11px] text-slate-500 mt-1">${detalle}</p>
+            </div>`;
+        let html = '';
+        if (pbl) html += card('Garantía provisional (máxima)', provisional, 'Máximo 3% del PBL, IVA excluido; solo si se justifica su exigencia en el expediente (arts. 106.1 y 106.2).');
+        if (baseDef) html += card('Garantía definitiva (5%)', definitiva, unitarios ? '5% del presupuesto base de licitación por ser precios unitarios (art. 107.3).' : '5% del precio final ofertado, IVA excluido (art. 107.1).');
+        if (comp && baseDef) html += card('Garantía complementaria (+5%)', complementaria, `Casos especiales del pliego (art. 107.2). Garantía total: ${fmtEur(definitiva + complementaria)} (máx. 10%).`);
+        if (pbl) html += card('Penalidad 3% del PBL', penalidad, 'Retirada indebida de la oferta o requerimiento no atendido (art. 150.2) y no formalización imputable al adjudicatario (art. 153.4).');
+        el.innerHTML = html;
+    }
+
+    function getSims() { try { return JSON.parse(localStorage.getItem('lcsp_sims') || '[]'); } catch(e) { return []; } }
+    function setSims(arr) { try { localStorage.setItem('lcsp_sims', JSON.stringify(arr)); } catch(e) {} }
+
+    function guardarSimulacion() {
+        if (!globalConfig.proc) return showToast('Genera primero una simulación en la pestaña Simulador');
+        const nombre = (document.getElementById('simNombre').value || '').trim() || `${globalConfig.proc.replace(/_/g,' ')} · ${new Date().toLocaleDateString('es-ES')}`;
+        const sliders = {};
+        currentSkeleton.forEach(ev => { if (ev.slider) { const el = document.getElementById(ev.slider.id); if (el) sliders[ev.slider.id] = parseInt(el.value); } });
+        const sims = getSims();
+        sims.unshift({ id: Date.now(), nombre, ts: new Date().toISOString(), cfg: Object.assign({}, globalConfig), sliders });
+        if (sims.length > 30) sims.length = 30;
+        setSims(sims);
+        document.getElementById('simNombre').value = '';
+        renderHistorial();
+        showToast(`Simulación «${nombre}» guardada ✓`);
+    }
+
+    function renderHistorial() {
+        const sims = getSims();
+        const el = document.getElementById('historialLista');
+        if (!sims.length) { el.innerHTML = '<p class="text-sm text-slate-500">No hay simulaciones guardadas. Configura una en la pestaña Simulador y pulsa «Guardar simulación actual».</p>'; return; }
+        el.innerHTML = sims.map(s => `
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                <div class="min-w-0">
+                    <p class="font-bold text-slate-800 text-sm truncate">${s.nombre}</p>
+                    <p class="text-xs text-slate-500">${new Date(s.ts).toLocaleString('es-ES')} · ${(s.cfg.proc||'').replace(/_/g,' ')} · ${(s.cfg.tipo||'').replace('_',' ')} · ${s.cfg.tramitacion||''}${s.cfg.sara?' · SARA':''}${s.cfg.valor?' · '+parseFloat(s.cfg.valor).toLocaleString('es-ES')+' €':''}</p>
+                </div>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button type="button" onclick="cargarSimulacion(${s.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">Cargar</button>
+                    <button type="button" onclick="borrarSimulacion(${s.id})" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">Eliminar</button>
+                </div>
+            </div>`).join('');
+    }
+
+    function borrarSimulacion(id) {
+        setSims(getSims().filter(s => s.id !== id));
+        renderHistorial();
+        showToast('Simulación eliminada ✓');
+    }
+
+    async function cargarSimulacion(id) {
+        const s = getSims().find(x => x.id === id);
+        if (!s) return;
+        const c = s.cfg;
+        const procEl = document.getElementById('procManual');
+        procEl.value = c.isAuto ? 'AUTO' : c.proc;
+        procEl.dispatchEvent(new Event('change'));
+        const tipoEl = document.getElementById('tipoContrato');
+        tipoEl.value = c.tipo;
+        tipoEl.dispatchEvent(new Event('change'));
+        document.getElementById('valorEstimado').value = c.valor || '';
+        document.getElementById('fechaAnuncio').value = c.fecha;
+        document.getElementById('numSobres').value = c.nSobres;
+        document.getElementById('tipoEntidad').value = c.entidad;
+        document.getElementById('tipoTramitacion').value = c.tramitacion;
+        document.getElementById('ccaa').value = c.ccaa;
+        document.getElementById('bajaAnormal').checked = !!c.hasBaja;
+        document.getElementById('subsanacionCheck').checked = !!c.hasSubsanacion;
+        document.getElementById('posAdjCheck').checked = !!c.posAdj;
+        document.getElementById('recursoCheck').checked = !!c.hasRecurso;
+        document.getElementById('aipCheck').checked = !!c.aip;
+        document.getElementById('ofertasElecCheck').checked = !!c.ofertasElec;
+        clearTimeout(calcDebounce);
+        await triggerCalc();
+        Object.entries(s.sliders || {}).forEach(([sid, val]) => {
+            const el = document.getElementById(sid);
+            if (el) {
+                el.value = val;
+                const lab = document.getElementById(`val-${el.dataset.evid}`);
+                if (lab) lab.textContent = `${val} días`;
+            }
+        });
+        await recalculateDates();
+        document.querySelector('[data-tab="tabSimulador"]').click();
+        showToast(`Simulación «${s.nombre}» cargada ✓`);
+    }
 
     document.getElementById('procManual').addEventListener('change', (e) => {
         if (e.target.value === 'SUPERSIMPLIFICADO') {
@@ -634,6 +827,10 @@
     function checkCoherencia(proc, tipo, tramitacion, nSobres, valor, tInfo) {
         const warnings = [];
         if (proc==='LICITACION_NEGOCIACION') warnings.push('La licitación con negociación solo puede utilizarse cuando concurre alguno de los supuestos tasados del art. 167 LCSP; debe justificarse en el expediente.');
+        if (proc==='NEGOCIADO_SIN_PUBLICIDAD') warnings.push('El negociado sin publicidad solo procede en los supuestos tasados del art. 168 LCSP (oferta única, exclusividad, imperiosa urgencia, etc.); debe justificarse en el expediente (art. 170.1).');
+        if (proc==='DIALOGO_COMPETITIVO') warnings.push('El diálogo competitivo procede en los supuestos del art. 167 LCSP, a los que remite el art. 172.3, y se reserva a prestaciones complejas; el órgano puede prever primas o compensaciones a los participantes (art. 173).');
+        if (proc==='DIALOGO_COMPETITIVO' && tramitacion==='urgente') warnings.push('En el diálogo competitivo el plazo de solicitudes de participación NO es reducible por urgencia (arts. 174.2 y 119.2.b.4º LCSP).');
+        if (proc==='SDA' && tramitacion!=='ordinaria') warnings.push('El sistema dinámico de adquisición es un proceso totalmente electrónico y permanentemente abierto (arts. 223-226); los plazos mostrados no se reducen por urgencia.');
         if (valor > 0 && tInfo) {
             if (proc==='MENOR' && (tInfo.menor===0 || valor>=tInfo.menor)) warnings.push('El VE indicado no permite contrato menor: límites del art. 118.1 LCSP (obras < 40.000 €; suministros y servicios < 15.000 €; no existe para concesiones).');
             if (proc==='SUPERSIMPLIFICADO' && (tInfo.supersimp===0 || valor>=tInfo.supersimp)) warnings.push('El VE indicado supera el límite del simplificado abreviado: obras < 80.000 €, suministros y servicios < 60.000 € (art. 159.6 LCSP).');
@@ -641,7 +838,7 @@
             if (proc==='ABIERTO_SARA' && valor<tInfo.sara) warnings.push('Con el VE indicado el contrato no alcanza el umbral SARA (arts. 20-22 LCSP y Orden HAC/1517/2025); correspondería Abierto No SARA.');
             if (proc==='ABIERTO_NO_SARA' && valor>=tInfo.sara) warnings.push('Con el VE indicado el contrato es SARA (arts. 20-22 LCSP y Orden HAC/1517/2025); correspondería Abierto SARA con publicación en el DOUE.');
         }
-        if ((proc==='RESTRINGIDO'||proc==='LICITACION_NEGOCIACION') && valor===0) warnings.push('Indica el valor estimado: en restringido y licitación con negociación determina si el contrato es SARA (plazos de los arts. 161 y 164) y si cabe recurso especial (art. 44).');
+        if (['RESTRINGIDO','LICITACION_NEGOCIACION','NEGOCIADO_SIN_PUBLICIDAD','DIALOGO_COMPETITIVO','SDA'].includes(proc) && valor===0) warnings.push('Indica el valor estimado: en estos procedimientos determina si el contrato es SARA (plazos de los arts. 161, 164 y 225) y si cabe recurso especial (art. 44).');
         if (proc==='MENOR' && tramitacion!=='ordinaria') warnings.push('El contrato menor no admite tramitación urgente ni de emergencia.');
         if (proc==='MENOR' && tipo.includes('concesion')) warnings.push('El contrato menor solo existe para obras, suministros y servicios (art. 118.1 LCSP); no es aplicable a concesiones.');
         if (tipo.includes('concesion') && (proc==='SIMPLIFICADO'||proc==='SUPERSIMPLIFICADO')) warnings.push('Las concesiones de obras o servicios no tienen procedimiento simplificado ni supersimplificado (art. 159.1: solo obras, suministros y servicios). Se recomienda Abierto SARA o No SARA.');
@@ -688,12 +885,15 @@
         return warnings;
     }
 
-    function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj) {
+    function buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj, hasRecurso) {
         let s = [];
         valor = valor || 0;
         const esObraOConc = (tipo==='obras' || tipo.includes('concesion'));
         const recursoEspecial = sara || (valor > 0 && (esObraOConc ? valor > 3000000 : valor > 100000));
 
+        if (proc === 'NEGOCIADO_SIN_PUBLICIDAD') {
+            s.push({ id:'pub', name:'Aprobación del expediente (sin anuncio)', color:'gray', art:'Arts. 168 y 170', getDesc:()=>'Negociado sin publicación previa de anuncio de licitación: solo procede en los supuestos tasados del art. 168 LCSP, que deben justificarse en el expediente. Se tramita conforme a las normas del art. 169 en lo que resulte aplicable, salvo la publicidad previa (art. 170.1).', staticDur:0, isHabiles:false, nextDay:true });
+        } else {
         s.push({ id:'pub', name:'Publicación del anuncio', color:'gray', art:'Art. 135 LCSP', getDesc:() => {
             let info = 'Publicación en perfil de contratante';
             if (sara) info += ' y en DOUE';
@@ -701,6 +901,7 @@
             if (sara) info += '. ⚠️ DOUE: el anuncio debe enviarse al DOUE antes que al perfil. El perfil no puede publicarse hasta transcurridas 48h desde la confirmación de recepción del DOUE (salvo que pasen 48h sin publicación en DOUE).';
             return info;
         }, staticDur:0, isHabiles:false, nextDay:true });
+        }
 
         if (tramitacion === 'emergencia') {
             s.push({ id:'emergencia', name:'ACUERDO DE EMERGENCIA', color:'red', art:'Art. 120 LCSP', getDesc:()=>'Régimen excepcional de emergencia. Se actúa de forma inmediata. Plazo máximo de inicio de ejecución: 1 mes desde el acuerdo (art. 120.1.c).', staticDur:0, isHabiles:false });
@@ -763,6 +964,22 @@
                 s.push({ id:'neg', name:'Fase de negociación', color:'orange', art:'Art. 169.5', getDesc:(v)=>`Negociación de las ofertas iniciales y ulteriores durante ${v} días hábiles (estimación; la LCSP no fija plazo). No se negocian los requisitos mínimos de la prestación ni los criterios de adjudicación (art. 169.5). Puede articularse en fases sucesivas para reducir el número de ofertas (art. 169.3). Igualdad de trato y confidencialidad (arts. 169.4 y 169.7).`, slider:{ id:'sl_neg', min:5, max:60, val:15, label:'Días de negociación', txt:'Sin plazo legal. Estimación según la complejidad del contrato.' }, isHabiles:true });
                 s.push({ id:'ofinal', name:'Ofertas definitivas', color:'blue', art:'Art. 169.8', getDesc:(v)=>`Concluidas las negociaciones, se informa a todos los licitadores y se fija un plazo común de ${v} días naturales para presentar ofertas nuevas o revisadas (art. 169.8). Las ofertas definitivas no se negocian (art. 169.5). La LCSP no fija mínimo.`, slider:{ id:'sl_ofinal', min:3, max:30, val:10, label:'Plazo ofertas definitivas', txt:'Plazo común fijado por el órgano de contratación (art. 169.8). Sin mínimo legal.' }, isHabiles:false });
             }
+        } else if (proc === 'DIALOGO_COMPETITIVO') {
+            const solDiag = sara ? 30 : 15;
+            s.push({ id:'sol', name:'Solicitudes de participación', color:'blue', art:'Art. 161 (vía art. 174.2)', getDesc:(v)=>`Plazo de presentación de solicitudes: ${v} días naturales. ${sara?'Mínimo 30 días desde el envío del anuncio al DOUE (art. 161.1).':'Mínimo 15 días desde la publicación del anuncio (art. 161.3).'} En el diálogo competitivo este plazo NO es reducible por urgencia: el art. 174.2 excluye el párrafo segundo del art. 161.1 y el art. 119.2.b.4º lo confirma. Las necesidades y requisitos se definen en el anuncio o en un documento descriptivo (art. 174.1).`, slider:{ id:'sl_sol', min:solDiag, max:solDiag+30, val:solDiag, label:'Plazo solicitudes', txt:`Mínimo legal ${solDiag} días naturales (art. 161 por remisión del art. 174.2). No reducible por urgencia (art. 119.2.b.4º).` }, isHabiles:false });
+            s.push({ id:'sel', name:'Selección de candidatos e invitación al diálogo', color:'purple', art:'Arts. 162 y 174', getDesc:(v)=>`Selección conforme a los criterios del anuncio e invitación simultánea a participar en el diálogo en ${v} días hábiles (estimación; sin plazo legal). Si se limita el número de candidatos, el mínimo es de 3 (art. 174.2). La invitación indica fecha y lugar de inicio de la fase de consulta (art. 174.3).`, slider:{ id:'sl_sel', min:1, max:30, val:5, label:'Días selección/invitación', txt:'Sin plazo legal. Estimación interna del órgano.' }, isHabiles:true });
+            s.push({ id:'neg', name:'Fase de diálogo', color:'orange', art:'Art. 175', getDesc:(v)=>`Diálogo con los candidatos para determinar y definir los medios adecuados para satisfacer las necesidades durante ${v} días hábiles (estimación; la LCSP no fija plazo). Puede desarrollarse en fases sucesivas (art. 175.4). Igualdad de trato y confidencialidad de las soluciones propuestas (art. 175.2 y 175.3).`, slider:{ id:'sl_neg', min:10, max:120, val:30, label:'Días de diálogo', txt:'Sin plazo legal. Estimación según la complejidad de las soluciones.' }, isHabiles:true });
+            s.push({ id:'ofinal', name:'Ofertas definitivas', color:'blue', art:'Art. 176', getDesc:(v)=>`Cerrado el diálogo, se invita a los participantes a presentar su oferta definitiva basada en las soluciones presentadas y especificadas durante la fase de diálogo, en ${v} días naturales. La LCSP no fija plazo mínimo; lo determina la invitación (art. 176).`, slider:{ id:'sl_ofinal', min:5, max:40, val:15, label:'Plazo ofertas definitivas', txt:'Sin mínimo legal. Plazo fijado en la invitación a presentar la oferta definitiva (art. 176).' }, isHabiles:false });
+        } else if (proc === 'SDA') {
+            s.push({ id:'sol', name:'Solicitudes de participación (implantación)', color:'blue', art:'Art. 225.2', getDesc:(v)=>`Plazo mínimo de presentación de solicitudes de participación: ${v} días naturales, contados desde el envío del anuncio de licitación a la Oficina de Publicaciones de la UE (art. 225.2). No puede ampliarse una vez enviada la invitación para la primera contratación específica. El SDA sigue las normas del procedimiento restringido (art. 224.1); se admite a todos los solicitantes que cumplan los criterios de selección, sin límite (art. 224.2). Cualquier empresa puede incorporarse durante toda la vigencia (art. 225.1).`, slider:{ id:'sl_sol', min:30, max:60, val:30, label:'Plazo solicitudes', txt:'Mínimo legal 30 días desde el envío del anuncio (art. 225.2 LCSP).' }, isHabiles:false });
+            s.push({ id:'sel', name:'Evaluación y admisión al sistema', color:'purple', art:'Art. 225.3', getDesc:(v)=>`Evaluación de las solicitudes conforme a los criterios de selección en ${v} días hábiles desde su recepción. Máximo legal: 10 días hábiles, prorrogables a 15 en casos justificados (art. 225.3). Se informa lo antes posible a cada empresa de su admisión (art. 225.4).`, slider:{ id:'sl_sel', min:1, max:15, val:10, label:'Días de evaluación', txt:'Máximo 10 días hábiles, prorrogable a 15 en casos concretos justificados (art. 225.3).' }, isHabiles:true });
+            s.push({ id:'inv_sda', name:'Invitación al contrato específico', color:'cyan', art:'Art. 226.2', getDesc:(v)=>`Cada contrato específico es objeto de una licitación: se invita a TODAS las empresas admitidas en el sistema (o en la categoría correspondiente) en ${v} día${v>1?'s':''} hábil${v>1?'es':''} (estimación; sin plazo legal). Comunicaciones exclusivamente por medios electrónicos (art. 224.4).`, slider:{ id:'sl_invsda', min:1, max:10, val:1, label:'Días gestión invitación', txt:'Sin plazo legal. Estimación interna del órgano.' }, isHabiles:true });
+            s.push({ id:'pres', name:'Ofertas del contrato específico', color:'blue', art:'Art. 226.3', getDesc:(v)=>`Plazo de presentación de ofertas: ${v} días naturales contados a partir de la fecha de envío de la invitación escrita. Mínimo legal: 10 días (art. 226.3). El contrato se adjudica a la mejor oferta según los criterios del anuncio del sistema (art. 226.4).`, slider:{ id:'sl_pres', min:10, max:40, val:10, label:'Plazo ofertas', txt:'Mínimo legal 10 días desde el envío de la invitación (art. 226.3 LCSP).' }, isHabiles:false });
+        } else if (proc === 'NEGOCIADO_SIN_PUBLICIDAD') {
+            s.push({ id:'sel', name:'Invitaciones a empresas capacitadas', color:'purple', art:'Arts. 169.2 y 170.1', getDesc:(v)=>`Envío de invitaciones en ${v} días hábiles (estimación; sin plazo legal). Se aplican las normas del art. 169 según el número de participantes (art. 170.1): si se limita el número de empresas, el mínimo es de 3 candidatos cuando sea posible (art. 169.2). Si únicamente participa un candidato, se negocia con él (art. 170.2).`, slider:{ id:'sl_sel', min:1, max:20, val:5, label:'Días invitaciones', txt:'Sin plazo legal. Estimación interna del órgano de contratación.' }, isHabiles:true });
+            s.push({ id:'pres', name:'Ofertas iniciales', color:'blue', art:'Art. 169 (vía art. 170.1)', getDesc:(v)=>`Presentación de ofertas iniciales en ${v} días naturales. Al no existir anuncio de licitación, la LCSP no fija plazo mínimo: lo determina la invitación, que debe ser suficiente para elaborar la oferta.`, slider:{ id:'sl_pres', min:5, max:40, val:10, label:'Plazo ofertas iniciales', txt:'Sin mínimo legal. Plazo fijado en la invitación.' }, isHabiles:false });
+            s.push({ id:'neg', name:'Fase de negociación', color:'orange', art:'Arts. 169.5 y 170.2', getDesc:(v)=>`Negociación de las ofertas durante ${v} días hábiles (estimación; sin plazo legal). No se negocian los requisitos mínimos ni los criterios de adjudicación (art. 169.5). Debe negociarse incluso si solo participa un candidato, siempre que sea posible (art. 170.2). Constancia en el expediente de invitaciones, ofertas y ventajas obtenidas (art. 169.6).`, slider:{ id:'sl_neg', min:5, max:60, val:15, label:'Días de negociación', txt:'Sin plazo legal. Estimación según la complejidad.' }, isHabiles:true });
+            s.push({ id:'ofinal', name:'Ofertas definitivas', color:'blue', art:'Art. 169.8', getDesc:(v)=>`Concluidas las negociaciones, se fija un plazo común de ${v} días naturales para las ofertas definitivas (art. 169.8). Sin mínimo legal.`, slider:{ id:'sl_ofinal', min:3, max:30, val:10, label:'Plazo ofertas definitivas', txt:'Plazo común fijado por el órgano (art. 169.8). Sin mínimo legal.' }, isHabiles:false });
         } else {
 
         let pDaysBase = sara ? (tipo.includes('concesion') ? 30 : 35) : (proc==='SIMPLIFICADO' ? (tipo==='obras' ? 20 : 15) : tInfo.pres);
@@ -833,8 +1050,12 @@
             ? 'Máximo legal: apertura dentro de los 20 días naturales siguientes al fin de presentación (art. 157.3, imperativo). En simplificado, la valoración de juicios de valor no puede superar 7 días (art. 159.4.e; naturales conforme a la D.A. 12ª).'
             : 'Máximo legal: la apertura del primer sobre debe efectuarse dentro de los 20 días naturales siguientes al fin del plazo de presentación (art. 157.3, "en todo caso").';
 
-        if (proc === 'LICITACION_NEGOCIACION') {
+        if (proc === 'LICITACION_NEGOCIACION' || proc === 'NEGOCIADO_SIN_PUBLICIDAD') {
             s.push({ id:'m1', name:'Valoración de ofertas definitivas', color:'purple', art:'Art. 169.8', getDesc:(v)=>`La mesa de contratación verifica que las ofertas definitivas se ajustan a los requisitos mínimos y del pliego, las valora conforme a los criterios de adjudicación y eleva propuesta al órgano de contratación en ${v} días hábiles (art. 169.8). La LCSP no fija plazo para este trámite.`, slider:{ id:'sl_m1', min:1, max:20, val:5, label:'Días de valoración', txt:'Sin plazo legal específico. Estimación del órgano.' }, isHabiles:true });
+        } else if (proc === 'DIALOGO_COMPETITIVO') {
+            s.push({ id:'m1', name:'Valoración de ofertas definitivas', color:'purple', art:'Arts. 174.1 y 176', getDesc:(v)=>`Evaluación de las ofertas definitivas conforme a los criterios de adjudicación definidos en el anuncio o en el documento descriptivo (art. 174.1) en ${v} días hábiles (estimación; sin plazo legal). Pueden solicitarse precisiones o aclaraciones que no modifiquen elementos fundamentales de la oferta (art. 176).`, slider:{ id:'sl_m1', min:1, max:30, val:7, label:'Días de valoración', txt:'Sin plazo legal específico. Estimación del órgano.' }, isHabiles:true });
+        } else if (proc === 'SDA') {
+            s.push({ id:'m1', name:'Valoración de ofertas', color:'purple', art:'Art. 226.4', getDesc:(v)=>`Valoración de las ofertas del contrato específico en ${v} días hábiles (estimación; sin plazo legal). El contrato se adjudica al licitador con la mejor oferta según los criterios detallados en el anuncio del sistema, precisables en la invitación (art. 226.4).`, slider:{ id:'sl_m1', min:1, max:15, val:3, label:'Días de valoración', txt:'Sin plazo legal específico. Estimación del órgano.' }, isHabiles:true });
         } else if (nSobres === 3) {
             s.push({ id:'m1', name:'Mesa 1: Administrativa y Juicios', color:'purple', art:'Art. 157.3 / 159', getDesc:(v)=>`Apertura sobre A (administrativa) y sobre B (juicios de valor) en ${v} días naturales. Máximo legal de apertura: 20 días naturales desde el fin de presentación (art. 157.3).`, slider:{ id:'sl_m1', min:1, max:maxMesa1, val:defMesa, label:'Días hasta Mesa 1', txt:txtMesa1 }, isHabiles:false });
             s.push({ id:'ev', name:'Evaluación Técnica (Sobre B)', color:'purple', art:proc==='SIMPLIFICADO'?'Art. 159.4.e':'Art. 157.5', getDesc:(v)=>`Informe técnico de los servicios del órgano en ${v} días${proc==='SIMPLIFICADO'?' naturales. Máximo legal en simplificado: 7 días (art. 159.4.e)':' hábiles. Sin máximo legal en el abierto ordinario (informes del art. 157.5)'}.`, slider:{ id:'sl_ev', min:1, max:proc==='SIMPLIFICADO'?7:30, val:(proc==='SIMPLIFICADO')?3:7, label:'Días de Evaluación Técnica', txt:(proc==='SIMPLIFICADO'?'Máx. 7 días (art. 159.4.e); al no decir "hábiles", se computan naturales conforme a la D.A. 12ª LCSP.':'Plazo orientativo. Sin máximo legal para el abierto ordinario.') }, isHabiles:proc!=='SIMPLIFICADO' });
@@ -867,7 +1088,13 @@
         s.push({ id:'adj', name:'Resolución Adjudicación', color:'amber', art:artAdj, getDesc:(v)=>`Resolución de adjudicación en ${v} días hábiles. Máximo legal: ${adjMax} días hábiles siguientes a la recepción de la documentación (art. 150.3).`, slider:{ id:'sl_adj', min:1, max:adjMax, val:adjMax, label:'Plazo Adjudicación', txt:`Máx. ${adjMax} días hábiles (art. 150.3${tramitacion==='urgente'?(proc==='SIMPLIFICADO'?'; sin reducción por urgencia en el simplificado, art. 159.5':' reducido a la mitad por urgencia, art. 119.2.b'):''}). Mínimo 1 día.` }, isHabiles:true });
 
         if (proc !== 'SUPERSIMPLIFICADO') {
-            if (recursoEspecial) {
+            if (recursoEspecial && hasRecurso) {
+                s.push({ id:'rec_int', name:'Interposición del recurso especial', color:'red', art:'Art. 50.1 / Art. 53', getDesc:(v)=>`El recurso contra la adjudicación se interpone el día ${v} del plazo de 15 días hábiles contados desde la remisión de la notificación (art. 50.1.d). Al recurrirse el acto de adjudicación, la tramitación del expediente queda automáticamente en suspenso (art. 53), por lo que no puede formalizarse el contrato.`, slider:{ id:'sl_recint', min:1, max:15, val:15, label:'Día de interposición', txt:'Plazo de interposición: 15 días hábiles (art. 50.1 LCSP). La suspensión automática del art. 53 se mantiene hasta resolución expresa (art. 56.3).' }, isHabiles:true });
+                s.push({ id:'rec_exp', name:'Remisión del expediente e informe', color:'orange', art:'Art. 56.2', getDesc:()=>'El órgano de contratación remite el expediente acompañado de su informe dentro de los 2 días hábiles siguientes a la reclamación del órgano competente para resolver el recurso (art. 56.2).', staticDur:2, isHabiles:true });
+                s.push({ id:'rec_aleg', name:'Traslado y alegaciones de interesados', color:'purple', art:'Art. 56.3', getDesc:(v)=>`Dentro de los 5 días hábiles siguientes a la interposición se da traslado del recurso a los restantes interesados, que disponen de 5 días hábiles para formular alegaciones (art. 56.3). En el mismo plazo se decide sobre medidas cautelares y sobre el mantenimiento de la suspensión automática. Margen configurado: ${v} días hábiles. Si se abre período de prueba, este dura 10 días hábiles adicionales (art. 56.4).`, slider:{ id:'sl_recaleg', min:10, max:25, val:10, label:'Días traslado y alegaciones', txt:'5 días hábiles para el traslado + 5 días hábiles de alegaciones (art. 56.3). Prueba opcional: +10 días hábiles (art. 56.4).' }, isHabiles:true });
+                s.push({ id:'rec_res', name:'Resolución del recurso', color:'pink', art:'Art. 57', getDesc:(v)=>`Recibidas las alegaciones, el órgano competente debe resolver dentro de los 5 días hábiles siguientes y notificar a todos los interesados (art. 57.1). La resolución acuerda el levantamiento de la suspensión (art. 57.3). Margen configurado: ${v} días hábiles. Transcurridos 2 meses desde la interposición sin resolución notificada, puede entenderse desestimado a efectos del contencioso-administrativo (art. 57.5); en la práctica los tribunales pueden demorarse más.`, slider:{ id:'sl_recres', min:5, max:60, val:5, label:'Días hasta resolución', txt:'Plazo legal: 5 días hábiles tras alegaciones (art. 57.1). Desestimación presunta a los 2 meses (art. 57.5).' }, isHabiles:true });
+                s.push({ id:'form', name:'Formalización (tras el recurso)', color:'emerald', art:'Art. 153.3, párr. 2º', getDesc:(v)=>`Levantada la suspensión o desestimado el recurso, los servicios del órgano requieren al adjudicatario para formalizar el contrato en un plazo no superior a 5 días a contar desde el siguiente a la recepción del requerimiento (art. 153.3, párr. 2º). Configurado: ${v} días naturales.`, slider:{ id:'sl_form', min:1, max:5, val:5, label:'Días hasta formalización', txt:'Máximo 5 días desde el siguiente a la recepción del requerimiento (art. 153.3, párr. 2º LCSP).' }, isHabiles:false });
+            } else if (recursoEspecial) {
                 s.push({ id:'form', name:'Formalización', color:'emerald', art:'Art. 153.3 / Art. 44', getDesc:(v)=>`Período de espera: ${v} días hábiles. No puede formalizarse antes de que transcurran 15 días hábiles desde la remisión de la notificación de adjudicación, por ser el contrato susceptible de recurso especial (arts. 153.3 y 44 LCSP: obras y concesiones VE &gt; 3.000.000 €, suministros y servicios VE &gt; 100.000 €, o SARA). El plazo de interposición del recurso es de 15 días hábiles (art. 50.1). Transcurrido el período sin recurso suspensivo, se requiere al adjudicatario para firmar en un máximo de 5 días (art. 153.3, párr. 2º).${tramitacion==='urgente'?' En urgente, este período de espera NO se reduce (art. 119.2.b.1º LCSP).':''}`, slider:{ id:'sl_form', min:15, max:30, val:15, label:'Días hasta formalización', txt:'Mínimo legal 15 días hábiles (art. 153.3 LCSP). Las CCAA pueden ampliarlo hasta un mes. No reducible por urgencia (art. 119.2.b.1º).' }, isHabiles:true });
             } else {
                 let espera = 15;
@@ -955,7 +1182,7 @@
             }
 
             document.getElementById(`date-${ev.id}`).textContent = start.getTime()===end.getTime() ? formatDate(start) : `${formatDate(start)} ➜ ${formatDate(end)}`;
-            calEvents.push({ name:ev.name, start, end, color:ev.color, isHabiles:ev.isHabiles, art:ev.art, dur });
+            calEvents.push({ id:ev.id, name:ev.name, start, end, color:ev.color, isHabiles:ev.isHabiles, art:ev.art, dur });
         }
 
         globalEvents = calEvents.filter(e => !e.name.includes('art. 138.3'));
@@ -981,6 +1208,29 @@
             festEl.classList.remove('hidden');
         } else {
             festEl.classList.add('hidden');
+        }
+
+        const art158El = document.getElementById('art158Warning');
+        const apEv = evs.find(e => e.id === 'm1');
+        const adjEv = evs.find(e => e.id === 'adj');
+        if (apEv && adjEv && ['ABIERTO_SARA','ABIERTO_NO_SARA','SIMPLIFICADO','SUPERSIMPLIFICADO'].includes(globalConfig.proc)) {
+            let lim2 = new Date(apEv.start); lim2.setMonth(lim2.getMonth()+2);
+            let lim15 = addDays(apEv.start, 15);
+            if (globalConfig.hasBaja) { lim2 = addHabiles(lim2, 15); lim15 = addHabiles(lim15, 15); }
+            let msg = '';
+            if (adjEv.end > lim2) {
+                msg = `La adjudicación prevista (${formatDate(adjEv.end)}) supera el plazo máximo de 2 meses desde la apertura de proposiciones${globalConfig.hasBaja?' ampliado en 15 días hábiles por la baja anormal (art. 158.3)':''}: límite ${formatDate(lim2)} (art. 158.2, salvo que el pliego fije otro plazo). De excederse, los licitadores tendrían derecho a retirar su proposición (art. 158.4).`;
+            } else if (adjEv.end > lim15) {
+                msg = `Si el único criterio de adjudicación fuera el precio, el máximo sería de 15 días desde el día siguiente a la apertura${globalConfig.hasBaja?' más 15 días hábiles por la baja anormal (art. 158.3)':''}: límite ${formatDate(lim15)} (art. 158.1), que la configuración actual superaría (adjudicación: ${formatDate(adjEv.end)}). Con pluralidad de criterios el máximo de 2 meses (límite ${formatDate(lim2)}, art. 158.2) sí se cumple.`;
+            }
+            if (msg) {
+                document.getElementById('art158Text').textContent = msg;
+                art158El.classList.remove('hidden');
+            } else {
+                art158El.classList.add('hidden');
+            }
+        } else {
+            art158El.classList.add('hidden');
         }
 
         const today = new Date(); today.setHours(0,0,0,0);
@@ -1204,7 +1454,7 @@
         const params = new URLSearchParams({
             proc:cfg.proc, tipo:cfg.tipo, valor:cfg.valor||'', fecha:cfg.fecha,
             sobres:cfg.nSobres, entidad:cfg.entidad, tramitacion:cfg.tramitacion, ccaa:cfg.ccaa,
-            baja:cfg.hasBaja?'1':'0', aip:cfg.aip?'1':'0', elec:cfg.ofertasElec?'1':'0', subsanacion:cfg.hasSubsanacion?'1':'0', posadj:cfg.posAdj?'1':'0'
+            baja:cfg.hasBaja?'1':'0', aip:cfg.aip?'1':'0', elec:cfg.ofertasElec?'1':'0', subsanacion:cfg.hasSubsanacion?'1':'0', posadj:cfg.posAdj?'1':'0', recurso:cfg.hasRecurso?'1':'0'
         });
         history.replaceState({}, '', '?'+params.toString());
         navigator.clipboard.writeText(window.location.href).then(()=>showToast('URL copiada ✓')).catch(()=>showToast('URL actualizada en la barra ✓'));
@@ -1233,6 +1483,7 @@
         if (p.get('elec')==='1') document.getElementById('ofertasElecCheck').checked = true;
         if (p.get('subsanacion')==='1') document.getElementById('subsanacionCheck').checked = true;
         if (p.get('posadj')==='1') document.getElementById('posAdjCheck').checked = true;
+        if (p.get('recurso')==='1') document.getElementById('recursoCheck').checked = true;
         clearTimeout(calcDebounce);
         calcDebounce = setTimeout(triggerCalc, 400);
     }
@@ -1249,7 +1500,7 @@
                 else if (ev.nextDay) curr = addDays(end, 1);
                 else curr = new Date(end);
             }
-            events.push({ name:ev.name, start, end, dur, isHabiles:ev.isHabiles, color:ev.color, art:ev.art||'' });
+            events.push({ id:ev.id, name:ev.name, start, end, dur, isHabiles:ev.isHabiles, color:ev.color, art:ev.art||'' });
         }
         return events;
     }
@@ -1266,11 +1517,11 @@
         let cmpTInfo = JSON.parse(JSON.stringify(thresholds[cfg.tipo]));
         if (cfg.entidad==='OTRAS'&&(cfg.tipo==='servicios'||cfg.tipo==='suministros')) { cmpTInfo.sara=216000; }
         let cmpProc = cmpProcRaw || cfg.proc;
-        const cmpSara = (cmpProc==='ABIERTO_SARA')||((cmpProc==='RESTRINGIDO'||cmpProc==='LICITACION_NEGOCIACION')&&cfg.valor>0&&cfg.valor>=cmpTInfo.sara);
+        const cmpSara = (cmpProc==='ABIERTO_SARA')||(['RESTRINGIDO','LICITACION_NEGOCIACION','NEGOCIADO_SIN_PUBLICIDAD','DIALOGO_COMPETITIVO','SDA'].includes(cmpProc)&&cfg.valor>0&&cfg.valor>=cmpTInfo.sara);
         const cmpNSobres = cmpSobresRaw ? parseInt(cmpSobresRaw) : cfg.nSobres;
         const cmpT0 = new Date(cmpFecha+'T00:00:00');
         cmpT0.setHours(0,0,0,0);
-        const skelB = buildSkeleton(cmpProc, cfg.tipo, cmpSara, cmpNSobres, cfg.hasBaja, cmpTInfo, cfg.entidad, cmpTramitacion, cmpAip, cmpElec, cfg.hasSubsanacion, cfg.valor, cfg.posAdj);
+        const skelB = buildSkeleton(cmpProc, cfg.tipo, cmpSara, cmpNSobres, cfg.hasBaja, cmpTInfo, cfg.entidad, cmpTramitacion, cmpAip, cmpElec, cfg.hasSubsanacion, cfg.valor, cfg.posAdj, cfg.hasRecurso);
         const eventsB = computeEventsFromSkeleton(skelB, cmpT0);
         const eventsA = globalEvents;
         const maxLen = Math.max(eventsA.length, eventsB.length);
@@ -1328,6 +1579,7 @@
         if (ofertasElec) extras += '<div class="bg-blue-50 border border-blue-200 p-3 rounded-lg"><span class="font-semibold text-blue-800">Oferta electrónica:</span> <span class="font-bold text-blue-900">Sí (-5 días SARA)</span></div>';
         if (hasSubsanacion) extras += '<div class="bg-orange-50 border border-orange-200 p-3 rounded-lg"><span class="font-semibold text-orange-800">Subsanación:</span> <span class="font-bold text-orange-900">Sí (+3 días)</span></div>';
         if (globalConfig.posAdj) extras += '<div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg"><span class="font-semibold text-emerald-800">Fase ejecución:</span> <span class="font-bold text-emerald-900">Incluida (arts. 154, 198.4, 210, 111)</span></div>';
+        if (globalConfig.hasRecurso) extras += '<div class="bg-red-50 border border-red-200 p-3 rounded-lg"><span class="font-semibold text-red-800">Recurso especial:</span> <span class="font-bold text-red-900">Simulado (arts. 50-57)</span></div>';
         document.getElementById('summaryContent').innerHTML = `
             <div class="bg-slate-100 p-3 rounded-lg"><span class="font-semibold text-slate-700">Procedimiento:</span> <span class="font-bold">${proc.replace(/_/g,' ')}</span></div>
             <div class="bg-slate-100 p-3 rounded-lg"><span class="font-semibold text-slate-700">Tipo contrato:</span> <span class="font-bold">${tipo.replace('_',' ').toUpperCase()}</span></div>
@@ -1356,6 +1608,7 @@
         const ofertasElec = document.getElementById('ofertasElecCheck').checked;
         const hasSubsanacion = document.getElementById('subsanacionCheck').checked;
         const posAdj = document.getElementById('posAdjCheck').checked;
+        const hasRecurso = document.getElementById('recursoCheck').checked;
 
         if (!tipo || !t0Str) return;
         if (tipo==='mixto') tipo = document.getElementById('mixtoPrincipal').value || 'servicios';
@@ -1376,9 +1629,12 @@
             else if (tInfo.simp>0&&(tipo==='obras' ? valor<=tInfo.simp : valor<tInfo.simp)) proc='SIMPLIFICADO';
             else proc=valor>=tInfo.sara?'ABIERTO_SARA':'ABIERTO_NO_SARA';
         }
-        const sara = (proc==='ABIERTO_SARA')||(isAuto&&valor>=tInfo.sara)||((proc==='RESTRINGIDO'||proc==='LICITACION_NEGOCIACION')&&valor>0&&valor>=tInfo.sara);
+        const sara = (proc==='ABIERTO_SARA')||(isAuto&&valor>=tInfo.sara)||(['RESTRINGIDO','LICITACION_NEGOCIACION','NEGOCIADO_SIN_PUBLICIDAD','DIALOGO_COMPETITIVO','SDA'].includes(proc)&&valor>0&&valor>=tInfo.sara);
 
         const warnings = checkCoherencia(pMan==='AUTO'?'AUTO':pMan, tipo, tramitacion, nSobres, valor, tInfo);
+        const esOC = (tipo==='obras'||tipo.includes('concesion'));
+        const recurrible = sara || (valor>0 && (esOC ? valor>3000000 : valor>100000));
+        if (hasRecurso && !recurrible) warnings.push('Con los datos indicados el contrato no es susceptible de recurso especial (art. 44: obras y concesiones VE > 3.000.000 €; suministros y servicios VE > 100.000 €, o SARA); el escenario de recurso no se aplicará. Indica el VE si procede.');
         const warnEl = document.getElementById('coherenceWarnings');
         if (warnings.length) {
             warnEl.innerHTML = `<div class="bg-yellow-50 border border-yellow-300 rounded-xl p-4 text-sm text-yellow-900"><p class="font-bold mb-2">⚠️ Avisos de coherencia</p>${warnings.map(w=>`<p class="mb-1">· ${w}</p>`).join('')}</div>`;
@@ -1387,10 +1643,10 @@
             warnEl.classList.add('hidden');
         }
 
-        globalConfig = { proc, tipo, valor, fecha:t0Str, nSobres, entidad, tramitacion, ccaa, hasBaja, sara, aip, ofertasElec, hasSubsanacion, posAdj, isAuto };
+        globalConfig = { proc, tipo, valor, fecha:t0Str, nSobres, entidad, tramitacion, ccaa, hasBaja, sara, aip, ofertasElec, hasSubsanacion, posAdj, hasRecurso, isAuto };
 
         let maxEnd = new Date(globalT0);
-        const tempSkel = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj);
+        const tempSkel = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj, hasRecurso);
         let estDias = 30;
         for (let ev of tempSkel) {
             const d = ev.slider ? (ev.slider.max || ev.slider.val) : (ev.staticDur || 0);
