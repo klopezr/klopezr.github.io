@@ -1,0 +1,33 @@
+{
+  "id": "./",
+  "name": "Simulador de Plazos LCSP - Ley 9/2017",
+  "short_name": "Plazos LCSP",
+  "description": "Simulador de plazos de licitación según la Ley 9/2017 de Contratos del Sector Público: procedimientos, calendario, garantías y recurso especial.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#1e40af",
+  "background_color": "#f8fafc",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
