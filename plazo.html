@@ -196,6 +196,10 @@
                     <label class="block text-sm font-bold text-slate-700 mb-2">Valor Estimado (€)</label>
                     <input type="number" id="valorEstimado" min="0" step="0.01" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 bg-slate-50 outline-none transition-all">
                     <p class="text-[11px] text-slate-500 mt-1.5 leading-snug">Con procedimiento manual es opcional: valida límites legales, umbral SARA y recurso especial (art. 44).</p>
+                    <label class="flex items-center gap-2 mt-1.5 cursor-pointer">
+                        <input type="checkbox" id="lotesCheck" class="w-4 h-4 rounded border-slate-300 text-blue-600">
+                        <span class="text-[11px] font-medium text-slate-600">Contrato dividido en lotes (art. 101.12)</span>
+                    </label>
                 </div>
             </div>
 
@@ -271,19 +275,19 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
                 <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" id="bajaAnormal" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <input type="checkbox" id="bajaAnormal" class="w-5 h-5 flex-shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm font-bold text-slate-800">Baja Temeraria/Anormal (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-61" target="_blank" class="text-blue-600 hover:underline">Art. 149</a>)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" id="subsanacionCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <input type="checkbox" id="subsanacionCheck" class="w-5 h-5 flex-shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm font-bold text-slate-800">Subsanación documental (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902#a1-53" target="_blank" class="text-blue-600 hover:underline">Art. 141.2</a>)</span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" id="posAdjCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <input type="checkbox" id="posAdjCheck" class="w-5 h-5 flex-shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm font-bold text-slate-800">Fase de ejecución y post-formalización <span class="font-normal text-xs text-slate-500">(anuncio art. 154, recepción art. 210, pago art. 198.4, garantía art. 111 — alarga el cronograma)</span></span>
                 </label>
                 <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" id="recursoCheck" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <input type="checkbox" id="recursoCheck" class="w-5 h-5 flex-shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                     <span class="text-sm font-bold text-slate-800">Simular recurso especial interpuesto <span class="font-normal text-xs text-slate-500">(arts. 50-57 — solo contratos recurribles del art. 44; suspende la formalización, art. 53)</span></span>
                 </label>
             </div>
@@ -396,6 +400,15 @@
                     <tbody id="hitosBody"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div id="ganttCard" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 fade-in">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                Cronograma (vista Gantt)
+            </h3>
+            <div id="ganttContainer" class="overflow-x-auto"></div>
+            <p class="text-[11px] text-slate-400 mt-3">La línea azul vertical marca el día de hoy. Pasa el ratón por cada barra para ver sus fechas y duración.</p>
         </div>
 
         <div id="bannerTitulares" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center shadow-sm fade-in">
@@ -539,7 +552,7 @@
 
     document.getElementById('fechaAnuncio').valueAsDate = new Date();
 
-    const watchedIds = ['procManual','tipoContrato','valorEstimado','tipoTramitacion','fechaAnuncio','numSobres','tipoEntidad','ccaa','bajaAnormal','subsanacionCheck','posAdjCheck','recursoCheck','aipCheck','ofertasElecCheck','mixtoPrincipal'];
+    const watchedIds = ['procManual','tipoContrato','valorEstimado','lotesCheck','tipoTramitacion','fechaAnuncio','numSobres','tipoEntidad','ccaa','bajaAnormal','subsanacionCheck','posAdjCheck','recursoCheck','aipCheck','ofertasElecCheck','mixtoPrincipal'];
     watchedIds.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -664,6 +677,7 @@
         document.getElementById('subsanacionCheck').checked = !!c.hasSubsanacion;
         document.getElementById('posAdjCheck').checked = !!c.posAdj;
         document.getElementById('recursoCheck').checked = !!c.hasRecurso;
+        document.getElementById('lotesCheck').checked = !!c.hasLotes;
         document.getElementById('aipCheck').checked = !!c.aip;
         document.getElementById('ofertasElecCheck').checked = !!c.ofertasElec;
         clearTimeout(calcDebounce);
@@ -827,8 +841,9 @@
     function formatDate(date) { return date.toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }); }
     function getMonthName(m, y) { return new Date(y, m, 1).toLocaleDateString('es-ES', { month:'long', year:'numeric' }); }
 
-    function checkCoherencia(proc, tipo, tramitacion, nSobres, valor, tInfo) {
+    function checkCoherencia(proc, tipo, tramitacion, nSobres, valor, tInfo, hasLotes) {
         const warnings = [];
+        if (hasLotes) warnings.push('Contrato por lotes: a efectos de umbrales (SARA, simplificado, contrato menor) se computa el valor global estimado de la TOTALIDAD de los lotes, no el de cada lote por separado (art. 101.12 LCSP; regla aplicable también a concesiones). Introduce como VE la suma de todos los lotes.');
         if (proc==='LICITACION_NEGOCIACION') warnings.push('La licitación con negociación solo puede utilizarse cuando concurre alguno de los supuestos tasados del art. 167 LCSP; debe justificarse en el expediente.');
         if (proc==='NEGOCIADO_SIN_PUBLICIDAD') warnings.push('El negociado sin publicidad solo procede en los supuestos tasados del art. 168 LCSP (oferta única, exclusividad, imperiosa urgencia, etc.); debe justificarse en el expediente (art. 170.1).');
         if (proc==='DIALOGO_COMPETITIVO') warnings.push('El diálogo competitivo procede en los supuestos del art. 167 LCSP, a los que remite el art. 172.3, y se reserva a prestaciones complejas; el órgano puede prever primas o compensaciones a los participantes (art. 173).');
@@ -1111,7 +1126,7 @@
             if (tramitacion==='urgente') {
                 s.push({ id:'inicioEjec', name:'Inicio de ejecución (urgencia)', color:'red', art:'Art. 119.2.c', getDesc:(v)=>`En tramitación urgente, el plazo de inicio de la ejecución no puede exceder de 1 mes desde la formalización (art. 119.2.c). Margen configurado: ${v} días naturales.`, slider:{ id:'sl_iniejec', min:1, max:30, val:30, label:'Días hasta inicio ejecución', txt:'Máximo legal: 1 mes desde la formalización (art. 119.2.c LCSP).' }, isHabiles:false });
             }
-            s.push({ id:'ejec', name:'Ejecución del contrato (estimada)', color:'cyan', art:'Art. 29', getDesc:(v)=>`Duración estimada de la ejecución: ${v} días naturales. La duración real se fija en el pliego conforme al art. 29 LCSP; este valor es solo una estimación para el cronograma.`, slider:{ id:'sl_ejec', min:15, max:365, val:90, label:'Duración ejecución (estimada)', txt:'Según pliego (art. 29 LCSP). Valor orientativo, ajústalo a tu contrato.' }, isHabiles:false });
+            s.push({ id:'ejec', name:'Ejecución del contrato (estimada)', color:'cyan', art:'Art. 29', getDesc:(v)=>`Duración estimada de la ejecución: ${v} días naturales. La duración real se fija en el pliego conforme al art. 29 LCSP; este valor es solo una estimación para el cronograma.${(tipo==='servicios'||tipo==='suministros')?' Recuerda: los contratos de suministros y de servicios de prestación sucesiva tienen una duración máxima de 5 años, prórrogas incluidas (art. 29.4); el arrendamiento de bienes muebles también (art. 29.5).':''}${tipo.includes('concesion')?' Recuerda: si la concesión supera 5 años, su duración no puede exceder del tiempo razonable de recuperación de las inversiones, con topes de 40 años (concesión de obras y de servicios con ejecución de obras), 25 años (servicios no sanitarios) y 10 años (servicios sanitarios) (art. 29.6).':''}`, slider:{ id:'sl_ejec', min:15, max:365, val:90, label:'Duración ejecución (estimada)', txt:'Según pliego (art. 29 LCSP). Valor orientativo, ajústalo a tu contrato.' }, isHabiles:false });
             s.push({ id:'recep', name:'Recepción / conformidad', color:'orange', art:'Art. 210.2', getDesc:(v)=>`Acto formal y positivo de recepción o conformidad dentro del mes siguiente a la entrega o realización del objeto del contrato (art. 210.2), salvo plazo distinto fijado en el PCAP. Configurado: ${v} días naturales. Debe comunicarse a la Intervención, cuando sea preceptivo, para su eventual asistencia.`, slider:{ id:'sl_recep', min:1, max:30, val:30, label:'Días hasta recepción', txt:'Máximo legal: 1 mes desde la entrega (art. 210.2), salvo que el pliego determine otro plazo por las características del contrato.' }, isHabiles:false });
             s.push({ id:'pago', name:'Aprobación de conformidad y pago', color:'teal', art:'Art. 198.4', getDesc:(v)=>`La Administración debe aprobar las certificaciones de obra o los documentos de conformidad dentro de los 30 días siguientes a la entrega efectiva, y abonar el precio dentro de los 30 días siguientes a esa aprobación (art. 198.4). Configurado: ${v} días naturales hasta el pago. La demora devenga intereses y costes de cobro (Ley 3/2004); si la factura se presenta tarde en el registro, el cómputo de intereses no se inicia hasta 30 días desde su correcta presentación (art. 198.4, párr. 3º). Liquidación: 30 días desde el acta de recepción, salvo obras (arts. 210.4 y 243).`, slider:{ id:'sl_pago', min:1, max:60, val:30, label:'Días hasta el pago', txt:'Máximo legal: 30 días para aprobar la conformidad desde la entrega + 30 días para pagar desde la aprobación (art. 198.4). Demora > 4 meses: el contratista puede suspender (198.5); > 6 meses: puede resolver (198.6).' }, isHabiles:false });
             s.push({ id:'gar', name:'Plazo de garantía', color:'pink', art:'Art. 210.3', getDesc:(v)=>`Plazo de garantía de ${v} días naturales desde la recepción o conformidad, fijado en el pliego (art. 210.3). En obras no puede ser inferior a 1 año, salvo casos especiales (art. 243.3). Transcurrido sin objeciones de la Administración, queda extinguida la responsabilidad del contratista (salvo vicios ocultos, art. 244 en obras).`, slider:{ id:'sl_gar', min:30, max:730, val:365, label:'Plazo de garantía', txt:'Se fija en el pliego (art. 210.3). En obras, mínimo 1 año salvo casos especiales (art. 243.3). Puede exceptuarse justificadamente por la naturaleza del contrato (art. 210.3).' }, isHabiles:false });
@@ -1193,6 +1208,43 @@
         actualizarBanners();
     }
 
+    function renderGantt(evs) {
+        const card = document.getElementById('ganttCard');
+        const cont = document.getElementById('ganttContainer');
+        if (!evs.length) { card.classList.add('hidden'); return; }
+        const min = Math.min(...evs.map(e => e.start.getTime()));
+        const max = Math.max(...evs.map(e => e.end.getTime()));
+        const span = Math.max(max - min, 86400000);
+        const pct = t => ((t - min) / span) * 100;
+        let grid = '';
+        let m = new Date(new Date(min).getFullYear(), new Date(min).getMonth(), 1);
+        const fin = new Date(max);
+        let guard = 0;
+        while (m <= fin && guard < 48) {
+            const left = pct(m.getTime());
+            if (left >= 0 && left <= 100) {
+                grid += `<div class="absolute top-0 bottom-0 border-l border-slate-200" style="left:${left.toFixed(2)}%"><span class="absolute top-0 left-1 text-[10px] text-slate-400 whitespace-nowrap">${m.toLocaleDateString('es-ES',{month:'short',year:'2-digit'})}</span></div>`;
+            }
+            m = new Date(m.getFullYear(), m.getMonth()+1, 1);
+            guard++;
+        }
+        const hoy = new Date(); hoy.setHours(0,0,0,0);
+        const hoyPct = pct(hoy.getTime());
+        const hoyLine = (hoyPct >= 0 && hoyPct <= 100) ? `<div class="absolute top-0 bottom-0 border-l-2 border-blue-500 z-10" style="left:${hoyPct.toFixed(2)}%"></div>` : '';
+        let labels = '<div class="h-6"></div>';
+        let bars = '<div class="h-6"></div>';
+        evs.forEach(ev => {
+            const left = pct(ev.start.getTime());
+            const isHito = ev.start.getTime() === ev.end.getTime();
+            const width = isHito ? 0.9 : Math.max(((ev.end - ev.start + 86400000) / span) * 100, 0.9);
+            const tt = isHito ? formatDate(ev.start) : `${formatDate(ev.start)} – ${formatDate(ev.end)} (${ev.dur||0} días ${ev.isHabiles?'hábiles':'naturales'})`;
+            labels += `<div class="h-6 flex items-center justify-end pr-2 text-[11px] font-medium text-slate-600 truncate" title="${ev.name}">${ev.name}</div>`;
+            bars += `<div class="relative h-6"><div class="absolute top-1 bottom-1 ${isHito?'rounded-full':'rounded'} ${themeColors[ev.color]||'bg-slate-400'} opacity-90 hover:opacity-100 transition-opacity cursor-default" style="left:${Math.max(0,left).toFixed(2)}%;width:${Math.min(width,100-Math.max(0,left)).toFixed(2)}%" title="${ev.name}: ${tt}"></div></div>`;
+        });
+        cont.innerHTML = `<div class="flex gap-2 min-w-[640px]"><div class="w-32 md:w-56 flex-shrink-0">${labels}</div><div class="relative flex-1 min-w-0">${grid}${hoyLine}<div class="relative">${bars}</div></div></div>`;
+        card.classList.remove('hidden');
+    }
+
     function actualizarBanners() {
         const evs = globalEvents;
         if (!evs.length) return;
@@ -1266,6 +1318,7 @@
         });
         document.getElementById('hitosBody').innerHTML = rows;
         document.getElementById('hitosResumen').classList.remove('hidden');
+        renderGantt(evs);
     }
 
     function renderCalendars(evs) {
@@ -1457,7 +1510,7 @@
         const params = new URLSearchParams({
             proc:cfg.proc, tipo:cfg.tipo, valor:cfg.valor||'', fecha:cfg.fecha,
             sobres:cfg.nSobres, entidad:cfg.entidad, tramitacion:cfg.tramitacion, ccaa:cfg.ccaa,
-            baja:cfg.hasBaja?'1':'0', aip:cfg.aip?'1':'0', elec:cfg.ofertasElec?'1':'0', subsanacion:cfg.hasSubsanacion?'1':'0', posadj:cfg.posAdj?'1':'0', recurso:cfg.hasRecurso?'1':'0'
+            baja:cfg.hasBaja?'1':'0', aip:cfg.aip?'1':'0', elec:cfg.ofertasElec?'1':'0', subsanacion:cfg.hasSubsanacion?'1':'0', posadj:cfg.posAdj?'1':'0', recurso:cfg.hasRecurso?'1':'0', lotes:cfg.hasLotes?'1':'0'
         });
         history.replaceState({}, '', '?'+params.toString());
         navigator.clipboard.writeText(window.location.href).then(()=>showToast('URL copiada ✓')).catch(()=>showToast('URL actualizada en la barra ✓'));
@@ -1487,6 +1540,7 @@
         if (p.get('subsanacion')==='1') document.getElementById('subsanacionCheck').checked = true;
         if (p.get('posadj')==='1') document.getElementById('posAdjCheck').checked = true;
         if (p.get('recurso')==='1') document.getElementById('recursoCheck').checked = true;
+        if (p.get('lotes')==='1') document.getElementById('lotesCheck').checked = true;
         clearTimeout(calcDebounce);
         calcDebounce = setTimeout(triggerCalc, 400);
     }
@@ -1583,6 +1637,7 @@
         if (hasSubsanacion) extras += '<div class="bg-orange-50 border border-orange-200 p-3 rounded-lg"><span class="font-semibold text-orange-800">Subsanación:</span> <span class="font-bold text-orange-900">Sí (+3 días)</span></div>';
         if (globalConfig.posAdj) extras += '<div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg"><span class="font-semibold text-emerald-800">Fase ejecución:</span> <span class="font-bold text-emerald-900">Incluida (arts. 154, 198.4, 210, 111)</span></div>';
         if (globalConfig.hasRecurso) extras += '<div class="bg-red-50 border border-red-200 p-3 rounded-lg"><span class="font-semibold text-red-800">Recurso especial:</span> <span class="font-bold text-red-900">Simulado (arts. 50-57)</span></div>';
+        if (globalConfig.hasLotes) extras += '<div class="bg-indigo-50 border border-indigo-200 p-3 rounded-lg"><span class="font-semibold text-indigo-800">Lotes:</span> <span class="font-bold text-indigo-900">VE global de todos los lotes (art. 101.12)</span></div>';
         document.getElementById('summaryContent').innerHTML = `
             <div class="bg-slate-100 p-3 rounded-lg"><span class="font-semibold text-slate-700">Procedimiento:</span> <span class="font-bold">${proc.replace(/_/g,' ')}</span></div>
             <div class="bg-slate-100 p-3 rounded-lg"><span class="font-semibold text-slate-700">Tipo contrato:</span> <span class="font-bold">${tipo.replace('_',' ').toUpperCase()}</span></div>
@@ -1612,6 +1667,7 @@
         const hasSubsanacion = document.getElementById('subsanacionCheck').checked;
         const posAdj = document.getElementById('posAdjCheck').checked;
         const hasRecurso = document.getElementById('recursoCheck').checked;
+        const hasLotes = document.getElementById('lotesCheck').checked;
 
         if (!tipo || !t0Str) return;
         if (tipo==='mixto') tipo = document.getElementById('mixtoPrincipal').value || 'servicios';
@@ -1634,7 +1690,7 @@
         }
         const sara = (proc==='ABIERTO_SARA')||(isAuto&&valor>=tInfo.sara)||(['RESTRINGIDO','LICITACION_NEGOCIACION','NEGOCIADO_SIN_PUBLICIDAD','DIALOGO_COMPETITIVO','SDA'].includes(proc)&&valor>0&&valor>=tInfo.sara);
 
-        const warnings = checkCoherencia(pMan==='AUTO'?'AUTO':pMan, tipo, tramitacion, nSobres, valor, tInfo);
+        const warnings = checkCoherencia(pMan==='AUTO'?'AUTO':pMan, tipo, tramitacion, nSobres, valor, tInfo, hasLotes);
         const esOC = (tipo==='obras'||tipo.includes('concesion'));
         const recurrible = sara || (valor>0 && (esOC ? valor>3000000 : valor>100000));
         if (hasRecurso && !recurrible) warnings.push('Con los datos indicados el contrato no es susceptible de recurso especial (art. 44: obras y concesiones VE > 3.000.000 €; suministros y servicios VE > 100.000 €, o SARA); el escenario de recurso no se aplicará. Indica el VE si procede.');
@@ -1646,7 +1702,7 @@
             warnEl.classList.add('hidden');
         }
 
-        globalConfig = { proc, tipo, valor, fecha:t0Str, nSobres, entidad, tramitacion, ccaa, hasBaja, sara, aip, ofertasElec, hasSubsanacion, posAdj, hasRecurso, isAuto };
+        globalConfig = { proc, tipo, valor, fecha:t0Str, nSobres, entidad, tramitacion, ccaa, hasBaja, sara, aip, ofertasElec, hasSubsanacion, posAdj, hasRecurso, hasLotes, isAuto };
 
         let maxEnd = new Date(globalT0);
         const tempSkel = buildSkeleton(proc, tipo, sara, nSobres, hasBaja, tInfo, entidad, tramitacion, aip, ofertasElec, hasSubsanacion, valor, posAdj, hasRecurso);
